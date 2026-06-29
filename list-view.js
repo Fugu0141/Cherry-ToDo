@@ -43,8 +43,9 @@
     if (!isListMode) return;
 
     const tasks = getTasks().slice().sort(sortByListOrder);
-    const todoCount = tasks.filter(task => task.status !== "done").length;
-    const doneCount = tasks.length - todoCount;
+    const actionTasks = tasks.filter(isActionTask);
+    const todoCount = actionTasks.filter(task => task.status !== "done").length;
+    const doneCount = actionTasks.length - todoCount;
 
     listView.innerHTML = "";
 
@@ -55,7 +56,7 @@
     const title = document.createElement("h2");
     title.textContent = "実行リスト";
     const lead = document.createElement("p");
-    lead.textContent = "ボードで作った流れから、今日までと今後のタスクを確認できます。";
+    lead.textContent = "ルートを見出しとして、今日までと今後の実行タスクを確認できます。";
     titleWrap.appendChild(title);
     titleWrap.appendChild(lead);
 
@@ -73,13 +74,13 @@
         key: "today",
         title: "今日まで",
         description: "今日以前の未処理を見落とさないための場所です。",
-        tasks: tasks.filter(task => normalizeDate(task.targetAt) <= today)
+        tasks: actionTasks.filter(task => normalizeDate(task.targetAt) <= today)
       },
       {
         key: "upcoming",
         title: "今後",
         description: "明日以降のタスクです。",
-        tasks: tasks.filter(task => normalizeDate(task.targetAt) > today)
+        tasks: actionTasks.filter(task => normalizeDate(task.targetAt) > today)
       }
     ];
 
@@ -111,7 +112,7 @@
     if (!section.tasks.length) {
       const empty = document.createElement("div");
       empty.className = "listEmpty";
-      empty.textContent = section.key === "today" ? "今日までのタスクはありません。" : "今後のタスクはありません。";
+      empty.textContent = section.key === "today" ? "今日までの実行タスクはありません。" : "今後の実行タスクはありません。";
       sectionEl.appendChild(empty);
       listView.appendChild(sectionEl);
       return;
@@ -197,9 +198,13 @@
     return row;
   }
 
+  function isActionTask(task) {
+    return Boolean(task.parentId && state.tasks[task.parentId]);
+  }
+
   function toggleTaskStatus(taskId) {
     const task = state.tasks[taskId];
-    if (!task) return;
+    if (!task || !isActionTask(task)) return;
     snapshot();
     task.status = task.status === "done" ? "todo" : "done";
     requestRender();
@@ -249,8 +254,6 @@
   }
 
   function makeTaskPath(task, root) {
-    if (task.id === root.id) return "ルートタスク";
-
     const names = [];
     let current = task;
     const seen = new Set();
