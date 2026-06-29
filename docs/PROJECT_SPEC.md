@@ -31,7 +31,7 @@ A normal todo list treats tasks as separate rows:
 物理プリント
 ```
 
-Cherry-ToDo treats tasks as connected work:
+Cherry-ToDo treats work as connected flow under root headings:
 
 ```text
 数3ワーク
@@ -61,7 +61,20 @@ This makes it easier to see:
 - where work branches
 - what should happen next
 
-### 3.2 Execute from a list
+### 3.2 Root as heading, children as actions
+
+A root task is the title of a flow.
+
+It behaves more like a project, tag, category, or heading than a normal action item.
+
+```text
+Root task  = 大分類・見出し・プロジェクト
+Child task = 実際にやるタスク
+```
+
+In execution-focused views, root tasks should usually appear as group headings, not as todo rows with done / todo state.
+
+### 3.3 Execute from a list
 
 The board is useful for creating and understanding structure, but it can become heavy when the user only wants to know what to do now.
 
@@ -72,7 +85,7 @@ Board view = create and understand task flow
 List view  = check today's tasks and upcoming tasks
 ```
 
-### 3.3 Flow first, dates second
+### 3.4 Flow first, dates second
 
 Cherry-ToDo is not just a calendar app. Dates are important, but the main structure is the task flow.
 
@@ -102,9 +115,9 @@ Main properties:
 
 ### Root task
 
-A task with no parent.
+A top-level flow heading with no parent.
 
-In Cherry-ToDo, root tasks are closer to projects, tags, or large categories than to simple action items.
+In Cherry-ToDo, root tasks are closer to projects, tags, large categories, or section titles than to simple action items.
 
 Examples:
 
@@ -115,6 +128,15 @@ Examples:
 文化祭準備
 個人開発
 ```
+
+Product rule:
+
+```text
+Root task = context heading
+Child task = executable action
+```
+
+Root tasks may still be shown as cards on the board because they are the starting point of a flow. However, in the list view, they should usually be used as group labels rather than displayed as tasks to complete.
 
 ### Child task / individual task
 
@@ -195,7 +217,7 @@ Current main screen.
 
 Purpose:
 
-- create root tasks
+- create root flow headings
 - extend branches
 - see parent-child relationships
 - arrange task flow
@@ -217,21 +239,24 @@ Current features:
 
 ### List view
 
-Planned execution-focused screen.
+Execution-focused screen.
 
 Purpose:
 
 - see what to do today
 - see upcoming tasks
 - see unscheduled tasks
-- complete tasks quickly
+- complete child tasks quickly
+- use root tasks as section headings
 
 Suggested display:
 
 ```text
 Root task name
-Individual task name    Due date
+Child task name    Due date
 ```
+
+Root task rows should not normally appear as executable list items.
 
 ### Mobile views
 

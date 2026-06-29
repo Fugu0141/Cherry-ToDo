@@ -1,0 +1,282 @@
+.toolbar button.activeView {
+  background: var(--accent);
+}
+
+.stage.listMode .board {
+  display: none;
+}
+
+.listView {
+  height: calc(100vh - 138px);
+  min-height: 520px;
+  border-radius: 18px;
+  background: var(--surface);
+  overflow: auto;
+  padding: 22px;
+  box-shadow: 0 10px 28px rgba(0,0,0,.08);
+  outline: 1px solid rgba(0,0,0,.07);
+}
+
+.listHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.listHeader h2 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.listHeader p,
+.listSection p,
+.listTaskPath,
+.listEmpty {
+  color: var(--muted);
+}
+
+.listSummary,
+.listSectionCount {
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #34405f;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.listSummary {
+  padding: 8px 12px;
+}
+
+.listSection {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(0,0,0,.08);
+}
+
+.listSectionHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.listSection h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.listSectionCount {
+  padding: 3px 8px;
+}
+
+.listEmpty {
+  padding: 18px;
+  border-radius: 16px;
+  background: #f8fafc;
+  border: 1px dashed rgba(0,0,0,.12);
+}
+
+.listRootGroup {
+  margin-top: 14px;
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 18px;
+  overflow: hidden;
+  background: #fbfcff;
+}
+
+.listRootTitle {
+  padding: 10px 14px;
+  background: linear-gradient(90deg, #fff7cc, #eefcff);
+  border-bottom: 1px solid rgba(0,0,0,.08);
+  font-weight: 800;
+}
+
+.listTaskRow {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-top: 1px solid rgba(0,0,0,.06);
+  cursor: pointer;
+}
+
+.listTaskRow:first-child {
+  border-top: 0;
+}
+
+.listTaskRow:hover {
+  background: rgba(115,87,255,.06);
+}
+
+.listTaskRow.done {
+  opacity: .58;
+}
+
+.listDoneToggle,
+.listOpenButton {
+  box-shadow: none;
+}
+
+.listDoneToggle {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: white;
+  color: var(--ink);
+  border: 2px solid var(--note-border);
+  font-weight: 900;
+}
+
+.listTaskRow.done .listDoneToggle {
+  background: #dfffe7;
+}
+
+.listTaskMain {
+  min-width: 0;
+}
+
+.listTaskTitleLine {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+
+.listTaskTitle {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 16px;
+  font-weight: 750;
+}
+
+.listTaskRow.done .listTaskTitle {
+  text-decoration: line-through;
+}
+
+.listTaskDate {
+  flex: 0 0 auto;
+  color: #147985;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.listTaskPath {
+  margin-top: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.listOpenButton {
+  padding: 7px 10px;
+  background: #e7eaf2;
+  color: #222937;
+  font-size: 13px;
+}
+
+@media (max-width: 980px) {
+  body {
+    overflow: hidden;
+  }
+
+  .topbar {
+    overflow: hidden;
+  }
+
+  .toolbar {
+    display: grid;
+    grid-template-columns: repeat(4, max-content);
+    justify-content: start;
+    align-items: center;
+    gap: 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 2px 2px 8px;
+    scroll-padding-inline: 8px;
+  }
+
+  .toolbar button {
+    padding: 8px 12px;
+    min-height: 38px;
+    font-size: 14px;
+  }
+
+  .app {
+    min-width: 0;
+  }
+
+  .stage {
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .stageHeader {
+    flex: 0 0 auto;
+  }
+
+  .board,
+  .listView {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: auto;
+  }
+
+  .listView {
+    border-radius: 16px;
+    padding: 14px;
+  }
+
+  .listHeader {
+    display: grid;
+    gap: 10px;
+  }
+
+  .listHeader h2 {
+    font-size: 21px;
+  }
+
+  .listSummary {
+    justify-self: start;
+  }
+
+  .listTaskRow {
+    grid-template-columns: 38px minmax(0, 1fr);
+    gap: 8px;
+    padding: 11px 10px;
+  }
+
+  .listTaskTitleLine {
+    display: grid;
+    gap: 2px;
+  }
+
+  .listOpenButton {
+    grid-column: 2;
+    justify-self: start;
+    margin-top: 4px;
+  }
+
+  .modalBackdrop {
+    place-items: start center;
+    overflow: auto;
+    padding: max(18px, env(safe-area-inset-top)) 14px max(18px, env(safe-area-inset-bottom));
+  }
+
+  .modal {
+    margin-top: 16px;
+    max-height: calc(100dvh - 36px);
+    overflow: auto;
+  }
+}
