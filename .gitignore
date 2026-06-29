@@ -1,0 +1,21 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor settings
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Dependency folders, if the project adds a build step later
+node_modules/
+
+# Build outputs, if added later
+dist/
+build/
+
+# Local env files
+.env
+.env.*
