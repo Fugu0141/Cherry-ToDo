@@ -169,6 +169,42 @@ Task = {
 }
 ```
 
+Migration from `targetAt` to `schedule` is designed in [`SCHEDULE_MIGRATION_PLAN.md`](SCHEDULE_MIGRATION_PLAN.md).
+
+---
+
+## Schedule migration architecture
+
+The migration should be staged so existing localStorage data remains readable.
+
+Recommended order:
+
+1. Add schedule helper functions.
+2. Normalize loaded tasks in memory.
+3. Read dates through schedule-aware accessors.
+4. Dual-write `schedule` and legacy `targetAt` for dated tasks during transition.
+5. Add unscheduled UI.
+6. Stop depending on direct `targetAt` reads.
+
+Important safety rule:
+
+```text
+Migration must not use today as a fallback for missing or invalid dates.
+```
+
+`todayISO()` can still be used as an intentional default for new task creation, but not as a migration fallback for existing data.
+
+Suggested module destination later:
+
+```text
+core/
+  schedule-model.js
+storage/
+  migration.js
+```
+
+Until the codebase is split, the helpers can live near the storage helpers in `app.js` or in a small standalone script loaded before layout logic.
+
 ---
 
 ## Storage
@@ -182,6 +218,8 @@ quest-sticky-todo-v10
 This internal key may remain temporarily to avoid breaking existing saved data.
 
 When renaming storage keys, migration must be implemented explicitly.
+
+During the schedule migration, do not rename the storage key. Keep v10 readable and write the new `schedule` field into the existing state shape.
 
 ---
 
@@ -297,7 +335,8 @@ Before changing layout, drag behavior, or scheduling logic, check:
 4. `docs/TECHNICAL_ARCHITECTURE.md`
 5. `docs/DATE_TARGET_SPEC.md`
 6. `docs/LAYOUT_AND_SCHEDULE_SPEC.md`
-7. `docs/UX_INTERACTION_SPEC.md`
-8. `docs/MOBILE_UX_SPEC.md`
-9. `app.js`
-10. `date-target-fix.js`
+7. `docs/SCHEDULE_MIGRATION_PLAN.md`
+8. `docs/UX_INTERACTION_SPEC.md`
+9. `docs/MOBILE_UX_SPEC.md`
+10. `app.js`
+11. `date-target-fix.js`
