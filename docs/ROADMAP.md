@@ -14,13 +14,22 @@ Goal: make the repository understandable as a standalone open-source project.
 - [x] Move project specifications into `docs/`.
 - [x] Add originality review notes.
 - [x] Review remaining old internal names and keep only compatibility-related ones.
-- [ ] Confirm GitHub Pages deployment settings.
-- [ ] Create initial issues for planned work.
+- [ ] Confirm GitHub Pages deployment settings. See [#1](https://github.com/Fugu0141/Cherry-ToDo/issues/1).
+- [x] Create initial issues for planned work.
 
 Notes:
 
 - Old `quest-sticky-todo-*` storage keys are intentionally kept for localStorage compatibility until a dedicated migration is implemented.
 - User-facing documentation and visible branding should continue to use `Cherry-ToDo`.
+
+Initial roadmap issues:
+
+- [#1 Confirm GitHub Pages deployment settings](https://github.com/Fugu0141/Cherry-ToDo/issues/1)
+- [#2 Design safe migration from targetAt to schedule model](https://github.com/Fugu0141/Cherry-ToDo/issues/2)
+- [#3 Add execution-focused list view](https://github.com/Fugu0141/Cherry-ToDo/issues/3)
+- [#4 Design same-day subflow layout](https://github.com/Fugu0141/Cherry-ToDo/issues/4)
+- [#5 Improve mobile touch interactions](https://github.com/Fugu0141/Cherry-ToDo/issues/5)
+- [#6 Plan codebase module separation](https://github.com/Fugu0141/Cherry-ToDo/issues/6)
 
 ---
 
@@ -46,6 +55,8 @@ New support docs:
 
 Goal: separate schedule intent from the current `targetAt` date string.
 
+Tracking issue: [#2](https://github.com/Fugu0141/Cherry-ToDo/issues/2)
+
 Planned model:
 
 ```js
@@ -70,6 +81,8 @@ Tasks:
 
 Goal: add an execution-focused view.
 
+Tracking issue: [#3](https://github.com/Fugu0141/Cherry-ToDo/issues/3)
+
 - [ ] Show today's tasks.
 - [ ] Show upcoming tasks.
 - [ ] Show unscheduled tasks.
@@ -83,6 +96,8 @@ Goal: add an execution-focused view.
 
 Goal: make task flow easier to read as the board grows.
 
+Tracking issue: [#4](https://github.com/Fugu0141/Cherry-ToDo/issues/4)
+
 - [ ] Preserve root subtrees during layout.
 - [ ] Reduce excessive vertical or horizontal growth.
 - [ ] Improve collision handling.
@@ -95,6 +110,8 @@ Goal: make task flow easier to read as the board grows.
 
 Goal: make the app feel lighter and more direct.
 
+Tracking issue: [#5](https://github.com/Fugu0141/Cherry-ToDo/issues/5)
+
 - [ ] Replace simple creation modals with contextual popups where appropriate.
 - [ ] Add safer delete confirmation.
 - [ ] Add mobile bottom sheets.
@@ -106,6 +123,8 @@ Goal: make the app feel lighter and more direct.
 ## Phase 6: Codebase cleanup
 
 Goal: make the project easier for contributors.
+
+Tracking issue: [#6](https://github.com/Fugu0141/Cherry-ToDo/issues/6)
 
 - [ ] Split `app.js` into smaller modules.
 - [ ] Move storage logic into a storage module.
