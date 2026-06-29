@@ -1,0 +1,209 @@
+.dateHud {
+  will-change: transform;
+  contain: layout style paint;
+}
+
+.laneLabel {
+  background: rgba(255,255,255,.92);
+  box-shadow: 0 2px 10px rgba(15,23,42,.08);
+  backdrop-filter: none;
+}
+
+.laneLabel.monthStart {
+  border: 1px solid rgba(116, 133, 255, .22);
+  border-left: 5px solid #6d74ff;
+  background: linear-gradient(180deg, rgba(248,250,255,.98), rgba(255,255,255,.92));
+  box-shadow: 0 6px 18px rgba(45, 70, 130, .12);
+}
+
+.horizontalMode .laneLabel.monthStart { width: 92px; }
+.verticalMode .laneLabel.monthStart { width: 74px; }
+
+.laneMonthTitle {
+  display: block;
+  margin: 0 0 2px;
+  color: #29344f;
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: .02em;
+}
+
+.laneLabel.monthStart .laneDay {
+  font-size: 35px;
+  line-height: 32px;
+}
+
+.laneStatus {
+  margin-top: 2px;
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.laneLabel.completeDate {
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.laneLabel.completeDate::after {
+  content: "クリックで切替";
+  display: block;
+  margin-top: 4px;
+  font-size: 10px;
+  color: #8a95a8;
+  white-space: nowrap;
+}
+
+.laneLabel.collapsedDate {
+  width: 84px;
+  opacity: .82;
+  border-left-color: #94a3b8;
+  background: rgba(248, 250, 252, .94);
+}
+
+.laneLine.pastLane {
+  background: #cbd5e1;
+  opacity: .48;
+}
+
+.laneLine.futureLane { opacity: .58; }
+
+.laneLine.todayLane,
+.laneLine.todayLine {
+  opacity: 1;
+  background: var(--today-strong);
+}
+
+.laneLine.collapsedDoneLane {
+  background: #94a3b8;
+  opacity: .38;
+}
+
+.laneBand.pastLane { background: rgba(148, 163, 184, .045); }
+.laneBand.futureLane { background: rgba(255, 255, 255, 0); }
+.laneBand.todayLane,
+.laneBand.todayBand { background: var(--today); }
+
+.laneBand.collapsedDoneLane {
+  background: repeating-linear-gradient(90deg, rgba(148,163,184,.10), rgba(148,163,184,.10) 8px, rgba(148,163,184,.045) 8px, rgba(148,163,184,.045) 16px);
+}
+
+.laneLabel.pastLane { opacity: .54; }
+.laneLabel.futureLane { opacity: .78; }
+.laneLabel.todayLane { opacity: 1; }
+
+.linkPath.defaultLink {
+  stroke: rgba(25, 25, 25, .28) !important;
+  stroke-width: 3 !important;
+}
+
+.linkPath.doneLink,
+.linkPath.mutedLink,
+.linkPath.collapsedLink {
+  stroke: rgba(80, 80, 90, .10) !important;
+  stroke-width: 3 !important;
+}
+
+.linkPath.focusedLink {
+  stroke: #7357ff !important;
+  stroke-width: 5 !important;
+}
+
+.note::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 8px;
+  border-radius: inherit;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  background: transparent;
+  pointer-events: none;
+}
+
+.note.todayTask {
+  box-shadow: 0 6px 0 rgba(0,0,0,.08), 0 12px 22px rgba(0,0,0,.12), 0 0 0 5px rgba(72, 183, 199, .16);
+}
+
+.note.todayTask::before { background: #48b7c7; }
+
+.note.futureTask {
+  opacity: .82;
+  filter: saturate(.82);
+}
+
+.note.overdueTask {
+  box-shadow: 0 6px 0 rgba(0,0,0,.08), 0 12px 22px rgba(0,0,0,.12), 0 0 0 4px rgba(226, 74, 74, .12);
+}
+
+.note.overdueTask::before { background: #e24a4a; }
+
+.note.doneTask {
+  background: linear-gradient(180deg, #eef2f7, #f8fafc);
+  border-color: #aeb7c5;
+  color: #707988;
+  opacity: .42;
+  filter: grayscale(.65);
+}
+
+.note.doneTask .noteText { text-decoration: line-through; }
+
+.note.collapsedTask {
+  display: none;
+}
+
+.note .handle,
+.note .doneBtn,
+.note .deleteBtn,
+.note.done .doneBtn {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.note.selected .handle,
+.note.selected .doneBtn,
+.note.selected .deleteBtn,
+.note.done.selected .doneBtn {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .note:hover .handle,
+  .note:hover .doneBtn,
+  .note:hover .deleteBtn,
+  .note.done:hover .doneBtn {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+}
+
+@media (max-width: 980px) {
+  .verticalMode .laneLabel.monthStart { width: 70px; }
+
+  .verticalMode .laneMonthTitle {
+    font-size: 15px;
+    line-height: 1.05;
+  }
+
+  .verticalMode .laneLabel.monthStart .laneDay {
+    font-size: 27px;
+    line-height: 25px;
+  }
+
+  .verticalMode .laneLabel.collapsedDate {
+    width: 64px;
+  }
+
+  .verticalMode .laneLabel.completeDate::after {
+    content: "タップ";
+  }
+
+  .linkPath.defaultLink { stroke-width: 2.5 !important; }
+
+  .note.todayTask {
+    box-shadow: 0 5px 0 rgba(0,0,0,.08), 0 9px 18px rgba(0,0,0,.10), 0 0 0 4px rgba(72, 183, 199, .16);
+  }
+}

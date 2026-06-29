@@ -1,0 +1,58 @@
+@media (max-width: 980px) {
+  html,
+  body {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  .modalBackdrop {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100dvw !important;
+    height: 100dvh !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom)) !important;
+    overflow: auto !important;
+    overscroll-behavior: contain;
+  }
+
+  .modalBackdrop.hidden {
+    display: none !important;
+  }
+
+  .modal {
+    width: min(390px, calc(100dvw - 24px)) !important;
+    max-width: calc(100dvw - 24px) !important;
+    max-height: calc(100dvh - 28px) !important;
+    overflow: auto !important;
+    margin: auto !important;
+    border-radius: 20px !important;
+    transform: none !important;
+  }
+
+  .modal h2 {
+    font-size: 22px !important;
+    line-height: 1.25 !important;
+  }
+
+  .modal input {
+    font-size: 16px !important;
+    min-height: 48px !important;
+  }
+
+  .modalActions {
+    position: sticky;
+    bottom: -18px;
+    padding-top: 10px;
+    background: linear-gradient(180deg, rgba(255,255,255,.86), #fff 38%);
+  }
+
+  .board {
+    overscroll-behavior: contain;
+  }
+}

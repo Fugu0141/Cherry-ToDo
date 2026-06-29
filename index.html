@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Quest Sticky ToDo v15.12 timezone-safe target fix</title>
+  <link rel="stylesheet" href="./style.css?v=20260628-101" />
+  <link rel="stylesheet" href="./ux-fix.css?v=20260628-13" />
+  <link rel="stylesheet" href="./safety-fix.css?v=20260628-14" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">Q</div>
+        <div>
+          <h1>Quest Sticky ToDo</h1>
+          <p>付箋を引っ張って、ブランチを伸ばす。</p>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <button id="addRootBtn">＋ ルート</button>
+        <button id="treeLayoutBtn">自動整列</button>
+        <button id="verticalLayoutBtn">縦整列</button>
+        <button id="toggleLanesBtn">日付レーン ON</button>
+        <button id="undoBtn">戻る</button>
+        <button id="deleteBtn" class="danger" disabled>削除</button>
+        <button id="resetBtn" class="danger">リセット</button>
+      </div>
+    </header>
+
+    <main class="stage">
+      <div class="stageHeader">
+        <div class="monthCard">
+          <div id="monthBig">5</div>
+          <div id="monthName">May</div>
+        </div>
+        <div class="help">
+          PC: 日付は上に固定 / スマホ: 日付は左に固定 / 完了済みの日付はクリックで展開
+        </div>
+      </div>
+
+      <div id="board" class="board">
+        <svg id="links" class="links"></svg>
+        <div id="lanes" class="lanes"></div>
+        <div id="dateHud" class="dateHud"></div>
+        <div id="notes" class="notes"></div>
+        <div id="ghost" class="ghost hidden">新しいタスク</div>
+      </div>
+    </main>
+  </div>
+
+  <div id="taskModal" class="modalBackdrop hidden">
+    <div class="modal">
+      <h2 id="taskModalTitle">タスクを作成</h2>
+      <label>
+        タスク名
+        <input id="taskNameInput" type="text" placeholder="例：ワーク12ページ" />
+      </label>
+      <label>
+        目標日
+        <input id="taskDateInput" type="date" />
+      </label>
+      <div class="modalActions">
+        <button id="taskCancelBtn" class="ghostBtn">キャンセル</button>
+        <button id="taskSaveBtn">決定</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="dateModal" class="modalBackdrop hidden">
+    <div class="modal smallModal">
+      <h2>日付を変更</h2>
+      <p class="modalText">区切り線や空白に置かれました。移動先の日付を選んでください。</p>
+      <label>
+        目標日
+        <input id="changeDateInput" type="date" />
+      </label>
+      <div class="modalActions">
+        <button id="dateCancelBtn" class="ghostBtn">戻す</button>
+        <button id="dateSaveBtn">変更</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="./app.js?v=20260628-10"></script>
+  <script src="./ux-fix.js?v=20260628-132"></script>
+  <script src="./mobile.js?v=20260628-10"></script>
+  <script src="./safety-fix.js?v=20260628-15"></script>
+  <script src="./final-fix.js?v=20260628-156"></script>
+  <script src="./date-target-fix.js?v=20260628-162"></script>
+</body>
+</html>
