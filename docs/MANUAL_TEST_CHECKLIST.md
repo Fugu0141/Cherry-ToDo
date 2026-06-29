@@ -65,6 +65,19 @@ http://localhost:8000/
 
 ---
 
+## List view behavior
+
+- [ ] The `リスト表示` button switches from board view to list view.
+- [ ] The `ボード表示` button switches back from list view to board view.
+- [ ] The list shows today's or overdue tasks in the `今日まで` section.
+- [ ] The list shows future tasks in the `今後` section.
+- [ ] Tasks are grouped by their root task.
+- [ ] Toggling done / todo from the list updates the board state.
+- [ ] Using `ボード` from a list row returns to the board and selects the task.
+- [ ] Reloading the page preserves the latest task status.
+
+---
+
 ## Layout behavior
 
 - [ ] Auto layout keeps parent-child links readable.
@@ -94,6 +107,8 @@ http://localhost:8000/
 - [ ] The `+`, done, and delete controls are reachable.
 - [ ] Dragging does not cause unusable page scrolling.
 - [ ] Modals fit on the screen.
+- [ ] List view rows remain readable on a mobile-sized viewport.
+- [ ] List view done / todo and board-open controls are easy to tap.
 
 ---
 
