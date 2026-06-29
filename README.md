@@ -5,6 +5,9 @@ Cherry-ToDo is an open-source sticky note todo app for organizing tasks as flows
 Instead of treating tasks as a flat list, Cherry-ToDo lets you start from a root task and extend child tasks like branches. The board is for building and viewing the flow of work, while the future list view is intended for quickly checking what needs to be done today or soon.
 
 > Current status: prototype / early OSS migration
+## Demo
+
+https://fugu0141.github.io/Cherry-ToDo/
 
 ## Concept
 
