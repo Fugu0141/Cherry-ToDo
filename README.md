@@ -84,9 +84,16 @@ http://localhost:8000/
 │   ├── LAYOUT_AND_SCHEDULE_SPEC.md
 │   ├── UX_INTERACTION_SPEC.md
 │   ├── MOBILE_UX_SPEC.md
+│   ├── ROADMAP.md
+│   ├── DEVELOPMENT_SETUP.md
+│   ├── MIGRATION_NOTES.md
 │   └── ORIGINALITY_REVIEW.md
+├── .github/
+│   ├── ISSUE_TEMPLATE/
+│   └── PULL_REQUEST_TEMPLATE.md
 ├── CONTRIBUTING.md
 ├── CODE_OF_CONDUCT.md
+├── .gitignore
 └── LICENSE
 ```
 
@@ -97,11 +104,14 @@ Start here:
 1. [`docs/PROJECT_SPEC.md`](docs/PROJECT_SPEC.md)
 2. [`docs/PRODUCT_VISION.md`](docs/PRODUCT_VISION.md)
 3. [`docs/TECHNICAL_ARCHITECTURE.md`](docs/TECHNICAL_ARCHITECTURE.md)
-4. [`docs/DATE_TARGET_SPEC.md`](docs/DATE_TARGET_SPEC.md)
-5. [`docs/LAYOUT_AND_SCHEDULE_SPEC.md`](docs/LAYOUT_AND_SCHEDULE_SPEC.md)
-6. [`docs/UX_INTERACTION_SPEC.md`](docs/UX_INTERACTION_SPEC.md)
-7. [`docs/MOBILE_UX_SPEC.md`](docs/MOBILE_UX_SPEC.md)
-8. [`docs/ORIGINALITY_REVIEW.md`](docs/ORIGINALITY_REVIEW.md)
+4. [`docs/ROADMAP.md`](docs/ROADMAP.md)
+5. [`docs/DEVELOPMENT_SETUP.md`](docs/DEVELOPMENT_SETUP.md)
+6. [`docs/DATE_TARGET_SPEC.md`](docs/DATE_TARGET_SPEC.md)
+7. [`docs/LAYOUT_AND_SCHEDULE_SPEC.md`](docs/LAYOUT_AND_SCHEDULE_SPEC.md)
+8. [`docs/UX_INTERACTION_SPEC.md`](docs/UX_INTERACTION_SPEC.md)
+9. [`docs/MOBILE_UX_SPEC.md`](docs/MOBILE_UX_SPEC.md)
+10. [`docs/MIGRATION_NOTES.md`](docs/MIGRATION_NOTES.md)
+11. [`docs/ORIGINALITY_REVIEW.md`](docs/ORIGINALITY_REVIEW.md)
 
 ## Development notes
 
