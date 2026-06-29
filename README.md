@@ -86,6 +86,8 @@ http://localhost:8000/
 │   ├── MOBILE_UX_SPEC.md
 │   ├── ROADMAP.md
 │   ├── DEVELOPMENT_SETUP.md
+│   ├── MANUAL_TEST_CHECKLIST.md
+│   ├── KNOWN_ISSUES.md
 │   ├── MIGRATION_NOTES.md
 │   └── ORIGINALITY_REVIEW.md
 ├── .github/
@@ -106,18 +108,22 @@ Start here:
 3. [`docs/TECHNICAL_ARCHITECTURE.md`](docs/TECHNICAL_ARCHITECTURE.md)
 4. [`docs/ROADMAP.md`](docs/ROADMAP.md)
 5. [`docs/DEVELOPMENT_SETUP.md`](docs/DEVELOPMENT_SETUP.md)
-6. [`docs/DATE_TARGET_SPEC.md`](docs/DATE_TARGET_SPEC.md)
-7. [`docs/LAYOUT_AND_SCHEDULE_SPEC.md`](docs/LAYOUT_AND_SCHEDULE_SPEC.md)
-8. [`docs/UX_INTERACTION_SPEC.md`](docs/UX_INTERACTION_SPEC.md)
-9. [`docs/MOBILE_UX_SPEC.md`](docs/MOBILE_UX_SPEC.md)
-10. [`docs/MIGRATION_NOTES.md`](docs/MIGRATION_NOTES.md)
-11. [`docs/ORIGINALITY_REVIEW.md`](docs/ORIGINALITY_REVIEW.md)
+6. [`docs/MANUAL_TEST_CHECKLIST.md`](docs/MANUAL_TEST_CHECKLIST.md)
+7. [`docs/KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.md)
+8. [`docs/DATE_TARGET_SPEC.md`](docs/DATE_TARGET_SPEC.md)
+9. [`docs/LAYOUT_AND_SCHEDULE_SPEC.md`](docs/LAYOUT_AND_SCHEDULE_SPEC.md)
+10. [`docs/UX_INTERACTION_SPEC.md`](docs/UX_INTERACTION_SPEC.md)
+11. [`docs/MOBILE_UX_SPEC.md`](docs/MOBILE_UX_SPEC.md)
+12. [`docs/MIGRATION_NOTES.md`](docs/MIGRATION_NOTES.md)
+13. [`docs/ORIGINALITY_REVIEW.md`](docs/ORIGINALITY_REVIEW.md)
 
 ## Development notes
 
 Cherry-ToDo was originally developed under `Fugu0141.github.io/ToDo` and was moved to this standalone repository for open-source development.
 
 Some file names and internal compatibility keys may still contain older project names for migration compatibility. User-facing names and documentation should use `Cherry-ToDo`.
+
+Before changing behavior, run through [`docs/MANUAL_TEST_CHECKLIST.md`](docs/MANUAL_TEST_CHECKLIST.md). Known prototype limitations are tracked in [`docs/KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.md).
 
 ## Contributing
 
