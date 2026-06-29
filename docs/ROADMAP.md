@@ -13,9 +13,14 @@ Goal: make the repository understandable as a standalone open-source project.
 - [x] Add README, license, contribution guide, and code of conduct.
 - [x] Move project specifications into `docs/`.
 - [x] Add originality review notes.
-- [ ] Review remaining old internal names and keep only compatibility-related ones.
+- [x] Review remaining old internal names and keep only compatibility-related ones.
 - [ ] Confirm GitHub Pages deployment settings.
 - [ ] Create initial issues for planned work.
+
+Notes:
+
+- Old `quest-sticky-todo-*` storage keys are intentionally kept for localStorage compatibility until a dedicated migration is implemented.
+- User-facing documentation and visible branding should continue to use `Cherry-ToDo`.
 
 ---
 
@@ -26,9 +31,14 @@ Goal: make the current implementation easier to test and maintain.
 - [ ] Check desktop behavior after repository migration.
 - [ ] Check mobile behavior after repository migration.
 - [ ] Verify localStorage compatibility.
-- [ ] Document known bugs.
+- [x] Document known bugs.
 - [ ] Reduce fragile fix-layer behavior where possible.
-- [ ] Add a simple manual test checklist.
+- [x] Add a simple manual test checklist.
+
+New support docs:
+
+- [`MANUAL_TEST_CHECKLIST.md`](MANUAL_TEST_CHECKLIST.md)
+- [`KNOWN_ISSUES.md`](KNOWN_ISSUES.md)
 
 ---
 
