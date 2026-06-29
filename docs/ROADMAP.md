@@ -69,7 +69,7 @@ schedule: {
 
 Tasks:
 
-- [ ] Design migration from `targetAt`.
+- [x] Design migration from `targetAt`. See [`SCHEDULE_MIGRATION_PLAN.md`](SCHEDULE_MIGRATION_PLAN.md).
 - [ ] Add unscheduled task support.
 - [ ] Add date-only and datetime states.
 - [ ] Update date lane rendering.
