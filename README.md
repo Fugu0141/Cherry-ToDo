@@ -1,31 +1,120 @@
-# Quest Sticky ToDo v2
+# Cherry-ToDo
 
-ゲームのような直感操作を目指した、付箋ブランチ型ToDoプロトタイプです。
+Cherry-ToDo is an open-source sticky note todo app for organizing tasks as flows, branches, and schedules.
 
-## v2で変えたこと
+Instead of treating tasks as a flat list, Cherry-ToDo lets you start from a root task and extend child tasks like branches. The board is for building and viewing the flow of work, while the future list view is intended for quickly checking what needs to be done today or soon.
 
-- タスク詳細サイドバーを削除
-- 新規作成/編集は「タスク名」と「目標日」だけのウィンドウに変更
-- 目標日をもとに日付レーンを自動追加
-- 履歴ログを削除
-- Gitっぽさは「履歴」ではなく「ブランチ」の考え方として整理
-- 付箋を別の日付レーンへ移動したら、内部の目標日も変更
-- 区切り線や下の空白へドロップしたら、日付変更ウィンドウを表示
-- 自動整列とは別に、枝をまっすぐ揃える「縦整列」を追加
-- 線を直角寄りにして視認性を改善
-- ＋ボタンはホバー/選択時のみ表示
+> Current status: prototype / early OSS migration
 
-## 使い方
+## Concept
 
-`index.html` をブラウザで開くだけです。
+```text
+Build the flow of tasks, then find what to do today.
+```
 
-## 操作
+Cherry-ToDo focuses on these ideas:
 
-- 付箋をドラッグ: 移動
-- 付箋下の丸い＋をドラッグ: 子タスク作成ウィンドウ
-- 付箋を別の日付レーンへ移動: 目標日を変更
-- 付箋を区切り線/下の空白に移動: 日付変更ウィンドウ
-- 付箋をダブルクリック: タスク名/目標日の編集
-- 付箋右上の丸: 完了切替
-- 自動整列: ブランチ全体を整列
-- 縦整列: 枝をなるべく縦に揃える
+- Root tasks work like projects, tags, or big categories.
+- Child tasks represent the actual things to do.
+- Task relationships are shown as branches instead of only a list.
+- Dates are useful, but they are not the main structure.
+- Unscheduled tasks should be treated as `unscheduled`, not as `today`.
+- The project is being prepared for open-source development.
+
+## Features
+
+Current prototype features:
+
+- Sticky-note style task cards
+- Root task creation
+- Child task creation by dragging from the `+` handle
+- Parent-child task links
+- Date lanes
+- Drag-and-drop task movement
+- Date change modal when dropping on boundaries or blank areas
+- Done / todo toggle
+- Auto layout
+- Undo
+- Local save with `localStorage`
+
+Planned or under discussion:
+
+- Better schedule model: none / date / datetime
+- List view for today's and upcoming tasks
+- Same-day subflow layout
+- Context popups instead of large modals
+- Better mobile UI and touch interactions
+- Codebase cleanup and module separation
+
+## Usage
+
+This is a static web app. For local use, open `index.html` in a browser.
+
+For development, using a local static server is recommended:
+
+```bash
+python -m http.server 8000
+```
+
+Then open:
+
+```text
+http://localhost:8000/
+```
+
+## Repository structure
+
+```text
+.
+├── index.html
+├── style.css
+├── app.js
+├── ux-fix.css
+├── ux-fix.js
+├── mobile.js
+├── safety-fix.css
+├── safety-fix.js
+├── final-fix.js
+├── date-target-fix.js
+├── docs/
+│   ├── PROJECT_SPEC.md
+│   ├── PRODUCT_VISION.md
+│   ├── TECHNICAL_ARCHITECTURE.md
+│   ├── DATE_TARGET_SPEC.md
+│   ├── LAYOUT_AND_SCHEDULE_SPEC.md
+│   ├── UX_INTERACTION_SPEC.md
+│   ├── MOBILE_UX_SPEC.md
+│   └── ORIGINALITY_REVIEW.md
+├── CONTRIBUTING.md
+├── CODE_OF_CONDUCT.md
+└── LICENSE
+```
+
+## Documentation
+
+Start here:
+
+1. [`docs/PROJECT_SPEC.md`](docs/PROJECT_SPEC.md)
+2. [`docs/PRODUCT_VISION.md`](docs/PRODUCT_VISION.md)
+3. [`docs/TECHNICAL_ARCHITECTURE.md`](docs/TECHNICAL_ARCHITECTURE.md)
+4. [`docs/DATE_TARGET_SPEC.md`](docs/DATE_TARGET_SPEC.md)
+5. [`docs/LAYOUT_AND_SCHEDULE_SPEC.md`](docs/LAYOUT_AND_SCHEDULE_SPEC.md)
+6. [`docs/UX_INTERACTION_SPEC.md`](docs/UX_INTERACTION_SPEC.md)
+7. [`docs/MOBILE_UX_SPEC.md`](docs/MOBILE_UX_SPEC.md)
+8. [`docs/ORIGINALITY_REVIEW.md`](docs/ORIGINALITY_REVIEW.md)
+
+## Development notes
+
+Cherry-ToDo was originally developed under `Fugu0141.github.io/ToDo` and was moved to this standalone repository for open-source development.
+
+Some file names and internal compatibility keys may still contain older project names for migration compatibility. User-facing names and documentation should use `Cherry-ToDo`.
+
+## Contributing
+
+Contributions are welcome after the codebase and specifications become stable enough for collaboration.
+
+Please read [`CONTRIBUTING.md`](CONTRIBUTING.md) before opening issues or pull requests.
+
+## License
+
+MIT License. See [`LICENSE`](LICENSE).
