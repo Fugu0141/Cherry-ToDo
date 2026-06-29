@@ -40,14 +40,15 @@ The list is for execution.
 
 ## Root task philosophy
 
-Root tasks are not always actions.
+Root tasks are not normal action items.
 
-They can behave like:
+They should primarily behave like:
 
 - project names
 - tags
 - categories
 - work themes
+- section headings
 
 Example:
 
@@ -58,7 +59,16 @@ Example:
   └ GitHub Pagesを設定する
 ```
 
-In the list view, the root task can be shown as context while child tasks become the actual action items.
+The root task gives context. The child tasks are the things the user actually does.
+
+```text
+Root task  = context / heading
+Child task = executable action
+```
+
+In the list view, the root task should be shown as context while child tasks become the actual action items. Root tasks should not usually appear as rows with done / todo controls.
+
+On the board, root tasks can still appear as cards because they are the visible starting points of flows.
 
 ---
 
