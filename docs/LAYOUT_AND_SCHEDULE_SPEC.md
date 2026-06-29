@@ -80,6 +80,8 @@ Meanings:
 - `date`: date is set, time is not set
 - `datetime`: date and time are both set
 
+Migration from the current `targetAt` field should follow [`SCHEDULE_MIGRATION_PLAN.md`](SCHEDULE_MIGRATION_PLAN.md).
+
 ---
 
 ## Layout modes
