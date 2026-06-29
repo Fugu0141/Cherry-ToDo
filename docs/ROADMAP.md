@@ -14,7 +14,7 @@ Goal: make the repository understandable as a standalone open-source project.
 - [x] Move project specifications into `docs/`.
 - [x] Add originality review notes.
 - [x] Review remaining old internal names and keep only compatibility-related ones.
-- [ ] Confirm GitHub Pages deployment settings. See [#1](https://github.com/Fugu0141/Cherry-ToDo/issues/1).
+- [x] Confirm GitHub Pages deployment settings. See [#1](https://github.com/Fugu0141/Cherry-ToDo/issues/1).
 - [x] Create initial issues for planned work.
 
 Notes:
