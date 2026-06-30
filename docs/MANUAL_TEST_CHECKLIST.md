@@ -87,6 +87,15 @@ http://localhost:8000/
 - [ ] Link lines update after drag, edit, delete, and undo.
 - [ ] Board size grows enough to show all task cards.
 
+### Same-day subflow behavior
+
+- [ ] Parent and same-branch child with the same date extend inside the same date area instead of becoming a plain vertical stack.
+- [ ] Multiple same-date same-branch tasks keep a left-to-right flow on desktop.
+- [ ] Multiple same-date same-branch tasks keep a top-to-bottom flow on mobile width.
+- [ ] Same-date branch children stay readable on separate tracks.
+- [ ] A widened same-date lane does not hide the next date label or next date line.
+- [ ] Dragging a task into or across a widened same-date lane still picks the expected date.
+
 ---
 
 ## Storage compatibility
@@ -109,6 +118,7 @@ http://localhost:8000/
 - [ ] Modals fit on the screen.
 - [ ] List view rows remain readable on a mobile-sized viewport.
 - [ ] List view done / todo and board-open controls are easy to tap.
+- [ ] Same-day expanded lanes remain scrollable and readable in vertical mode.
 
 ---
 
