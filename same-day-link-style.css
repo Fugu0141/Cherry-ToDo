@@ -1,0 +1,30 @@
+.linkPath.sameDayLink {
+  stroke-dasharray: 7 7;
+  stroke-linecap: round;
+}
+
+.linkPath.sameDayLink.defaultLink {
+  stroke: rgba(25, 25, 25, .20) !important;
+  stroke-width: 2.5 !important;
+}
+
+.linkPath.sameDayLink.focusedLink {
+  stroke-dasharray: 9 7;
+  stroke-width: 4.5 !important;
+}
+
+.linkPath.sameDayLink.doneLink,
+.linkPath.sameDayLink.mutedLink,
+.linkPath.sameDayLink.collapsedLink {
+  stroke: rgba(80, 80, 90, .08) !important;
+  stroke-width: 2.5 !important;
+}
+
+@media (max-width: 980px) {
+  .linkPath.sameDayLink.defaultLink,
+  .linkPath.sameDayLink.doneLink,
+  .linkPath.sameDayLink.mutedLink,
+  .linkPath.sameDayLink.collapsedLink {
+    stroke-width: 2.25 !important;
+  }
+}
