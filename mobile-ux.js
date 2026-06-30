@@ -117,7 +117,7 @@
     if (!mobileViewportQuery.matches) {
       rootStyle.removeProperty("--mobile-visual-viewport-top");
       rootStyle.removeProperty("--mobile-visual-viewport-height");
-      document.body.classList.remove("mobileKeyboardOpen");
+      document.body.classList.remove("mobileKeyboardOpen", "mobileModalInputActive");
       return;
     }
 
@@ -125,20 +125,32 @@
     const height = Math.max(320, Math.round(viewport?.height || window.innerHeight || document.documentElement.clientHeight || 520));
     const top = Math.max(0, Math.round(viewport?.offsetTop || 0));
     const layoutHeight = Math.round(window.innerHeight || document.documentElement.clientHeight || height);
-    const keyboardLikelyOpen = Boolean(activeModalInput()) && height < layoutHeight - 72;
+    const inputActive = Boolean(activeModalInput());
+    const keyboardLikelyOpen = inputActive && height < layoutHeight - 72;
 
     rootStyle.setProperty("--mobile-visual-viewport-top", `${top}px`);
     rootStyle.setProperty("--mobile-visual-viewport-height", `${height}px`);
+    document.body.classList.toggle("mobileModalInputActive", inputActive);
     document.body.classList.toggle("mobileKeyboardOpen", keyboardLikelyOpen);
 
+    scheduleFocusedFieldReveal();
+  }
+
+  function scheduleFocusedFieldReveal() {
     requestAnimationFrame(keepFocusedFieldVisible);
+    setTimeout(keepFocusedFieldVisible, 90);
+    setTimeout(keepFocusedFieldVisible, 240);
+    setTimeout(keepFocusedFieldVisible, 420);
   }
 
   function keepFocusedFieldVisible() {
     const input = activeModalInput();
-    if (!input) return;
+    const modal = activeMobileModal();
+    if (!input || !modal) return;
 
-    input.scrollIntoView({ block: "nearest", inline: "nearest" });
+    const desiredTop = Math.max(0, input.offsetTop - 58);
+    const maxScroll = Math.max(0, modal.scrollHeight - modal.clientHeight);
+    modal.scrollTop = Math.min(desiredTop, maxScroll);
   }
 
   ensureContentSize = function() {
