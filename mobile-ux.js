@@ -2,7 +2,7 @@
   const mobileViewportQuery = window.matchMedia("(max-width: 980px)");
   const baseEnsureContentSize = typeof ensureContentSize === "function" ? ensureContentSize : null;
   const rootStyle = document.documentElement.style;
-  const minImeOffset = 80;
+  const visibleGap = 8;
 
   if (!baseEnsureContentSize) return;
 
@@ -114,27 +114,29 @@
       : null;
   }
 
-  function layoutHeight() {
-    return Math.max(
-      window.innerHeight || 0,
-      document.documentElement.clientHeight || 0,
-      window.visualViewport?.height || 0
-    );
+  function visualHeight() {
+    return Math.max(260, Math.round(window.visualViewport?.height || window.innerHeight || document.documentElement.clientHeight || 520));
   }
 
-  function imeOffset() {
-    if (!activeModalInput()) return 0;
+  function readCurrentOffset() {
+    const value = getComputedStyle(document.documentElement).getPropertyValue("--mobile-ime-offset");
+    const parsed = Number.parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
 
-    const viewport = window.visualViewport;
-    if (!viewport) return 0;
+  function neededOffset() {
+    const modal = activeMobileModal();
+    if (!activeModalInput() || !modal) return 0;
 
-    const fullHeight = layoutHeight();
-    const visibleHeight = viewport.height || fullHeight;
-    const byHeight = Math.max(0, fullHeight - visibleHeight);
-    const byBottom = Math.max(0, fullHeight - (viewport.offsetTop || 0) - visibleHeight);
-    const offset = Math.max(byHeight, byBottom);
+    const currentOffset = readCurrentOffset();
+    const rect = modal.getBoundingClientRect();
+    const unshiftedTop = rect.top + currentOffset;
+    const unshiftedBottom = rect.bottom + currentOffset;
+    const maxVisibleBottom = visualHeight() - visibleGap;
 
-    return offset >= minImeOffset ? Math.round(offset) : 0;
+    const overlap = Math.max(0, unshiftedBottom - maxVisibleBottom);
+    const safeTopLimit = Math.max(0, unshiftedTop - visibleGap);
+    return Math.round(Math.min(overlap, safeTopLimit));
   }
 
   function updateMobileViewportVars() {
@@ -146,12 +148,11 @@
     }
 
     const inputActive = Boolean(activeModalInput());
-    const fullHeight = layoutHeight();
-    const offset = imeOffset();
-    const visibleHeight = Math.max(260, fullHeight - offset);
+    const availableHeight = visualHeight();
+    const offset = neededOffset();
 
     rootStyle.setProperty("--mobile-ime-offset", `${offset}px`);
-    rootStyle.setProperty("--mobile-visible-height", `${visibleHeight}px`);
+    rootStyle.setProperty("--mobile-visible-height", `${availableHeight}px`);
     document.body.classList.toggle("mobileModalInputActive", inputActive);
     document.body.classList.toggle("mobileImeOpen", offset > 0);
 
