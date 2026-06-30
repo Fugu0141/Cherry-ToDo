@@ -141,18 +141,21 @@ http://localhost:8000/
 - [ ] List view done / todo and board-open controls are easy to tap.
 - [ ] Same-day expanded lanes remain scrollable and readable in vertical mode.
 
-### Mobile action bar behavior
+### Mobile action dock behavior
 
-- [ ] Selecting a task on mobile shows the bottom action bar.
-- [ ] Deselecting a task hides the bottom action bar.
+- [ ] Selecting a task on mobile shows the action dock near the selected note, not fixed to the bottom edge.
+- [ ] The dock appears below the note when there is room and above/inside the viewport when there is not.
+- [ ] The dock stays inside the viewport near left and right edges.
+- [ ] The dock follows the selected note while scrolling.
+- [ ] Deselecting a task hides the dock.
 - [ ] The card-level done, delete, and add controls do not overlap the task body on mobile.
-- [ ] The action bar can toggle done / todo.
-- [ ] The action bar can create a same-branch child task.
-- [ ] The action bar can open edit mode for the selected task.
+- [ ] The dock can toggle done / todo.
+- [ ] The dock can create a same-branch child task.
+- [ ] The dock can open edit mode for the selected task.
 - [ ] The fourth action requires two taps within the short guard window.
 - [ ] A single accidental fourth-action tap does not change the board.
 - [ ] Selecting another task resets the fourth-action guard state.
-- [ ] Opening a modal hides the action bar until the modal closes.
+- [ ] Opening a modal hides the dock until the modal closes.
 - [ ] Desktop card controls are unchanged.
 
 ### Mobile bottom sheet behavior
