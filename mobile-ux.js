@@ -87,18 +87,16 @@
     });
   }
 
-  function clampScrollAfterLayout() {
-    requestAnimationFrame(() => {
-      if (isMobileVerticalBoard()) {
-        const maxLeft = Math.max(0, contentWidth - board.clientWidth);
-        if (board.scrollLeft > maxLeft) board.scrollLeft = maxLeft;
-      }
+  function clampScrollToContent() {
+    if (isMobileVerticalBoard()) {
+      const maxLeft = Math.max(0, contentWidth - board.clientWidth);
+      if (board.scrollLeft > maxLeft) board.scrollLeft = maxLeft;
+    }
 
-      if (isDesktopHorizontalBoard()) {
-        const maxTop = Math.max(0, contentHeight - board.clientHeight);
-        if (board.scrollTop > maxTop) board.scrollTop = maxTop;
-      }
-    });
+    if (isDesktopHorizontalBoard()) {
+      const maxTop = Math.max(0, contentHeight - board.clientHeight);
+      if (board.scrollTop > maxTop) board.scrollTop = maxTop;
+    }
   }
 
   ensureContentSize = function() {
@@ -115,8 +113,10 @@
       applyLayerHeight(contentHeight);
     }
 
-    clampScrollAfterLayout();
+    clampScrollToContent();
   };
+
+  board.addEventListener("scroll", clampScrollToContent, { passive: true });
 
   mobileViewportQuery.addEventListener("change", () => {
     if (typeof requestRender === "function") requestRender();
