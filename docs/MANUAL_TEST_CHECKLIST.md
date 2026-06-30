@@ -69,6 +69,7 @@ http://localhost:8000/
 
 - [ ] The `リスト表示` button switches from board view to list view.
 - [ ] The `ボード表示` button switches back from list view to board view.
+- [ ] The list shows unscheduled action tasks in the `未定` section.
 - [ ] The list shows today's or overdue tasks in the `今日まで` section.
 - [ ] The list shows future tasks in the `今後` section.
 - [ ] Tasks are grouped by their root task.
@@ -103,8 +104,18 @@ http://localhost:8000/
 - [ ] Existing data under `quest-sticky-todo-v10` loads correctly.
 - [ ] Older compatible keys still load when no v10 data exists.
 - [ ] New changes save back to the current storage key.
-- [ ] Reloading the page preserves tasks, dates, status, and branches.
+- [ ] Reloading the page preserves tasks, dates, status, branches, and schedule objects.
 - [ ] Reset only clears the app state after confirmation.
+
+### Schedule migration behavior
+
+- [ ] Old tasks with only `targetAt` load as `schedule.type = "date"`.
+- [ ] Missing `targetAt` and missing `schedule` become `schedule.type = "none"`.
+- [ ] Invalid `targetAt` values become `schedule.type = "none"` and do not become today.
+- [ ] Existing valid `schedule` is authoritative over legacy `targetAt`.
+- [ ] Editing a dated task dual-writes `schedule.date` and legacy `targetAt`.
+- [ ] Clearing a task date input saves the task as `schedule.type = "none"`.
+- [ ] Unscheduled tasks do not create a date lane from their invalid or missing legacy date.
 
 ---
 
