@@ -3,6 +3,8 @@
   const baseEnsureContentSize = typeof ensureContentSize === "function" ? ensureContentSize : null;
   const rootStyle = document.documentElement.style;
   const visibleGap = 8;
+  let modalActionLocked = false;
+  let unlockTimer = null;
 
   if (!baseEnsureContentSize) return;
 
@@ -114,47 +116,64 @@
       : null;
   }
 
-  function visualHeight() {
-    return Math.max(260, Math.round(window.visualViewport?.height || window.innerHeight || document.documentElement.clientHeight || 520));
+  function visualViewportMetrics() {
+    const viewport = window.visualViewport;
+    const layoutHeight = window.innerHeight || document.documentElement.clientHeight || 520;
+    const height = Math.max(260, Math.round(viewport?.height || layoutHeight));
+    const top = Math.max(0, Math.round(viewport?.offsetTop || 0));
+
+    return { top, height, bottom: top + height, layoutHeight };
   }
 
-  function readCurrentOffset() {
-    const value = getComputedStyle(document.documentElement).getPropertyValue("--mobile-ime-offset");
+  function readCurrentShift() {
+    const value = getComputedStyle(document.documentElement).getPropertyValue("--mobile-modal-shift-y");
     const parsed = Number.parseFloat(value);
     return Number.isFinite(parsed) ? parsed : 0;
   }
 
-  function neededOffset() {
+  function neededShift() {
     const modal = activeMobileModal();
     if (!activeModalInput() || !modal) return 0;
 
-    const currentOffset = readCurrentOffset();
+    const currentShift = readCurrentShift();
     const rect = modal.getBoundingClientRect();
-    const unshiftedTop = rect.top + currentOffset;
-    const unshiftedBottom = rect.bottom + currentOffset;
-    const maxVisibleBottom = visualHeight() - visibleGap;
+    const metrics = visualViewportMetrics();
+    const safeTop = metrics.top + visibleGap;
+    const safeBottom = metrics.bottom - visibleGap;
+    const naturalTop = rect.top - currentShift;
+    const naturalBottom = rect.bottom - currentShift;
 
-    const overlap = Math.max(0, unshiftedBottom - maxVisibleBottom);
-    const safeTopLimit = Math.max(0, unshiftedTop - visibleGap);
-    return Math.round(Math.min(overlap, safeTopLimit));
+    const overlap = Math.max(0, naturalBottom - safeBottom);
+    const upwardRoom = Math.max(0, naturalTop - safeTop);
+    const shift = -Math.min(overlap, upwardRoom);
+
+    return Math.round(shift);
+  }
+
+  function keyboardProbablyOpen(metrics, inputActive, shift) {
+    return inputActive && (shift < 0 || metrics.height < metrics.layoutHeight - 96);
   }
 
   function updateMobileViewportVars() {
     if (!mobileViewportQuery.matches) {
+      rootStyle.removeProperty("--mobile-modal-shift-y");
       rootStyle.removeProperty("--mobile-ime-offset");
       rootStyle.removeProperty("--mobile-visible-height");
       document.body.classList.remove("mobileImeOpen", "mobileModalInputActive");
       return;
     }
 
-    const inputActive = Boolean(activeModalInput());
-    const availableHeight = visualHeight();
-    const offset = neededOffset();
+    if (modalActionLocked) return;
 
-    rootStyle.setProperty("--mobile-ime-offset", `${offset}px`);
-    rootStyle.setProperty("--mobile-visible-height", `${availableHeight}px`);
+    const inputActive = Boolean(activeModalInput());
+    const metrics = visualViewportMetrics();
+    const shift = neededShift();
+
+    rootStyle.setProperty("--mobile-modal-shift-y", `${shift}px`);
+    rootStyle.setProperty("--mobile-ime-offset", `${Math.abs(shift)}px`);
+    rootStyle.setProperty("--mobile-visible-height", `${metrics.height}px`);
     document.body.classList.toggle("mobileModalInputActive", inputActive);
-    document.body.classList.toggle("mobileImeOpen", offset > 0);
+    document.body.classList.toggle("mobileImeOpen", keyboardProbablyOpen(metrics, inputActive, shift));
 
     scheduleFocusedFieldReveal();
   }
@@ -169,11 +188,27 @@
   function keepFocusedFieldVisible() {
     const input = activeModalInput();
     const modal = activeMobileModal();
-    if (!input || !modal) return;
+    if (!input || !modal || modal.scrollHeight <= modal.clientHeight + 2) return;
+
+    const metrics = visualViewportMetrics();
+    const inputRect = input.getBoundingClientRect();
+    const safeTop = metrics.top + 48;
+    const safeBottom = metrics.bottom - 88;
+
+    if (inputRect.top >= safeTop && inputRect.bottom <= safeBottom) return;
 
     const desiredTop = Math.max(0, input.offsetTop - 72);
     const maxScroll = Math.max(0, modal.scrollHeight - modal.clientHeight);
     modal.scrollTop = Math.min(desiredTop, maxScroll);
+  }
+
+  function lockModalPositionDuringAction() {
+    modalActionLocked = true;
+    clearTimeout(unlockTimer);
+    unlockTimer = setTimeout(() => {
+      modalActionLocked = false;
+      updateMobileViewportVars();
+    }, 180);
   }
 
   ensureContentSize = function() {
@@ -219,6 +254,7 @@
   });
 
   [taskCancelBtn, taskSaveBtn, dateCancelBtn, dateSaveBtn].forEach(button => {
+    button.addEventListener("pointerdown", lockModalPositionDuringAction);
     button.addEventListener("click", () => requestAnimationFrame(updateMobileViewportVars));
   });
 
