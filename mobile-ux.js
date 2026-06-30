@@ -143,22 +143,25 @@
     const naturalTop = rect.top - currentShift;
     const naturalBottom = rect.bottom - currentShift;
 
-    const overlap = Math.max(0, naturalBottom - safeBottom);
-    const upwardRoom = Math.max(0, naturalTop - safeTop);
-    const shift = -Math.min(overlap, upwardRoom);
+    if (naturalBottom <= safeBottom && naturalTop >= safeTop) return 0;
+
+    const overlapBottom = Math.max(0, naturalBottom - safeBottom);
+    let shift = -overlapBottom;
+
+    if (naturalTop + shift < safeTop) {
+      shift = safeTop - naturalTop;
+    }
 
     return Math.round(shift);
   }
 
   function keyboardProbablyOpen(metrics, inputActive, shift) {
-    return inputActive && (shift < 0 || metrics.height < metrics.layoutHeight - 96);
+    return inputActive && (shift !== 0 || metrics.height < metrics.layoutHeight - 96);
   }
 
   function updateMobileViewportVars() {
     if (!mobileViewportQuery.matches) {
       rootStyle.removeProperty("--mobile-modal-shift-y");
-      rootStyle.removeProperty("--mobile-ime-offset");
-      rootStyle.removeProperty("--mobile-visible-height");
       document.body.classList.remove("mobileImeOpen", "mobileModalInputActive");
       return;
     }
@@ -170,8 +173,6 @@
     const shift = neededShift();
 
     rootStyle.setProperty("--mobile-modal-shift-y", `${shift}px`);
-    rootStyle.setProperty("--mobile-ime-offset", `${Math.abs(shift)}px`);
-    rootStyle.setProperty("--mobile-visible-height", `${metrics.height}px`);
     document.body.classList.toggle("mobileModalInputActive", inputActive);
     document.body.classList.toggle("mobileImeOpen", keyboardProbablyOpen(metrics, inputActive, shift));
 
