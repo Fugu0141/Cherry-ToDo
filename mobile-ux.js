@@ -1,6 +1,7 @@
 (() => {
   const mobileViewportQuery = window.matchMedia("(max-width: 980px)");
   const baseEnsureContentSize = typeof ensureContentSize === "function" ? ensureContentSize : null;
+  const baseSyncMetrics = typeof syncMetrics === "function" ? syncMetrics : null;
 
   if (!baseEnsureContentSize) return;
 
@@ -28,17 +29,35 @@
     return Math.max(360, boardHeight, viewportHeight - 170);
   }
 
+  function mobileBalancedNoteWidth() {
+    const visibleWidth = minimumVisibleWidth();
+    const leftRail = 92;
+    const sidePadding = 30;
+    return Math.max(mobileNoteW, Math.min(260, visibleWidth - leftRail - sidePadding));
+  }
+
+  if (baseSyncMetrics) {
+    syncMetrics = function() {
+      baseSyncMetrics();
+      if (!isMobileVerticalBoard()) return;
+
+      noteW = mobileBalancedNoteWidth();
+      board.style.setProperty("--note-w", `${noteW}px`);
+      board.style.setProperty("--note-h", `${noteH}px`);
+    };
+  }
+
   function compactVerticalContentWidth() {
     let width = minimumVisibleWidth();
 
     for (const task of getTasks()) {
       if (!Number.isFinite(task.x)) continue;
-      width = Math.max(width, task.x + noteW + 64);
+      width = Math.max(width, task.x + noteW + 44);
     }
 
     if (Number.isFinite(maxTrack)) {
       const lastTrack = Math.max(0, maxTrack);
-      width = Math.max(width, vTrackToX(lastTrack) + noteW + 64);
+      width = Math.max(width, vTrackToX(lastTrack) + noteW + 44);
     }
 
     return Math.ceil(width);
