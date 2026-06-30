@@ -105,6 +105,10 @@
     return document.querySelector(".modalBackdrop:not(.hidden) .modal");
   }
 
+  function activeModalBackdrop() {
+    return activeMobileModal()?.closest(".modalBackdrop") || null;
+  }
+
   function activeModalInput() {
     const modal = activeMobileModal();
     const active = document.activeElement;
@@ -113,11 +117,24 @@
       : null;
   }
 
+  function setDockedBackdrop(backdrop) {
+    document.querySelectorAll(".modalBackdrop.keyboardDocked").forEach(el => {
+      if (el !== backdrop) el.classList.remove("keyboardDocked");
+    });
+
+    if (backdrop) backdrop.classList.add("keyboardDocked");
+  }
+
+  function clearDockedBackdrops() {
+    document.querySelectorAll(".modalBackdrop.keyboardDocked").forEach(el => el.classList.remove("keyboardDocked"));
+  }
+
   function updateMobileViewportVars() {
     if (!mobileViewportQuery.matches) {
       rootStyle.removeProperty("--mobile-visual-viewport-top");
       rootStyle.removeProperty("--mobile-visual-viewport-height");
       document.body.classList.remove("mobileKeyboardOpen", "mobileModalInputActive");
+      clearDockedBackdrops();
       return;
     }
 
@@ -125,13 +142,15 @@
     const height = Math.max(320, Math.round(viewport?.height || window.innerHeight || document.documentElement.clientHeight || 520));
     const top = Math.max(0, Math.round(viewport?.offsetTop || 0));
     const layoutHeight = Math.round(window.innerHeight || document.documentElement.clientHeight || height);
-    const inputActive = Boolean(activeModalInput());
+    const input = activeModalInput();
+    const inputActive = Boolean(input);
     const keyboardLikelyOpen = inputActive && height < layoutHeight - 72;
 
     rootStyle.setProperty("--mobile-visual-viewport-top", `${top}px`);
     rootStyle.setProperty("--mobile-visual-viewport-height", `${height}px`);
     document.body.classList.toggle("mobileModalInputActive", inputActive);
     document.body.classList.toggle("mobileKeyboardOpen", keyboardLikelyOpen);
+    setDockedBackdrop(inputActive ? input.closest(".modalBackdrop") : null);
 
     scheduleFocusedFieldReveal();
   }
@@ -185,6 +204,7 @@
 
   document.addEventListener("focusin", event => {
     if (event.target instanceof HTMLElement && event.target.matches("input, textarea, select")) {
+      setDockedBackdrop(event.target.closest(".modalBackdrop"));
       updateMobileViewportVars();
     }
   });
