@@ -1,6 +1,8 @@
 (() => {
   const mobileViewportQuery = window.matchMedia("(max-width: 980px)");
   const baseEnsureContentSize = typeof ensureContentSize === "function" ? ensureContentSize : null;
+  const rootStyle = document.documentElement.style;
+  const visibleGap = 8;
 
   if (!baseEnsureContentSize) return;
 
@@ -99,6 +101,81 @@
     }
   }
 
+  function activeMobileModal() {
+    if (!mobileViewportQuery.matches) return null;
+    return document.querySelector(".modalBackdrop:not(.hidden) .modal");
+  }
+
+  function activeModalInput() {
+    const modal = activeMobileModal();
+    const active = document.activeElement;
+    return modal && active instanceof HTMLElement && modal.contains(active) && active.matches("input, textarea, select")
+      ? active
+      : null;
+  }
+
+  function visualHeight() {
+    return Math.max(260, Math.round(window.visualViewport?.height || window.innerHeight || document.documentElement.clientHeight || 520));
+  }
+
+  function readCurrentOffset() {
+    const value = getComputedStyle(document.documentElement).getPropertyValue("--mobile-ime-offset");
+    const parsed = Number.parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  function neededOffset() {
+    const modal = activeMobileModal();
+    if (!activeModalInput() || !modal) return 0;
+
+    const currentOffset = readCurrentOffset();
+    const rect = modal.getBoundingClientRect();
+    const unshiftedTop = rect.top + currentOffset;
+    const unshiftedBottom = rect.bottom + currentOffset;
+    const maxVisibleBottom = visualHeight() - visibleGap;
+
+    const overlap = Math.max(0, unshiftedBottom - maxVisibleBottom);
+    const safeTopLimit = Math.max(0, unshiftedTop - visibleGap);
+    return Math.round(Math.min(overlap, safeTopLimit));
+  }
+
+  function updateMobileViewportVars() {
+    if (!mobileViewportQuery.matches) {
+      rootStyle.removeProperty("--mobile-ime-offset");
+      rootStyle.removeProperty("--mobile-visible-height");
+      document.body.classList.remove("mobileImeOpen", "mobileModalInputActive");
+      return;
+    }
+
+    const inputActive = Boolean(activeModalInput());
+    const availableHeight = visualHeight();
+    const offset = neededOffset();
+
+    rootStyle.setProperty("--mobile-ime-offset", `${offset}px`);
+    rootStyle.setProperty("--mobile-visible-height", `${availableHeight}px`);
+    document.body.classList.toggle("mobileModalInputActive", inputActive);
+    document.body.classList.toggle("mobileImeOpen", offset > 0);
+
+    scheduleFocusedFieldReveal();
+  }
+
+  function scheduleFocusedFieldReveal() {
+    requestAnimationFrame(keepFocusedFieldVisible);
+    setTimeout(keepFocusedFieldVisible, 80);
+    setTimeout(keepFocusedFieldVisible, 220);
+    setTimeout(keepFocusedFieldVisible, 420);
+  }
+
+  function keepFocusedFieldVisible() {
+    const input = activeModalInput();
+    const modal = activeMobileModal();
+    if (!input || !modal) return;
+
+    const desiredTop = Math.max(0, input.offsetTop - 72);
+    const maxScroll = Math.max(0, modal.scrollHeight - modal.clientHeight);
+    modal.scrollTop = Math.min(desiredTop, maxScroll);
+  }
+
   ensureContentSize = function() {
     baseEnsureContentSize();
     clearManagedInlineSizes();
@@ -114,11 +191,36 @@
     }
 
     clampScrollToContent();
+    updateMobileViewportVars();
   };
 
   board.addEventListener("scroll", clampScrollToContent, { passive: true });
 
   mobileViewportQuery.addEventListener("change", () => {
+    updateMobileViewportVars();
     if (typeof requestRender === "function") requestRender();
   });
+
+  window.addEventListener("resize", updateMobileViewportVars, { passive: true });
+  window.addEventListener("orientationchange", () => requestAnimationFrame(updateMobileViewportVars));
+  window.visualViewport?.addEventListener("resize", updateMobileViewportVars, { passive: true });
+  window.visualViewport?.addEventListener("scroll", updateMobileViewportVars, { passive: true });
+
+  document.addEventListener("focusin", event => {
+    if (event.target instanceof HTMLElement && event.target.matches("input, textarea, select")) {
+      updateMobileViewportVars();
+    }
+  });
+
+  document.addEventListener("focusout", event => {
+    if (event.target instanceof HTMLElement && event.target.matches("input, textarea, select")) {
+      setTimeout(updateMobileViewportVars, 80);
+    }
+  });
+
+  [taskCancelBtn, taskSaveBtn, dateCancelBtn, dateSaveBtn].forEach(button => {
+    button.addEventListener("click", () => requestAnimationFrame(updateMobileViewportVars));
+  });
+
+  updateMobileViewportVars();
 })();
