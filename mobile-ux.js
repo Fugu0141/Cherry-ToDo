@@ -3,6 +3,9 @@
   const baseEnsureContentSize = typeof ensureContentSize === "function" ? ensureContentSize : null;
   const rootStyle = document.documentElement.style;
   const visibleGap = 8;
+  const keyboardThreshold = 80;
+  let closedViewportHeight = 0;
+  let modalPollTimer = null;
 
   if (!baseEnsureContentSize) return;
 
@@ -118,38 +121,108 @@
     return Math.max(260, Math.round(window.visualViewport?.height || window.innerHeight || document.documentElement.clientHeight || 520));
   }
 
-  function readCurrentOffset() {
-    const value = getComputedStyle(document.documentElement).getPropertyValue("--mobile-ime-offset");
-    const parsed = Number.parseFloat(value);
-    return Number.isFinite(parsed) ? parsed : 0;
+  function layoutHeight() {
+    return Math.max(
+      visualHeight(),
+      Math.round(window.innerHeight || 0),
+      Math.round(document.documentElement.clientHeight || 0)
+    );
   }
 
-  function neededOffset() {
-    const modal = activeMobileModal();
-    if (!activeModalInput() || !modal) return 0;
+  function rememberClosedViewportHeight() {
+    const height = layoutHeight();
+    closedViewportHeight = Math.max(closedViewportHeight, height);
+    rootStyle.setProperty("--mobile-closed-height", `${closedViewportHeight}px`);
+  }
 
-    const currentOffset = readCurrentOffset();
+  function keyboardInset() {
+    const viewport = window.visualViewport;
+    const visible = visualHeight();
+    const base = Math.max(closedViewportHeight || 0, layoutHeight(), visible);
+    if (!viewport) return Math.max(0, base - visible);
+    return Math.max(0, base - (viewport.offsetTop || 0) - visible);
+  }
+
+  function isKeyboardOpen() {
+    return Boolean(activeModalInput()) && keyboardInset() >= keyboardThreshold;
+  }
+
+  function measureUnshiftedModalRect(modal) {
+    const previousOffset = rootStyle.getPropertyValue("--mobile-ime-offset");
+    rootStyle.setProperty("--mobile-ime-offset", "0px");
     const rect = modal.getBoundingClientRect();
-    const unshiftedTop = rect.top + currentOffset;
-    const unshiftedBottom = rect.bottom + currentOffset;
-    const maxVisibleBottom = visualHeight() - visibleGap;
 
-    const overlap = Math.max(0, unshiftedBottom - maxVisibleBottom);
-    const safeTopLimit = Math.max(0, unshiftedTop - visibleGap);
+    if (previousOffset) rootStyle.setProperty("--mobile-ime-offset", previousOffset);
+    else rootStyle.removeProperty("--mobile-ime-offset");
+
+    return rect;
+  }
+
+  function centeredOffset() {
+    const modal = activeMobileModal();
+    if (!modal) return 0;
+
+    const rect = measureUnshiftedModalRect(modal);
+    const modalCenter = rect.top + rect.height / 2;
+    const viewportCenter = visualHeight() / 2;
+    const offset = modalCenter - viewportCenter;
+    const maxDownShift = Math.max(0, visualHeight() - rect.bottom - visibleGap);
+    const maxUpShift = Math.max(0, rect.top - visibleGap);
+
+    return Math.round(Math.min(maxUpShift, Math.max(-maxDownShift, offset)));
+  }
+
+  function neededOffset(availableHeight) {
+    const modal = activeMobileModal();
+    if (!isKeyboardOpen() || !modal) return centeredOffset();
+
+    const rect = measureUnshiftedModalRect(modal);
+    const maxVisibleBottom = availableHeight - visibleGap;
+
+    const overlap = Math.max(0, rect.bottom - maxVisibleBottom);
+    const safeTopLimit = Math.max(0, rect.top - visibleGap);
     return Math.round(Math.min(overlap, safeTopLimit));
+  }
+
+  function resetMobileViewportVars() {
+    const offset = centeredOffset();
+    rootStyle.setProperty("--mobile-ime-offset", `${offset}px`);
+    rootStyle.setProperty("--mobile-visible-height", `${closedViewportHeight || layoutHeight()}px`);
+    document.body.classList.remove("mobileImeOpen", "mobileModalInputActive");
   }
 
   function updateMobileViewportVars() {
     if (!mobileViewportQuery.matches) {
       rootStyle.removeProperty("--mobile-ime-offset");
       rootStyle.removeProperty("--mobile-visible-height");
+      rootStyle.removeProperty("--mobile-closed-height");
       document.body.classList.remove("mobileImeOpen", "mobileModalInputActive");
+      stopModalPoll();
       return;
     }
 
+    const modal = activeMobileModal();
+    if (!modal) {
+      rootStyle.setProperty("--mobile-ime-offset", "0px");
+      rootStyle.setProperty("--mobile-visible-height", `${closedViewportHeight || layoutHeight()}px`);
+      document.body.classList.remove("mobileImeOpen", "mobileModalInputActive");
+      stopModalPoll();
+      return;
+    }
+
+    startModalPoll();
+
     const inputActive = Boolean(activeModalInput());
+    const keyboardOpen = isKeyboardOpen();
+
+    if (!keyboardOpen) {
+      rememberClosedViewportHeight();
+      resetMobileViewportVars();
+      return;
+    }
+
     const availableHeight = visualHeight();
-    const offset = neededOffset();
+    const offset = neededOffset(availableHeight);
 
     rootStyle.setProperty("--mobile-ime-offset", `${offset}px`);
     rootStyle.setProperty("--mobile-visible-height", `${availableHeight}px`);
@@ -157,6 +230,17 @@
     document.body.classList.toggle("mobileImeOpen", offset > 0);
 
     scheduleFocusedFieldReveal();
+  }
+
+  function startModalPoll() {
+    if (modalPollTimer) return;
+    modalPollTimer = window.setInterval(updateMobileViewportVars, 180);
+  }
+
+  function stopModalPoll() {
+    if (!modalPollTimer) return;
+    window.clearInterval(modalPollTimer);
+    modalPollTimer = null;
   }
 
   function scheduleFocusedFieldReveal() {
@@ -167,6 +251,7 @@
   }
 
   function keepFocusedFieldVisible() {
+    if (!isKeyboardOpen()) return;
     const input = activeModalInput();
     const modal = activeMobileModal();
     if (!input || !modal) return;
@@ -215,12 +300,28 @@
   document.addEventListener("focusout", event => {
     if (event.target instanceof HTMLElement && event.target.matches("input, textarea, select")) {
       setTimeout(updateMobileViewportVars, 80);
+      setTimeout(updateMobileViewportVars, 260);
     }
+  });
+
+  [taskModal, dateModal].forEach(modalRoot => {
+    if (!modalRoot) return;
+    new MutationObserver(() => {
+      if (!modalRoot.classList.contains("hidden")) {
+        rememberClosedViewportHeight();
+        resetMobileViewportVars();
+        startModalPoll();
+        requestAnimationFrame(updateMobileViewportVars);
+      } else {
+        requestAnimationFrame(updateMobileViewportVars);
+      }
+    }).observe(modalRoot, { attributes: true, attributeFilter: ["class"] });
   });
 
   [taskCancelBtn, taskSaveBtn, dateCancelBtn, dateSaveBtn].forEach(button => {
     button.addEventListener("click", () => requestAnimationFrame(updateMobileViewportVars));
   });
 
+  rememberClosedViewportHeight();
   updateMobileViewportVars();
 })();
