@@ -152,9 +152,7 @@ http://localhost:8000/
 - [ ] The dock can toggle done / todo.
 - [ ] The dock can create a same-branch child task.
 - [ ] The dock can open edit mode for the selected task.
-- [ ] The fourth action requires two taps within the short guard window.
-- [ ] A single accidental fourth-action tap does not change the board.
-- [ ] Selecting another task resets the fourth-action guard state.
+- [ ] The dock delete button is labeled `削除` and opens the same confirmation flow as the desktop toolbar.
 - [ ] Opening a modal hides the dock until the modal closes.
 - [ ] Desktop card controls are unchanged.
 
