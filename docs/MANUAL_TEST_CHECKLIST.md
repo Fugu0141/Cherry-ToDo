@@ -120,6 +120,15 @@ http://localhost:8000/
 - [ ] List view done / todo and board-open controls are easy to tap.
 - [ ] Same-day expanded lanes remain scrollable and readable in vertical mode.
 
+### Mobile bottom sheet behavior
+
+- [ ] Task creation opens as a bottom sheet at mobile width.
+- [ ] Date-change UI opens as a bottom sheet at mobile width.
+- [ ] Inputs are large enough to edit without accidental zoom or missed taps.
+- [ ] Cancel and confirm actions are both easy to tap near the bottom edge.
+- [ ] The bottom sheet respects the mobile viewport height and remains scrollable when needed.
+- [ ] Desktop modal layout is unchanged.
+
 ---
 
 ## Regression notes
