@@ -2,6 +2,7 @@
   const mobileViewportQuery = window.matchMedia("(max-width: 980px)");
   const baseEnsureContentSize = typeof ensureContentSize === "function" ? ensureContentSize : null;
   const rootStyle = document.documentElement.style;
+  const minImeOffset = 80;
 
   if (!baseEnsureContentSize) return;
 
@@ -113,30 +114,54 @@
       : null;
   }
 
+  function layoutHeight() {
+    return Math.max(
+      window.innerHeight || 0,
+      document.documentElement.clientHeight || 0,
+      window.visualViewport?.height || 0
+    );
+  }
+
+  function imeOffset() {
+    if (!activeModalInput()) return 0;
+
+    const viewport = window.visualViewport;
+    if (!viewport) return 0;
+
+    const fullHeight = layoutHeight();
+    const visibleHeight = viewport.height || fullHeight;
+    const byHeight = Math.max(0, fullHeight - visibleHeight);
+    const byBottom = Math.max(0, fullHeight - (viewport.offsetTop || 0) - visibleHeight);
+    const offset = Math.max(byHeight, byBottom);
+
+    return offset >= minImeOffset ? Math.round(offset) : 0;
+  }
+
   function updateMobileViewportVars() {
     if (!mobileViewportQuery.matches) {
-      rootStyle.removeProperty("--mobile-visual-viewport-height");
-      document.body.classList.remove("mobileKeyboardOpen", "mobileModalInputActive");
+      rootStyle.removeProperty("--mobile-ime-offset");
+      rootStyle.removeProperty("--mobile-visible-height");
+      document.body.classList.remove("mobileImeOpen", "mobileModalInputActive");
       return;
     }
 
-    const viewport = window.visualViewport;
-    const height = Math.max(320, Math.round(viewport?.height || window.innerHeight || document.documentElement.clientHeight || 520));
-    const layoutHeight = Math.round(window.innerHeight || document.documentElement.clientHeight || height);
     const inputActive = Boolean(activeModalInput());
-    const keyboardLikelyOpen = inputActive && height < layoutHeight - 72;
+    const fullHeight = layoutHeight();
+    const offset = imeOffset();
+    const visibleHeight = Math.max(260, fullHeight - offset);
 
-    rootStyle.setProperty("--mobile-visual-viewport-height", `${height}px`);
+    rootStyle.setProperty("--mobile-ime-offset", `${offset}px`);
+    rootStyle.setProperty("--mobile-visible-height", `${visibleHeight}px`);
     document.body.classList.toggle("mobileModalInputActive", inputActive);
-    document.body.classList.toggle("mobileKeyboardOpen", keyboardLikelyOpen);
+    document.body.classList.toggle("mobileImeOpen", offset > 0);
 
     scheduleFocusedFieldReveal();
   }
 
   function scheduleFocusedFieldReveal() {
     requestAnimationFrame(keepFocusedFieldVisible);
-    setTimeout(keepFocusedFieldVisible, 90);
-    setTimeout(keepFocusedFieldVisible, 240);
+    setTimeout(keepFocusedFieldVisible, 80);
+    setTimeout(keepFocusedFieldVisible, 220);
     setTimeout(keepFocusedFieldVisible, 420);
   }
 
@@ -145,7 +170,7 @@
     const modal = activeMobileModal();
     if (!input || !modal) return;
 
-    const desiredTop = Math.max(0, input.offsetTop - 58);
+    const desiredTop = Math.max(0, input.offsetTop - 72);
     const maxScroll = Math.max(0, modal.scrollHeight - modal.clientHeight);
     modal.scrollTop = Math.min(desiredTop, maxScroll);
   }
