@@ -120,6 +120,13 @@ http://localhost:8000/
 - [ ] List view done / todo and board-open controls are easy to tap.
 - [ ] Same-day expanded lanes remain scrollable and readable in vertical mode.
 
+### Mobile scroll boundary behavior
+
+- [ ] With few or no tasks, the mobile board does not allow meaningless horizontal scrolling into blank space.
+- [ ] The visible board reaches a natural horizontal end instead of feeling infinite.
+- [ ] Creating a branch that needs another track still expands the board enough to reach that track.
+- [ ] Date lane bands and lines fill the compact mobile board width.
+
 ### Mobile bottom sheet behavior
 
 - [ ] Task creation opens as a bottom sheet at mobile width.
