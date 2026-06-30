@@ -150,7 +150,9 @@ http://localhost:8000/
 - [ ] Deselecting a task hides the dock.
 - [ ] The card-level done, delete, and add controls do not overlap the task body on mobile.
 - [ ] The dock can toggle done / todo.
-- [ ] The dock can create a same-branch child task.
+- [ ] The dock can create a child branch task from the selected task.
+- [ ] Repeated dock `＋追加` from the same selected parent creates sibling branches, not a linear same-branch chain.
+- [ ] After saving a dock-created task, the original parent stays selected so another tap adds another sibling.
 - [ ] The dock can open edit mode for the selected task.
 - [ ] The dock delete button is labeled `削除` and opens the same confirmation flow as the desktop toolbar.
 - [ ] Opening a modal hides the dock until the modal closes.
