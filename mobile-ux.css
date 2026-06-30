@@ -14,6 +14,8 @@
     background: rgba(18, 22, 32, .42);
   }
 
+  .modalBackdrop:focus-within,
+  .modalBackdrop.keyboardDocked,
   body.mobileModalInputActive .modalBackdrop {
     align-items: flex-start;
   }
@@ -33,13 +35,12 @@
     animation: mobileSheetUp .16s ease-out;
   }
 
-  body.mobileModalInputActive .modal {
-    max-height: min(calc(var(--mobile-visual-viewport-height, 100dvh) - 8px), 52dvh, 560px);
-    border-radius: 0 0 24px 24px;
-  }
-
+  .modalBackdrop:focus-within .modal,
+  .modalBackdrop.keyboardDocked .modal,
+  body.mobileModalInputActive .modal,
   body.mobileKeyboardOpen .modal {
-    max-height: min(calc(var(--mobile-visual-viewport-height, 100dvh) - 8px), 52dvh, 560px);
+    max-height: min(calc(var(--mobile-visual-viewport-height, 100dvh) - 8px), 42dvh, 560px);
+    border-radius: 0 0 24px 24px;
   }
 
   .smallModal {
@@ -56,6 +57,8 @@
     background: rgba(31, 41, 55, .22);
   }
 
+  .modalBackdrop:focus-within .modal::before,
+  .modalBackdrop.keyboardDocked .modal::before,
   body.mobileModalInputActive .modal::before {
     display: none;
   }
@@ -94,6 +97,8 @@
     background: linear-gradient(180deg, rgba(255,255,255,.82), #fff 38%);
   }
 
+  .modalBackdrop:focus-within .modalActions,
+  .modalBackdrop.keyboardDocked .modalActions,
   body.mobileModalInputActive .modalActions {
     padding-bottom: 14px;
   }
