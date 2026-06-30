@@ -33,6 +33,11 @@
     requestRender();
   });
 
+  function scheduleDate(task) {
+    if (typeof getTaskDate === "function") return getTaskDate(task);
+    return task.targetAt ? normalizeDate(task.targetAt) : null;
+  }
+
   function renderListView() {
     const isListMode = state.viewMode === "list";
     stage.classList.toggle("listMode", isListMode);
@@ -56,7 +61,7 @@
     const title = document.createElement("h2");
     title.textContent = "実行リスト";
     const lead = document.createElement("p");
-    lead.textContent = "ルートを見出しとして、今日までと今後の実行タスクを確認できます。";
+    lead.textContent = "ルートを見出しとして、未定・今日まで・今後の実行タスクを確認できます。";
     titleWrap.appendChild(title);
     titleWrap.appendChild(lead);
 
@@ -71,16 +76,28 @@
     const today = todayISO();
     const sections = [
       {
+        key: "unscheduled",
+        title: "未定",
+        description: "まだ日付を決めていない実行タスクです。今日扱いにはしません。",
+        tasks: actionTasks.filter(task => !scheduleDate(task))
+      },
+      {
         key: "today",
         title: "今日まで",
         description: "今日以前の未処理を見落とさないための場所です。",
-        tasks: actionTasks.filter(task => normalizeDate(task.targetAt) <= today)
+        tasks: actionTasks.filter(task => {
+          const date = scheduleDate(task);
+          return date && date <= today;
+        })
       },
       {
         key: "upcoming",
         title: "今後",
         description: "明日以降のタスクです。",
-        tasks: actionTasks.filter(task => normalizeDate(task.targetAt) > today)
+        tasks: actionTasks.filter(task => {
+          const date = scheduleDate(task);
+          return date && date > today;
+        })
       }
     ];
 
@@ -112,7 +129,9 @@
     if (!section.tasks.length) {
       const empty = document.createElement("div");
       empty.className = "listEmpty";
-      empty.textContent = section.key === "today" ? "今日までの実行タスクはありません。" : "今後の実行タスクはありません。";
+      empty.textContent = section.key === "unscheduled"
+        ? "未定の実行タスクはありません。"
+        : section.key === "today" ? "今日までの実行タスクはありません。" : "今後の実行タスクはありません。";
       sectionEl.appendChild(empty);
       listView.appendChild(sectionEl);
       return;
@@ -168,7 +187,7 @@
 
     const date = document.createElement("span");
     date.className = "listTaskDate";
-    date.textContent = formatTaskDate(task.targetAt);
+    date.textContent = formatTaskDate(task);
 
     titleLine.appendChild(title);
     titleLine.appendChild(date);
@@ -268,13 +287,17 @@
     return names.length ? names.join(" → ") : "ルート直下";
   }
 
-  function formatTaskDate(date) {
+  function formatTaskDate(task) {
+    const date = scheduleDate(task);
+    if (!date) return "未定";
     const parts = formatDateParts(date);
     return `${parts.month}/${parts.day}`;
   }
 
   function sortByListOrder(a, b) {
-    const dateDiff = normalizeDate(a.targetAt).localeCompare(normalizeDate(b.targetAt));
+    const dateA = scheduleDate(a) || "9999-12-31";
+    const dateB = scheduleDate(b) || "9999-12-31";
+    const dateDiff = dateA.localeCompare(dateB);
     if (dateDiff !== 0) return dateDiff;
 
     const rootA = getRootTask(a);
