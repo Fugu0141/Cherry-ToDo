@@ -1,6 +1,7 @@
 @media (max-width: 980px) {
   :root {
     --mobile-ime-offset: 0px;
+    --mobile-visible-height: 100dvh;
   }
 
   .modalBackdrop {
@@ -20,12 +21,9 @@
 
   .modal {
     position: relative !important;
-    flex: 0 0 auto !important;
     width: 100% !important;
     max-width: none !important;
-    height: auto !important;
-    min-height: 0 !important;
-    max-height: 72dvh !important;
+    max-height: min(78dvh, calc(var(--mobile-visible-height, 100dvh) - 16px)) !important;
     margin: 0 !important;
     padding: 22px 18px calc(18px + env(safe-area-inset-bottom)) !important;
     border-radius: 24px 24px 0 0 !important;
@@ -33,7 +31,7 @@
     overscroll-behavior: contain !important;
     -webkit-overflow-scrolling: touch !important;
     transform: translate3d(0, calc(-1 * var(--mobile-ime-offset, 0px)), 0) !important;
-    transition: transform .16s ease, border-radius .16s ease !important;
+    transition: transform .16s ease, max-height .16s ease, border-radius .16s ease !important;
     will-change: transform !important;
     box-shadow: 0 -14px 38px rgba(0,0,0,.22) !important;
     animation: none !important;
@@ -41,7 +39,7 @@
 
   body.mobileImeOpen .modal,
   body.mobileModalInputActive .modal {
-    max-height: min(72dvh, calc(100dvh - var(--mobile-ime-offset, 0px) - 16px)) !important;
+    max-height: calc(var(--mobile-visible-height, 100dvh) - 16px) !important;
     border-radius: 20px !important;
   }
 
