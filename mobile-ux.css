@@ -7,40 +7,26 @@
   .modalBackdrop {
     inset: var(--mobile-visual-viewport-top, 0px) 0 auto 0;
     display: flex;
-    align-items: flex-end;
+    align-items: flex-start;
     justify-content: center;
     height: var(--mobile-visual-viewport-height, 100dvh);
-    padding: 0;
+    padding: 12px 10px 0;
     background: rgba(18, 22, 32, .42);
-  }
-
-  .modalBackdrop:focus-within,
-  .modalBackdrop.keyboardDocked,
-  body.mobileModalInputActive .modalBackdrop {
-    align-items: flex-start;
   }
 
   .modal {
     position: relative;
     width: 100%;
     max-width: none;
-    max-height: min(calc(var(--mobile-visual-viewport-height, 100dvh) - 12px), 560px);
+    max-height: min(calc(var(--mobile-visual-viewport-height, 100dvh) - 24px), 48dvh, 520px);
     margin: 0;
-    padding: 24px 18px calc(18px + env(safe-area-inset-bottom));
-    border-radius: 24px 24px 0 0;
+    padding: 18px 18px calc(18px + env(safe-area-inset-bottom));
+    border-radius: 22px;
     overflow: auto;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
-    box-shadow: 0 -14px 38px rgba(0,0,0,.22);
-    animation: mobileSheetUp .16s ease-out;
-  }
-
-  .modalBackdrop:focus-within .modal,
-  .modalBackdrop.keyboardDocked .modal,
-  body.mobileModalInputActive .modal,
-  body.mobileKeyboardOpen .modal {
-    max-height: min(calc(var(--mobile-visual-viewport-height, 100dvh) - 8px), 42dvh, 560px);
-    border-radius: 0 0 24px 24px;
+    box-shadow: 0 14px 38px rgba(0,0,0,.24);
+    animation: mobileSheetDown .16s ease-out;
   }
 
   .smallModal {
@@ -48,19 +34,7 @@
   }
 
   .modal::before {
-    content: "";
-    display: block;
-    width: 46px;
-    height: 5px;
-    margin: -8px auto 16px;
-    border-radius: 999px;
-    background: rgba(31, 41, 55, .22);
-  }
-
-  .modalBackdrop:focus-within .modal::before,
-  .modalBackdrop.keyboardDocked .modal::before,
-  body.mobileModalInputActive .modal::before {
-    display: none;
+    content: none;
   }
 
   .modal h2 {
@@ -95,12 +69,6 @@
     margin: 18px -18px calc(-18px - env(safe-area-inset-bottom));
     padding: 12px 18px calc(14px + env(safe-area-inset-bottom));
     background: linear-gradient(180deg, rgba(255,255,255,.82), #fff 38%);
-  }
-
-  .modalBackdrop:focus-within .modalActions,
-  .modalBackdrop.keyboardDocked .modalActions,
-  body.mobileModalInputActive .modalActions {
-    padding-bottom: 14px;
   }
 
   .modalActions button {
@@ -160,9 +128,9 @@
   .deleteBtn { left: -19px; }
 }
 
-@keyframes mobileSheetUp {
+@keyframes mobileSheetDown {
   from {
-    transform: translateY(18px);
+    transform: translateY(-12px);
     opacity: .88;
   }
   to {
