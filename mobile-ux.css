@@ -81,10 +81,6 @@
     padding: 10px 14px;
   }
 
-  .board {
-    overscroll-behavior: contain;
-  }
-
   .verticalMode .laneBand {
     left: 0;
     right: 0;
@@ -127,12 +123,6 @@
 
   .doneBtn { right: -19px; }
   .deleteBtn { left: -19px; }
-}
-
-@media (min-width: 981px) {
-  .board {
-    overscroll-behavior: contain;
-  }
 }
 
 @keyframes mobileSheetUp {
