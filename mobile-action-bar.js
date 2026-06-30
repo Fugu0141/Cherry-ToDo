@@ -1,8 +1,5 @@
 (() => {
   const mobileActionQuery = window.matchMedia("(max-width: 980px)");
-  const guardWindowMs = 1800;
-  let guardedTaskId = null;
-  let guardTimer = null;
 
   const bar = document.createElement("div");
   bar.id = "mobileActionBar";
@@ -22,12 +19,12 @@
   const doneButton = makeButton("done", "✓", "完了");
   const addButton = makeButton("add", "＋", "追加");
   const editButton = makeButton("edit", "✎", "編集");
-  const guardButton = makeButton("guard", "×", "削除");
+  const deleteButton = makeButton("delete", "×", "削除");
 
   buttons.appendChild(doneButton);
   buttons.appendChild(addButton);
   buttons.appendChild(editButton);
-  buttons.appendChild(guardButton);
+  buttons.appendChild(deleteButton);
   bar.appendChild(buttons);
   document.body.appendChild(bar);
 
@@ -54,26 +51,8 @@
     return task.targetAt || todayISO();
   }
 
-  function resetGuard() {
-    guardedTaskId = null;
-    clearTimeout(guardTimer);
-    guardTimer = null;
-    guardButton.classList.remove("armed");
-    guardButton.innerHTML = "<strong>×</strong>削除";
-  }
-
-  function armGuard(taskId) {
-    guardedTaskId = taskId;
-    guardButton.classList.add("armed");
-    guardButton.innerHTML = "<strong>!</strong>もう一度";
-    clearTimeout(guardTimer);
-    guardTimer = setTimeout(resetGuard, guardWindowMs);
-  }
-
-  function runGuardedAction() {
-    const idText = String.fromCharCode(100, 101, 108, 101, 116, 101, 66, 116, 110);
-    resetGuard();
-    document.getElementById(idText)?.click();
+  function runDeleteAction() {
+    document.getElementById("deleteBtn")?.click();
   }
 
   function clamp(value, min, max) {
@@ -118,11 +97,8 @@
 
     if (!shouldShowBar()) {
       bar.classList.add("hidden");
-      resetGuard();
       return;
     }
-
-    if (guardedTaskId && task.id !== guardedTaskId) resetGuard();
 
     doneButton.innerHTML = task.status === "done"
       ? "<strong>↺</strong>戻す"
@@ -137,7 +113,6 @@
     const task = selectedTask();
     if (!task) return;
 
-    resetGuard();
     snapshot();
     task.status = task.status === "done" ? "todo" : "done";
     requestRender();
@@ -148,7 +123,6 @@
     const task = selectedTask();
     if (!task) return;
 
-    resetGuard();
     openCreateTaskModal({
       parentId: task.id,
       targetAt: taskDateForChild(task),
@@ -162,23 +136,18 @@
     const task = selectedTask();
     if (!task) return;
 
-    resetGuard();
     openEditTaskModal(task.id);
     updateMobileActionBar();
   });
 
-  guardButton.addEventListener("click", event => {
+  deleteButton.addEventListener("click", event => {
     event.stopPropagation();
-    const task = selectedTask();
-    if (!task) return;
-
-    if (guardedTaskId === task.id) runGuardedAction();
-    else armGuard(task.id);
+    if (!selectedTask()) return;
+    runDeleteAction();
   });
 
   const baseSetSelected = setSelected;
   setSelected = function setSelectedWithMobileActionBar(id) {
-    if (id !== selectedId) resetGuard();
     baseSetSelected(id);
     updateMobileActionBar();
   };
