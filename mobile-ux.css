@@ -82,33 +82,21 @@
   }
 
   .verticalMode .laneBand {
-    right: auto;
-    width: max(100%, 100vw);
-    min-width: calc(100vw - 12px);
+    left: 0;
+    right: 0;
+    width: auto;
+    min-width: 0;
   }
 
-  .verticalMode .laneLine {
-    right: auto;
-    width: max(calc(100% - 106px), calc(100vw - 106px));
-    min-width: 180px;
-  }
-
+  .verticalMode .laneLine,
   .verticalMode .laneEndLine {
-    right: auto;
-    width: max(calc(100% - 106px), calc(100vw - 106px));
+    right: 28px;
+    width: auto;
+    min-width: 0;
   }
 
   .board.verticalMode::after {
-    content: "";
-    position: sticky;
-    left: calc(100% - 2px);
-    top: 0;
-    display: block;
-    width: 2px;
-    min-height: 100%;
-    background: rgba(15, 23, 42, .08);
-    pointer-events: none;
-    z-index: 6;
+    content: none;
   }
 
   .note.selected .handle,
