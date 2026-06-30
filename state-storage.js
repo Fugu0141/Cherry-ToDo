@@ -11,6 +11,7 @@
   ];
   const saveDelayMs = 160;
   const maxUndoSnapshots = 80;
+  const appBootSaveNow = typeof saveNow === "function" ? saveNow : null;
 
   function storedStateRaw() {
     return [currentStorageKey, ...legacyStorageKeys]
@@ -53,10 +54,14 @@
     if (undoStack.length > maxUndoSnapshots) undoStack.shift();
   }
 
+  if (appBootSaveNow) window.removeEventListener("beforeunload", appBootSaveNow);
+
   saveNow = saveNowFromState;
   scheduleSave = scheduleStateSave;
   load = loadStoredState;
   snapshot = snapshotState;
+
+  window.addEventListener("beforeunload", saveNowFromState);
 
   window.cherryStorage = {
     currentStorageKey,
