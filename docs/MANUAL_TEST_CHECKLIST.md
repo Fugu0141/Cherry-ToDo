@@ -160,11 +160,12 @@ http://localhost:8000/
 
 ### Mobile modal and keyboard behavior
 
-- [ ] Task creation opens as a compact centered mobile dialog at mobile width.
-- [ ] Date-change UI opens as a compact centered mobile dialog at mobile width.
+- [ ] Task creation opens as a compact fixed-size mobile dialog at mobile width.
+- [ ] Date-change UI opens as a compact fixed-size mobile dialog at mobile width.
 - [ ] Inputs are large enough to edit without accidental zoom or missed taps.
-- [ ] Focusing an input with the virtual keyboard open shifts the whole dialog upward only as much as needed.
-- [ ] The dialog does not stretch into a full bottom sheet while typing.
+- [ ] Focusing an input with the virtual keyboard open moves the whole dialog upward only as much as needed.
+- [ ] The dialog height and action area do not stretch or shrink when the keyboard opens.
+- [ ] The dialog moves between centered position and a keyboard-safe position using only window translation.
 - [ ] The dialog returns to its centered position after the keyboard closes.
 - [ ] Cancel, confirm, Change, and Back actions still work during and after keyboard transitions.
 - [ ] Desktop modal layout is unchanged.
