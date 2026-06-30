@@ -22,7 +22,7 @@
   const doneButton = makeButton("done", "✓", "完了");
   const addButton = makeButton("add", "＋", "追加");
   const editButton = makeButton("edit", "✎", "編集");
-  const guardButton = makeButton("guard", "×", "整理");
+  const guardButton = makeButton("guard", "×", "削除");
 
   buttons.appendChild(doneButton);
   buttons.appendChild(addButton);
@@ -59,7 +59,7 @@
     clearTimeout(guardTimer);
     guardTimer = null;
     guardButton.classList.remove("armed");
-    guardButton.innerHTML = "<strong>×</strong>整理";
+    guardButton.innerHTML = "<strong>×</strong>削除";
   }
 
   function armGuard(taskId) {
