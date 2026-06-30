@@ -118,24 +118,26 @@
     return Math.max(260, Math.round(window.visualViewport?.height || window.innerHeight || document.documentElement.clientHeight || 520));
   }
 
-  function readCurrentOffset() {
-    const value = getComputedStyle(document.documentElement).getPropertyValue("--mobile-ime-offset");
-    const parsed = Number.parseFloat(value);
-    return Number.isFinite(parsed) ? parsed : 0;
+  function measureUnshiftedModalRect(modal) {
+    const previousOffset = rootStyle.getPropertyValue("--mobile-ime-offset");
+    rootStyle.setProperty("--mobile-ime-offset", "0px");
+    const rect = modal.getBoundingClientRect();
+
+    if (previousOffset) rootStyle.setProperty("--mobile-ime-offset", previousOffset);
+    else rootStyle.removeProperty("--mobile-ime-offset");
+
+    return rect;
   }
 
   function neededOffset() {
     const modal = activeMobileModal();
     if (!activeModalInput() || !modal) return 0;
 
-    const currentOffset = readCurrentOffset();
-    const rect = modal.getBoundingClientRect();
-    const unshiftedTop = rect.top + currentOffset;
-    const unshiftedBottom = rect.bottom + currentOffset;
+    const rect = measureUnshiftedModalRect(modal);
     const maxVisibleBottom = visualHeight() - visibleGap;
 
-    const overlap = Math.max(0, unshiftedBottom - maxVisibleBottom);
-    const safeTopLimit = Math.max(0, unshiftedTop - visibleGap);
+    const overlap = Math.max(0, rect.bottom - maxVisibleBottom);
+    const safeTopLimit = Math.max(0, rect.top - visibleGap);
     return Math.round(Math.min(overlap, safeTopLimit));
   }
 
