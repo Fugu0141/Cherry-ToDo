@@ -21,9 +21,12 @@
 
   .modal {
     position: relative !important;
+    flex: 0 0 auto !important;
     width: 100% !important;
     max-width: none !important;
-    max-height: min(78dvh, calc(var(--mobile-visible-height, 100dvh) - 16px)) !important;
+    height: fit-content !important;
+    min-height: 0 !important;
+    max-height: min(72dvh, calc(var(--mobile-visible-height, 100dvh) - 16px)) !important;
     margin: 0 !important;
     padding: 22px 18px calc(18px + env(safe-area-inset-bottom)) !important;
     border-radius: 24px 24px 0 0 !important;
@@ -39,7 +42,9 @@
 
   body.mobileImeOpen .modal,
   body.mobileModalInputActive .modal {
-    max-height: calc(var(--mobile-visible-height, 100dvh) - 16px) !important;
+    height: fit-content !important;
+    min-height: 0 !important;
+    max-height: min(72dvh, calc(var(--mobile-visible-height, 100dvh) - 16px)) !important;
     border-radius: 20px !important;
   }
 
@@ -75,19 +80,18 @@
   }
 
   .modalActions {
-    position: sticky !important;
-    bottom: 0 !important;
+    position: static !important;
     display: grid !important;
     grid-template-columns: 1fr 1fr !important;
     gap: 10px !important;
-    margin: 18px -18px calc(-18px - env(safe-area-inset-bottom)) !important;
-    padding: 12px 18px calc(14px + env(safe-area-inset-bottom)) !important;
-    background: linear-gradient(180deg, rgba(255,255,255,.82), #fff 38%) !important;
+    margin: 18px 0 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
   }
 
   body.mobileImeOpen .modalActions,
   body.mobileModalInputActive .modalActions {
-    padding-bottom: 14px !important;
+    padding-bottom: 0 !important;
   }
 
   .modalActions button {
