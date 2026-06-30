@@ -2,7 +2,7 @@
   const mobileViewportQuery = window.matchMedia("(max-width: 980px)");
   const baseEnsureContentSize = typeof ensureContentSize === "function" ? ensureContentSize : null;
   const rootStyle = document.documentElement.style;
-  const visibleGap = 8;
+  const visibleGap = 4;
 
   if (!baseEnsureContentSize) return;
 
@@ -139,24 +139,27 @@
     return Math.round(Math.min(overlap, safeTopLimit));
   }
 
+  function resetMobileImeVars() {
+    rootStyle.setProperty("--mobile-ime-offset", "0px");
+    document.body.classList.remove("mobileImeOpen", "mobileModalInputActive");
+  }
+
   function updateMobileViewportVars() {
     if (!mobileViewportQuery.matches) {
       rootStyle.removeProperty("--mobile-ime-offset");
-      rootStyle.removeProperty("--mobile-visible-height");
       document.body.classList.remove("mobileImeOpen", "mobileModalInputActive");
       return;
     }
 
     const inputActive = Boolean(activeModalInput());
-    const availableHeight = visualHeight();
     const offset = neededOffset();
 
     rootStyle.setProperty("--mobile-ime-offset", `${offset}px`);
-    rootStyle.setProperty("--mobile-visible-height", `${availableHeight}px`);
     document.body.classList.toggle("mobileModalInputActive", inputActive);
     document.body.classList.toggle("mobileImeOpen", offset > 0);
 
-    scheduleFocusedFieldReveal();
+    if (!inputActive) resetMobileImeVars();
+    else scheduleFocusedFieldReveal();
   }
 
   function scheduleFocusedFieldReveal() {
@@ -214,12 +217,13 @@
 
   document.addEventListener("focusout", event => {
     if (event.target instanceof HTMLElement && event.target.matches("input, textarea, select")) {
-      setTimeout(updateMobileViewportVars, 80);
+      setTimeout(resetMobileImeVars, 80);
+      setTimeout(updateMobileViewportVars, 180);
     }
   });
 
   [taskCancelBtn, taskSaveBtn, dateCancelBtn, dateSaveBtn].forEach(button => {
-    button.addEventListener("click", () => requestAnimationFrame(updateMobileViewportVars));
+    button.addEventListener("click", () => requestAnimationFrame(resetMobileImeVars));
   });
 
   updateMobileViewportVars();
