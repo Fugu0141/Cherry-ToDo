@@ -134,12 +134,23 @@ http://localhost:8000/
 - [ ] The app switches to vertical mode at mobile width.
 - [ ] Date labels stay usable on the left side.
 - [ ] Task cards remain large enough to tap.
-- [ ] The `+`, done, and delete controls are reachable.
+- [ ] The selected task title is not covered by card-level control buttons.
 - [ ] Dragging does not cause unusable page scrolling.
 - [ ] Modals fit on the screen.
 - [ ] List view rows remain readable on a mobile-sized viewport.
 - [ ] List view done / todo and board-open controls are easy to tap.
 - [ ] Same-day expanded lanes remain scrollable and readable in vertical mode.
+
+### Mobile action bar behavior
+
+- [ ] Selecting a task on mobile shows the bottom action bar.
+- [ ] Deselecting a task hides the bottom action bar.
+- [ ] The card-level done, delete, and add controls do not overlap the task body on mobile.
+- [ ] The action bar can toggle done / todo.
+- [ ] The action bar can create a same-branch child task.
+- [ ] The action bar can open edit mode for the selected task.
+- [ ] Opening a modal hides the action bar until the modal closes.
+- [ ] Desktop card controls are unchanged.
 
 ### Mobile bottom sheet behavior
 
