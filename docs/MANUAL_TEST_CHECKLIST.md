@@ -149,6 +149,9 @@ http://localhost:8000/
 - [ ] The action bar can toggle done / todo.
 - [ ] The action bar can create a same-branch child task.
 - [ ] The action bar can open edit mode for the selected task.
+- [ ] The fourth action requires two taps within the short guard window.
+- [ ] A single accidental fourth-action tap does not change the board.
+- [ ] Selecting another task resets the fourth-action guard state.
 - [ ] Opening a modal hides the action bar until the modal closes.
 - [ ] Desktop card controls are unchanged.
 
