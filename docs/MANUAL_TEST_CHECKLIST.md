@@ -108,6 +108,16 @@ http://localhost:8000/
 
 ---
 
+## Scroll boundary behavior
+
+- [ ] Desktop board does not allow meaningless vertical scrolling into blank space.
+- [ ] Desktop board still expands downward when many branch tracks exist.
+- [ ] Mobile board does not allow meaningless horizontal scrolling into blank space.
+- [ ] Mobile board still expands sideways when branch tracks need more room.
+- [ ] Switching between desktop and mobile viewport sizes does not preserve stale inline canvas sizes.
+
+---
+
 ## Mobile viewport check
 
 - [ ] The app switches to vertical mode at mobile width.
@@ -119,6 +129,15 @@ http://localhost:8000/
 - [ ] List view rows remain readable on a mobile-sized viewport.
 - [ ] List view done / todo and board-open controls are easy to tap.
 - [ ] Same-day expanded lanes remain scrollable and readable in vertical mode.
+
+### Mobile bottom sheet behavior
+
+- [ ] Task creation opens as a bottom sheet at mobile width.
+- [ ] Date-change UI opens as a bottom sheet at mobile width.
+- [ ] Inputs are large enough to edit without accidental zoom or missed taps.
+- [ ] Cancel and confirm actions are both easy to tap near the bottom edge.
+- [ ] The bottom sheet respects the mobile viewport height and remains scrollable when needed.
+- [ ] Desktop modal layout is unchanged.
 
 ---
 
