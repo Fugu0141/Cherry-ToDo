@@ -28,6 +28,8 @@
   bar.appendChild(buttons);
   document.body.appendChild(bar);
 
+  let mobileAddParentContext = null;
+
   function selectedTask() {
     return selectedId ? state.tasks[selectedId] : null;
   }
@@ -53,6 +55,27 @@
 
   function runDeleteAction() {
     document.getElementById("deleteBtn")?.click();
+  }
+
+  function clearMobileAddParentContext() {
+    mobileAddParentContext = null;
+  }
+
+  function restoreMobileAddParentAfterSave() {
+    const context = mobileAddParentContext;
+    if (!context) return;
+
+    if (!taskModal.classList.contains("hidden")) return;
+    mobileAddParentContext = null;
+
+    if (!context.parentId || !state.tasks[context.parentId]) return;
+
+    setSelected(context.parentId);
+    requestRender();
+  }
+
+  function restoreMobileAddParentAfterEnter(event) {
+    if (event.key === "Enter") restoreMobileAddParentAfterSave();
   }
 
   function clamp(value, min, max) {
@@ -123,16 +146,19 @@
     const task = selectedTask();
     if (!task) return;
 
+    mobileAddParentContext = { parentId: task.id };
     openCreateTaskModal({
       parentId: task.id,
       targetAt: taskDateForChild(task),
-      branchMode: "same"
+      branchMode: "branch"
     });
+    taskModalTitle.textContent = "タスクを追加";
     updateMobileActionBar();
   });
 
   editButton.addEventListener("click", event => {
     event.stopPropagation();
+    clearMobileAddParentContext();
     const task = selectedTask();
     if (!task) return;
 
@@ -142,8 +168,17 @@
 
   deleteButton.addEventListener("click", event => {
     event.stopPropagation();
+    clearMobileAddParentContext();
     if (!selectedTask()) return;
     runDeleteAction();
+  });
+
+  taskSaveBtn.addEventListener("click", restoreMobileAddParentAfterSave);
+  taskNameInput.addEventListener("keydown", restoreMobileAddParentAfterEnter);
+  taskDateInput.addEventListener("keydown", restoreMobileAddParentAfterEnter);
+  taskCancelBtn.addEventListener("click", clearMobileAddParentContext);
+  taskModal.addEventListener("pointerdown", event => {
+    if (event.target === taskModal) clearMobileAddParentContext();
   });
 
   const baseSetSelected = setSelected;
