@@ -1,6 +1,7 @@
 (() => {
   const mobileViewportQuery = window.matchMedia("(max-width: 980px)");
   const baseEnsureContentSize = typeof ensureContentSize === "function" ? ensureContentSize : null;
+  const rootStyle = document.documentElement.style;
 
   if (!baseEnsureContentSize) return;
 
@@ -99,6 +100,47 @@
     }
   }
 
+  function activeMobileModal() {
+    if (!mobileViewportQuery.matches) return null;
+    return document.querySelector(".modalBackdrop:not(.hidden) .modal");
+  }
+
+  function activeModalInput() {
+    const modal = activeMobileModal();
+    const active = document.activeElement;
+    return modal && active instanceof HTMLElement && modal.contains(active) && active.matches("input, textarea, select")
+      ? active
+      : null;
+  }
+
+  function updateMobileViewportVars() {
+    if (!mobileViewportQuery.matches) {
+      rootStyle.removeProperty("--mobile-visual-viewport-top");
+      rootStyle.removeProperty("--mobile-visual-viewport-height");
+      document.body.classList.remove("mobileKeyboardOpen");
+      return;
+    }
+
+    const viewport = window.visualViewport;
+    const height = Math.max(320, Math.round(viewport?.height || window.innerHeight || document.documentElement.clientHeight || 520));
+    const top = Math.max(0, Math.round(viewport?.offsetTop || 0));
+    const layoutHeight = Math.round(window.innerHeight || document.documentElement.clientHeight || height);
+    const keyboardLikelyOpen = Boolean(activeModalInput()) && height < layoutHeight - 72;
+
+    rootStyle.setProperty("--mobile-visual-viewport-top", `${top}px`);
+    rootStyle.setProperty("--mobile-visual-viewport-height", `${height}px`);
+    document.body.classList.toggle("mobileKeyboardOpen", keyboardLikelyOpen);
+
+    requestAnimationFrame(keepFocusedFieldVisible);
+  }
+
+  function keepFocusedFieldVisible() {
+    const input = activeModalInput();
+    if (!input) return;
+
+    input.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }
+
   ensureContentSize = function() {
     baseEnsureContentSize();
     clearManagedInlineSizes();
@@ -114,11 +156,36 @@
     }
 
     clampScrollToContent();
+    updateMobileViewportVars();
   };
 
   board.addEventListener("scroll", clampScrollToContent, { passive: true });
 
   mobileViewportQuery.addEventListener("change", () => {
+    updateMobileViewportVars();
     if (typeof requestRender === "function") requestRender();
   });
+
+  window.addEventListener("resize", updateMobileViewportVars, { passive: true });
+  window.addEventListener("orientationchange", () => requestAnimationFrame(updateMobileViewportVars));
+  window.visualViewport?.addEventListener("resize", updateMobileViewportVars, { passive: true });
+  window.visualViewport?.addEventListener("scroll", updateMobileViewportVars, { passive: true });
+
+  document.addEventListener("focusin", event => {
+    if (event.target instanceof HTMLElement && event.target.matches("input, textarea, select")) {
+      updateMobileViewportVars();
+    }
+  });
+
+  document.addEventListener("focusout", event => {
+    if (event.target instanceof HTMLElement && event.target.matches("input, textarea, select")) {
+      setTimeout(updateMobileViewportVars, 80);
+    }
+  });
+
+  [taskCancelBtn, taskSaveBtn, dateCancelBtn, dateSaveBtn].forEach(button => {
+    button.addEventListener("click", () => requestAnimationFrame(updateMobileViewportVars));
+  });
+
+  updateMobileViewportVars();
 })();
