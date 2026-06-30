@@ -8,10 +8,24 @@
     return mobileViewportQuery.matches && typeof isVerticalMode === "function" && isVerticalMode();
   }
 
+  function isDesktopHorizontalBoard() {
+    return !mobileViewportQuery.matches && typeof isVerticalMode === "function" && !isVerticalMode();
+  }
+
+  function layerElements() {
+    return [links, lanesEl, dateHud, notesEl].filter(Boolean);
+  }
+
   function minimumVisibleWidth() {
     const boardWidth = board?.clientWidth || 0;
     const viewportWidth = document.documentElement?.clientWidth || 0;
     return Math.max(320, boardWidth, viewportWidth - 12);
+  }
+
+  function minimumVisibleHeight() {
+    const boardHeight = board?.clientHeight || 0;
+    const viewportHeight = document.documentElement?.clientHeight || 0;
+    return Math.max(360, boardHeight, viewportHeight - 170);
   }
 
   function compactVerticalContentWidth() {
@@ -30,9 +44,24 @@
     return Math.ceil(width);
   }
 
+  function compactHorizontalContentHeight() {
+    let height = minimumVisibleHeight();
+
+    for (const task of getTasks()) {
+      if (!Number.isFinite(task.y)) continue;
+      height = Math.max(height, task.y + noteH + 92);
+    }
+
+    if (Number.isFinite(maxTrack)) {
+      const lastTrack = Math.max(0, maxTrack);
+      height = Math.max(height, hTrackToY(lastTrack) + noteH + 92);
+    }
+
+    return Math.ceil(height);
+  }
+
   function applyLayerWidth(width) {
-    [links, lanesEl, dateHud, notesEl].forEach(el => {
-      if (!el) return;
+    layerElements().forEach(el => {
       el.style.minWidth = `${width}px`;
       el.style.width = `${width}px`;
     });
@@ -41,19 +70,49 @@
     board.style.setProperty("--mobile-content-w", `${width}px`);
   }
 
+  function applyLayerHeight(height) {
+    layerElements().forEach(el => {
+      el.style.minHeight = `${height}px`;
+      el.style.height = `${height}px`;
+    });
+
+    if (links) links.setAttribute("height", String(height));
+    board.style.setProperty("--desktop-content-h", `${height}px`);
+  }
+
+  function clearManagedInlineSizes() {
+    layerElements().forEach(el => {
+      el.style.width = "";
+      el.style.height = "";
+    });
+  }
+
   function clampScrollToContent() {
-    if (!isMobileVerticalBoard()) return;
-    const maxLeft = Math.max(0, contentWidth - board.clientWidth);
-    if (board.scrollLeft > maxLeft) board.scrollLeft = maxLeft;
+    if (isMobileVerticalBoard()) {
+      const maxLeft = Math.max(0, contentWidth - board.clientWidth);
+      if (board.scrollLeft > maxLeft) board.scrollLeft = maxLeft;
+    }
+
+    if (isDesktopHorizontalBoard()) {
+      const maxTop = Math.max(0, contentHeight - board.clientHeight);
+      if (board.scrollTop > maxTop) board.scrollTop = maxTop;
+    }
   }
 
   ensureContentSize = function() {
     baseEnsureContentSize();
+    clearManagedInlineSizes();
 
-    if (!isMobileVerticalBoard()) return;
+    if (isMobileVerticalBoard()) {
+      contentWidth = compactVerticalContentWidth();
+      applyLayerWidth(contentWidth);
+    }
 
-    contentWidth = compactVerticalContentWidth();
-    applyLayerWidth(contentWidth);
+    if (isDesktopHorizontalBoard()) {
+      contentHeight = compactHorizontalContentHeight();
+      applyLayerHeight(contentHeight);
+    }
+
     clampScrollToContent();
   };
 
