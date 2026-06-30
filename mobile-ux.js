@@ -4,6 +4,7 @@
   const rootStyle = document.documentElement.style;
   const visibleGap = 4;
   let currentModalOffset = 0;
+  let actionTapLockUntil = 0;
 
   if (!baseEnsureContentSize) return;
 
@@ -119,6 +120,14 @@
       : null;
   }
 
+  function isActionTapLocked() {
+    return Date.now() < actionTapLockUntil;
+  }
+
+  function lockActionTap() {
+    actionTapLockUntil = Date.now() + 700;
+  }
+
   function setImportant(el, name, value) {
     el?.style.setProperty(name, value, "important");
   }
@@ -169,6 +178,7 @@
   }
 
   function resetMobileImeVars() {
+    if (isActionTapLocked()) return;
     currentModalOffset = 0;
     rootStyle.setProperty("--mobile-ime-offset", "0px");
     document.body.classList.remove("mobileImeOpen", "mobileModalInputActive");
@@ -181,6 +191,8 @@
       document.body.classList.remove("mobileImeOpen", "mobileModalInputActive");
       return;
     }
+
+    if (isActionTapLocked()) return;
 
     const inputActive = Boolean(activeModalInput());
     const offset = inputActive ? neededOffset() : 0;
@@ -202,6 +214,7 @@
   }
 
   function keepFocusedFieldVisible() {
+    if (isActionTapLocked()) return;
     const input = activeModalInput();
     const modal = activeMobileModal();
     if (!input || !modal) return;
@@ -249,8 +262,8 @@
 
   document.addEventListener("focusout", event => {
     if (event.target instanceof HTMLElement && event.target.matches("input, textarea, select")) {
-      setTimeout(resetMobileImeVars, 80);
-      setTimeout(updateMobileViewportVars, 180);
+      setTimeout(resetMobileImeVars, 380);
+      setTimeout(updateMobileViewportVars, 520);
     }
   });
 
@@ -260,7 +273,13 @@
   });
 
   [taskCancelBtn, taskSaveBtn, dateCancelBtn, dateSaveBtn].forEach(button => {
-    button.addEventListener("click", () => requestAnimationFrame(resetMobileImeVars));
+    button.addEventListener("pointerdown", lockActionTap, true);
+    button.addEventListener("click", () => {
+      setTimeout(() => {
+        actionTapLockUntil = 0;
+        resetMobileImeVars();
+      }, 180);
+    }, true);
   });
 
   updateMobileViewportVars();
