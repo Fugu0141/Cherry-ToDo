@@ -3,6 +3,7 @@
   const baseEnsureContentSize = typeof ensureContentSize === "function" ? ensureContentSize : null;
   const rootStyle = document.documentElement.style;
   const visibleGap = 4;
+  let currentModalOffset = 0;
 
   if (!baseEnsureContentSize) return;
 
@@ -106,6 +107,10 @@
     return document.querySelector(".modalBackdrop:not(.hidden) .modal");
   }
 
+  function activeModalBackdrop() {
+    return activeMobileModal()?.closest(".modalBackdrop") || null;
+  }
+
   function activeModalInput() {
     const modal = activeMobileModal();
     const active = document.activeElement;
@@ -114,34 +119,60 @@
       : null;
   }
 
-  function visualHeight() {
-    return Math.max(260, Math.round(window.visualViewport?.height || window.innerHeight || document.documentElement.clientHeight || 520));
+  function setImportant(el, name, value) {
+    el?.style.setProperty(name, value, "important");
   }
 
-  function readCurrentOffset() {
-    const value = getComputedStyle(document.documentElement).getPropertyValue("--mobile-ime-offset");
-    const parsed = Number.parseFloat(value);
-    return Number.isFinite(parsed) ? parsed : 0;
+  function applyModalLayout(offset = currentModalOffset) {
+    const modal = activeMobileModal();
+    const backdrop = activeModalBackdrop();
+    if (!modal || !backdrop || !mobileViewportQuery.matches) return;
+
+    setImportant(backdrop, "position", "fixed");
+    setImportant(backdrop, "inset", "0");
+    setImportant(backdrop, "display", "flex");
+    setImportant(backdrop, "align-items", "center");
+    setImportant(backdrop, "justify-content", "center");
+    setImportant(backdrop, "width", "100vw");
+    setImportant(backdrop, "height", "100dvh");
+    setImportant(backdrop, "padding", "12px 10px");
+    setImportant(backdrop, "overflow", "hidden");
+    setImportant(backdrop, "place-items", "initial");
+
+    setImportant(modal, "flex", "0 0 auto");
+    setImportant(modal, "width", "100%");
+    setImportant(modal, "max-width", "min(640px, calc(100vw - 20px))");
+    setImportant(modal, "height", "auto");
+    setImportant(modal, "min-height", "0");
+    setImportant(modal, "max-height", "min(72dvh, calc(100dvh - 24px))");
+    setImportant(modal, "margin", "0");
+    setImportant(modal, "border-radius", "24px");
+    setImportant(modal, "overflow", "auto");
+    setImportant(modal, "transform", `translateY(${-offset}px)`);
+    setImportant(modal, "transition", "transform .16s ease");
+  }
+
+  function visualHeight() {
+    return Math.max(260, Math.round(window.visualViewport?.height || window.innerHeight || document.documentElement.clientHeight || 520));
   }
 
   function neededOffset() {
     const modal = activeMobileModal();
     if (!activeModalInput() || !modal) return 0;
 
-    const currentOffset = readCurrentOffset();
+    applyModalLayout(0);
     const rect = modal.getBoundingClientRect();
-    const unshiftedTop = rect.top + currentOffset;
-    const unshiftedBottom = rect.bottom + currentOffset;
     const maxVisibleBottom = visualHeight() - visibleGap;
-
-    const overlap = Math.max(0, unshiftedBottom - maxVisibleBottom);
-    const safeTopLimit = Math.max(0, unshiftedTop - visibleGap);
+    const overlap = Math.max(0, rect.bottom - maxVisibleBottom);
+    const safeTopLimit = Math.max(0, rect.top - visibleGap);
     return Math.round(Math.min(overlap, safeTopLimit));
   }
 
   function resetMobileImeVars() {
+    currentModalOffset = 0;
     rootStyle.setProperty("--mobile-ime-offset", "0px");
     document.body.classList.remove("mobileImeOpen", "mobileModalInputActive");
+    applyModalLayout(0);
   }
 
   function updateMobileViewportVars() {
@@ -152,14 +183,15 @@
     }
 
     const inputActive = Boolean(activeModalInput());
-    const offset = neededOffset();
+    const offset = inputActive ? neededOffset() : 0;
+    currentModalOffset = offset;
 
     rootStyle.setProperty("--mobile-ime-offset", `${offset}px`);
     document.body.classList.toggle("mobileModalInputActive", inputActive);
     document.body.classList.toggle("mobileImeOpen", offset > 0);
+    applyModalLayout(offset);
 
-    if (!inputActive) resetMobileImeVars();
-    else scheduleFocusedFieldReveal();
+    if (inputActive) scheduleFocusedFieldReveal();
   }
 
   function scheduleFocusedFieldReveal() {
@@ -220,6 +252,11 @@
       setTimeout(resetMobileImeVars, 80);
       setTimeout(updateMobileViewportVars, 180);
     }
+  });
+
+  [taskModal, dateModal].forEach(modalRoot => {
+    if (!modalRoot) return;
+    new MutationObserver(updateMobileViewportVars).observe(modalRoot, { attributes: true, attributeFilter: ["class"] });
   });
 
   [taskCancelBtn, taskSaveBtn, dateCancelBtn, dateSaveBtn].forEach(button => {
