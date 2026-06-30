@@ -2,9 +2,7 @@
   const mobileViewportQuery = window.matchMedia("(max-width: 980px)");
   const baseEnsureContentSize = typeof ensureContentSize === "function" ? ensureContentSize : null;
   const rootStyle = document.documentElement.style;
-  const visibleGap = 4;
-  let currentModalOffset = 0;
-  let actionTapLockUntil = 0;
+  const minImeOffset = 80;
 
   if (!baseEnsureContentSize) return;
 
@@ -108,10 +106,6 @@
     return document.querySelector(".modalBackdrop:not(.hidden) .modal");
   }
 
-  function activeModalBackdrop() {
-    return activeMobileModal()?.closest(".modalBackdrop") || null;
-  }
-
   function activeModalInput() {
     const modal = activeMobileModal();
     const active = document.activeElement;
@@ -120,90 +114,48 @@
       : null;
   }
 
-  function isActionTapLocked() {
-    return Date.now() < actionTapLockUntil;
+  function layoutHeight() {
+    return Math.max(
+      window.innerHeight || 0,
+      document.documentElement.clientHeight || 0,
+      window.visualViewport?.height || 0
+    );
   }
 
-  function lockActionTap() {
-    actionTapLockUntil = Date.now() + 700;
-  }
+  function imeOffset() {
+    if (!activeModalInput()) return 0;
 
-  function setImportant(el, name, value) {
-    el?.style.setProperty(name, value, "important");
-  }
+    const viewport = window.visualViewport;
+    if (!viewport) return 0;
 
-  function applyModalLayout(offset = currentModalOffset) {
-    const modal = activeMobileModal();
-    const backdrop = activeModalBackdrop();
-    if (!modal || !backdrop || !mobileViewportQuery.matches) return;
+    const fullHeight = layoutHeight();
+    const visibleHeight = viewport.height || fullHeight;
+    const byHeight = Math.max(0, fullHeight - visibleHeight);
+    const byBottom = Math.max(0, fullHeight - (viewport.offsetTop || 0) - visibleHeight);
+    const offset = Math.max(byHeight, byBottom);
 
-    setImportant(backdrop, "position", "fixed");
-    setImportant(backdrop, "inset", "0");
-    setImportant(backdrop, "display", "flex");
-    setImportant(backdrop, "align-items", "center");
-    setImportant(backdrop, "justify-content", "center");
-    setImportant(backdrop, "width", "100vw");
-    setImportant(backdrop, "height", "100dvh");
-    setImportant(backdrop, "padding", "12px 10px");
-    setImportant(backdrop, "overflow", "hidden");
-    setImportant(backdrop, "place-items", "initial");
-
-    setImportant(modal, "flex", "0 0 auto");
-    setImportant(modal, "width", "100%");
-    setImportant(modal, "max-width", "min(640px, calc(100vw - 20px))");
-    setImportant(modal, "height", "auto");
-    setImportant(modal, "min-height", "0");
-    setImportant(modal, "max-height", "min(72dvh, calc(100dvh - 24px))");
-    setImportant(modal, "margin", "0");
-    setImportant(modal, "border-radius", "24px");
-    setImportant(modal, "overflow", "auto");
-    setImportant(modal, "transform", `translateY(${-offset}px)`);
-    setImportant(modal, "transition", "transform .16s ease");
-  }
-
-  function visualHeight() {
-    return Math.max(260, Math.round(window.visualViewport?.height || window.innerHeight || document.documentElement.clientHeight || 520));
-  }
-
-  function neededOffset() {
-    const modal = activeMobileModal();
-    if (!activeModalInput() || !modal) return 0;
-
-    applyModalLayout(0);
-    const rect = modal.getBoundingClientRect();
-    const maxVisibleBottom = visualHeight() - visibleGap;
-    const overlap = Math.max(0, rect.bottom - maxVisibleBottom);
-    const safeTopLimit = Math.max(0, rect.top - visibleGap);
-    return Math.round(Math.min(overlap, safeTopLimit));
-  }
-
-  function resetMobileImeVars() {
-    if (isActionTapLocked()) return;
-    currentModalOffset = 0;
-    rootStyle.setProperty("--mobile-ime-offset", "0px");
-    document.body.classList.remove("mobileImeOpen", "mobileModalInputActive");
-    applyModalLayout(0);
+    return offset >= minImeOffset ? Math.round(offset) : 0;
   }
 
   function updateMobileViewportVars() {
     if (!mobileViewportQuery.matches) {
       rootStyle.removeProperty("--mobile-ime-offset");
+      rootStyle.removeProperty("--mobile-visible-height");
       document.body.classList.remove("mobileImeOpen", "mobileModalInputActive");
       return;
     }
 
-    if (isActionTapLocked()) return;
-
     const inputActive = Boolean(activeModalInput());
-    const offset = inputActive ? neededOffset() : 0;
-    currentModalOffset = offset;
+    const fullHeight = layoutHeight();
+    const offset = imeOffset();
+    const visibleHeight = Math.max(260, fullHeight - offset);
 
     rootStyle.setProperty("--mobile-ime-offset", `${offset}px`);
+    rootStyle.setProperty("--mobile-visible-height", `${visibleHeight}px`);
     document.body.classList.toggle("mobileModalInputActive", inputActive);
     document.body.classList.toggle("mobileImeOpen", offset > 0);
-    applyModalLayout(offset);
 
-    if (inputActive) scheduleFocusedFieldReveal();
+    scheduleFocusedFieldReveal();
   }
 
   function scheduleFocusedFieldReveal() {
@@ -214,7 +166,6 @@
   }
 
   function keepFocusedFieldVisible() {
-    if (isActionTapLocked()) return;
     const input = activeModalInput();
     const modal = activeMobileModal();
     if (!input || !modal) return;
@@ -262,24 +213,12 @@
 
   document.addEventListener("focusout", event => {
     if (event.target instanceof HTMLElement && event.target.matches("input, textarea, select")) {
-      setTimeout(resetMobileImeVars, 380);
-      setTimeout(updateMobileViewportVars, 520);
+      setTimeout(updateMobileViewportVars, 80);
     }
   });
 
-  [taskModal, dateModal].forEach(modalRoot => {
-    if (!modalRoot) return;
-    new MutationObserver(updateMobileViewportVars).observe(modalRoot, { attributes: true, attributeFilter: ["class"] });
-  });
-
   [taskCancelBtn, taskSaveBtn, dateCancelBtn, dateSaveBtn].forEach(button => {
-    button.addEventListener("pointerdown", lockActionTap, true);
-    button.addEventListener("click", () => {
-      setTimeout(() => {
-        actionTapLockUntil = 0;
-        resetMobileImeVars();
-      }, 180);
-    }, true);
+    button.addEventListener("click", () => requestAnimationFrame(updateMobileViewportVars));
   });
 
   updateMobileViewportVars();
