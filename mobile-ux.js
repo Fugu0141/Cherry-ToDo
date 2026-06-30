@@ -1,7 +1,6 @@
 (() => {
   const mobileViewportQuery = window.matchMedia("(max-width: 980px)");
   const baseEnsureContentSize = typeof ensureContentSize === "function" ? ensureContentSize : null;
-  const baseSyncMetrics = typeof syncMetrics === "function" ? syncMetrics : null;
 
   if (!baseEnsureContentSize) return;
 
@@ -29,54 +28,36 @@
     return Math.max(360, boardHeight, viewportHeight - 170);
   }
 
-  function mobileBalancedNoteWidth() {
-    const visibleWidth = minimumVisibleWidth();
-    const leftRail = 92;
-    const sidePadding = 30;
-    return Math.max(mobileNoteW, Math.min(260, visibleWidth - leftRail - sidePadding));
+  function taskRightEdge() {
+    let right = 0;
+    for (const task of getTasks()) {
+      if (!Number.isFinite(task.x)) continue;
+      right = Math.max(right, task.x + noteW);
+    }
+    return right;
   }
 
-  if (baseSyncMetrics) {
-    syncMetrics = function() {
-      baseSyncMetrics();
-      if (!isMobileVerticalBoard()) return;
-
-      noteW = mobileBalancedNoteWidth();
-      board.style.setProperty("--note-w", `${noteW}px`);
-      board.style.setProperty("--note-h", `${noteH}px`);
-    };
+  function taskBottomEdge() {
+    let bottom = 0;
+    for (const task of getTasks()) {
+      if (!Number.isFinite(task.y)) continue;
+      bottom = Math.max(bottom, task.y + noteH);
+    }
+    return bottom;
   }
 
   function compactVerticalContentWidth() {
-    let width = minimumVisibleWidth();
-
-    for (const task of getTasks()) {
-      if (!Number.isFinite(task.x)) continue;
-      width = Math.max(width, task.x + noteW + 44);
-    }
-
-    if (Number.isFinite(maxTrack)) {
-      const lastTrack = Math.max(0, maxTrack);
-      width = Math.max(width, vTrackToX(lastTrack) + noteW + 44);
-    }
-
-    return Math.ceil(width);
+    const visibleWidth = minimumVisibleWidth();
+    const taskEdge = taskRightEdge();
+    const taskPadding = taskEdge > 0 ? 28 : 0;
+    return Math.ceil(Math.max(visibleWidth, taskEdge + taskPadding));
   }
 
   function compactHorizontalContentHeight() {
-    let height = minimumVisibleHeight();
-
-    for (const task of getTasks()) {
-      if (!Number.isFinite(task.y)) continue;
-      height = Math.max(height, task.y + noteH + 92);
-    }
-
-    if (Number.isFinite(maxTrack)) {
-      const lastTrack = Math.max(0, maxTrack);
-      height = Math.max(height, hTrackToY(lastTrack) + noteH + 92);
-    }
-
-    return Math.ceil(height);
+    const visibleHeight = minimumVisibleHeight();
+    const taskEdge = taskBottomEdge();
+    const taskPadding = taskEdge > 0 ? 72 : 0;
+    return Math.ceil(Math.max(visibleHeight, taskEdge + taskPadding));
   }
 
   function applyLayerWidth(width) {
