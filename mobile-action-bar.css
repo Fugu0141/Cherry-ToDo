@@ -67,7 +67,7 @@
 
   .mobileActionButtons {
     display: grid;
-    grid-template-columns: repeat(3, 58px);
+    grid-template-columns: repeat(4, 54px);
     gap: 8px;
   }
 
@@ -104,6 +104,14 @@
 
   .mobileActionButton.edit {
     background: #334155;
+  }
+
+  .mobileActionButton.guard {
+    background: #6b7280;
+  }
+
+  .mobileActionButton.guard.armed {
+    background: #dc5652;
   }
 
   .mobileActionButton:active {
