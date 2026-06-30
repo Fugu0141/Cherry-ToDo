@@ -81,6 +81,36 @@
     padding: 10px 14px;
   }
 
+  .verticalMode .laneBand {
+    right: auto;
+    width: max(100%, 100vw);
+    min-width: calc(100vw - 12px);
+  }
+
+  .verticalMode .laneLine {
+    right: auto;
+    width: max(calc(100% - 106px), calc(100vw - 106px));
+    min-width: 180px;
+  }
+
+  .verticalMode .laneEndLine {
+    right: auto;
+    width: max(calc(100% - 106px), calc(100vw - 106px));
+  }
+
+  .board.verticalMode::after {
+    content: "";
+    position: sticky;
+    left: calc(100% - 2px);
+    top: 0;
+    display: block;
+    width: 2px;
+    min-height: 100%;
+    background: rgba(15, 23, 42, .08);
+    pointer-events: none;
+    z-index: 6;
+  }
+
   .note.selected .handle,
   .note.selected .doneBtn,
   .note.selected .deleteBtn,
