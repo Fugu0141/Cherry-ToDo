@@ -1,8 +1,15 @@
 @media (max-width: 980px) {
+  :root {
+    --mobile-visual-viewport-top: 0px;
+    --mobile-visual-viewport-height: 100dvh;
+  }
+
   .modalBackdrop {
+    inset: var(--mobile-visual-viewport-top, 0px) 0 auto 0;
     display: flex;
     align-items: flex-end;
     justify-content: center;
+    height: var(--mobile-visual-viewport-height, 100dvh);
     padding: 0;
     background: rgba(18, 22, 32, .42);
   }
@@ -11,13 +18,19 @@
     position: relative;
     width: 100%;
     max-width: none;
-    max-height: min(78dvh, 560px);
+    max-height: min(calc(var(--mobile-visual-viewport-height, 100dvh) - 12px), 560px);
     margin: 0;
     padding: 24px 18px calc(18px + env(safe-area-inset-bottom));
     border-radius: 24px 24px 0 0;
     overflow: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
     box-shadow: 0 -14px 38px rgba(0,0,0,.22);
     animation: mobileSheetUp .16s ease-out;
+  }
+
+  body.mobileKeyboardOpen .modal {
+    max-height: calc(var(--mobile-visual-viewport-height, 100dvh) - 8px);
   }
 
   .smallModal {
@@ -59,7 +72,7 @@
 
   .modalActions {
     position: sticky;
-    bottom: calc(-18px - env(safe-area-inset-bottom));
+    bottom: 0;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px;
