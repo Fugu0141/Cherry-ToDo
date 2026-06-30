@@ -86,11 +86,7 @@
     background: #334155;
   }
 
-  .mobileActionButton.guard {
-    background: #6b7280;
-  }
-
-  .mobileActionButton.guard.armed {
+  .mobileActionButton.delete {
     background: #dc5652;
   }
 
