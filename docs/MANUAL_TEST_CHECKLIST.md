@@ -158,13 +158,15 @@ http://localhost:8000/
 - [ ] Opening a modal hides the dock until the modal closes.
 - [ ] Desktop card controls are unchanged.
 
-### Mobile bottom sheet behavior
+### Mobile modal and keyboard behavior
 
-- [ ] Task creation opens as a bottom sheet at mobile width.
-- [ ] Date-change UI opens as a bottom sheet at mobile width.
+- [ ] Task creation opens as a compact centered mobile dialog at mobile width.
+- [ ] Date-change UI opens as a compact centered mobile dialog at mobile width.
 - [ ] Inputs are large enough to edit without accidental zoom or missed taps.
-- [ ] Cancel and confirm actions are both easy to tap near the bottom edge.
-- [ ] The bottom sheet respects the mobile viewport height and remains scrollable when needed.
+- [ ] Focusing an input with the virtual keyboard open shifts the whole dialog upward only as much as needed.
+- [ ] The dialog does not stretch into a full bottom sheet while typing.
+- [ ] The dialog returns to its centered position after the keyboard closes.
+- [ ] Cancel, confirm, Change, and Back actions still work during and after keyboard transitions.
 - [ ] Desktop modal layout is unchanged.
 
 ---
