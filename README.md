@@ -5,6 +5,7 @@ Cherry-ToDo is an open-source sticky note todo app for organizing tasks as flows
 Instead of treating tasks as a flat list, Cherry-ToDo lets you start from a root task and extend child tasks like branches. The board is for building and viewing the flow of work, while the future list view is intended for quickly checking what needs to be done today or soon.
 
 > Current status: prototype / early OSS migration
+
 ## Demo
 
 https://fugu0141.github.io/Cherry-ToDo/
@@ -69,38 +70,19 @@ http://localhost:8000/
 
 ```text
 .
-├── index.html
-├── style.css
-├── app.js
-├── ux-fix.css
-├── ux-fix.js
-├── mobile.js
-├── safety-fix.css
-├── safety-fix.js
-├── final-fix.js
-├── date-target-fix.js
-├── docs/
-│   ├── PROJECT_SPEC.md
-│   ├── PRODUCT_VISION.md
-│   ├── TECHNICAL_ARCHITECTURE.md
-│   ├── DATE_TARGET_SPEC.md
-│   ├── LAYOUT_AND_SCHEDULE_SPEC.md
-│   ├── UX_INTERACTION_SPEC.md
-│   ├── MOBILE_UX_SPEC.md
-│   ├── ROADMAP.md
-│   ├── DEVELOPMENT_SETUP.md
-│   ├── MANUAL_TEST_CHECKLIST.md
-│   ├── KNOWN_ISSUES.md
-│   ├── MIGRATION_NOTES.md
-│   └── ORIGINALITY_REVIEW.md
-├── .github/
-│   ├── ISSUE_TEMPLATE/
-│   └── PULL_REQUEST_TEMPLATE.md
+├── index.html                  # GitHub Pages entry point
+├── src/
+│   ├── css/                    # Stylesheets loaded by index.html
+│   └── js/                     # Runtime JavaScript loaded by index.html
+├── docs/                       # Specs, roadmap, architecture, and test notes
+├── .github/                    # Issue and pull request templates
 ├── CONTRIBUTING.md
 ├── CODE_OF_CONDUCT.md
-├── .gitignore
-└── LICENSE
+├── LICENSE
+└── .gitignore
 ```
+
+For the detailed placement rules, see [`docs/CODEBASE_STRUCTURE.md`](docs/CODEBASE_STRUCTURE.md).
 
 ## Documentation
 
@@ -109,16 +91,17 @@ Start here:
 1. [`docs/PROJECT_SPEC.md`](docs/PROJECT_SPEC.md)
 2. [`docs/PRODUCT_VISION.md`](docs/PRODUCT_VISION.md)
 3. [`docs/TECHNICAL_ARCHITECTURE.md`](docs/TECHNICAL_ARCHITECTURE.md)
-4. [`docs/ROADMAP.md`](docs/ROADMAP.md)
-5. [`docs/DEVELOPMENT_SETUP.md`](docs/DEVELOPMENT_SETUP.md)
-6. [`docs/MANUAL_TEST_CHECKLIST.md`](docs/MANUAL_TEST_CHECKLIST.md)
-7. [`docs/KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.md)
-8. [`docs/DATE_TARGET_SPEC.md`](docs/DATE_TARGET_SPEC.md)
-9. [`docs/LAYOUT_AND_SCHEDULE_SPEC.md`](docs/LAYOUT_AND_SCHEDULE_SPEC.md)
-10. [`docs/UX_INTERACTION_SPEC.md`](docs/UX_INTERACTION_SPEC.md)
-11. [`docs/MOBILE_UX_SPEC.md`](docs/MOBILE_UX_SPEC.md)
-12. [`docs/MIGRATION_NOTES.md`](docs/MIGRATION_NOTES.md)
-13. [`docs/ORIGINALITY_REVIEW.md`](docs/ORIGINALITY_REVIEW.md)
+4. [`docs/CODEBASE_STRUCTURE.md`](docs/CODEBASE_STRUCTURE.md)
+5. [`docs/ROADMAP.md`](docs/ROADMAP.md)
+6. [`docs/DEVELOPMENT_SETUP.md`](docs/DEVELOPMENT_SETUP.md)
+7. [`docs/MANUAL_TEST_CHECKLIST.md`](docs/MANUAL_TEST_CHECKLIST.md)
+8. [`docs/KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.md)
+9. [`docs/DATE_TARGET_SPEC.md`](docs/DATE_TARGET_SPEC.md)
+10. [`docs/LAYOUT_AND_SCHEDULE_SPEC.md`](docs/LAYOUT_AND_SCHEDULE_SPEC.md)
+11. [`docs/UX_INTERACTION_SPEC.md`](docs/UX_INTERACTION_SPEC.md)
+12. [`docs/MOBILE_UX_SPEC.md`](docs/MOBILE_UX_SPEC.md)
+13. [`docs/MIGRATION_NOTES.md`](docs/MIGRATION_NOTES.md)
+14. [`docs/ORIGINALITY_REVIEW.md`](docs/ORIGINALITY_REVIEW.md)
 
 ## Development notes
 
