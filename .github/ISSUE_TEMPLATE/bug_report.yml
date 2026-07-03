@@ -1,0 +1,86 @@
+name: Bug report
+description: Report a bug or unexpected behavior
+title: "[Bug]: "
+labels: ["type: bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug!
+        Please provide enough information so the problem can be reproduced.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: Describe the bug clearly.
+      placeholder: "Example: Tasks move to the wrong date after refreshing the page."
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+      placeholder: "Example: The task should stay on the selected date."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Please write the steps needed to reproduce the issue.
+      placeholder: |
+        1. Open Cherry-ToDo
+        2. Create a task on July 3
+        3. Refresh the page
+        4. The task appears on July 2
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      placeholder: "Example: v0.1.0 / commit hash / latest main"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      options:
+        - Windows
+        - macOS
+        - Linux
+        - Android
+        - iOS
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser or runtime
+      placeholder: "Example: Chrome, Firefox, Tauri, etc."
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots or recordings
+      description: Drag and drop images or videos here if useful.
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional context
+      placeholder: "Anything else that may help."
+    validations:
+      required: false
