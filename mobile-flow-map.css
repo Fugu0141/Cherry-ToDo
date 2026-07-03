@@ -4,6 +4,7 @@
 
 @media (max-width: 980px) {
   #flowMap {
+    display: block;
     position: fixed;
     top: calc(72px + env(safe-area-inset-top, 0px));
     right: calc(10px + env(safe-area-inset-right, 0px));
