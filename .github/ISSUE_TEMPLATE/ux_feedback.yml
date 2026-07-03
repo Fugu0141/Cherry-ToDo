@@ -1,0 +1,54 @@
+name: UX feedback
+description: Share feedback about usability, interaction, or visual design
+title: "[UX]: "
+labels: ["type: ux"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for sharing UX feedback!
+        Please describe where you felt confused, slow, or uncomfortable.
+
+  - type: textarea
+    id: situation
+    attributes:
+      label: What were you trying to do?
+      placeholder: "Example: I was trying to move a task to next week on mobile."
+    validations:
+      required: true
+
+  - type: textarea
+    id: confusion
+    attributes:
+      label: What felt confusing or difficult?
+      placeholder: "Example: I could not understand where I was in the timeline."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: device
+    attributes:
+      label: Device
+      options:
+        - Desktop
+        - Tablet
+        - Mobile
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What would feel better?
+      placeholder: "Example: I want to see the surrounding days like a mini-map."
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots or recordings
+      description: Drag and drop files here if useful.
+    validations:
+      required: false
