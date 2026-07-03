@@ -13,6 +13,7 @@ Related documents:
 - `LAYOUT_AND_SCHEDULE_SPEC.md`
 - `UX_INTERACTION_SPEC.md`
 - `MOBILE_UX_SPEC.md`
+- `MOBILE_FLOW_MAP_SPEC.md`
 - `TECHNICAL_ARCHITECTURE.md`
 - `ORIGINALITY_REVIEW.md`
 
@@ -186,6 +187,19 @@ A visual axis for target dates on the board.
 - PC layout: dates progress left to right.
 - Mobile layout: dates progress top to bottom.
 
+### Flow Map
+
+A mobile board minimap that shows current position and rough task-flow structure.
+
+It should behave like a game minimap: useful for orientation, not for reading task text.
+
+```text
+Main board = read and edit task content
+Flow Map   = understand current position and rough structure
+```
+
+See `MOBILE_FLOW_MAP_SPEC.md`.
+
 ### Unscheduled task
 
 A task without a target date.
@@ -267,10 +281,11 @@ Planned mobile directions:
 - list-centered mode
 - root-based flow mode
 - simplified board mode
+- Flow Map assisted board mode
 - bottom sheets for input
 - touch-friendly long press, swipe, and handles
 
-See `MOBILE_UX_SPEC.md`.
+See `MOBILE_UX_SPEC.md` and `MOBILE_FLOW_MAP_SPEC.md`.
 
 ---
 
@@ -318,6 +333,7 @@ Current migration and development priorities:
 9. Redesign auto layout.
 10. Improve same-day subflow display.
 11. Improve mobile UI/UX.
+12. Add mobile Flow Map navigation for board orientation.
 
 ---
 
