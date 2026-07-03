@@ -5,7 +5,8 @@
   const PADDING = 10;
   const ACTIVE_TIMEOUT = 1400;
   const TOOLBAR_SUPPRESS_TIMEOUT = 2200;
-  const WORLD_TO_MAP_SCALE = 0.12;
+  const WORLD_TO_MAP_SCALE_Y = 0.12;
+  const WORLD_TO_MAP_SCALE_X = 0.085;
   const SVG_NS = "http://www.w3.org/2000/svg";
 
   const mobileQuery = window.matchMedia(MOBILE_QUERY);
@@ -181,7 +182,8 @@
   function computeTransform(board) {
     const camera = computeCamera(board);
     return {
-      scale: WORLD_TO_MAP_SCALE,
+      scaleX: WORLD_TO_MAP_SCALE_X,
+      scaleY: WORLD_TO_MAP_SCALE_Y,
       camera,
       centerX: MAP_WIDTH / 2,
       centerY: (MAP_HEIGHT - 12) / 2
@@ -190,15 +192,15 @@
 
   function toMini(point, transform) {
     return {
-      x: transform.centerX + (point.x - transform.camera.x) * transform.scale,
-      y: transform.centerY + (point.y - transform.camera.y) * transform.scale
+      x: transform.centerX + (point.x - transform.camera.x) * transform.scaleX,
+      y: transform.centerY + (point.y - transform.camera.y) * transform.scaleY
     };
   }
 
   function fromMini(point, transform) {
     return {
-      x: (point.x - transform.centerX) / transform.scale + transform.camera.x,
-      y: (point.y - transform.centerY) / transform.scale + transform.camera.y
+      x: (point.x - transform.centerX) / transform.scaleX + transform.camera.x,
+      y: (point.y - transform.centerY) / transform.scaleY + transform.camera.y
     };
   }
 
