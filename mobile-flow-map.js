@@ -202,10 +202,6 @@
     };
   }
 
-  function clamp(value, min, max) {
-    return Math.max(min, Math.min(max, value));
-  }
-
   function isInsideMap(point, margin = 14) {
     return point.x >= -margin
       && point.x <= MAP_WIDTH + margin
@@ -309,18 +305,6 @@
     svg.appendChild(group);
   }
 
-  function drawViewport() {
-    svg.appendChild(makeSvgElement("rect", {
-      class: "flowMapViewport",
-      x: MAP_WIDTH / 2 - 18,
-      y: (MAP_HEIGHT - 12) / 2 - 28,
-      width: 36,
-      height: 56,
-      rx: 4,
-      ry: 4
-    }));
-  }
-
   function renderEmpty() {
     clearSvg();
     svg.appendChild(makeSvgElement("text", {
@@ -359,7 +343,6 @@
     drawDateLanes(transform);
     drawLinks(tasks, taskById, noteSize, transform, selectedId);
     drawNodes(tasks, noteSize, transform, selectedId);
-    drawViewport();
 
     if (selectedId) showFlowMap();
     if (chromeHint) chromeHint.textContent = selectedId ? "Selected" : "Flow Map";
