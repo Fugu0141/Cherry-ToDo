@@ -45,6 +45,10 @@
     return document.querySelector(".note.selected[data-id]")?.dataset.id || null;
   }
 
+  function hasSelectedTask() {
+    return Boolean(selectedTaskId());
+  }
+
   function readNoteSize(board) {
     const sample = document.querySelector(".note[data-id]");
     const boardStyle = window.getComputedStyle(board);
@@ -109,6 +113,8 @@
 
   function suppressFlowMapForTopToolbar(event) {
     if (!isTopToolbarTarget(event.target)) return;
+    if (hasSelectedTask()) return;
+
     suppressFlowMapUntil = Date.now() + TOOLBAR_SUPPRESS_TIMEOUT;
     hideFlowMap();
   }
@@ -119,7 +125,7 @@
 
   function showFlowMap() {
     if (!mapEl || !mobileQuery.matches) return;
-    if (isFlowMapSuppressed()) {
+    if (isFlowMapSuppressed() && !hasSelectedTask()) {
       hideFlowMap();
       return;
     }
@@ -129,7 +135,7 @@
     mapEl.setAttribute("aria-hidden", "false");
     window.clearTimeout(activeTimer);
     activeTimer = window.setTimeout(() => {
-      if (!isPointerActive) hideFlowMap();
+      if (!isPointerActive && !hasSelectedTask()) hideFlowMap();
     }, ACTIVE_TIMEOUT);
   }
 
@@ -165,22 +171,19 @@
   }
 
   function computeBounds(board, tasks, noteSize) {
-    let minX = board.scrollLeft;
-    let minY = board.scrollTop;
-    let maxX = board.scrollLeft + board.clientWidth;
-    let maxY = board.scrollTop + board.clientHeight;
+    let minX = 0;
+    let minY = 0;
+    let maxX = Math.max(board.clientWidth || 1, 1);
+    let maxY = Math.max(board.clientHeight || 1, 1);
 
     for (const task of tasks) {
       const x = Number(task.x || 0);
       const y = Number(task.y || 0);
-      minX = Math.min(minX, x - 48);
-      minY = Math.min(minY, y - 48);
-      maxX = Math.max(maxX, x + noteSize.width + 48);
-      maxY = Math.max(maxY, y + noteSize.height + 48);
+      minX = Math.min(minX, x - 64);
+      minY = Math.min(minY, y - 64);
+      maxX = Math.max(maxX, x + noteSize.width + 64);
+      maxY = Math.max(maxY, y + noteSize.height + 64);
     }
-
-    maxX = Math.max(maxX, board.scrollWidth || 0, minX + 1);
-    maxY = Math.max(maxY, board.scrollHeight || 0, minY + 1);
 
     return { minX, minY, maxX, maxY, width: maxX - minX, height: maxY - minY };
   }
@@ -188,30 +191,32 @@
   function computeTransform(bounds) {
     const usableW = MAP_WIDTH - PADDING * 2;
     const usableH = MAP_HEIGHT - PADDING * 2 - 12;
-    const scale = Math.min(usableW / Math.max(bounds.width, 1), usableH / Math.max(bounds.height, 1));
-    const drawnW = bounds.width * scale;
-    const drawnH = bounds.height * scale;
 
     return {
-      scale,
-      offsetX: PADDING + (usableW - drawnW) / 2,
-      offsetY: PADDING + (usableH - drawnH) / 2,
+      scaleX: usableW / Math.max(bounds.width, 1),
+      scaleY: usableH / Math.max(bounds.height, 1),
+      offsetX: PADDING,
+      offsetY: PADDING,
       bounds
     };
   }
 
   function toMini(point, transform) {
     return {
-      x: transform.offsetX + (point.x - transform.bounds.minX) * transform.scale,
-      y: transform.offsetY + (point.y - transform.bounds.minY) * transform.scale
+      x: transform.offsetX + (point.x - transform.bounds.minX) * transform.scaleX,
+      y: transform.offsetY + (point.y - transform.bounds.minY) * transform.scaleY
     };
   }
 
   function fromMini(point, transform) {
     return {
-      x: (point.x - transform.offsetX) / transform.scale + transform.bounds.minX,
-      y: (point.y - transform.offsetY) / transform.scale + transform.bounds.minY
+      x: (point.x - transform.offsetX) / transform.scaleX + transform.bounds.minX,
+      y: (point.y - transform.offsetY) / transform.scaleY + transform.bounds.minY
     };
+  }
+
+  function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
   }
 
   function connectedToSelected(task, selectedId) {
@@ -311,17 +316,21 @@
       y: board.scrollTop + board.clientHeight
     }, transform);
 
-    const x = Math.max(PADDING, Math.min(topLeft.x, MAP_WIDTH - PADDING));
-    const y = Math.max(PADDING, Math.min(topLeft.y, MAP_HEIGHT - PADDING));
-    const width = Math.max(6, Math.min(MAP_WIDTH - PADDING - x, bottomRight.x - topLeft.x));
-    const height = Math.max(6, Math.min(MAP_HEIGHT - PADDING - 12 - y, bottomRight.y - topLeft.y));
+    const minX = PADDING;
+    const maxX = MAP_WIDTH - PADDING;
+    const minY = PADDING;
+    const maxY = MAP_HEIGHT - PADDING - 12;
+    const x1 = clamp(Math.min(topLeft.x, bottomRight.x), minX, maxX);
+    const x2 = clamp(Math.max(topLeft.x, bottomRight.x), minX, maxX);
+    const y1 = clamp(Math.min(topLeft.y, bottomRight.y), minY, maxY);
+    const y2 = clamp(Math.max(topLeft.y, bottomRight.y), minY, maxY);
 
     svg.appendChild(makeSvgElement("rect", {
       class: "flowMapViewport",
-      x,
-      y,
-      width,
-      height,
+      x: x1,
+      y: y1,
+      width: Math.max(6, x2 - x1),
+      height: Math.max(6, y2 - y1),
       rx: 4,
       ry: 4
     }));
@@ -368,6 +377,7 @@
     drawNodes(tasks, noteSize, transform, selectedId);
     drawViewport(board, transform);
 
+    if (selectedId) showFlowMap();
     if (chromeHint) chromeHint.textContent = selectedId ? "Selected" : "Flow Map";
   }
 
