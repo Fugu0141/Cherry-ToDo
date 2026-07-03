@@ -1,0 +1,71 @@
+name: Feature request
+description: Suggest a new feature or improvement
+title: "[Feature]: "
+labels: ["type: feature", "philosophy: needs discussion"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting an idea!
+        Cherry-ToDo values flow-based task management, not just adding more features.
+        Please explain the problem first.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the user problem, not only the feature itself.
+      placeholder: "Example: It is hard to understand the surrounding task structure on mobile."
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe your idea.
+      placeholder: "Example: Add a mini-map-like overview in the corner."
+    validations:
+      required: true
+
+  - type: textarea
+    id: cherry_fit
+    attributes:
+      label: Why does this fit Cherry-ToDo?
+      description: Explain how this supports Cherry-ToDo's flow-based design.
+      placeholder: "Example: It helps users understand the flow of tasks without switching screens."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Timeline
+        - Task creation
+        - Task editing
+        - Mobile UX
+        - Desktop UX
+        - Data / storage
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Are there simpler ways to solve this?
+      placeholder: "Example: A collapsible overview, zoom mode, or gesture-based navigation."
+    validations:
+      required: false
+
+  - type: textarea
+    id: mockups
+    attributes:
+      label: Mockups or screenshots
+      description: Drag and drop sketches, screenshots, or videos if available.
+    validations:
+      required: false
