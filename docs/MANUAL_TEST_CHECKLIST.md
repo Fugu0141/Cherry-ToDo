@@ -63,6 +63,15 @@ http://localhost:8000/
 - [ ] Turning date lanes off does not break task dragging.
 - [ ] Turning date lanes back on restores lane rendering.
 
+### Date-only timezone behavior
+
+- [ ] Today's lane uses the browser's local calendar date, not UTC date.
+- [ ] New root tasks default to the browser's local calendar date.
+- [ ] New child tasks created by touch fallback also default to the local calendar date.
+- [ ] Date lane / boundary date math stores plain `YYYY-MM-DD` strings.
+- [ ] Adding one day around month and year boundaries does not shift by timezone.
+- [ ] Existing saved task dates do not change after reload.
+
 ---
 
 ## List view behavior
