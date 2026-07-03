@@ -1,5 +1,5 @@
-name: "Bug report / *バグ報告*"
-description: "Report a bug or unexpected behavior / *バグや想定外の動作を報告します*"
+name: "Bug report"
+description: "バグや想定外の動作を報告します"
 title: "[Bug]: "
 labels: ["type: bug"]
 body:
@@ -7,83 +7,87 @@ body:
     attributes:
       value: |
         Thanks for reporting a bug!
-        *バグ報告ありがとうございます。*
 
         Please provide enough information so the problem can be reproduced.
-        *問題を再現できるように、できるだけ具体的に書いてください。*
+        日本語: 問題を再現できるように、できるだけ具体的に書いてください。
 
   - type: textarea
     id: summary
     attributes:
-      label: "What happened? / *何が起きましたか？*"
-      description: "Describe the bug clearly. / *バグの内容を具体的に書いてください。*"
-      placeholder: "Example / 例: The task date changes after refreshing the page. / *ページ更新後にタスクの日付が変わります。*"
+      label: "What happened?"
+      description: "日本語: 何が起きましたか？ バグの内容を具体的に書いてください。"
+      placeholder: "Example: The task date changes after refreshing the page."
     validations:
       required: true
 
   - type: textarea
     id: expected
     attributes:
-      label: "Expected behavior / *期待していた動作*"
-      placeholder: "Example / *例*: The task should stay on the selected date. / *選択した日付のまま表示されてほしいです。*"
+      label: "Expected behavior"
+      description: "日本語: 期待していた動作を書いてください。"
+      placeholder: "Example: The task should stay on the selected date."
     validations:
       required: true
 
   - type: textarea
     id: steps
     attributes:
-      label: "Steps to reproduce / *再現手順*"
-      description: "Please write the steps needed to reproduce the issue. / *問題を再現するための手順を書いてください。*"
+      label: "Steps to reproduce"
+      description: "日本語: 問題を再現するための手順を書いてください。"
       placeholder: |
-        1. Open Cherry-ToDo / *Cherry-ToDoを開く*
-        2. Create a task / *タスクを作成する*
-        3. Refresh the page / *ページを更新する*
-        4. Check the result / *結果を確認する*
+        1. Open Cherry-ToDo
+        2. Create a task
+        3. Refresh the page
+        4. Check the result
     validations:
       required: true
 
   - type: input
     id: version
     attributes:
-      label: "Version / *バージョン*"
-      placeholder: "Example / *例*: v0.1.0 / commit hash / latest main"
+      label: "Version"
+      description: "日本語: 使用しているバージョン、commit hash、または latest main などを書いてください。"
+      placeholder: "Example: v0.1.0 / commit hash / latest main"
     validations:
       required: false
 
   - type: dropdown
     id: environment
     attributes:
-      label: "Environment / *環境*"
+      label: "Environment"
+      description: "日本語: 使用している環境を選んでください。"
       options:
         - Windows
         - macOS
         - Linux
         - Android
         - iOS
-        - "Other / *その他*"
+        - Other
     validations:
       required: true
 
   - type: input
     id: browser
     attributes:
-      label: "Browser or runtime / *ブラウザまたは実行環境*"
-      placeholder: "Example / *例*: Chrome, Firefox, Tauri"
+      label: "Browser or runtime"
+      description: "日本語: ブラウザまたは実行環境を書いてください。"
+      placeholder: "Example: Chrome, Firefox, Tauri"
     validations:
       required: false
 
   - type: textarea
     id: screenshots
     attributes:
-      label: "Screenshots or recordings / *スクリーンショット・録画*"
-      description: "Attach files if useful. / *必要であれば画像や動画を添付してください。*"
+      label: "Screenshots or recordings"
+      description: "日本語: 必要であれば画像や動画を添付してください。"
     validations:
       required: false
 
   - type: textarea
     id: additional_context
     attributes:
-      label: "Additional context / *補足情報*"
-      placeholder: "Anything else that may help. / *ほかに役立つ情報があれば書いてください。*"
+      label: "Additional context"
+      description: "日本語: ほかに役立つ情報があれば書いてください。"
+      placeholder: "Anything else that may help."
     validations:
       required: false

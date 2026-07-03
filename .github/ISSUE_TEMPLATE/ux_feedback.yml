@@ -1,5 +1,5 @@
-name: "UX feedback / UXフィードバック"
-description: "Share feedback about usability, interaction, or visual design / 使いにくさ・操作感・見た目について共有します"
+name: "UX feedback"
+description: "使いにくさ・操作感・見た目について共有します"
 title: "[UX]: "
 labels: ["type: ux"]
 body:
@@ -7,51 +7,54 @@ body:
     attributes:
       value: |
         Thanks for sharing UX feedback!
-        UXフィードバックありがとうございます。
 
         Please describe where you felt confused, slow, or uncomfortable.
-        どこで迷ったか、遅く感じたか、使いづらかったかを教えてください。
+        日本語: どこで迷ったか、遅く感じたか、使いづらかったかを教えてください。
 
   - type: textarea
     id: situation
     attributes:
-      label: "What were you trying to do? / 何をしようとしていましたか？"
-      placeholder: "Example / 例: I was trying to move a task to next week on mobile. / モバイルでタスクを来週に移動しようとしていました。"
+      label: "What were you trying to do?"
+      description: "日本語: そのとき何をしようとしていたかを書いてください。"
+      placeholder: "Example: I was trying to move a task to next week on mobile."
     validations:
       required: true
 
   - type: textarea
     id: confusion
     attributes:
-      label: "What felt confusing or difficult? / 何が分かりにくい・難しいと感じましたか？"
-      placeholder: "Example / 例: I could not understand where I was in the timeline. / タイムライン上で今どこを見ているのか分かりにくかったです。"
+      label: "What felt confusing or difficult?"
+      description: "日本語: 何が分かりにくい・難しい・使いづらいと感じたかを書いてください。"
+      placeholder: "Example: I could not understand where I was in the timeline."
     validations:
       required: true
 
   - type: dropdown
     id: device
     attributes:
-      label: "Device / デバイス"
+      label: "Device"
+      description: "日本語: 使用していたデバイスを選んでください。"
       options:
-        - "Desktop / デスクトップ"
-        - "Tablet / タブレット"
-        - "Mobile / モバイル"
-        - "Other / その他"
+        - Desktop
+        - Tablet
+        - Mobile
+        - Other
     validations:
       required: true
 
   - type: textarea
     id: expected
     attributes:
-      label: "What would feel better? / どうなると使いやすくなりそうですか？"
-      placeholder: "Example / 例: I want to see the surrounding days like a mini-map. / 周囲の日付をミニマップのように見られるとよさそうです。"
+      label: "What would feel better?"
+      description: "日本語: どうなると使いやすくなりそうかを書いてください。"
+      placeholder: "Example: I want to see the surrounding days like a mini-map."
     validations:
       required: false
 
   - type: textarea
     id: screenshots
     attributes:
-      label: "Screenshots or recordings / スクリーンショット・録画"
-      description: "Attach files if useful. / 必要であれば画像や動画を添付してください。"
+      label: "Screenshots or recordings"
+      description: "日本語: 必要であれば画像や動画を添付してください。"
     validations:
       required: false
