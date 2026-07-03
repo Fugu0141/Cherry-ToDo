@@ -3,7 +3,7 @@
   const MAP_WIDTH = 132;
   const MAP_HEIGHT = 172;
   const PADDING = 10;
-  const ACTIVE_TIMEOUT = 900;
+  const ACTIVE_TIMEOUT = 1400;
   const SVG_NS = "http://www.w3.org/2000/svg";
 
   const mobileQuery = window.matchMedia(MOBILE_QUERY);
@@ -63,6 +63,7 @@
     mapEl.className = "hidden";
     mapEl.setAttribute("role", "button");
     mapEl.setAttribute("tabindex", "0");
+    mapEl.setAttribute("aria-hidden", "true");
     mapEl.setAttribute("aria-label", "Flow Map: board overview and navigation");
 
     svg = document.createElementNS(SVG_NS, "svg");
@@ -94,17 +95,25 @@
     return mapEl;
   }
 
-  function setActive() {
+  function hideFlowMap() {
     if (!mapEl) return;
+    mapEl.classList.remove("visible", "active");
+    mapEl.setAttribute("aria-hidden", "true");
+  }
+
+  function showFlowMap() {
+    if (!mapEl || !mobileQuery.matches) return;
+    mapEl.classList.remove("hidden");
     mapEl.classList.add("visible");
+    mapEl.setAttribute("aria-hidden", "false");
     window.clearTimeout(activeTimer);
     activeTimer = window.setTimeout(() => {
-      if (!isPointerActive) mapEl.classList.remove("visible");
+      if (!isPointerActive) hideFlowMap();
     }, ACTIVE_TIMEOUT);
   }
 
   function scheduleRender({ active = false } = {}) {
-    if (active) setActive();
+    if (active) showFlowMap();
     if (renderQueued) return;
 
     renderQueued = true;
@@ -313,12 +322,14 @@
 
     if (!board || !mobileQuery.matches) {
       mapEl.classList.add("hidden");
+      hideFlowMap();
       return;
     }
 
     const tasks = tasksFromApp().filter(task => task && task.id);
     mapEl.classList.toggle("hidden", tasks.length === 0);
     if (!tasks.length) {
+      hideFlowMap();
       renderEmpty();
       return;
     }
@@ -364,6 +375,7 @@
     event.stopPropagation();
     isPointerActive = true;
     mapEl.classList.add("active", "visible");
+    mapEl.setAttribute("aria-hidden", "false");
     mapEl.setPointerCapture(event.pointerId);
     moveBoardFromEvent(event);
   }
@@ -383,7 +395,7 @@
     } catch {
       // Pointer capture may already be released.
     }
-    setActive();
+    showFlowMap();
   }
 
   function onMapKeyDown(event) {
@@ -412,7 +424,7 @@
     window.addEventListener("resize", () => scheduleRender({ active: true }), { passive: true });
     mobileQuery.addEventListener("change", () => scheduleRender({ active: true }));
 
-    const observer = new MutationObserver(() => scheduleRender());
+    const observer = new MutationObserver(() => scheduleRender({ active: true }));
     observer.observe(board, {
       subtree: true,
       childList: true,
