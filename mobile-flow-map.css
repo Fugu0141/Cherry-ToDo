@@ -113,13 +113,6 @@
     stroke-width: 2;
   }
 
-  .flowMapViewport {
-    fill: rgba(255, 255, 255, 0.18);
-    stroke: rgba(255, 83, 121, 0.9);
-    stroke-width: 2;
-    stroke-dasharray: 4 3;
-  }
-
   .flowMapCamera {
     fill: rgba(255, 83, 121, 0.95);
     stroke: rgba(255, 255, 255, 0.96);
