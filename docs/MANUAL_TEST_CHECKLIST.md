@@ -36,6 +36,21 @@ http://localhost:8000/
 
 ---
 
+## First-run welcome window
+
+- [ ] Clear `localStorage.cherry-todo-welcome-dismissed-v1` and reload the app.
+- [ ] Confirm the welcome window appears on the first launch.
+- [ ] Confirm the welcome window describes Cherry-ToDo as an OSS app.
+- [ ] Confirm `はじめる`, the close button, backdrop click, and `Esc` close the window.
+- [ ] Confirm closing the window writes `cherry-todo-welcome-dismissed-v1 = true`.
+- [ ] Reload the app and confirm the window does not appear again.
+- [ ] Confirm the GitHub, contribution, and release notes links open in a new tab.
+- [ ] Confirm the donation/support entry is shown as a placeholder and is not a broken link.
+- [ ] Confirm the welcome window fits inside a mobile-sized viewport.
+- [ ] Confirm task data under `quest-sticky-todo-v10` is not changed by dismissing the window.
+
+---
+
 ## Core task flow
 
 - [ ] Create a root task from `＋ ルート`.
@@ -106,6 +121,7 @@ http://localhost:8000/
 - [ ] New changes save back to the current storage key.
 - [ ] Reloading the page preserves tasks, dates, status, branches, and schedule objects.
 - [ ] Reset only clears the app state after confirmation.
+- [ ] Dismissing first-run onboarding writes only `cherry-todo-welcome-dismissed-v1` and does not rewrite task data.
 
 ### Schedule migration behavior
 
@@ -140,6 +156,7 @@ http://localhost:8000/
 - [ ] List view rows remain readable on a mobile-sized viewport.
 - [ ] List view done / todo and board-open controls are easy to tap.
 - [ ] Same-day expanded lanes remain scrollable and readable in vertical mode.
+- [ ] The first-run welcome window fits on the screen and remains scrollable when needed.
 
 ### Mobile action dock behavior
 
