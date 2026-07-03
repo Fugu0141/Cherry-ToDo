@@ -78,19 +78,21 @@
   }
 
   .flowMapLane {
-    stroke: rgba(255, 83, 121, 0.18);
+    stroke: rgba(255, 83, 121, 0.16);
     stroke-width: 1;
   }
 
   .flowMapLink {
-    stroke: rgba(25, 25, 25, 0.22);
-    stroke-width: 1.6;
+    fill: none;
+    stroke: rgba(25, 25, 25, 0.14);
+    stroke-width: 1.25;
     stroke-linecap: round;
+    stroke-linejoin: round;
   }
 
   .flowMapLink.connected {
-    stroke: rgba(115, 87, 255, 0.58);
-    stroke-width: 2.4;
+    stroke: rgba(115, 87, 255, 0.42);
+    stroke-width: 1.8;
   }
 
   .flowMapNode {
