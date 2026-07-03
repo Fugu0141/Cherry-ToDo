@@ -4,6 +4,7 @@
   const MAP_HEIGHT = 172;
   const PADDING = 10;
   const ACTIVE_TIMEOUT = 1400;
+  const TOOLBAR_SUPPRESS_TIMEOUT = 2200;
   const SVG_NS = "http://www.w3.org/2000/svg";
 
   const mobileQuery = window.matchMedia(MOBILE_QUERY);
@@ -14,6 +15,7 @@
   let renderQueued = false;
   let isPointerActive = false;
   let latestTransform = null;
+  let suppressFlowMapUntil = 0;
 
   function boardEl() {
     return document.getElementById("board");
@@ -101,8 +103,27 @@
     mapEl.setAttribute("aria-hidden", "true");
   }
 
+  function isTopToolbarTarget(target) {
+    return Boolean(target?.closest?.(".topbar"));
+  }
+
+  function suppressFlowMapForTopToolbar(event) {
+    if (!isTopToolbarTarget(event.target)) return;
+    suppressFlowMapUntil = Date.now() + TOOLBAR_SUPPRESS_TIMEOUT;
+    hideFlowMap();
+  }
+
+  function isFlowMapSuppressed() {
+    return Date.now() < suppressFlowMapUntil;
+  }
+
   function showFlowMap() {
     if (!mapEl || !mobileQuery.matches) return;
+    if (isFlowMapSuppressed()) {
+      hideFlowMap();
+      return;
+    }
+
     mapEl.classList.remove("hidden");
     mapEl.classList.add("visible");
     mapEl.setAttribute("aria-hidden", "false");
@@ -420,6 +441,8 @@
     const board = boardEl();
     if (!board) return;
 
+    document.addEventListener("pointerdown", suppressFlowMapForTopToolbar, true);
+    document.addEventListener("click", suppressFlowMapForTopToolbar, true);
     board.addEventListener("scroll", () => scheduleRender({ active: true }), { passive: true });
     window.addEventListener("resize", () => scheduleRender({ active: true }), { passive: true });
     mobileQuery.addEventListener("change", () => scheduleRender({ active: true }));
