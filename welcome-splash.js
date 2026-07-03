@@ -26,57 +26,41 @@
     backdrop.className = "welcomeSplashBackdrop hidden";
     backdrop.innerHTML = `
       <section class="welcomeSplash" role="dialog" aria-modal="true" aria-labelledby="welcomeSplashTitle">
-        <div class="welcomeSplashHero">
-          <div class="welcomeSplashTopLine">
-            <div class="welcomeSplashLogo" aria-label="Cherry-ToDo">
-              <span class="welcomeSplashLogoMark">C</span>
-              <span>Cherry-ToDo</span>
-            </div>
-            <div class="welcomeSplashVersion">OSS prototype</div>
-            <button type="button" class="welcomeSplashClose" data-welcome-close aria-label="閉じる">×</button>
+        <div class="welcomeSplashHeader">
+          <div class="welcomeSplashBrand" aria-label="Cherry-ToDo">
+            <span class="welcomeSplashMark">C</span>
+            <span>Cherry-ToDo</span>
           </div>
-          <div class="welcomeSplashTitle">
-            <h2 id="welcomeSplashTitle">Welcome to Cherry-ToDo</h2>
-            <p>Cherry-ToDoは、タスクをただのリストではなく「流れ・分岐・日付」で整理する、オープンソースの付箋ToDoアプリです。</p>
-          </div>
+          <button type="button" class="welcomeSplashClose" data-welcome-close aria-label="閉じる">×</button>
         </div>
 
-        <div class="welcomeSplashBody">
-          <div>
-            <p class="welcomeSplashSectionTitle">Start</p>
-            <p class="welcomeSplashLead">
-              まずはルートタスクを作り、そこから子タスクを伸ばしていきます。
-              ボードは流れを組み立てる場所、リスト表示は今日やることを確認する場所として育てていく予定です。
-            </p>
-            <div class="welcomeSplashActions">
-              <button type="button" class="welcomeSplashAction primary" data-welcome-close>はじめる</button>
-              <a class="welcomeSplashLink" href="${repoUrl}" target="_blank" rel="noopener noreferrer">
-                <strong>GitHubを開く</strong>
-                <span>ソースコード、Issue、今後の開発状況を見る</span>
-              </a>
-            </div>
-            <p class="welcomeSplashFootnote">
-              この案内は初回起動時だけ表示されます。閉じると、このブラウザでは次回から表示されません。
-            </p>
+        <div class="welcomeSplashContent">
+          <p class="welcomeSplashKicker">Flow first, date second.</p>
+          <h2 id="welcomeSplashTitle">やることの流れを、見失わない。</h2>
+          <p class="welcomeSplashLead">
+            Cherry-ToDoは、タスクを付箋のように並べながら、親子関係と日付で整理するOSSのToDoアプリです。
+          </p>
+
+          <div class="welcomeSplashFlow" aria-label="Cherry-ToDoの基本コンセプト">
+            <span>ルート</span>
+            <span aria-hidden="true">→</span>
+            <span>子タスク</span>
+            <span aria-hidden="true">→</span>
+            <span>今日やること</span>
           </div>
 
-          <div>
-            <p class="welcomeSplashSectionTitle">Community</p>
-            <div class="welcomeSplashLinks">
-              <a class="welcomeSplashLink" href="${repoUrl}/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener noreferrer">
-                <strong>貢献する</strong>
-                <span>バグ報告・要望・ドキュメント改善・PRの入口</span>
-              </a>
-              <div class="welcomeSplashPlaceholder" aria-disabled="true">
-                <strong>寄付</strong>
-                <span>支援ページは後から追加予定です</span>
-              </div>
-              <a class="welcomeSplashLink" href="${repoUrl}/releases" target="_blank" rel="noopener noreferrer">
-                <strong>リリースノート</strong>
-                <span>更新内容を確認する場所として整備予定です</span>
-              </a>
-            </div>
-          </div>
+          <p class="welcomeSplashHint">
+            まずはルートを作って、必要な作業を枝のように伸ばしてみてください。
+          </p>
+
+          <button type="button" class="welcomeSplashStart" data-welcome-close>はじめる</button>
+        </div>
+
+        <div class="welcomeSplashFooter" aria-label="プロジェクトリンク">
+          <a href="${repoUrl}" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a href="${repoUrl}/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener noreferrer">貢献する</a>
+          <span>寄付は準備中</span>
+          <a href="${repoUrl}/releases" target="_blank" rel="noopener noreferrer">リリースノート</a>
         </div>
       </section>
     `;
@@ -129,8 +113,8 @@
     previouslyFocused = document.activeElement;
     backdrop.classList.remove("hidden");
 
-    const firstButton = backdrop.querySelector("[data-welcome-close]");
-    if (firstButton) firstButton.focus({ preventScroll: true });
+    const startButton = backdrop.querySelector(".welcomeSplashStart");
+    if (startButton) startButton.focus({ preventScroll: true });
 
     document.addEventListener("keydown", onKeyDown);
   }
