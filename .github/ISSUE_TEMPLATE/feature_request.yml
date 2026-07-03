@@ -1,0 +1,76 @@
+name: "Feature request / 機能要望"
+description: "Suggest a new feature or improvement / 新機能や改善案を提案します"
+title: "[Feature]: "
+labels: ["type: feature", "philosophy: needs discussion"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting an idea!
+        アイデアの提案ありがとうございます。
+
+        Cherry-ToDo values flow-based task management, not just adding more features.
+        Cherry-ToDoは、ただ機能を増やすことよりも、流れを重視したタスク管理を大切にしています。
+
+        Please explain the problem first.
+        まずは「何に困っているのか」を教えてください。
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: "What problem does this solve? / どんな困りごとを解決しますか？"
+      description: "Describe the user problem, not only the feature itself. / 機能そのものだけでなく、ユーザーの困りごとを書いてください。"
+      placeholder: "Example / 例: It is hard to understand the surrounding task structure on mobile. / モバイルで周囲のタスク構造を把握しづらいです。"
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: "Proposed solution / 提案する解決策"
+      description: "Describe your idea. / アイデアを書いてください。"
+      placeholder: "Example / 例: Add a mini-map-like overview in the corner. / 右上にミニマップのような全体表示を追加する。"
+    validations:
+      required: true
+
+  - type: textarea
+    id: cherry_fit
+    attributes:
+      label: "Why does this fit Cherry-ToDo? / なぜCherry-ToDoに合うと思いますか？"
+      description: "Explain how this supports Cherry-ToDo's flow-based design. / Cherry-ToDoの流れ重視の設計にどう役立つか説明してください。"
+      placeholder: "Example / 例: It helps users understand the flow of tasks without switching screens. / 画面を切り替えずにタスクの流れを把握できます。"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: "Area / 分野"
+      options:
+        - "Timeline / タイムライン"
+        - "Task creation / タスク作成"
+        - "Task editing / タスク編集"
+        - "Mobile UX / モバイルUX"
+        - "Desktop UX / デスクトップUX"
+        - "Data / storage / データ・保存"
+        - "Documentation / ドキュメント"
+        - "Other / その他"
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: "Alternatives considered / 検討した代替案"
+      description: "Are there simpler ways to solve this? / もっとシンプルな解決方法はありますか？"
+      placeholder: "Example / 例: A collapsible overview, zoom mode, or gesture-based navigation. / 折りたたみ表示、ズーム、ジェスチャー操作など。"
+    validations:
+      required: false
+
+  - type: textarea
+    id: mockups
+    attributes:
+      label: "Mockups or screenshots / モックアップ・スクリーンショット"
+      description: "Attach sketches, screenshots, or videos if available. / スケッチ、画像、動画があれば添付してください。"
+    validations:
+      required: false

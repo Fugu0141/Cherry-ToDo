@@ -1,0 +1,40 @@
+name: "Documentation request / ドキュメント改善"
+description: "Request improvements to documentation / ドキュメントの改善を提案します"
+title: "[Docs]: "
+labels: ["type: docs"]
+body:
+  - type: textarea
+    id: target
+    attributes:
+      label: "Which document or section? / どのドキュメント・項目ですか？"
+      placeholder: "Example / 例: README, CONTRIBUTING.md, Japanese guide, installation guide"
+    validations:
+      required: true
+
+  - type: textarea
+    id: issue
+    attributes:
+      label: "What is unclear or missing? / 何が分かりにくい・不足していますか？"
+      placeholder: "Example / 例: I could not understand how to run the app locally. / ローカルでの起動方法が分かりませんでした。"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: language
+    attributes:
+      label: "Language / 言語"
+      options:
+        - "English / 英語"
+        - "Japanese / 日本語"
+        - "Both / 両方"
+        - "Other / その他"
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: "Suggested improvement / 改善案"
+      placeholder: "Example / 例: Add screenshots and a short setup guide. / スクリーンショットと短いセットアップ手順を追加する。"
+    validations:
+      required: false
