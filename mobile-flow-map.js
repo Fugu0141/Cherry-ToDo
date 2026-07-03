@@ -5,6 +5,7 @@
   const PADDING = 10;
   const ACTIVE_TIMEOUT = 1400;
   const TOOLBAR_SUPPRESS_TIMEOUT = 2200;
+  const WORLD_TO_MAP_SCALE = 0.12;
   const SVG_NS = "http://www.w3.org/2000/svg";
 
   const mobileQuery = window.matchMedia(MOBILE_QUERY);
@@ -170,53 +171,54 @@
     };
   }
 
-  function computeBounds(board, tasks, noteSize) {
-    let minX = 0;
-    let minY = 0;
-    let maxX = Math.max(board.clientWidth || 1, 1);
-    let maxY = Math.max(board.clientHeight || 1, 1);
-
-    for (const task of tasks) {
-      const x = Number(task.x || 0);
-      const y = Number(task.y || 0);
-      minX = Math.min(minX, x - 64);
-      minY = Math.min(minY, y - 64);
-      maxX = Math.max(maxX, x + noteSize.width + 64);
-      maxY = Math.max(maxY, y + noteSize.height + 64);
-    }
-
-    return { minX, minY, maxX, maxY, width: maxX - minX, height: maxY - minY };
+  function selectedTask(tasks, selectedId) {
+    if (!selectedId) return null;
+    return tasks.find(task => task.id === selectedId) || null;
   }
 
-  function computeTransform(bounds) {
-    const usableW = MAP_WIDTH - PADDING * 2;
-    const usableH = MAP_HEIGHT - PADDING * 2 - 12;
+  function computeCamera(board, tasks, noteSize, selectedId) {
+    const selected = selectedTask(tasks, selectedId);
+    if (selected) return taskCenter(selected, noteSize);
 
     return {
-      scaleX: usableW / Math.max(bounds.width, 1),
-      scaleY: usableH / Math.max(bounds.height, 1),
-      offsetX: PADDING,
-      offsetY: PADDING,
-      bounds
+      x: board.scrollLeft + board.clientWidth / 2,
+      y: board.scrollTop + board.clientHeight / 2
+    };
+  }
+
+  function computeTransform(board, tasks, noteSize, selectedId) {
+    const camera = computeCamera(board, tasks, noteSize, selectedId);
+    return {
+      scale: WORLD_TO_MAP_SCALE,
+      camera,
+      centerX: MAP_WIDTH / 2,
+      centerY: (MAP_HEIGHT - 12) / 2
     };
   }
 
   function toMini(point, transform) {
     return {
-      x: transform.offsetX + (point.x - transform.bounds.minX) * transform.scaleX,
-      y: transform.offsetY + (point.y - transform.bounds.minY) * transform.scaleY
+      x: transform.centerX + (point.x - transform.camera.x) * transform.scale,
+      y: transform.centerY + (point.y - transform.camera.y) * transform.scale
     };
   }
 
   function fromMini(point, transform) {
     return {
-      x: (point.x - transform.offsetX) / transform.scaleX + transform.bounds.minX,
-      y: (point.y - transform.offsetY) / transform.scaleY + transform.bounds.minY
+      x: (point.x - transform.centerX) / transform.scale + transform.camera.x,
+      y: (point.y - transform.centerY) / transform.scale + transform.camera.y
     };
   }
 
   function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
+  }
+
+  function isInsideMap(point, margin = 14) {
+    return point.x >= -margin
+      && point.x <= MAP_WIDTH + margin
+      && point.y >= -margin
+      && point.y <= MAP_HEIGHT - 12 + margin;
   }
 
   function connectedToSelected(task, selectedId) {
@@ -245,9 +247,9 @@
       let worldPoint;
       try {
         worldPoint = vertical && typeof vDateLineY === "function"
-          ? { x: transform.bounds.minX, y: vDateLineY(date) }
+          ? { x: transform.camera.x, y: vDateLineY(date) }
           : typeof hDateLineX === "function"
-            ? { x: hDateLineX(date), y: transform.bounds.minY }
+            ? { x: hDateLineX(date), y: transform.camera.y }
             : null;
       } catch {
         worldPoint = null;
@@ -255,6 +257,8 @@
 
       if (!worldPoint) return;
       const mini = toMini(worldPoint, transform);
+      if (!isInsideMap(mini, 0)) return;
+
       const line = vertical
         ? makeSvgElement("line", { class: "flowMapLane", x1: PADDING, y1: mini.y, x2: MAP_WIDTH - PADDING, y2: mini.y })
         : makeSvgElement("line", { class: "flowMapLane", x1: mini.x, y1: PADDING, x2: mini.x, y2: MAP_HEIGHT - PADDING - 12 });
@@ -271,6 +275,8 @@
       const parent = taskById.get(task.parentId);
       const parentPoint = toMini(taskCenter(parent, noteSize), transform);
       const childPoint = toMini(taskCenter(task, noteSize), transform);
+      if (!isInsideMap(parentPoint) && !isInsideMap(childPoint)) continue;
+
       const isConnected = selectedId && (task.id === selectedId || parent.id === selectedId);
 
       group.appendChild(makeSvgElement("line", {
@@ -290,6 +296,8 @@
 
     for (const task of tasks) {
       const point = toMini(taskCenter(task, noteSize), transform);
+      if (!isInsideMap(point, 4)) continue;
+
       const classes = ["flowMapNode"];
       if (task.status === "done") classes.push("done");
       if (connectedToSelected(task, selectedId)) classes.push("connected");
@@ -336,6 +344,15 @@
     }));
   }
 
+  function drawCameraMarker() {
+    svg.appendChild(makeSvgElement("circle", {
+      class: "flowMapCamera",
+      cx: MAP_WIDTH / 2,
+      cy: (MAP_HEIGHT - 12) / 2,
+      r: 3.2
+    }));
+  }
+
   function renderEmpty() {
     clearSvg();
     svg.appendChild(makeSvgElement("text", {
@@ -365,9 +382,8 @@
     }
 
     const noteSize = readNoteSize(board);
-    const bounds = computeBounds(board, tasks, noteSize);
-    const transform = computeTransform(bounds);
     const selectedId = selectedTaskId();
+    const transform = computeTransform(board, tasks, noteSize, selectedId);
     const taskById = new Map(tasks.map(task => [task.id, task]));
 
     latestTransform = transform;
@@ -376,6 +392,7 @@
     drawLinks(tasks, taskById, noteSize, transform, selectedId);
     drawNodes(tasks, noteSize, transform, selectedId);
     drawViewport(board, transform);
+    drawCameraMarker();
 
     if (selectedId) showFlowMap();
     if (chromeHint) chromeHint.textContent = selectedId ? "Selected" : "Flow Map";
