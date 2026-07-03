@@ -1,0 +1,263 @@
+.welcomeSplashBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 220;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(14px, 4vw, 32px);
+  background: rgba(12, 16, 26, .62);
+  backdrop-filter: blur(8px);
+}
+
+.welcomeSplashBackdrop.hidden {
+  display: none;
+}
+
+.welcomeSplash {
+  width: min(880px, 100%);
+  max-height: min(760px, calc(100dvh - 32px));
+  overflow: auto;
+  color: #f8fbff;
+  background: #101522;
+  border: 1px solid rgba(255, 255, 255, .14);
+  border-radius: 28px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .35);
+}
+
+.welcomeSplashHero {
+  position: relative;
+  min-height: 230px;
+  display: grid;
+  align-content: end;
+  gap: 16px;
+  padding: 28px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 10% 18%, rgba(255, 230, 120, .90), transparent 24%),
+    radial-gradient(circle at 82% 24%, rgba(159, 244, 255, .80), transparent 28%),
+    radial-gradient(circle at 65% 82%, rgba(255, 86, 137, .62), transparent 26%),
+    linear-gradient(135deg, #1d2644 0%, #233f57 50%, #26192f 100%);
+}
+
+.welcomeSplashHero::before,
+.welcomeSplashHero::after {
+  content: "";
+  position: absolute;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.welcomeSplashHero::before {
+  right: 8%;
+  bottom: 14%;
+  width: 220px;
+  height: 74px;
+  background: rgba(255, 255, 255, .15);
+  transform: rotate(-18deg);
+}
+
+.welcomeSplashHero::after {
+  left: 8%;
+  top: 28%;
+  width: 320px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.66), transparent);
+  box-shadow: 0 28px 0 rgba(255,255,255,.18), 0 56px 0 rgba(255,255,255,.10);
+}
+
+.welcomeSplashTopLine {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.welcomeSplashLogo {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 900;
+  letter-spacing: -.03em;
+  text-shadow: 0 6px 18px rgba(0,0,0,.22);
+}
+
+.welcomeSplashLogoMark {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  color: #161b26;
+  background: linear-gradient(135deg, #ffe678, #9ff4ff);
+  border-radius: 16px;
+  box-shadow: inset 0 0 0 2px rgba(0,0,0,.12), 0 12px 30px rgba(0,0,0,.18);
+}
+
+.welcomeSplashVersion {
+  position: relative;
+  z-index: 1;
+  padding: 7px 11px;
+  color: rgba(255,255,255,.82);
+  background: rgba(0,0,0,.20);
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.welcomeSplashTitle {
+  position: relative;
+  z-index: 1;
+  max-width: 620px;
+}
+
+.welcomeSplashTitle h2 {
+  margin: 0;
+  font-size: clamp(30px, 6vw, 54px);
+  line-height: .96;
+  letter-spacing: -.06em;
+}
+
+.welcomeSplashTitle p {
+  max-width: 560px;
+  margin-top: 12px;
+  color: rgba(248, 251, 255, .84);
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.welcomeSplashBody {
+  display: grid;
+  grid-template-columns: 1.1fr .9fr;
+  gap: 20px;
+  padding: 24px;
+}
+
+.welcomeSplashSectionTitle {
+  margin: 0 0 10px;
+  color: rgba(248, 251, 255, .78);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.welcomeSplashLead {
+  margin: 0 0 18px;
+  color: rgba(248, 251, 255, .76);
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.welcomeSplashActions,
+.welcomeSplashLinks {
+  display: grid;
+  gap: 10px;
+}
+
+.welcomeSplashAction,
+.welcomeSplashLink,
+.welcomeSplashPlaceholder {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  min-height: 74px;
+  padding: 15px 16px;
+  color: #f8fbff;
+  text-align: left;
+  text-decoration: none;
+  background: rgba(255,255,255,.075);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 18px;
+  box-shadow: none;
+}
+
+.welcomeSplashAction {
+  cursor: pointer;
+}
+
+.welcomeSplashAction.primary {
+  min-height: 54px;
+  place-items: center;
+  color: #171b25;
+  text-align: center;
+  font-weight: 900;
+  background: linear-gradient(135deg, #ffe678, #9ff4ff);
+  border: 0;
+  box-shadow: 0 10px 24px rgba(0,0,0,.18);
+}
+
+.welcomeSplashLink:hover,
+.welcomeSplashAction:hover {
+  filter: brightness(1.08);
+}
+
+.welcomeSplashLink strong,
+.welcomeSplashPlaceholder strong {
+  font-size: 15px;
+}
+
+.welcomeSplashLink span,
+.welcomeSplashPlaceholder span {
+  color: rgba(248, 251, 255, .64);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.welcomeSplashPlaceholder {
+  opacity: .62;
+  cursor: not-allowed;
+}
+
+.welcomeSplashClose {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  color: #f8fbff;
+  background: rgba(0,0,0,.28);
+  border: 1px solid rgba(255,255,255,.18);
+  box-shadow: none;
+}
+
+.welcomeSplashFootnote {
+  margin: 14px 0 0;
+  color: rgba(248, 251, 255, .46);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+@media (max-width: 760px) {
+  .welcomeSplashBackdrop {
+    align-items: stretch;
+    padding: 10px;
+  }
+
+  .welcomeSplash {
+    max-height: calc(100dvh - 20px);
+    border-radius: 22px;
+  }
+
+  .welcomeSplashHero {
+    min-height: 210px;
+    padding: 22px;
+  }
+
+  .welcomeSplashBody {
+    grid-template-columns: 1fr;
+    padding: 18px;
+  }
+
+  .welcomeSplashTopLine {
+    align-items: center;
+  }
+
+  .welcomeSplashTitle h2 {
+    font-size: 36px;
+  }
+}
