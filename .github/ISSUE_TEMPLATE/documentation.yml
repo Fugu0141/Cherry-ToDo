@@ -1,0 +1,40 @@
+name: Documentation request
+description: Request improvements to documentation
+title: "[Docs]: "
+labels: ["type: docs"]
+body:
+  - type: textarea
+    id: target
+    attributes:
+      label: Which document or section?
+      placeholder: "Example: README, CONTRIBUTING.md, Japanese guide, installation guide"
+    validations:
+      required: true
+
+  - type: textarea
+    id: issue
+    attributes:
+      label: What is unclear or missing?
+      placeholder: "Example: I could not understand how to run the app locally."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: language
+    attributes:
+      label: Language
+      options:
+        - English
+        - Japanese
+        - Both
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested improvement
+      placeholder: "Example: Add screenshots and a short setup guide."
+    validations:
+      required: false
