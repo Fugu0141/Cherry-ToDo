@@ -254,8 +254,49 @@
     });
   }
 
+  function linkOffsetFor(task, siblingsByParent) {
+    if (!task.parentId) return 0;
+    const siblings = siblingsByParent.get(task.parentId) || [];
+    if (siblings.length <= 1) return 0;
+
+    const index = siblings.findIndex(sibling => sibling.id === task.id);
+    if (index < 0) return 0;
+
+    const centeredIndex = index - (siblings.length - 1) / 2;
+    return Math.max(-8, Math.min(8, centeredIndex * 4));
+  }
+
+  function buildElbowPath(parentPoint, childPoint, offset = 0) {
+    const dx = childPoint.x - parentPoint.x;
+    const dy = childPoint.y - parentPoint.y;
+    const closeEnough = Math.abs(dx) < 14 || Math.abs(dy) < 14;
+
+    if (closeEnough) {
+      return `M ${parentPoint.x} ${parentPoint.y} L ${childPoint.x} ${childPoint.y}`;
+    }
+
+    if (Math.abs(dx) >= Math.abs(dy)) {
+      const midX = parentPoint.x + dx / 2 + offset;
+      return `M ${parentPoint.x} ${parentPoint.y} L ${midX} ${parentPoint.y} L ${midX} ${childPoint.y} L ${childPoint.x} ${childPoint.y}`;
+    }
+
+    const midY = parentPoint.y + dy / 2 + offset;
+    return `M ${parentPoint.x} ${parentPoint.y} L ${parentPoint.x} ${midY} L ${childPoint.x} ${midY} L ${childPoint.x} ${childPoint.y}`;
+  }
+
   function drawLinks(tasks, taskById, noteSize, transform, selectedId) {
     const group = makeSvgElement("g", { class: "flowMapLinks" });
+    const siblingsByParent = new Map();
+
+    for (const task of tasks) {
+      if (!task.parentId) continue;
+      if (!siblingsByParent.has(task.parentId)) siblingsByParent.set(task.parentId, []);
+      siblingsByParent.get(task.parentId).push(task);
+    }
+
+    for (const siblings of siblingsByParent.values()) {
+      siblings.sort((a, b) => (Number(a.y || 0) - Number(b.y || 0)) || (Number(a.x || 0) - Number(b.x || 0)));
+    }
 
     for (const task of tasks) {
       if (!task.parentId || !taskById.has(task.parentId)) continue;
@@ -266,13 +307,11 @@
       if (!isInsideMap(parentPoint) && !isInsideMap(childPoint)) continue;
 
       const isConnected = selectedId && (task.id === selectedId || parent.id === selectedId);
+      const offset = linkOffsetFor(task, siblingsByParent);
 
-      group.appendChild(makeSvgElement("line", {
+      group.appendChild(makeSvgElement("path", {
         class: `flowMapLink ${isConnected ? "connected" : ""}`,
-        x1: parentPoint.x,
-        y1: parentPoint.y,
-        x2: childPoint.x,
-        y2: childPoint.y
+        d: buildElbowPath(parentPoint, childPoint, offset)
       }));
     }
 
