@@ -2,11 +2,15 @@
 
 ## Purpose
 
-The welcome splash is a lightweight first-run introduction for new Cherry-ToDo users.
+The welcome splash is a lightweight first-run concept window for new Cherry-ToDo users.
 
-It should explain what the app is without turning the main board UI into a manual.
+It should communicate the product idea quickly:
 
-Cherry-ToDo is being prepared as an open-source project, so the splash also gives users a clear path to the repository, contribution guide, donation/support information, and release notes.
+```text
+Flow first, date second.
+```
+
+Cherry-ToDo is an open-source app, but the first-run window should not feel like a project dashboard. It should first explain the Cherry-ToDo concept, then provide small community links for users who want them.
 
 ## Current behavior
 
@@ -29,16 +33,16 @@ quest-sticky-todo-v10
 
 ## Content
 
-The current splash includes:
+The current splash intentionally stays simple:
 
-- a short OSS/product introduction
-- a primary start button
-- a GitHub repository link
-- a contribution guide link
-- a donation/support placeholder
-- a release notes link
+- Cherry-ToDo brand
+- short concept line
+- one concise product description
+- a small flow example: root task → child task → today's task
+- one primary start button
+- small footer links for GitHub, contribution guide, donation placeholder, and release notes
 
-Donation support is intentionally shown as a placeholder until a proper destination exists.
+Donation support is intentionally shown as a quiet placeholder until a proper destination exists.
 
 Release notes currently point to GitHub Releases so the destination can work before a custom release page exists.
 
@@ -46,6 +50,7 @@ Release notes currently point to GitHub Releases so the destination can work bef
 
 - The splash must not block returning users after they dismiss it once.
 - The splash must not clear or rewrite task data.
+- The splash should feel light and close to Cherry-ToDo's existing sticky-note UI.
 - The splash should be usable on desktop and mobile viewports.
 - The splash should be dismissible by mouse, touch, and keyboard.
 - The splash should trap keyboard tab focus while open.
