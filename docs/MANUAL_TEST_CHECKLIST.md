@@ -155,8 +155,8 @@ http://localhost:8000/
 - [ ] The Flow Map is visible on mobile board view and hidden at desktop width.
 - [ ] The Flow Map shows simplified task nodes without task titles.
 - [ ] Parent-child links appear as simplified lines.
-- [ ] The current viewport is shown as a rectangle.
-- [ ] Scrolling the board moves the viewport rectangle.
+- [ ] The Flow Map behaves like a fixed-scale local game minimap, not a full-board scaled-down map.
+- [ ] Scrolling the board moves the mapped task dots and keeps their size stable.
 - [ ] Selecting a task updates the matching minimap marker.
 - [ ] Tapping inside the Flow Map scrolls the board toward that area.
 - [ ] Dragging inside the Flow Map continuously navigates the board.
