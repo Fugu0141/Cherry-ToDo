@@ -16,11 +16,13 @@ Goal: make the repository understandable as a standalone open-source project.
 - [x] Review remaining old internal names and keep only compatibility-related ones.
 - [x] Confirm GitHub Pages deployment settings. See [#1](https://github.com/Fugu0141/Cherry-ToDo/issues/1).
 - [x] Create initial issues for planned work.
+- [x] Add a first-run welcome window for OSS introduction and community links. See [#44](https://github.com/Fugu0141/Cherry-ToDo/issues/44) and [`WELCOME_SPLASH_SPEC.md`](WELCOME_SPLASH_SPEC.md).
 
 Notes:
 
 - Old `quest-sticky-todo-*` storage keys are intentionally kept for localStorage compatibility until a dedicated migration is implemented.
 - User-facing documentation and visible branding should continue to use `Cherry-ToDo`.
+- The welcome splash uses a separate `cherry-todo-welcome-dismissed-v1` key and must not affect task storage compatibility.
 
 Initial roadmap issues:
 
@@ -30,6 +32,7 @@ Initial roadmap issues:
 - [#4 Design same-day subflow layout](https://github.com/Fugu0141/Cherry-ToDo/issues/4)
 - [#5 Improve mobile touch interactions](https://github.com/Fugu0141/Cherry-ToDo/issues/5)
 - [#6 Plan codebase module separation](https://github.com/Fugu0141/Cherry-ToDo/issues/6)
+- [#44 Add first-run welcome window](https://github.com/Fugu0141/Cherry-ToDo/issues/44)
 
 ---
 
@@ -48,6 +51,7 @@ New support docs:
 
 - [`MANUAL_TEST_CHECKLIST.md`](MANUAL_TEST_CHECKLIST.md)
 - [`KNOWN_ISSUES.md`](KNOWN_ISSUES.md)
+- [`WELCOME_SPLASH_SPEC.md`](WELCOME_SPLASH_SPEC.md)
 
 ---
 
@@ -118,6 +122,7 @@ Tracking issue: [#5](https://github.com/Fugu0141/Cherry-ToDo/issues/5)
 - [ ] Improve touch targets.
 - [ ] Reduce scroll/drag conflicts on mobile.
 - [ ] Add mobile Flow Map minimap for board navigation. See [#38](https://github.com/Fugu0141/Cherry-ToDo/issues/38) and [`MOBILE_FLOW_MAP_SPEC.md`](MOBILE_FLOW_MAP_SPEC.md).
+- [ ] Add a way to reopen the welcome / about window after first dismissal.
 
 ---
 
