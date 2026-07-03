@@ -24,8 +24,9 @@ Last updated: 2026-07-03 JST
 | Item | Status | Meaning | Next action |
 | --- | --- | --- | --- |
 | #45 Add simple first-run concept window | Draft | Parked intentionally. This should not be marked ready or merged yet. | Keep it as a planned welcome/about feature until the maintainer decides timing. |
-| #46 Fix timezone-safe date-only helpers | Open | Bug-fix PR for timezone-safe date-only handling. Does not hard-code JST. | Manual test before merge. |
-| #38 Add mobile Flow Map minimap | Open / planned | Mobile board overview idea: game-like minimap for understanding the task flow. | Design/implementation phase after current higher-priority fixes. |
+| #46 Fix timezone-safe date-only helpers | Merged | Bug-fix PR for timezone-safe date-only handling. Does not hard-code JST. | Keep regression checks in the manual checklist. |
+| #47 Add project progress log | Merged | Adds this project progress log and communication rules. | Keep this file updated when state changes. |
+| #38 Add mobile Flow Map minimap | Implementation PR in progress | Mobile board overview idea: game-like minimap for understanding the task flow. | Test the Flow Map PR before merge. |
 | #37 Add Japanese README | Open / docs | Japanese documentation for Japanese users and community onboarding. | Create `README_ja.md` later. |
 | #33 Redesign desktop task creation as inline side editor | Open / future UX | Reduce context switching by showing a compact editor near the task. | Implement separately from storage/schema work. |
 | #6 Plan codebase module separation | Open / ongoing | Larger cleanup direction. | Avoid large refactors while behavior is still changing quickly. |
@@ -53,6 +54,7 @@ Last updated: 2026-07-03 JST
 - Cherry-ToDo should avoid turning the main board into a manual; documentation and welcome surfaces should stay lightweight.
 - The first-run welcome/about window is useful, but it does not need to be merged immediately.
 - Donation/support and release notes entry points can stay planned or placeholder until their actual destinations are ready.
+- The mobile Flow Map should behave like a game minimap: orientation first, task text/detail second.
 
 ---
 
@@ -71,8 +73,7 @@ When asked to continue development:
 
 ## Suggested next work queue
 
-1. Manually test #46 timezone-safe date-only behavior.
-2. Decide whether #46 should be merged before feature work.
-3. Keep #45 draft until the maintainer wants the first-run welcome window included.
-4. Continue mobile UX planning around the Flow Map minimap (#38).
-5. Add Japanese README (#37) when documentation/community onboarding becomes the priority.
+1. Keep #45 draft until the maintainer wants the first-run welcome window included.
+2. Manually test the mobile Flow Map minimap implementation for #38.
+3. If #38 is merged, continue mobile UX polish under #5.
+4. Add Japanese README (#37) when documentation/community onboarding becomes the priority.
