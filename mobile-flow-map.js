@@ -392,7 +392,7 @@
     drawLinks(tasks, taskById, noteSize, transform, selectedId);
     drawNodes(tasks, noteSize, transform, selectedId);
     drawViewport(board, transform);
-    drawCameraMarker();
+    if (selectedId) drawCameraMarker();
 
     if (selectedId) showFlowMap();
     if (chromeHint) chromeHint.textContent = selectedId ? "Selected" : "Flow Map";
