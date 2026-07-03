@@ -150,6 +150,19 @@ http://localhost:8000/
 - [ ] List view done / todo and board-open controls are easy to tap.
 - [ ] Same-day expanded lanes remain scrollable and readable in vertical mode.
 
+### Mobile Flow Map behavior
+
+- [ ] The Flow Map is visible on mobile board view and hidden at desktop width.
+- [ ] The Flow Map shows simplified task nodes without task titles.
+- [ ] Parent-child links appear as simplified lines.
+- [ ] The current viewport is shown as a rectangle.
+- [ ] Scrolling the board moves the viewport rectangle.
+- [ ] Selecting a task updates the matching minimap marker.
+- [ ] Tapping inside the Flow Map scrolls the board toward that area.
+- [ ] Dragging inside the Flow Map continuously navigates the board.
+- [ ] The Flow Map becomes more visible while scrolling or interacting, then fades back.
+- [ ] Existing board editing, creation, dragging, completion, and mobile action dock behavior still works.
+
 ### Mobile action dock behavior
 
 - [ ] Selecting a task on mobile shows the action dock near the selected note, not fixed to the bottom edge.
