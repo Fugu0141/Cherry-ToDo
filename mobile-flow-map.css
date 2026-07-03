@@ -17,17 +17,22 @@
     box-shadow: 0 12px 32px rgba(25, 25, 25, 0.18);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    opacity: 0.48;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: scale(0.98);
     overflow: hidden;
     touch-action: none;
     user-select: none;
-    transition: opacity 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+    transition: opacity 160ms ease, visibility 160ms ease, transform 160ms ease, box-shadow 160ms ease;
   }
 
   #flowMap.visible,
   #flowMap.active,
   #flowMap:focus-within {
-    opacity: 0.94;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
     transform: scale(1.02);
     box-shadow: 0 16px 40px rgba(25, 25, 25, 0.24);
   }
