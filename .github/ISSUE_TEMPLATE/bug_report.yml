@@ -9,7 +9,6 @@ body:
         Thanks for reporting a bug!
 
         Please provide enough information so the problem can be reproduced.
-        日本語: 問題を再現できるように、できるだけ具体的に書いてください。
 
   - type: textarea
     id: summary

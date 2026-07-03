@@ -9,10 +9,8 @@ body:
         Thanks for suggesting an idea!
 
         Cherry-ToDo values flow-based task management, not just adding more features.
-        日本語: Cherry-ToDoは、ただ機能を増やすことよりも、流れを重視したタスク管理を大切にしています。
 
         Please explain the problem first.
-        日本語: まずは「何に困っているのか」を教えてください。
 
   - type: textarea
     id: problem

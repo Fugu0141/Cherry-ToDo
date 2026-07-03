@@ -9,7 +9,6 @@ body:
         Thanks for sharing UX feedback!
 
         Please describe where you felt confused, slow, or uncomfortable.
-        日本語: どこで迷ったか、遅く感じたか、使いづらかったかを教えてください。
 
   - type: textarea
     id: situation
