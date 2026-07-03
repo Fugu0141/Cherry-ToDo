@@ -171,23 +171,15 @@
     };
   }
 
-  function selectedTask(tasks, selectedId) {
-    if (!selectedId) return null;
-    return tasks.find(task => task.id === selectedId) || null;
-  }
-
-  function computeCamera(board, tasks, noteSize, selectedId) {
-    const selected = selectedTask(tasks, selectedId);
-    if (selected) return taskCenter(selected, noteSize);
-
+  function computeCamera(board) {
     return {
       x: board.scrollLeft + board.clientWidth / 2,
       y: board.scrollTop + board.clientHeight / 2
     };
   }
 
-  function computeTransform(board, tasks, noteSize, selectedId) {
-    const camera = computeCamera(board, tasks, noteSize, selectedId);
+  function computeTransform(board) {
+    const camera = computeCamera(board);
     return {
       scale: WORLD_TO_MAP_SCALE,
       camera,
@@ -317,39 +309,15 @@
     svg.appendChild(group);
   }
 
-  function drawViewport(board, transform) {
-    const topLeft = toMini({ x: board.scrollLeft, y: board.scrollTop }, transform);
-    const bottomRight = toMini({
-      x: board.scrollLeft + board.clientWidth,
-      y: board.scrollTop + board.clientHeight
-    }, transform);
-
-    const minX = PADDING;
-    const maxX = MAP_WIDTH - PADDING;
-    const minY = PADDING;
-    const maxY = MAP_HEIGHT - PADDING - 12;
-    const x1 = clamp(Math.min(topLeft.x, bottomRight.x), minX, maxX);
-    const x2 = clamp(Math.max(topLeft.x, bottomRight.x), minX, maxX);
-    const y1 = clamp(Math.min(topLeft.y, bottomRight.y), minY, maxY);
-    const y2 = clamp(Math.max(topLeft.y, bottomRight.y), minY, maxY);
-
+  function drawViewport() {
     svg.appendChild(makeSvgElement("rect", {
       class: "flowMapViewport",
-      x: x1,
-      y: y1,
-      width: Math.max(6, x2 - x1),
-      height: Math.max(6, y2 - y1),
+      x: MAP_WIDTH / 2 - 18,
+      y: (MAP_HEIGHT - 12) / 2 - 28,
+      width: 36,
+      height: 56,
       rx: 4,
       ry: 4
-    }));
-  }
-
-  function drawCameraMarker() {
-    svg.appendChild(makeSvgElement("circle", {
-      class: "flowMapCamera",
-      cx: MAP_WIDTH / 2,
-      cy: (MAP_HEIGHT - 12) / 2,
-      r: 3.2
     }));
   }
 
@@ -383,7 +351,7 @@
 
     const noteSize = readNoteSize(board);
     const selectedId = selectedTaskId();
-    const transform = computeTransform(board, tasks, noteSize, selectedId);
+    const transform = computeTransform(board);
     const taskById = new Map(tasks.map(task => [task.id, task]));
 
     latestTransform = transform;
@@ -391,8 +359,7 @@
     drawDateLanes(transform);
     drawLinks(tasks, taskById, noteSize, transform, selectedId);
     drawNodes(tasks, noteSize, transform, selectedId);
-    drawViewport(board, transform);
-    if (selectedId) drawCameraMarker();
+    drawViewport();
 
     if (selectedId) showFlowMap();
     if (chromeHint) chromeHint.textContent = selectedId ? "Selected" : "Flow Map";
