@@ -120,6 +120,12 @@
     stroke-dasharray: 4 3;
   }
 
+  .flowMapCamera {
+    fill: rgba(255, 83, 121, 0.95);
+    stroke: rgba(255, 255, 255, 0.96);
+    stroke-width: 1.8;
+  }
+
   .flowMapEmptyText {
     fill: rgba(25, 25, 25, 0.48);
     font-size: 11px;
