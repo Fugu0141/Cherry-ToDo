@@ -60,8 +60,8 @@
   }
 
   function targetDateForBoundary(lanes, boundaryIndex) {
-    if (boundaryIndex <= 0) return lanes[0] || todayISO();
-    return addDaysISO(lanes[boundaryIndex - 1], 1);
+    const lineDate = lanes[boundaryIndex] || lanes.at(-1) || todayISO();
+    return addDaysISO(lineDate, 1);
   }
 
   function makeLineHit(lanes, boundaryIndex) {
