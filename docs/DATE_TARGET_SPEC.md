@@ -122,20 +122,26 @@ const defaultDate = hit.targetDate || hit.date || todayISO();
 
 ## Timezone rule
 
-Date math should avoid local timezone drift.
+Calendar-only values are not instants in time.
 
-When adding days to an ISO date, use UTC-based construction:
+Cherry-ToDo should treat task dates as plain `YYYY-MM-DD` strings and should not hard-code Japan time or any other fixed timezone.
+
+Rules:
+
+- `todayISO()` must return the browser's local calendar date.
+- Saved task dates should stay as plain `YYYY-MM-DD` strings.
+- Date-only values should not be converted through `new Date("YYYY-MM-DD")` for display or storage.
+- Date addition should use UTC-based date parts and then format back to `YYYY-MM-DD`.
+
+Use the shared helper in `date-only-utils.js` when possible:
 
 ```js
-function addDaysISO(date, days = 1) {
-  const [year, month, day] = normalizeDate(date).split("-").map(Number);
-  const d = new Date(Date.UTC(year, month - 1, day));
-  d.setUTCDate(d.getUTCDate() + days);
-  return d.toISOString().slice(0, 10);
-}
+window.cherryDateOnly.today();
+window.cherryDateOnly.normalize(value);
+window.cherryDateOnly.addDays("2026-07-13", 1);
 ```
 
-This avoids `YYYY-MM-DD` shifting by timezone differences.
+The helper keeps local "today" local, while keeping date arithmetic stable across timezones.
 
 ---
 
@@ -158,4 +164,5 @@ A change is valid when:
 - blank area drops do not fall back to today unexpectedly
 - desktop and mobile layouts behave consistently
 - timezone drift does not shift dates by one day
+- local today is not accidentally replaced by UTC today
 - visual hot lines and saved dates do not get mixed up

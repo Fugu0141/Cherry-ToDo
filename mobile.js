@@ -1,11 +1,20 @@
 (() => {
   const isTouchLike = event => event.pointerType === "touch" || window.matchMedia("(pointer: coarse)").matches;
 
+  function localTodayFallback() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
   function fallbackToday() {
     try {
+      if (window.cherryDateOnly?.today) return window.cherryDateOnly.today();
       if (typeof todayISO === "function") return todayISO();
     } catch (_) {}
-    return new Date().toISOString().slice(0, 10);
+    return localTodayFallback();
   }
 
   function dateFromPointer(event) {

@@ -6,11 +6,20 @@
   let recentHit = null;
   let recentHitAt = 0;
 
+  function formatUTCDateKey(date) {
+    const year = date.getUTCFullYear();
+    const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+    const day = String(date.getUTCDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
   function addDaysISO(date, days = 1) {
+    if (window.cherryDateOnly?.addDays) return window.cherryDateOnly.addDays(date, days);
+
     const [year, month, day] = normalizeDate(date).split("-").map(Number);
     const d = new Date(Date.UTC(year, month - 1, day));
     d.setUTCDate(d.getUTCDate() + days);
-    return d.toISOString().slice(0, 10);
+    return formatUTCDateKey(d);
   }
 
   function lineTolerance() {
