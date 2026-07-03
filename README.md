@@ -39,6 +39,7 @@ Current prototype features:
 - Auto layout
 - Undo
 - Local save with `localStorage`
+- First-run welcome / OSS introduction window
 
 Planned or under discussion:
 
@@ -47,6 +48,8 @@ Planned or under discussion:
 - Same-day subflow layout
 - Context popups instead of large modals
 - Better mobile UI and touch interactions
+- Donation / support entry point
+- Release notes entry point
 - Codebase cleanup and module separation
 
 ## Usage
@@ -79,6 +82,9 @@ http://localhost:8000/
 ├── safety-fix.js
 ├── final-fix.js
 ├── date-target-fix.js
+├── state-storage.js
+├── welcome-splash.css
+├── welcome-splash.js
 ├── docs/
 │   ├── PROJECT_SPEC.md
 │   ├── PRODUCT_VISION.md
@@ -87,6 +93,7 @@ http://localhost:8000/
 │   ├── LAYOUT_AND_SCHEDULE_SPEC.md
 │   ├── UX_INTERACTION_SPEC.md
 │   ├── MOBILE_UX_SPEC.md
+│   ├── WELCOME_SPLASH_SPEC.md
 │   ├── ROADMAP.md
 │   ├── DEVELOPMENT_SETUP.md
 │   ├── MANUAL_TEST_CHECKLIST.md
@@ -117,8 +124,9 @@ Start here:
 9. [`docs/LAYOUT_AND_SCHEDULE_SPEC.md`](docs/LAYOUT_AND_SCHEDULE_SPEC.md)
 10. [`docs/UX_INTERACTION_SPEC.md`](docs/UX_INTERACTION_SPEC.md)
 11. [`docs/MOBILE_UX_SPEC.md`](docs/MOBILE_UX_SPEC.md)
-12. [`docs/MIGRATION_NOTES.md`](docs/MIGRATION_NOTES.md)
-13. [`docs/ORIGINALITY_REVIEW.md`](docs/ORIGINALITY_REVIEW.md)
+12. [`docs/WELCOME_SPLASH_SPEC.md`](docs/WELCOME_SPLASH_SPEC.md)
+13. [`docs/MIGRATION_NOTES.md`](docs/MIGRATION_NOTES.md)
+14. [`docs/ORIGINALITY_REVIEW.md`](docs/ORIGINALITY_REVIEW.md)
 
 ## Development notes
 
