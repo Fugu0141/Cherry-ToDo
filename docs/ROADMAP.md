@@ -117,6 +117,7 @@ Tracking issue: [#5](https://github.com/Fugu0141/Cherry-ToDo/issues/5)
 - [ ] Add mobile bottom sheets.
 - [ ] Improve touch targets.
 - [ ] Reduce scroll/drag conflicts on mobile.
+- [ ] Add mobile Flow Map minimap for board navigation. See [#38](https://github.com/Fugu0141/Cherry-ToDo/issues/38) and [`MOBILE_FLOW_MAP_SPEC.md`](MOBILE_FLOW_MAP_SPEC.md).
 
 ---
 
