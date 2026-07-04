@@ -1,0 +1,252 @@
+/*
+ * Experiment B: Mobile Control Cleanup
+ * See docs/UI_THEME_EXPERIMENTS.md.
+ *
+ * This experiment reduces mobile UI overlap before judging the final colors.
+ */
+@media (max-width: 980px) {
+  :root {
+    --mobile-action-dock-h: 74px;
+  }
+
+  .board {
+    scroll-padding-bottom: calc(var(--mobile-action-dock-h) + 24px + env(safe-area-inset-bottom, 0px));
+  }
+
+  body.mobileActionBarVisible .stage {
+    padding-bottom: calc(var(--mobile-action-dock-h) + env(safe-area-inset-bottom, 0px));
+  }
+
+  #deleteBtn {
+    display: none;
+  }
+
+  #resetBtn {
+    min-width: 110px;
+  }
+
+  .toolbar button:disabled {
+    opacity: .38;
+    filter: saturate(.65);
+  }
+
+  .mobileActionBar {
+    left: 50% !important;
+    right: auto !important;
+    top: auto !important;
+    bottom: calc(10px + env(safe-area-inset-bottom, 0px)) !important;
+    width: min(342px, calc(100vw - 28px));
+    padding: 8px;
+    border-radius: 999px;
+    transform: translate3d(-50%, 0, 0) !important;
+  }
+
+  .mobileActionBar[data-placement="dock"] {
+    transform: translate3d(-50%, 0, 0) !important;
+  }
+
+  .mobileActionBar.hidden {
+    transform: translate3d(-50%, 12px, 0) scale(.98) !important;
+  }
+
+  .mobileActionButtons {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 7px;
+  }
+
+  .mobileActionButton {
+    min-height: 52px;
+    color: #fff;
+    border: 0;
+    opacity: 1;
+  }
+
+  .mobileActionButton.done {
+    color: #fff;
+    background: #2f8b7f;
+  }
+
+  .mobileActionButton.add {
+    color: #fff;
+    background: var(--accent);
+    box-shadow: 0 8px 18px color-mix(in srgb, var(--accent) 28%, transparent);
+  }
+
+  .mobileActionButton.edit {
+    color: #fff;
+    background: #334155;
+  }
+
+  .mobileActionButton.delete {
+    color: #fff;
+    background: var(--danger);
+  }
+
+  #flowMap {
+    top: auto;
+    right: calc(10px + env(safe-area-inset-right, 0px));
+    bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+    width: 104px;
+    height: 136px;
+    border-radius: 16px;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(6px) scale(.96);
+  }
+
+  #flowMap.visible,
+  #flowMap.active,
+  #flowMap:focus-within {
+    opacity: .92;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
+  }
+
+  .flowMapChrome {
+    left: 8px;
+    right: 8px;
+    bottom: 6px;
+    font-size: 9px;
+  }
+
+  :root[data-theme="dark"] #flowMap {
+    background: rgba(25, 35, 53, .97);
+    border-color: rgba(141, 124, 255, .42);
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, .06) inset,
+      0 0 0 1px rgba(141, 124, 255, .18),
+      0 14px 32px rgba(0, 0, 0, .46);
+  }
+
+  :root[data-theme="dark"] #flowMap.visible,
+  :root[data-theme="dark"] #flowMap.active,
+  :root[data-theme="dark"] #flowMap:focus-within {
+    opacity: .98;
+  }
+
+  :root[data-theme="dark"] .flowMapChrome {
+    color: rgba(226, 232, 240, .82);
+  }
+
+  :root[data-theme="dark"] .flowMapLane {
+    stroke: rgba(148, 163, 184, .30);
+  }
+
+  :root[data-theme="dark"] .flowMapLink {
+    stroke: rgba(172, 187, 207, .42);
+  }
+
+  :root[data-theme="dark"] .flowMapLink.connected {
+    stroke: rgba(167, 139, 250, .78);
+  }
+
+  :root[data-theme="dark"] .flowMapNode {
+    fill: rgba(190, 203, 222, .76);
+    stroke: rgba(15, 23, 42, .92);
+  }
+
+  :root[data-theme="dark"] .flowMapNode.connected {
+    fill: rgba(167, 139, 250, .88);
+  }
+
+  :root[data-theme="dark"] .flowMapNode.selected {
+    fill: #ffffff;
+    stroke: rgba(167, 139, 250, .98);
+    stroke-width: 2;
+  }
+
+  :root[data-theme="dark"] .flowMapCamera {
+    fill: rgba(141, 124, 255, .22);
+    stroke: rgba(196, 181, 253, .88);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) #flowMap {
+      background: rgba(25, 35, 53, .97);
+      border-color: rgba(141, 124, 255, .42);
+      box-shadow:
+        0 0 0 1px rgba(255, 255, 255, .06) inset,
+        0 0 0 1px rgba(141, 124, 255, .18),
+        0 14px 32px rgba(0, 0, 0, .46);
+    }
+
+    :root:not([data-theme="light"]) #flowMap.visible,
+    :root:not([data-theme="light"]) #flowMap.active,
+    :root:not([data-theme="light"]) #flowMap:focus-within {
+      opacity: .98;
+    }
+
+    :root:not([data-theme="light"]) .flowMapChrome {
+      color: rgba(226, 232, 240, .82);
+    }
+
+    :root:not([data-theme="light"]) .flowMapLane {
+      stroke: rgba(148, 163, 184, .30);
+    }
+
+    :root:not([data-theme="light"]) .flowMapLink {
+      stroke: rgba(172, 187, 207, .42);
+    }
+
+    :root:not([data-theme="light"]) .flowMapLink.connected {
+      stroke: rgba(167, 139, 250, .78);
+    }
+
+    :root:not([data-theme="light"]) .flowMapNode {
+      fill: rgba(190, 203, 222, .76);
+      stroke: rgba(15, 23, 42, .92);
+    }
+
+    :root:not([data-theme="light"]) .flowMapNode.connected {
+      fill: rgba(167, 139, 250, .88);
+    }
+
+    :root:not([data-theme="light"]) .flowMapNode.selected {
+      fill: #ffffff;
+      stroke: rgba(167, 139, 250, .98);
+      stroke-width: 2;
+    }
+
+    :root:not([data-theme="light"]) .flowMapCamera {
+      fill: rgba(141, 124, 255, .22);
+      stroke: rgba(196, 181, 253, .88);
+    }
+  }
+
+  .laneLabel {
+    background: transparent;
+    border: 0;
+    border-left: 3px solid color-mix(in srgb, var(--lane-today-line) 54%, transparent);
+    border-radius: 0;
+    box-shadow: none;
+    padding: 1px 0 1px 7px;
+  }
+
+  .laneLabel.monthStart {
+    background: transparent;
+    border: 0;
+    border-left: 3px solid var(--lane-today-line);
+    box-shadow: none;
+  }
+
+  .laneMonthMarker {
+    padding: 1px 5px;
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+  }
+
+  .verticalMode .laneLabel,
+  .verticalMode .laneLabel.monthStart {
+    background: transparent;
+    border-top: 0;
+    border-right: 0;
+    border-bottom: 0;
+    border-left: 3px solid color-mix(in srgb, var(--lane-today-line) 54%, transparent);
+    box-shadow: none;
+  }
+
+  .verticalMode .laneLabel.monthStart {
+    border-left-color: var(--lane-today-line);
+  }
+}

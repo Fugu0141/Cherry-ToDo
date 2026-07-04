@@ -78,40 +78,37 @@
     if (event.key === "Enter") restoreMobileAddParentAfterSave();
   }
 
-  function clamp(value, min, max) {
-    return Math.min(Math.max(value, min), max);
+  function ensureSelectedTaskNotHidden(task) {
+    const noteEl = selectedNoteElement(task);
+    if (!noteEl || !mobileActionQuery.matches) return;
+
+    const boardRect = board.getBoundingClientRect();
+    const noteRect = noteEl.getBoundingClientRect();
+    const barRect = bar.getBoundingClientRect();
+    const bottomDock = barRect.height + 30;
+    const visibleBottom = Math.min(window.innerHeight, boardRect.bottom) - bottomDock;
+    const visibleTop = Math.max(boardRect.top, 8);
+
+    if (noteRect.bottom > visibleBottom) {
+      board.scrollTop += Math.ceil(noteRect.bottom - visibleBottom + 16);
+      return;
+    }
+
+    if (noteRect.top < visibleTop) {
+      board.scrollTop -= Math.ceil(visibleTop - noteRect.top + 12);
+    }
   }
 
   function positionBar(task) {
-    const noteEl = selectedNoteElement(task);
-    if (!noteEl) return false;
+    if (!selectedNoteElement(task)) return false;
 
-    const noteRect = noteEl.getBoundingClientRect();
-    const barRect = bar.getBoundingClientRect();
-    const gap = 10;
-    const safe = 8;
-    const viewportW = document.documentElement.clientWidth;
-    const viewportH = document.documentElement.clientHeight;
+    bar.style.left = "";
+    bar.style.top = "";
+    bar.style.right = "";
+    bar.style.bottom = "";
+    bar.dataset.placement = "dock";
 
-    let left = noteRect.left + noteRect.width / 2 - barRect.width / 2;
-    left = clamp(left, safe, Math.max(safe, viewportW - barRect.width - safe));
-
-    let top = noteRect.bottom + gap;
-    let placement = "below";
-
-    if (top + barRect.height > viewportH - safe) {
-      top = noteRect.top - barRect.height - gap;
-      placement = "above";
-    }
-
-    if (top < safe) {
-      top = clamp(noteRect.top + noteRect.height / 2 - barRect.height / 2, safe, Math.max(safe, viewportH - barRect.height - safe));
-      placement = "middle";
-    }
-
-    bar.style.left = `${Math.round(left)}px`;
-    bar.style.top = `${Math.round(top)}px`;
-    bar.dataset.placement = placement;
+    requestAnimationFrame(() => ensureSelectedTaskNotHidden(task));
     return true;
   }
 
@@ -120,6 +117,7 @@
 
     if (!shouldShowBar()) {
       bar.classList.add("hidden");
+      document.body.classList.remove("mobileActionBarVisible");
       return;
     }
 
@@ -128,7 +126,11 @@
       : "<strong>✓</strong>完了";
 
     bar.classList.remove("hidden");
-    if (!positionBar(task)) bar.classList.add("hidden");
+    document.body.classList.add("mobileActionBarVisible");
+    if (!positionBar(task)) {
+      bar.classList.add("hidden");
+      document.body.classList.remove("mobileActionBarVisible");
+    }
   }
 
   doneButton.addEventListener("click", event => {
