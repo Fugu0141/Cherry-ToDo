@@ -1,8 +1,8 @@
-# Cherry-ToDo Project Specification
+# Cherry Project Specification
 
 ## 1. Purpose
 
-This document is the entry point for understanding Cherry-ToDo as an open-source project.
+This document is the entry point for understanding Cherry as an open-source project.
 
 It explains the product goal, core concepts, current screens, task model, layout direction, and near-term development priorities so that contributors do not need to reverse-engineer the whole codebase before participating.
 
@@ -21,7 +21,7 @@ Related documents:
 
 ## 2. Product overview
 
-Cherry-ToDo is a task flow todo app for organizing work as connected task blocks instead of a flat list.
+Cherry is a task flow todo app for organizing work as connected task blocks instead of a flat list.
 
 A normal todo list treats tasks as separate rows:
 
@@ -32,7 +32,7 @@ A normal todo list treats tasks as separate rows:
 物理プリント
 ```
 
-Cherry-ToDo treats work as connected flow under root headings:
+Cherry treats work as connected flow under root headings:
 
 ```text
 数3ワーク
@@ -88,7 +88,7 @@ List view  = check today's tasks and upcoming tasks
 
 ### 3.4 Flow first, dates second
 
-Cherry-ToDo is not just a calendar app. Dates are important, but the main structure is the task flow.
+Cherry is not just a calendar app. Dates are important, but the main structure is the task flow.
 
 ```text
 フローが主役
@@ -118,7 +118,7 @@ Main properties:
 
 A top-level flow heading with no parent.
 
-In Cherry-ToDo, root tasks are closer to projects, tags, large categories, or section titles than to simple action items.
+In Cherry, root tasks are closer to projects, tags, large categories, or section titles than to simple action items.
 
 Examples:
 
@@ -156,7 +156,7 @@ READMEを修正する
 
 A connection from a parent task to a child task.
 
-Cherry-ToDo uses branches to represent the flow of work.
+Cherry uses branches to represent the flow of work.
 
 ### Same branch
 
@@ -301,7 +301,7 @@ Current compatibility key:
 quest-sticky-todo-v10
 ```
 
-This key may remain temporarily for migration compatibility even after the project was renamed to Cherry-ToDo.
+This key may remain temporarily for migration compatibility even after the app name was clarified as Cherry.
 
 ### Date lane hit testing
 
@@ -339,7 +339,7 @@ Current migration and development priorities:
 
 ## 8. Contribution readiness
 
-Cherry-ToDo is being prepared for OSS collaboration.
+Cherry is being prepared for OSS collaboration.
 
 Before large-scale contributions, the project should clarify:
 
