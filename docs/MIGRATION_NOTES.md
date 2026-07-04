@@ -1,6 +1,6 @@
 # Migration Notes
 
-Cherry-ToDo was originally developed inside the `ToDo/` directory of `Fugu0141.github.io`.
+Cherry was originally developed inside the `ToDo/` directory of `Fugu0141.github.io`.
 
 This document records the migration to the standalone `Fugu0141/Cherry-ToDo` repository.
 
@@ -24,12 +24,12 @@ Initial migration:
 
 - app source files were copied from `Fugu0141.github.io/ToDo`
 - existing prototype documentation was imported
-- the standalone project name became `Cherry-ToDo`
+- the standalone repository became `Cherry-ToDo`
 - MIT License was added
 
 Follow-up cleanup:
 
-- README was rewritten for Cherry-ToDo
+- README was rewritten for Cherry
 - visible app title/header were updated
 - documentation was moved into `docs/`
 - contribution and code of conduct files were added
@@ -39,17 +39,29 @@ Follow-up cleanup:
 
 ## Name compatibility
 
-User-facing project name:
+User-facing app name:
+
+```text
+Cherry
+```
+
+Repository name:
 
 ```text
 Cherry-ToDo
 ```
 
-Old prototype name may still appear in:
+The repository name may still appear in:
 
+- URLs
 - commit history
-- old screenshots
+- GitHub issue and pull request references
+- repository setup notes
 - compatibility notes
+
+Old prototype names may still appear in:
+
+- old screenshots
 - internal localStorage keys
 - comments describing migration history
 
@@ -71,7 +83,7 @@ A future migration could:
 
 1. read from the old key
 2. convert task data if necessary
-3. write to a new Cherry-ToDo key
+3. write to a new Cherry key
 4. preserve or backup the old data
 5. avoid data loss if migration fails
 
@@ -84,7 +96,7 @@ The old app URL may be replaced by a simple redirect or migration notice later.
 Possible notice:
 
 ```text
-Cherry-ToDo has moved to a standalone repository.
+Cherry has moved to a standalone repository.
 Please use the new GitHub Pages URL.
 ```
 
