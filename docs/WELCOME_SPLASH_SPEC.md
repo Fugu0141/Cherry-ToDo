@@ -48,12 +48,12 @@ Release notes currently point to GitHub Releases so the destination can work bef
 
 ## UX rules
 
-- The splash must not block returning users after they dismiss it once.
+- The splash must not reappear for returning users after they dismiss it once.
 - The splash must not clear or rewrite task data.
-- The splash should feel light and close to Cherry-ToDo's existing sticky-note UI.
+- The splash should feel light and close to Cherry-ToDo's existing task-block UI.
 - The splash should be usable on desktop and mobile viewports.
 - The splash should be dismissible by mouse, touch, and keyboard.
-- The splash should trap keyboard tab focus while open.
+- Keyboard focus should stay inside the splash while it is open.
 - Links should open in a new tab with `rel="noopener noreferrer"`.
 
 ## Future work
