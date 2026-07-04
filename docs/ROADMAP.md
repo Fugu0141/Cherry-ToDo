@@ -1,6 +1,6 @@
-# Cherry-ToDo Roadmap
+# Cherry Roadmap
 
-This roadmap describes the current direction of Cherry-ToDo. It is not a fixed promise; priorities may change as the project evolves.
+This roadmap describes the current direction of Cherry. It is not a fixed promise; priorities may change as the project evolves.
 
 ---
 
@@ -9,7 +9,7 @@ This roadmap describes the current direction of Cherry-ToDo. It is not a fixed p
 Goal: make the repository understandable as a standalone open-source project.
 
 - [x] Move the app from `Fugu0141.github.io/ToDo` to this repository.
-- [x] Update visible branding to `Cherry-ToDo`.
+- [x] Update visible branding to `Cherry`.
 - [x] Add README, license, contribution guide, and code of conduct.
 - [x] Move project specifications into `docs/`.
 - [x] Add originality review notes.
@@ -21,7 +21,8 @@ Goal: make the repository understandable as a standalone open-source project.
 Notes:
 
 - Old `quest-sticky-todo-*` storage keys are intentionally kept for localStorage compatibility until a dedicated migration is implemented.
-- User-facing documentation and visible branding should continue to use `Cherry-ToDo`.
+- User-facing documentation and visible branding should continue to use `Cherry`.
+- The repository name and GitHub Pages URL may still use `Cherry-ToDo`.
 - The welcome splash uses a separate `cherry-todo-welcome-dismissed-v1` key and must not affect task storage compatibility.
 
 Initial roadmap issues:
