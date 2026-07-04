@@ -17,6 +17,19 @@
     padding-bottom: calc(var(--mobile-action-dock-h) + env(safe-area-inset-bottom, 0px));
   }
 
+  #deleteBtn {
+    display: none;
+  }
+
+  #resetBtn {
+    min-width: 110px;
+  }
+
+  .toolbar button:disabled {
+    opacity: .38;
+    filter: saturate(.65);
+  }
+
   .mobileActionBar {
     left: 50% !important;
     right: auto !important;
@@ -43,6 +56,30 @@
 
   .mobileActionButton {
     min-height: 52px;
+    color: #fff;
+    border: 0;
+    opacity: 1;
+  }
+
+  .mobileActionButton.done {
+    color: #fff;
+    background: #2f8b7f;
+  }
+
+  .mobileActionButton.add {
+    color: #fff;
+    background: var(--accent);
+    box-shadow: 0 8px 18px color-mix(in srgb, var(--accent) 28%, transparent);
+  }
+
+  .mobileActionButton.edit {
+    color: #fff;
+    background: #334155;
+  }
+
+  .mobileActionButton.delete {
+    color: #fff;
+    background: var(--danger);
   }
 
   #flowMap {
