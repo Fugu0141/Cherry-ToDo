@@ -48,17 +48,18 @@
       if (!children.length) return Math.max(nextTrack, task._track + 1);
 
       const mainChild = children.find(child => child.branchMode === "same") || null;
+      const branchChildren = children.filter(child => !mainChild || child.id !== mainChild.id);
       let cursor = Math.max(nextTrack, task._track + 1);
 
-      if (mainChild) {
-        cursor = assignBranchTracks(mainChild.id, task._track, cursor);
-      }
-
-      for (const child of children) {
-        if (mainChild && child.id === mainChild.id) continue;
-
+      // Keep side branches close to their source parent before the main branch walks
+      // through deeper descendants. This reduces long parent-side trunks after auto-layout.
+      for (const child of branchChildren) {
         const childTrack = Math.max(cursor, task._track + 1);
         cursor = assignBranchTracks(child.id, childTrack, childTrack + 1);
+      }
+
+      if (mainChild) {
+        cursor = Math.max(cursor, assignBranchTracks(mainChild.id, task._track, cursor));
       }
 
       return Math.max(cursor, task._track + 1);
@@ -122,6 +123,80 @@
     };
   }
 
+  function installMainBoardBranchRouting() {
+    if (typeof makePath !== "function") return;
+
+    if (typeof makeHorizontalBranchPath === "function") {
+      makeHorizontalBranchPath = function makeRelationshipHorizontalBranchPath(parent, child, color, width, dash) {
+        const sameTrack = Math.abs(parent.y - child.y) < 6;
+        const sameDate = Math.abs(parent.x - child.x) < 6;
+        let d;
+
+        if (child.branchMode === "same" || sameTrack) {
+          d = `M ${parent.x + noteW} ${parent.y + noteH / 2} L ${child.x} ${child.y + noteH / 2}`;
+        } else if (sameDate) {
+          const x = parent.x + noteW / 2;
+          d = `M ${x} ${parent.y + noteH} L ${x} ${child.y}`;
+        } else if (child.x >= parent.x) {
+          const x1 = parent.x + noteW;
+          const y1 = parent.y + noteH / 2;
+          const x2 = child.x;
+          const y2 = child.y + noteH / 2;
+          const nearParentX = x1 + 34;
+          const nearChildX = x2 - 34;
+          const elbowX = nearChildX > nearParentX ? nearChildX : (x1 + x2) / 2;
+          d = `M ${x1} ${y1} L ${elbowX} ${y1} L ${elbowX} ${y2} L ${x2} ${y2}`;
+        } else {
+          const x1 = parent.x;
+          const y1 = parent.y + noteH / 2;
+          const x2 = child.x + noteW;
+          const y2 = child.y + noteH / 2;
+          const nearParentX = x1 - 34;
+          const nearChildX = x2 + 34;
+          const elbowX = nearChildX < nearParentX ? nearChildX : (x1 + x2) / 2;
+          d = `M ${x1} ${y1} L ${elbowX} ${y1} L ${elbowX} ${y2} L ${x2} ${y2}`;
+        }
+
+        return makePath(d, color, width, dash);
+      };
+    }
+
+    if (typeof makeVerticalBranchPath === "function") {
+      makeVerticalBranchPath = function makeRelationshipVerticalBranchPath(parent, child, color, width, dash) {
+        const sameTrack = Math.abs(parent.x - child.x) < 6;
+        const sameDate = Math.abs(parent.y - child.y) < 6;
+        let d;
+
+        if (child.branchMode === "same" || sameTrack) {
+          const x = parent.x + noteW / 2;
+          d = `M ${x} ${parent.y + noteH} L ${x} ${child.y}`;
+        } else if (sameDate) {
+          d = `M ${parent.x + noteW} ${parent.y + noteH / 2} L ${child.x} ${child.y + noteH / 2}`;
+        } else if (child.y >= parent.y) {
+          const x1 = parent.x + noteW / 2;
+          const y1 = parent.y + noteH;
+          const x2 = child.x + noteW / 2;
+          const y2 = child.y;
+          const nearParentY = y1 + 24;
+          const nearChildY = y2 - 24;
+          const elbowY = nearChildY > nearParentY ? nearChildY : (y1 + y2) / 2;
+          d = `M ${x1} ${y1} L ${x1} ${elbowY} L ${x2} ${elbowY} L ${x2} ${y2}`;
+        } else {
+          const x1 = parent.x + noteW / 2;
+          const y1 = parent.y;
+          const x2 = child.x + noteW / 2;
+          const y2 = child.y + noteH;
+          const nearParentY = y1 - 24;
+          const nearChildY = y2 + 24;
+          const elbowY = nearChildY < nearParentY ? nearChildY : (y1 + y2) / 2;
+          d = `M ${x1} ${y1} L ${x1} ${elbowY} L ${x2} ${elbowY} L ${x2} ${y2}`;
+        }
+
+        return makePath(d, color, width, dash);
+      };
+    }
+  }
+
   function injectMobileActionDragStyle() {
     if (document.getElementById("mobileActionDragHideStyle")) return;
 
@@ -166,6 +241,7 @@
 
     window.addEventListener("pointerup", reveal, true);
     window.addEventListener("pointercancel", reveal, true);
+    window.addEventListener("blur", reveal, true);
   }
 
   function boardEl() {
@@ -326,6 +402,7 @@
     }
   }
 
+  installMainBoardBranchRouting();
   installMobileActionDragHide();
   observeFlowMap();
   applyRelationshipLayout();
