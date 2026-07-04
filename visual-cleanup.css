@@ -1,21 +1,21 @@
 /*
  * Visual cleanup layer for Issue #64.
- * Keep the task flow readable by reducing color competition and making only
- * selected or dangerous states visually strong.
+ * Reduce color competition without flattening the board: keep clear boundaries
+ * between the app background, date lanes, task cards, and selected state.
  */
 :root {
-  --bg: #f8fafc;
-  --surface: #ffffff;
+  --bg: #eef3f7;
+  --surface: #f6f8fb;
   --ink: #1f2937;
   --muted: #6b7280;
-  --line: #d6d9e0;
+  --line: #c7cdd6;
   --accent: #6f5cff;
   --accent-soft: #e9e5ff;
-  --note: #fffdf4;
-  --note2: #fff8dd;
-  --note-border: #d6d9e0;
-  --today: rgba(142, 214, 220, .08);
-  --today-strong: #8ed6dc;
+  --note: #fff5ca;
+  --note2: #ffefb0;
+  --note-border: #d9c979;
+  --today: rgba(142, 214, 220, .16);
+  --today-strong: #71c5ce;
   --danger: #ef5350;
   --success: #0f9f8f;
 }
@@ -29,18 +29,23 @@ button.danger {
 }
 
 .topbar {
-  border-bottom-color: rgba(148, 163, 184, .22);
-  box-shadow: 0 1px 0 rgba(15, 23, 42, .03);
+  border-bottom-color: rgba(148, 163, 184, .26);
+  box-shadow: 0 1px 0 rgba(15, 23, 42, .04);
 }
 
 .logo {
-  background: linear-gradient(135deg, #fff7bf, #c9f6e5);
-  box-shadow: inset 0 0 0 2px rgba(15, 23, 42, .08);
+  background: linear-gradient(135deg, #fff7bf, #bcefd5);
+  box-shadow: inset 0 0 0 2px rgba(15, 23, 42, .10);
 }
 
 .board {
-  box-shadow: 0 10px 24px rgba(15, 23, 42, .07);
-  outline-color: rgba(148, 163, 184, .28);
+  background: var(--surface);
+  box-shadow: 0 10px 28px rgba(15, 23, 42, .10);
+  outline-color: rgba(100, 116, 139, .30);
+}
+
+.laneBand {
+  background: rgba(148, 163, 184, .045);
 }
 
 .laneBand.todayBand,
@@ -49,20 +54,20 @@ button.danger {
 }
 
 .laneBand.highlight {
-  background: rgba(111, 92, 255, .06);
+  background: rgba(111, 92, 255, .08);
 }
 
 .laneBand.todayBand.highlight,
 .laneBand.todayLane.highlight {
-  background: linear-gradient(0deg, rgba(111, 92, 255, .04), rgba(111, 92, 255, .04)), var(--today);
+  background: linear-gradient(0deg, rgba(111, 92, 255, .06), rgba(111, 92, 255, .06)), var(--today);
 }
 
 .laneLine {
-  background: rgba(107, 114, 128, .22);
+  background: rgba(100, 116, 139, .32);
 }
 
 .laneLine.hot {
-  background: rgba(111, 92, 255, .48);
+  background: rgba(111, 92, 255, .54);
 }
 
 .laneLine.todayLine,
@@ -73,52 +78,63 @@ button.danger {
 .laneLine.pastLane,
 .laneLine.futureLane,
 .laneLine.collapsedDoneLane {
-  opacity: .36;
+  opacity: .46;
 }
 
 .laneLabel {
   color: var(--ink);
-  background: rgba(255, 255, 255, .88);
-  box-shadow: none;
-  border: 1px solid rgba(148, 163, 184, .16);
+  background: rgba(255, 255, 255, .94);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, .08);
+  border: 1px solid rgba(148, 163, 184, .24);
   backdrop-filter: none;
 }
 
 .laneLabel.monthStart {
-  border-color: rgba(142, 214, 220, .28);
+  border-color: rgba(113, 197, 206, .42);
   border-left-color: var(--today-strong);
-  background: rgba(255, 255, 255, .92);
-  box-shadow: 0 4px 14px rgba(15, 23, 42, .06);
+  background: rgba(255, 255, 255, .96);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, .10);
 }
 
 .laneMonthMarker {
-  background: rgba(111, 92, 255, .10);
+  background: rgba(111, 92, 255, .12);
   color: #4b5563;
 }
 
 .note {
   background: linear-gradient(180deg, var(--note), var(--note2));
   border: 1px solid var(--note-border);
-  box-shadow: 0 6px 14px rgba(15, 23, 42, .10);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, .68) inset,
+    0 7px 16px rgba(15, 23, 42, .14);
 }
 
 .note:hover {
-  box-shadow: 0 8px 18px rgba(15, 23, 42, .12);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, .72) inset,
+    0 9px 20px rgba(15, 23, 42, .16);
+}
+
+.note::before {
+  width: 9px;
+  background: rgba(113, 197, 206, .58);
 }
 
 .note.selected,
 .board.verticalMode .note.selected {
   outline: 2px solid var(--accent);
   outline-offset: 4px;
+  border-color: rgba(111, 92, 255, .50);
   box-shadow:
-    0 0 0 4px rgba(111, 92, 255, .08),
-    0 10px 22px rgba(15, 23, 42, .12);
+    0 0 0 4px rgba(111, 92, 255, .12),
+    0 12px 26px rgba(15, 23, 42, .18);
 }
 
 .note.todayTask {
   box-shadow:
-    0 6px 14px rgba(15, 23, 42, .10),
-    0 0 0 4px rgba(142, 214, 220, .12);
+    0 1px 0 rgba(255, 255, 255, .68) inset,
+    0 7px 16px rgba(15, 23, 42, .14),
+    0 0 0 4px rgba(113, 197, 206, .18);
 }
 
 .note.todayTask::before {
@@ -127,8 +143,9 @@ button.danger {
 
 .note.overdueTask {
   box-shadow:
-    0 6px 14px rgba(15, 23, 42, .10),
-    0 0 0 4px rgba(239, 83, 80, .10);
+    0 1px 0 rgba(255, 255, 255, .68) inset,
+    0 7px 16px rgba(15, 23, 42, .14),
+    0 0 0 4px rgba(239, 83, 80, .12);
 }
 
 .note.overdueTask::before {
@@ -136,26 +153,26 @@ button.danger {
 }
 
 .note.futureTask {
-  opacity: .9;
-  filter: saturate(.9);
+  opacity: .94;
+  filter: saturate(.96);
 }
 
 .note.doneTask {
-  background: linear-gradient(180deg, #f3f5f8, #f8fafc);
-  border-color: #d5dbe5;
-  color: #7b8492;
-  opacity: .48;
+  background: linear-gradient(180deg, #eef2f7, #f8fafc);
+  border-color: #c7cfdb;
+  color: #707988;
+  opacity: .54;
 }
 
 .handle,
 .doneBtn,
 .deleteBtn {
-  border-color: rgba(31, 41, 55, .32);
-  box-shadow: 0 4px 10px rgba(15, 23, 42, .12);
+  border-color: rgba(31, 41, 55, .34);
+  box-shadow: 0 4px 10px rgba(15, 23, 42, .14);
 }
 
 .deleteBtn {
-  border-color: rgba(239, 83, 80, .36);
+  border-color: rgba(239, 83, 80, .42);
   background: var(--danger);
 }
 
@@ -165,14 +182,14 @@ button.danger {
 }
 
 .ghost {
-  background: rgba(255, 253, 244, .72);
-  border-color: rgba(107, 114, 128, .34);
+  background: rgba(255, 245, 202, .68);
+  border-color: rgba(107, 114, 128, .40);
 }
 
 .linkPath.defaultLink,
 .linkPath.sameDayLink.defaultLink {
-  stroke: rgba(107, 114, 128, .28) !important;
-  stroke-width: 2.4 !important;
+  stroke: rgba(100, 116, 139, .36) !important;
+  stroke-width: 2.6 !important;
 }
 
 .linkPath.doneLink,
@@ -181,13 +198,13 @@ button.danger {
 .linkPath.sameDayLink.doneLink,
 .linkPath.sameDayLink.mutedLink,
 .linkPath.sameDayLink.collapsedLink {
-  stroke: rgba(107, 114, 128, .10) !important;
-  stroke-width: 2.2 !important;
+  stroke: rgba(100, 116, 139, .16) !important;
+  stroke-width: 2.3 !important;
 }
 
 .linkPath.focusedLink,
 .linkPath.sameDayLink.focusedLink {
-  stroke: var(--accent) !important;
+  stroke: rgba(111, 92, 255, .78) !important;
   stroke-width: 4 !important;
 }
 
@@ -206,12 +223,13 @@ button.danger {
   }
 
   .board {
-    box-shadow: 0 6px 18px rgba(15, 23, 42, .06);
-    outline-color: rgba(148, 163, 184, .22);
+    background: #f5f8fb;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, .10);
+    outline-color: rgba(100, 116, 139, .30);
   }
 
   .verticalMode .laneBand {
-    background: transparent;
+    background: rgba(148, 163, 184, .05);
   }
 
   .verticalMode .laneBand.todayBand,
@@ -221,12 +239,12 @@ button.danger {
 
   .verticalMode .laneLine {
     height: 2px;
-    background: rgba(107, 114, 128, .18);
+    background: rgba(100, 116, 139, .28);
   }
 
   .verticalMode .laneLine.hot {
     height: 3px;
-    background: rgba(111, 92, 255, .44);
+    background: rgba(111, 92, 255, .50);
   }
 
   .verticalMode .laneLine.todayLine,
@@ -235,19 +253,21 @@ button.danger {
   }
 
   .verticalMode .laneLabel {
-    background: rgba(255, 255, 255, .82);
-    border-color: rgba(148, 163, 184, .14);
-    box-shadow: none;
+    background: rgba(255, 255, 255, .92);
+    border-color: rgba(148, 163, 184, .24);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, .08);
   }
 
   .verticalMode .laneLabel.monthStart {
-    background: rgba(255, 255, 255, .90);
+    background: rgba(255, 255, 255, .96);
     border-left-color: var(--today-strong);
-    box-shadow: 0 3px 10px rgba(15, 23, 42, .05);
+    box-shadow: 0 5px 14px rgba(15, 23, 42, .10);
   }
 
   .note {
-    box-shadow: 0 5px 12px rgba(15, 23, 42, .10);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, .68) inset,
+      0 6px 15px rgba(15, 23, 42, .14);
   }
 
   .note.selected,
@@ -255,19 +275,20 @@ button.danger {
     outline-width: 2px;
     outline-offset: 3px;
     box-shadow:
-      0 0 0 4px rgba(111, 92, 255, .08),
-      0 8px 18px rgba(15, 23, 42, .12);
+      0 0 0 4px rgba(111, 92, 255, .13),
+      0 10px 22px rgba(15, 23, 42, .18);
   }
 
   .note.todayTask {
     box-shadow:
-      0 5px 12px rgba(15, 23, 42, .10),
-      0 0 0 3px rgba(142, 214, 220, .12);
+      0 1px 0 rgba(255, 255, 255, .68) inset,
+      0 6px 15px rgba(15, 23, 42, .14),
+      0 0 0 3px rgba(113, 197, 206, .20);
   }
 
   .linkPath.defaultLink,
   .linkPath.sameDayLink.defaultLink {
-    stroke-width: 2.1 !important;
+    stroke-width: 2.2 !important;
   }
 
   .linkPath.focusedLink,
@@ -276,44 +297,44 @@ button.danger {
   }
 
   .mobileActionBar {
-    border-color: rgba(148, 163, 184, .20);
+    border-color: rgba(148, 163, 184, .24);
     background: rgba(255, 255, 255, .94);
-    box-shadow: 0 12px 30px rgba(15, 23, 42, .16);
+    box-shadow: 0 14px 34px rgba(15, 23, 42, .18);
   }
 
   .mobileActionButton {
     color: #374151;
-    background: rgba(255, 255, 255, .94);
-    border: 1px solid rgba(148, 163, 184, .22);
-    box-shadow: none;
+    background: rgba(255, 255, 255, .95);
+    border: 1px solid rgba(148, 163, 184, .28);
+    box-shadow: 0 2px 6px rgba(15, 23, 42, .06);
   }
 
   .mobileActionButton.add {
     color: #fff;
     background: var(--accent);
-    border-color: rgba(111, 92, 255, .18);
+    border-color: rgba(111, 92, 255, .22);
     box-shadow: 0 8px 18px rgba(111, 92, 255, .24);
   }
 
   .mobileActionButton.done {
     color: var(--success);
-    background: rgba(255, 255, 255, .94);
+    background: rgba(255, 255, 255, .95);
   }
 
   .mobileActionButton.edit {
     color: #374151;
-    background: rgba(255, 255, 255, .94);
+    background: rgba(255, 255, 255, .95);
   }
 
   .mobileActionButton.delete {
     color: var(--danger);
-    background: rgba(255, 255, 255, .94);
+    background: rgba(255, 255, 255, .95);
   }
 
   #flowMap {
-    border-color: rgba(148, 163, 184, .26);
-    background: rgba(255, 255, 255, .86);
-    box-shadow: 0 10px 24px rgba(15, 23, 42, .12);
+    border-color: rgba(148, 163, 184, .30);
+    background: rgba(255, 255, 255, .88);
+    box-shadow: 0 11px 26px rgba(15, 23, 42, .14);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
   }
@@ -321,7 +342,7 @@ button.danger {
   #flowMap.visible,
   #flowMap.active,
   #flowMap:focus-within {
-    box-shadow: 0 12px 28px rgba(15, 23, 42, .16);
+    box-shadow: 0 13px 30px rgba(15, 23, 42, .18);
   }
 
   .flowMapChrome {
@@ -329,32 +350,32 @@ button.danger {
   }
 
   .flowMapDot {
-    background: rgba(107, 114, 128, .52);
+    background: rgba(107, 114, 128, .54);
   }
 
   .flowMapLane {
-    stroke: rgba(107, 114, 128, .14);
+    stroke: rgba(107, 114, 128, .18);
   }
 
   .flowMapLink {
-    stroke: rgba(107, 114, 128, .22);
+    stroke: rgba(107, 114, 128, .24);
   }
 
   .flowMapLink.connected {
-    stroke: rgba(111, 92, 255, .36);
+    stroke: rgba(111, 92, 255, .42);
   }
 
   .flowMapNode {
-    fill: rgba(75, 85, 99, .58);
+    fill: rgba(75, 85, 99, .60);
     stroke: rgba(255, 255, 255, .88);
   }
 
   .flowMapNode.done {
-    fill: rgba(107, 114, 128, .24);
+    fill: rgba(107, 114, 128, .28);
   }
 
   .flowMapNode.connected {
-    fill: rgba(111, 92, 255, .50);
+    fill: rgba(111, 92, 255, .56);
   }
 
   .flowMapNode.selected {
@@ -363,7 +384,7 @@ button.danger {
   }
 
   .flowMapCamera {
-    fill: rgba(111, 92, 255, .14);
-    stroke: rgba(111, 92, 255, .56);
+    fill: rgba(111, 92, 255, .16);
+    stroke: rgba(111, 92, 255, .60);
   }
 }
