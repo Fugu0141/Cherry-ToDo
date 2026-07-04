@@ -38,7 +38,7 @@
           <p class="welcomeSplashKicker">Flow first, date second.</p>
           <h2 id="welcomeSplashTitle">やることの流れを、見失わない。</h2>
           <p class="welcomeSplashLead">
-            Cherry-ToDoは、タスクを付箋のように並べながら、親子関係と日付で整理するOSSのToDoアプリです。
+            Cherry-ToDoは、タスクブロックを枝のようにつなぎながら、親子関係と日付で整理するOSSのToDoアプリです。
           </p>
 
           <div class="welcomeSplashFlow" aria-label="Cherry-ToDoの基本コンセプト">
