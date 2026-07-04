@@ -27,9 +27,9 @@
     backdrop.innerHTML = `
       <section class="welcomeSplash" role="dialog" aria-modal="true" aria-labelledby="welcomeSplashTitle">
         <div class="welcomeSplashHeader">
-          <div class="welcomeSplashBrand" aria-label="Cherry-ToDo">
+          <div class="welcomeSplashBrand" aria-label="Cherry">
             <span class="welcomeSplashMark">C</span>
-            <span>Cherry-ToDo</span>
+            <span>Cherry</span>
           </div>
           <button type="button" class="welcomeSplashClose" data-welcome-close aria-label="閉じる">×</button>
         </div>
@@ -38,10 +38,10 @@
           <p class="welcomeSplashKicker">Flow first, date second.</p>
           <h2 id="welcomeSplashTitle">やることの流れを、見失わない。</h2>
           <p class="welcomeSplashLead">
-            Cherry-ToDoは、タスクブロックを枝のようにつなぎながら、親子関係と日付で整理するOSSのToDoアプリです。
+            Cherryは、タスクブロックを枝のようにつなぎながら、親子関係と日付で整理するOSSのToDoアプリです。
           </p>
 
-          <div class="welcomeSplashFlow" aria-label="Cherry-ToDoの基本コンセプト">
+          <div class="welcomeSplashFlow" aria-label="Cherryの基本コンセプト">
             <span>ルート</span>
             <span aria-hidden="true">→</span>
             <span>子タスク</span>
