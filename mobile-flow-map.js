@@ -137,7 +137,7 @@
     mapEl.setAttribute("aria-hidden", "false");
     window.clearTimeout(activeTimer);
     activeTimer = window.setTimeout(() => {
-      if (!isPointerActive) hideFlowMap();
+      if (!isPointerActive && !hasSelectedTask()) hideFlowMap();
     }, ACTIVE_TIMEOUT);
   }
 
@@ -384,6 +384,7 @@
     drawLinks(tasks, taskById, noteSize, transform, selectedId);
     drawNodes(tasks, noteSize, transform, selectedId);
 
+    if (selectedId) showFlowMap();
     if (chromeHint) chromeHint.textContent = selectedId ? "Selected" : "Flow Map";
   }
 
