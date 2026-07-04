@@ -1,14 +1,14 @@
-# Contributing to Cherry-ToDo
+# Contributing to Cherry
 
-Thank you for your interest in Cherry-ToDo.
+Thank you for your interest in Cherry.
 
-Cherry-ToDo is still an early prototype, so contribution rules are intentionally simple for now.
+Cherry is still an early prototype, so contribution rules are intentionally simple for now.
 
 ---
 
 ## Project direction
 
-Cherry-ToDo is a task flow todo app for organizing task blocks as flows, branches, and schedules.
+Cherry is a task flow todo app for organizing task blocks as flows, branches, and schedules.
 
 Before contributing, please read:
 
@@ -87,7 +87,7 @@ When opening an issue, please include:
 
 ## Design and originality
 
-Cherry-ToDo may take inspiration from general task-flow concepts, but it must not clone another product.
+Cherry may take inspiration from general task-flow concepts, but it must not clone another product.
 
 Do not contribute:
 
