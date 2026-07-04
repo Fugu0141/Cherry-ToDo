@@ -60,8 +60,9 @@
   }
 
   function targetDateForBoundary(lanes, boundaryIndex) {
-    const lineDate = lanes[boundaryIndex] || lanes.at(-1) || todayISO();
-    return addDaysISO(lineDate, 1);
+    if (!lanes.length) return todayISO();
+    const baseDate = boundaryIndex > 0 ? lanes[boundaryIndex - 1] : lanes[0];
+    return addDaysISO(baseDate || todayISO(), 1);
   }
 
   function makeLineHit(lanes, boundaryIndex) {
@@ -111,6 +112,13 @@
 
     if (anchor <= lines[0]) return { kind: "lane", date: lanes[0], targetDate: lanes[0], mode: "snap" };
     return makeBlankHit(lanes);
+  }
+
+  function isFreshAskHit(hit, at, defaultDate = null) {
+    if (!hit || !hit.targetDate || hit.mode !== "ask") return false;
+    if (Date.now() - at < 5000) return true;
+    if (!defaultDate || !hit.date) return false;
+    return normalizeDate(defaultDate) === normalizeDate(hit.date);
   }
 
   hitTestDateArea = function(noteMainStart) {
@@ -169,9 +177,7 @@
       const next = { ...options };
       const hit = recentHit || window[recentHitKey];
       const at = recentHitAt || hit?.at || 0;
-      const targetDate = hit?.targetDate || hit?.date;
-      const fresh = hit && targetDate && hit.mode === "ask" && Date.now() - at < 1500;
-      if (next.parentId && fresh && normalizeDate(next.targetAt) === todayISO()) next.targetAt = targetDate;
+      if (next.parentId && isFreshAskHit(hit, at)) next.targetAt = hit.targetDate;
       return originalOpenCreateTaskModal(next);
     };
   }
@@ -180,9 +186,8 @@
     openChangeDateModal = function(taskId, defaultDate, original) {
       const hit = recentHit || window[recentHitKey];
       const at = recentHitAt || hit?.at || 0;
-      const targetDate = hit?.targetDate || hit?.date;
-      const fresh = hit && targetDate && hit.mode === "ask" && Date.now() - at < 1500;
-      return originalOpenChangeDateModal(taskId, fresh ? targetDate : defaultDate, original);
+      const fixedDate = isFreshAskHit(hit, at, defaultDate) ? hit.targetDate : defaultDate;
+      return originalOpenChangeDateModal(taskId, fixedDate, original);
     };
   }
 })();
