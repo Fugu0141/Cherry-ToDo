@@ -60,8 +60,9 @@
   }
 
   function targetDateForBoundary(lanes, boundaryIndex) {
-    const lineDate = lanes[boundaryIndex] || lanes.at(-1) || todayISO();
-    return addDaysISO(lineDate, 1);
+    if (!lanes.length) return todayISO();
+    const baseDate = boundaryIndex > 0 ? lanes[boundaryIndex - 1] : lanes[0];
+    return addDaysISO(baseDate || todayISO(), 1);
   }
 
   function makeLineHit(lanes, boundaryIndex) {
@@ -171,7 +172,7 @@
       const at = recentHitAt || hit?.at || 0;
       const targetDate = hit?.targetDate || hit?.date;
       const fresh = hit && targetDate && hit.mode === "ask" && Date.now() - at < 1500;
-      if (next.parentId && fresh && normalizeDate(next.targetAt) === todayISO()) next.targetAt = targetDate;
+      if (next.parentId && fresh) next.targetAt = targetDate;
       return originalOpenCreateTaskModal(next);
     };
   }
