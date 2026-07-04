@@ -151,4 +151,4 @@ Please read [`CONTRIBUTING.md`](CONTRIBUTING.md) before opening issues or pull r
 
 ## License
 
-MIT License. See [`LICENSE`).
+MIT License. See [`LICENSE`](LICENSE).
