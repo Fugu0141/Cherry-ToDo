@@ -111,6 +111,110 @@
     font-size: 9px;
   }
 
+  :root[data-theme="dark"] #flowMap {
+    background: rgba(25, 35, 53, .97);
+    border-color: rgba(141, 124, 255, .42);
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, .06) inset,
+      0 0 0 1px rgba(141, 124, 255, .18),
+      0 14px 32px rgba(0, 0, 0, .46);
+  }
+
+  :root[data-theme="dark"] #flowMap.visible,
+  :root[data-theme="dark"] #flowMap.active,
+  :root[data-theme="dark"] #flowMap:focus-within {
+    opacity: .98;
+  }
+
+  :root[data-theme="dark"] .flowMapChrome {
+    color: rgba(226, 232, 240, .82);
+  }
+
+  :root[data-theme="dark"] .flowMapLane {
+    stroke: rgba(148, 163, 184, .30);
+  }
+
+  :root[data-theme="dark"] .flowMapLink {
+    stroke: rgba(172, 187, 207, .42);
+  }
+
+  :root[data-theme="dark"] .flowMapLink.connected {
+    stroke: rgba(167, 139, 250, .78);
+  }
+
+  :root[data-theme="dark"] .flowMapNode {
+    fill: rgba(190, 203, 222, .76);
+    stroke: rgba(15, 23, 42, .92);
+  }
+
+  :root[data-theme="dark"] .flowMapNode.connected {
+    fill: rgba(167, 139, 250, .88);
+  }
+
+  :root[data-theme="dark"] .flowMapNode.selected {
+    fill: #ffffff;
+    stroke: rgba(167, 139, 250, .98);
+    stroke-width: 2;
+  }
+
+  :root[data-theme="dark"] .flowMapCamera {
+    fill: rgba(141, 124, 255, .22);
+    stroke: rgba(196, 181, 253, .88);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) #flowMap {
+      background: rgba(25, 35, 53, .97);
+      border-color: rgba(141, 124, 255, .42);
+      box-shadow:
+        0 0 0 1px rgba(255, 255, 255, .06) inset,
+        0 0 0 1px rgba(141, 124, 255, .18),
+        0 14px 32px rgba(0, 0, 0, .46);
+    }
+
+    :root:not([data-theme="light"]) #flowMap.visible,
+    :root:not([data-theme="light"]) #flowMap.active,
+    :root:not([data-theme="light"]) #flowMap:focus-within {
+      opacity: .98;
+    }
+
+    :root:not([data-theme="light"]) .flowMapChrome {
+      color: rgba(226, 232, 240, .82);
+    }
+
+    :root:not([data-theme="light"]) .flowMapLane {
+      stroke: rgba(148, 163, 184, .30);
+    }
+
+    :root:not([data-theme="light"]) .flowMapLink {
+      stroke: rgba(172, 187, 207, .42);
+    }
+
+    :root:not([data-theme="light"]) .flowMapLink.connected {
+      stroke: rgba(167, 139, 250, .78);
+    }
+
+    :root:not([data-theme="light"]) .flowMapNode {
+      fill: rgba(190, 203, 222, .76);
+      stroke: rgba(15, 23, 42, .92);
+    }
+
+    :root:not([data-theme="light"]) .flowMapNode.connected {
+      fill: rgba(167, 139, 250, .88);
+    }
+
+    :root:not([data-theme="light"]) .flowMapNode.selected {
+      fill: #ffffff;
+      stroke: rgba(167, 139, 250, .98);
+      stroke-width: 2;
+    }
+
+    :root:not([data-theme="light"]) .flowMapCamera {
+      fill: rgba(141, 124, 255, .22);
+      stroke: rgba(196, 181, 253, .88);
+    }
+  }
+
   .laneLabel {
     background: transparent;
     border: 0;
