@@ -61,14 +61,14 @@ Defines the app shell:
 - board area
 - SVG link layer
 - date lane layer
-- task note layer
+- task block layer
 - task creation modal
 - date change modal
 - script loading order
 
 ### `style.css`
 
-Base visual styles for the board, notes, toolbar, date lanes, links, and modals.
+Base visual styles for the board, task blocks, toolbar, date lanes, links, and modals.
 
 ### `ux-fix.css`
 
@@ -243,8 +243,8 @@ Layering:
 ```text
 SVG links
 Date lanes
-Task notes
-Ghost note / modal UI
+Task blocks
+Ghost task block / modal UI
 ```
 
 ---
@@ -291,7 +291,7 @@ render/
   board-view.js
   lane-view.js
   link-view.js
-  note-view.js
+  task-card-view.js
   list-view.js
 
 interaction/
