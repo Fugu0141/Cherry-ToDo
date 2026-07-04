@@ -114,6 +114,13 @@
     return makeBlankHit(lanes);
   }
 
+  function isFreshAskHit(hit, at, defaultDate = null) {
+    if (!hit || !hit.targetDate || hit.mode !== "ask") return false;
+    if (Date.now() - at < 5000) return true;
+    if (!defaultDate || !hit.date) return false;
+    return normalizeDate(defaultDate) === normalizeDate(hit.date);
+  }
+
   hitTestDateArea = function(noteMainStart) {
     const size = isVerticalMode() ? noteH : noteW;
     const anchor = noteMainStart + size / 2;
@@ -170,9 +177,7 @@
       const next = { ...options };
       const hit = recentHit || window[recentHitKey];
       const at = recentHitAt || hit?.at || 0;
-      const targetDate = hit?.targetDate || hit?.date;
-      const fresh = hit && targetDate && hit.mode === "ask" && Date.now() - at < 1500;
-      if (next.parentId && fresh) next.targetAt = targetDate;
+      if (next.parentId && isFreshAskHit(hit, at)) next.targetAt = hit.targetDate;
       return originalOpenCreateTaskModal(next);
     };
   }
@@ -181,9 +186,8 @@
     openChangeDateModal = function(taskId, defaultDate, original) {
       const hit = recentHit || window[recentHitKey];
       const at = recentHitAt || hit?.at || 0;
-      const targetDate = hit?.targetDate || hit?.date;
-      const fresh = hit && targetDate && hit.mode === "ask" && Date.now() - at < 1500;
-      return originalOpenChangeDateModal(taskId, fresh ? targetDate : defaultDate, original);
+      const fixedDate = isFreshAskHit(hit, at, defaultDate) ? hit.targetDate : defaultDate;
+      return originalOpenChangeDateModal(taskId, fixedDate, original);
     };
   }
 })();
