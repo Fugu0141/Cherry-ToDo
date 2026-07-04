@@ -19,14 +19,16 @@ Cherry-ToDo is still moving quickly, so this document should be treated as the f
 
 ## Current snapshot
 
-Last updated: 2026-07-03 JST
+Last updated: 2026-07-04 JST
 
 | Item | Status | Meaning | Next action |
 | --- | --- | --- | --- |
+| #50 Fix mobile layout date and action bar issues | Draft / manual testing needed | Bundles the active fixes for #51, #52, and #53. It should stay draft until browser/mobile checks are complete. | Manually test date-line default dates, relationship-aware layout, Flow Map link readability, and mobile action-button hiding. |
+| #54 Trigger GitHub Pages redeploy | Merged | Recovery-only PR for a stuck/delayed GitHub Pages deployment. It leaves no final repository diff. | Check Pages from the repository UI if deployment is still delayed; no app-code follow-up is needed here. |
+| #49 Add mobile Flow Map minimap | Merged | Mobile board overview idea: game-like minimap for understanding the task flow. | Keep regression checks in #50 because layout fixes can affect Flow Map links. |
 | #45 Add simple first-run concept window | Draft | Parked intentionally. This should not be marked ready or merged yet. | Keep it as a planned welcome/about feature until the maintainer decides timing. |
 | #46 Fix timezone-safe date-only helpers | Merged | Bug-fix PR for timezone-safe date-only handling. Does not hard-code JST. | Keep regression checks in the manual checklist. |
 | #47 Add project progress log | Merged | Adds this project progress log and communication rules. | Keep this file updated when state changes. |
-| #38 Add mobile Flow Map minimap | Implementation PR in progress | Mobile board overview idea: game-like minimap for understanding the task flow. | Test the Flow Map PR before merge. |
 | #37 Add Japanese README | Open / docs | Japanese documentation for Japanese users and community onboarding. | Create `README_ja.md` later. |
 | #33 Redesign desktop task creation as inline side editor | Open / future UX | Reduce context switching by showing a compact editor near the task. | Implement separately from storage/schema work. |
 | #6 Plan codebase module separation | Open / ongoing | Larger cleanup direction. | Avoid large refactors while behavior is still changing quickly. |
@@ -42,6 +44,12 @@ Last updated: 2026-07-03 JST
 - PR #45 has been converted back to draft.
 - New rule: do not change PR readiness/merge state unless the maintainer explicitly asks.
 
+2026-07-04:
+
+- PR #54 was merged only to retrigger GitHub Pages deployment.
+- PR #50 remains draft because it changes date targeting, layout ordering, Flow Map link rendering, and mobile action-button behavior.
+- Do not mark #50 ready until the date-line and mobile checks have been run in a browser-sized mobile viewport.
+
 ---
 
 ## Product decisions to preserve
@@ -51,6 +59,8 @@ Last updated: 2026-07-03 JST
 - Do not fix timezone behavior by hard-coding Japan time.
 - The app should work naturally for users in any timezone.
 - Date-only task values should remain plain `YYYY-MM-DD` strings.
+- Dropping a task on a date line should open the date-change UI with that line's date + 1 day as the default.
+- Relationship readability should win over packing tasks as tightly as possible.
 - Cherry-ToDo should avoid turning the main board into a manual; documentation and welcome surfaces should stay lightweight.
 - The first-run welcome/about window is useful, but it does not need to be merged immediately.
 - Donation/support and release notes entry points can stay planned or placeholder until their actual destinations are ready.
@@ -73,7 +83,8 @@ When asked to continue development:
 
 ## Suggested next work queue
 
-1. Keep #45 draft until the maintainer wants the first-run welcome window included.
-2. Manually test the mobile Flow Map minimap implementation for #38.
-3. If #38 is merged, continue mobile UX polish under #5.
+1. Keep #50 draft and manually test the active fixes for #51, #52, and #53.
+2. After #50 is validated and merged, continue mobile UX polish under #5.
+3. Keep #45 draft until the maintainer wants the first-run welcome window included.
 4. Add Japanese README (#37) when documentation/community onboarding becomes the priority.
+5. Resume module separation (#6) only after the current layout/date behavior is stable.
