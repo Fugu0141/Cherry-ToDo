@@ -1,0 +1,369 @@
+/*
+ * Visual cleanup layer for Issue #64.
+ * Keep the task flow readable by reducing color competition and making only
+ * selected or dangerous states visually strong.
+ */
+:root {
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --ink: #1f2937;
+  --muted: #6b7280;
+  --line: #d6d9e0;
+  --accent: #6f5cff;
+  --accent-soft: #e9e5ff;
+  --note: #fffdf4;
+  --note2: #fff8dd;
+  --note-border: #d6d9e0;
+  --today: rgba(142, 214, 220, .08);
+  --today-strong: #8ed6dc;
+  --danger: #ef5350;
+  --success: #0f9f8f;
+}
+
+button {
+  box-shadow: 0 4px 10px rgba(15, 23, 42, .10);
+}
+
+button.danger {
+  background: var(--danger);
+}
+
+.topbar {
+  border-bottom-color: rgba(148, 163, 184, .22);
+  box-shadow: 0 1px 0 rgba(15, 23, 42, .03);
+}
+
+.logo {
+  background: linear-gradient(135deg, #fff7bf, #c9f6e5);
+  box-shadow: inset 0 0 0 2px rgba(15, 23, 42, .08);
+}
+
+.board {
+  box-shadow: 0 10px 24px rgba(15, 23, 42, .07);
+  outline-color: rgba(148, 163, 184, .28);
+}
+
+.laneBand.todayBand,
+.laneBand.todayLane {
+  background: var(--today);
+}
+
+.laneBand.highlight {
+  background: rgba(111, 92, 255, .06);
+}
+
+.laneBand.todayBand.highlight,
+.laneBand.todayLane.highlight {
+  background: linear-gradient(0deg, rgba(111, 92, 255, .04), rgba(111, 92, 255, .04)), var(--today);
+}
+
+.laneLine {
+  background: rgba(107, 114, 128, .22);
+}
+
+.laneLine.hot {
+  background: rgba(111, 92, 255, .48);
+}
+
+.laneLine.todayLine,
+.laneLine.todayLane {
+  background: var(--today-strong);
+}
+
+.laneLine.pastLane,
+.laneLine.futureLane,
+.laneLine.collapsedDoneLane {
+  opacity: .36;
+}
+
+.laneLabel {
+  color: var(--ink);
+  background: rgba(255, 255, 255, .88);
+  box-shadow: none;
+  border: 1px solid rgba(148, 163, 184, .16);
+  backdrop-filter: none;
+}
+
+.laneLabel.monthStart {
+  border-color: rgba(142, 214, 220, .28);
+  border-left-color: var(--today-strong);
+  background: rgba(255, 255, 255, .92);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, .06);
+}
+
+.laneMonthMarker {
+  background: rgba(111, 92, 255, .10);
+  color: #4b5563;
+}
+
+.note {
+  background: linear-gradient(180deg, var(--note), var(--note2));
+  border: 1px solid var(--note-border);
+  box-shadow: 0 6px 14px rgba(15, 23, 42, .10);
+}
+
+.note:hover {
+  box-shadow: 0 8px 18px rgba(15, 23, 42, .12);
+}
+
+.note.selected,
+.board.verticalMode .note.selected {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  box-shadow:
+    0 0 0 4px rgba(111, 92, 255, .08),
+    0 10px 22px rgba(15, 23, 42, .12);
+}
+
+.note.todayTask {
+  box-shadow:
+    0 6px 14px rgba(15, 23, 42, .10),
+    0 0 0 4px rgba(142, 214, 220, .12);
+}
+
+.note.todayTask::before {
+  background: var(--today-strong);
+}
+
+.note.overdueTask {
+  box-shadow:
+    0 6px 14px rgba(15, 23, 42, .10),
+    0 0 0 4px rgba(239, 83, 80, .10);
+}
+
+.note.overdueTask::before {
+  background: var(--danger);
+}
+
+.note.futureTask {
+  opacity: .9;
+  filter: saturate(.9);
+}
+
+.note.doneTask {
+  background: linear-gradient(180deg, #f3f5f8, #f8fafc);
+  border-color: #d5dbe5;
+  color: #7b8492;
+  opacity: .48;
+}
+
+.handle,
+.doneBtn,
+.deleteBtn {
+  border-color: rgba(31, 41, 55, .32);
+  box-shadow: 0 4px 10px rgba(15, 23, 42, .12);
+}
+
+.deleteBtn {
+  border-color: rgba(239, 83, 80, .36);
+  background: var(--danger);
+}
+
+.done .doneBtn {
+  background: rgba(15, 159, 143, .12);
+  color: var(--success);
+}
+
+.ghost {
+  background: rgba(255, 253, 244, .72);
+  border-color: rgba(107, 114, 128, .34);
+}
+
+.linkPath.defaultLink,
+.linkPath.sameDayLink.defaultLink {
+  stroke: rgba(107, 114, 128, .28) !important;
+  stroke-width: 2.4 !important;
+}
+
+.linkPath.doneLink,
+.linkPath.mutedLink,
+.linkPath.collapsedLink,
+.linkPath.sameDayLink.doneLink,
+.linkPath.sameDayLink.mutedLink,
+.linkPath.sameDayLink.collapsedLink {
+  stroke: rgba(107, 114, 128, .10) !important;
+  stroke-width: 2.2 !important;
+}
+
+.linkPath.focusedLink,
+.linkPath.sameDayLink.focusedLink {
+  stroke: var(--accent) !important;
+  stroke-width: 4 !important;
+}
+
+@media (max-width: 980px) {
+  .topbar {
+    background: rgba(255, 255, 255, .96);
+  }
+
+  .toolbar button {
+    background: #1f2937;
+    box-shadow: 0 3px 8px rgba(15, 23, 42, .10);
+  }
+
+  .toolbar button.danger {
+    background: var(--danger);
+  }
+
+  .board {
+    box-shadow: 0 6px 18px rgba(15, 23, 42, .06);
+    outline-color: rgba(148, 163, 184, .22);
+  }
+
+  .verticalMode .laneBand {
+    background: transparent;
+  }
+
+  .verticalMode .laneBand.todayBand,
+  .verticalMode .laneBand.todayLane {
+    background: var(--today);
+  }
+
+  .verticalMode .laneLine {
+    height: 2px;
+    background: rgba(107, 114, 128, .18);
+  }
+
+  .verticalMode .laneLine.hot {
+    height: 3px;
+    background: rgba(111, 92, 255, .44);
+  }
+
+  .verticalMode .laneLine.todayLine,
+  .verticalMode .laneLine.todayLane {
+    background: var(--today-strong);
+  }
+
+  .verticalMode .laneLabel {
+    background: rgba(255, 255, 255, .82);
+    border-color: rgba(148, 163, 184, .14);
+    box-shadow: none;
+  }
+
+  .verticalMode .laneLabel.monthStart {
+    background: rgba(255, 255, 255, .90);
+    border-left-color: var(--today-strong);
+    box-shadow: 0 3px 10px rgba(15, 23, 42, .05);
+  }
+
+  .note {
+    box-shadow: 0 5px 12px rgba(15, 23, 42, .10);
+  }
+
+  .note.selected,
+  .board.verticalMode .note.selected {
+    outline-width: 2px;
+    outline-offset: 3px;
+    box-shadow:
+      0 0 0 4px rgba(111, 92, 255, .08),
+      0 8px 18px rgba(15, 23, 42, .12);
+  }
+
+  .note.todayTask {
+    box-shadow:
+      0 5px 12px rgba(15, 23, 42, .10),
+      0 0 0 3px rgba(142, 214, 220, .12);
+  }
+
+  .linkPath.defaultLink,
+  .linkPath.sameDayLink.defaultLink {
+    stroke-width: 2.1 !important;
+  }
+
+  .linkPath.focusedLink,
+  .linkPath.sameDayLink.focusedLink {
+    stroke-width: 3.6 !important;
+  }
+
+  .mobileActionBar {
+    border-color: rgba(148, 163, 184, .20);
+    background: rgba(255, 255, 255, .94);
+    box-shadow: 0 12px 30px rgba(15, 23, 42, .16);
+  }
+
+  .mobileActionButton {
+    color: #374151;
+    background: rgba(255, 255, 255, .94);
+    border: 1px solid rgba(148, 163, 184, .22);
+    box-shadow: none;
+  }
+
+  .mobileActionButton.add {
+    color: #fff;
+    background: var(--accent);
+    border-color: rgba(111, 92, 255, .18);
+    box-shadow: 0 8px 18px rgba(111, 92, 255, .24);
+  }
+
+  .mobileActionButton.done {
+    color: var(--success);
+    background: rgba(255, 255, 255, .94);
+  }
+
+  .mobileActionButton.edit {
+    color: #374151;
+    background: rgba(255, 255, 255, .94);
+  }
+
+  .mobileActionButton.delete {
+    color: var(--danger);
+    background: rgba(255, 255, 255, .94);
+  }
+
+  #flowMap {
+    border-color: rgba(148, 163, 184, .26);
+    background: rgba(255, 255, 255, .86);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, .12);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  #flowMap.visible,
+  #flowMap.active,
+  #flowMap:focus-within {
+    box-shadow: 0 12px 28px rgba(15, 23, 42, .16);
+  }
+
+  .flowMapChrome {
+    color: rgba(75, 85, 99, .70);
+  }
+
+  .flowMapDot {
+    background: rgba(107, 114, 128, .52);
+  }
+
+  .flowMapLane {
+    stroke: rgba(107, 114, 128, .14);
+  }
+
+  .flowMapLink {
+    stroke: rgba(107, 114, 128, .22);
+  }
+
+  .flowMapLink.connected {
+    stroke: rgba(111, 92, 255, .36);
+  }
+
+  .flowMapNode {
+    fill: rgba(75, 85, 99, .58);
+    stroke: rgba(255, 255, 255, .88);
+  }
+
+  .flowMapNode.done {
+    fill: rgba(107, 114, 128, .24);
+  }
+
+  .flowMapNode.connected {
+    fill: rgba(111, 92, 255, .50);
+  }
+
+  .flowMapNode.selected {
+    fill: var(--accent);
+    stroke: rgba(255, 255, 255, .98);
+  }
+
+  .flowMapCamera {
+    fill: rgba(111, 92, 255, .14);
+    stroke: rgba(111, 92, 255, .56);
+  }
+}
