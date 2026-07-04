@@ -13,14 +13,19 @@
     dark: "ダークテーマを使用中です。クリックで自動選択に戻します",
   };
 
-  function loadExperimentStylesheet() {
-    if (document.querySelector('link[data-theme-experiment="paper-canvas"]')) return;
+  function loadStylesheetOnce(id, href) {
+    if (document.querySelector(`link[data-experiment-id="${id}"]`)) return;
 
     const link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = "./theme-experiment-a.css?v=20260705-1";
-    link.dataset.themeExperiment = "paper-canvas";
+    link.href = href;
+    link.dataset.experimentId = id;
     document.head.appendChild(link);
+  }
+
+  function loadExperimentStylesheets() {
+    loadStylesheetOnce("paper-canvas", "./theme-experiment-a.css?v=20260705-1");
+    loadStylesheetOnce("mobile-control-cleanup", "./mobile-control-cleanup.css?v=20260705-1");
   }
 
   function safeGetMode() {
@@ -63,7 +68,7 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    loadExperimentStylesheet();
+    loadExperimentStylesheets();
 
     const button = document.getElementById("themeToggleBtn");
     let currentMode = safeGetMode();
