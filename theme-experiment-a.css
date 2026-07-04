@@ -1,0 +1,201 @@
+/*
+ * Experiment A: Paper Canvas
+ * See docs/UI_THEME_EXPERIMENTS.md.
+ *
+ * This file intentionally lives after visual-cleanup.css so the experiment can
+ * be removed or merged without touching the baseline theme layer.
+ */
+:root {
+  --app-bg: #edf1f5;
+  --topbar-bg: rgba(255, 255, 255, .94);
+  --board-bg: #f4f6fa;
+  --board-border: rgba(100, 116, 139, .26);
+  --board-shadow: 0 12px 28px rgba(15, 23, 42, .08);
+
+  --lane-bg: rgba(229, 234, 241, .55);
+  --lane-today-bg: rgba(205, 238, 242, .72);
+  --lane-highlight-bg: rgba(104, 87, 245, .055);
+  --lane-line: rgba(105, 118, 134, .26);
+  --lane-today-line: #74c6cf;
+  --lane-label-bg: rgba(255, 255, 255, .96);
+  --lane-label-border: rgba(126, 140, 158, .24);
+
+  --note: #fff7d6;
+  --note2: #fff0bd;
+  --note-ink: #243043;
+  --note-border: #d7c784;
+  --note-accent: rgba(118, 196, 190, .42);
+  --note-shadow: 0 1px 0 rgba(255, 255, 255, .78) inset, 0 7px 16px rgba(15, 23, 42, .12);
+  --note-selected-shadow: 0 0 0 4px rgba(104, 87, 245, .11), 0 12px 24px rgba(15, 23, 42, .16);
+
+  --link: rgba(96, 111, 130, .28);
+  --link-muted: rgba(96, 111, 130, .12);
+  --link-focused: rgba(104, 87, 245, .62);
+}
+
+:root[data-theme="dark"] {
+  --app-bg: #0c1320;
+  --topbar-bg: rgba(13, 20, 33, .95);
+  --board-bg: #121b2a;
+  --board-border: rgba(148, 163, 184, .18);
+  --board-shadow: 0 18px 42px rgba(0, 0, 0, .34);
+
+  --lane-bg: rgba(148, 163, 184, .040);
+  --lane-today-bg: rgba(68, 151, 164, .145);
+  --lane-highlight-bg: rgba(141, 124, 255, .10);
+  --lane-line: rgba(165, 178, 196, .22);
+  --lane-today-line: #56bcc8;
+  --lane-label-bg: rgba(18, 27, 42, .96);
+  --lane-label-border: rgba(148, 163, 184, .20);
+
+  --note: #514b39;
+  --note2: #4a432e;
+  --note-ink: #fff0c8;
+  --note-border: rgba(202, 177, 97, .45);
+  --note-accent: rgba(97, 190, 177, .42);
+  --note-shadow: 0 1px 0 rgba(255, 255, 255, .08) inset, 0 10px 20px rgba(0, 0, 0, .28);
+  --note-selected-shadow: 0 0 0 4px rgba(141, 124, 255, .18), 0 14px 28px rgba(0, 0, 0, .36);
+
+  --link: rgba(169, 184, 205, .26);
+  --link-muted: rgba(169, 184, 205, .10);
+  --link-focused: rgba(141, 124, 255, .66);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --app-bg: #0c1320;
+    --topbar-bg: rgba(13, 20, 33, .95);
+    --board-bg: #121b2a;
+    --board-border: rgba(148, 163, 184, .18);
+    --board-shadow: 0 18px 42px rgba(0, 0, 0, .34);
+
+    --lane-bg: rgba(148, 163, 184, .040);
+    --lane-today-bg: rgba(68, 151, 164, .145);
+    --lane-highlight-bg: rgba(141, 124, 255, .10);
+    --lane-line: rgba(165, 178, 196, .22);
+    --lane-today-line: #56bcc8;
+    --lane-label-bg: rgba(18, 27, 42, .96);
+    --lane-label-border: rgba(148, 163, 184, .20);
+
+    --note: #514b39;
+    --note2: #4a432e;
+    --note-ink: #fff0c8;
+    --note-border: rgba(202, 177, 97, .45);
+    --note-accent: rgba(97, 190, 177, .42);
+    --note-shadow: 0 1px 0 rgba(255, 255, 255, .08) inset, 0 10px 20px rgba(0, 0, 0, .28);
+    --note-selected-shadow: 0 0 0 4px rgba(141, 124, 255, .18), 0 14px 28px rgba(0, 0, 0, .36);
+
+    --link: rgba(169, 184, 205, .26);
+    --link-muted: rgba(169, 184, 205, .10);
+    --link-focused: rgba(141, 124, 255, .66);
+  }
+}
+
+.board {
+  background: var(--board-bg);
+  box-shadow: var(--board-shadow);
+  outline-color: var(--board-border);
+}
+
+.laneBand {
+  background: var(--lane-bg);
+}
+
+.laneBand.todayBand,
+.laneBand.todayLane {
+  background: var(--lane-today-bg);
+}
+
+.laneLine {
+  background: var(--lane-line);
+}
+
+.laneLine.hot {
+  background: color-mix(in srgb, var(--accent) 46%, transparent);
+}
+
+.laneLine.todayLine,
+.laneLine.todayLane {
+  background: var(--lane-today-line);
+}
+
+.laneLabel {
+  background: var(--lane-label-bg);
+  border-color: var(--lane-label-border);
+}
+
+.note {
+  color: var(--note-ink);
+  background: linear-gradient(180deg, var(--note), var(--note2));
+  border-color: var(--note-border);
+  box-shadow: var(--note-shadow);
+}
+
+.note::before {
+  width: 8px;
+  background: var(--note-accent);
+}
+
+.note.selected,
+.board.verticalMode .note.selected {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-color: color-mix(in srgb, var(--accent) 44%, var(--note-border));
+  box-shadow: var(--note-selected-shadow);
+}
+
+.note.todayTask {
+  box-shadow: var(--note-shadow), 0 0 0 3px color-mix(in srgb, var(--lane-today-line) 18%, transparent);
+}
+
+.linkPath.defaultLink,
+.linkPath.sameDayLink.defaultLink {
+  stroke: var(--link) !important;
+  stroke-width: 2.2 !important;
+}
+
+.linkPath.doneLink,
+.linkPath.mutedLink,
+.linkPath.collapsedLink,
+.linkPath.sameDayLink.doneLink,
+.linkPath.sameDayLink.mutedLink,
+.linkPath.sameDayLink.collapsedLink {
+  stroke: var(--link-muted) !important;
+  stroke-width: 2 !important;
+}
+
+.linkPath.focusedLink,
+.linkPath.sameDayLink.focusedLink {
+  stroke: var(--link-focused) !important;
+  stroke-width: 3.3 !important;
+}
+
+.mobileActionBar {
+  box-shadow: 0 12px 28px rgba(15, 23, 42, .16);
+}
+
+.mobileActionButton:not(.add) {
+  box-shadow: none;
+}
+
+@media (max-width: 980px) {
+  .verticalMode .laneLine.hot {
+    background: color-mix(in srgb, var(--accent) 46%, transparent);
+  }
+
+  .linkPath.defaultLink,
+  .linkPath.sameDayLink.defaultLink {
+    stroke-width: 2 !important;
+  }
+
+  .linkPath.focusedLink,
+  .linkPath.sameDayLink.focusedLink {
+    stroke-width: 3.1 !important;
+  }
+
+  #themeToggleBtn {
+    max-width: 112px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
