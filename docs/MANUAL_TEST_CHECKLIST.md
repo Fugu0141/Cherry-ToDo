@@ -182,10 +182,10 @@ http://localhost:8000/
 
 ### Mobile action dock behavior
 
-- [ ] Selecting a task on mobile shows the action dock near the selected note, not fixed to the bottom edge.
-- [ ] The dock appears below the note when there is room and above/inside the viewport when there is not.
+- [ ] Selecting a task on mobile shows the action dock near the selected task block, not fixed to the bottom edge.
+- [ ] The dock appears below the task block when there is room and above/inside the viewport when there is not.
 - [ ] The dock stays inside the viewport near left and right edges.
-- [ ] The dock follows the selected note while scrolling.
+- [ ] The dock follows the selected task block while scrolling.
 - [ ] Deselecting a task hides the dock.
 - [ ] The card-level done, delete, and add controls do not overlap the task body on mobile.
 - [ ] The dock can toggle done / todo.

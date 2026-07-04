@@ -21,7 +21,7 @@ Related documents:
 
 ## 2. Product overview
 
-Cherry-ToDo is a sticky-note todo app for organizing work as a flow instead of a flat list.
+Cherry-ToDo is a task flow todo app for organizing work as connected task blocks instead of a flat list.
 
 A normal todo list treats tasks as separate rows:
 
@@ -103,7 +103,7 @@ This means tasks should eventually support both scheduled and unscheduled states
 
 ### Task
 
-A unit of work managed by the user. In the current prototype, tasks are displayed as sticky-note style cards.
+A unit of work managed by the user. In the current prototype, tasks are displayed as task block cards.
 
 Main properties:
 

@@ -8,7 +8,7 @@ Cherry-ToDo is still an early prototype, so contribution rules are intentionally
 
 ## Project direction
 
-Cherry-ToDo is a sticky-note todo app for organizing tasks as flows, branches, and schedules.
+Cherry-ToDo is a task flow todo app for organizing task blocks as flows, branches, and schedules.
 
 Before contributing, please read:
 

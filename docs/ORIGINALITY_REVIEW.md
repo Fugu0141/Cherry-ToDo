@@ -24,7 +24,7 @@ Cherry-ToDo may be inspired by general ideas such as:
 
 - task flow
 - branches
-- sticky notes
+- task blocks
 - visual organization
 - date-aware task management
 
