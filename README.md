@@ -1,12 +1,15 @@
-# Cherry-ToDo
+# Cherry
 
 [English](./README.md) | [日本語](./README_ja.md)
 
-Cherry-ToDo is an open-source task flow todo app for organizing task blocks as flows, branches, and schedules.
+Cherry is an open-source task flow todo app for organizing task blocks as flows, branches, and schedules.
 
-Instead of treating tasks as a flat list, Cherry-ToDo lets you start from a root task and extend child tasks like branches. The board is for building and viewing the flow of work, while the future list view is intended for quickly checking what needs to be done today or soon.
+Instead of treating tasks as a flat list, Cherry lets you start from a root task and extend child tasks like branches. The board is for building and viewing the flow of work, while the future list view is intended for quickly checking what needs to be done today or soon.
 
 > Current status: prototype / early OSS migration
+>
+> Repository name: `Cherry-ToDo`
+
 ## Demo
 
 https://fugu0141.github.io/Cherry-ToDo/
@@ -17,7 +20,7 @@ https://fugu0141.github.io/Cherry-ToDo/
 Build the flow of tasks, then find what to do today.
 ```
 
-Cherry-ToDo focuses on these ideas:
+Cherry focuses on these ideas:
 
 - Root tasks work like projects, tags, or big categories.
 - Child tasks represent the actual things to do.
@@ -137,9 +140,9 @@ Start here:
 
 ## Development notes
 
-Cherry-ToDo was originally developed under `Fugu0141.github.io/ToDo` and was moved to this standalone repository for open-source development.
+Cherry was originally developed under `Fugu0141.github.io/ToDo` and was moved to this standalone repository for open-source development.
 
-Some file names and internal compatibility keys may still contain older project names for migration compatibility. User-facing names and documentation should use `Cherry-ToDo`.
+Some file names, URLs, repository names, and internal compatibility keys may still contain `Cherry-ToDo` or older project names for migration compatibility. User-facing app names and documentation should use `Cherry`.
 
 Before changing behavior, run through [`docs/MANUAL_TEST_CHECKLIST.md`](docs/MANUAL_TEST_CHECKLIST.md). Known prototype limitations are tracked in [`docs/KNOWN_ISSUES.md`](docs/KNOWN_ISSUES.md).
 

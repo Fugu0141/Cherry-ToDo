@@ -1,6 +1,6 @@
 # Code of Conduct
 
-Cherry-ToDo is intended to be a friendly open-source project.
+Cherry is intended to be a friendly open-source project.
 
 This code of conduct is intentionally simple while the project is small.
 
@@ -42,4 +42,4 @@ For now, the maintainer may remove comments, close issues, or block users when n
 
 ## Project culture
 
-Cherry-ToDo should be a place where small experiments, careful design, and respectful open-source development can happen without pressure.
+Cherry should be a place where small experiments, careful design, and respectful open-source development can happen without pressure.

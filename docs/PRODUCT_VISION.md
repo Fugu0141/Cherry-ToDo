@@ -1,10 +1,10 @@
-# Cherry-ToDo Product Vision
+# Cherry Product Vision
 
 ## Purpose
 
-This document describes the intended direction of Cherry-ToDo.
+This document describes the intended direction of Cherry.
 
-Cherry-ToDo is not meant to be just another list-based todo app. Its goal is to help users make sense of work by arranging tasks as connected flows.
+Cherry is not meant to be just another list-based todo app. Its goal is to help users make sense of work by arranging tasks as connected flows.
 
 ---
 
@@ -14,7 +14,7 @@ Cherry-ToDo is not meant to be just another list-based todo app. Its goal is to 
 やることの流れを作って、今日やることを見失わないToDoアプリ
 ```
 
-Cherry-ToDo should help users:
+Cherry should help users:
 
 - break down a vague project into smaller actions
 - connect tasks by order and dependency
@@ -76,7 +76,7 @@ On the board, root tasks can still appear as cards because they are the visible 
 
 Dates are important, but they should support the flow instead of replacing it.
 
-Cherry-ToDo should eventually support:
+Cherry should eventually support:
 
 ```js
 schedule: {
@@ -112,7 +112,7 @@ Preferred direction:
 
 ## Design direction
 
-Cherry-ToDo can use the metaphor of cherries and branches lightly:
+Cherry can use the metaphor of cherries and branches lightly:
 
 - connected tasks as stems or branches
 - small tasks as fruits or notes
@@ -126,7 +126,7 @@ Clarity comes first.
 
 ## Long-term goal
 
-Cherry-ToDo should become a small, understandable, open-source task planning tool that is easy to modify and friendly to contributors.
+Cherry should become a small, understandable, open-source task planning tool that is easy to modify and friendly to contributors.
 
 The ideal project is:
 
