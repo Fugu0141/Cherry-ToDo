@@ -1,0 +1,111 @@
+/*
+ * Experiment B: Mobile Control Cleanup
+ * See docs/UI_THEME_EXPERIMENTS.md.
+ *
+ * This experiment reduces mobile UI overlap before judging the final colors.
+ */
+@media (max-width: 980px) {
+  :root {
+    --mobile-action-dock-h: 74px;
+  }
+
+  .board {
+    scroll-padding-bottom: calc(var(--mobile-action-dock-h) + 24px + env(safe-area-inset-bottom, 0px));
+  }
+
+  body.mobileActionBarVisible .stage {
+    padding-bottom: calc(var(--mobile-action-dock-h) + env(safe-area-inset-bottom, 0px));
+  }
+
+  .mobileActionBar {
+    left: 50% !important;
+    right: auto !important;
+    top: auto !important;
+    bottom: calc(10px + env(safe-area-inset-bottom, 0px)) !important;
+    width: min(342px, calc(100vw - 28px));
+    padding: 8px;
+    border-radius: 999px;
+    transform: translate3d(-50%, 0, 0) !important;
+  }
+
+  .mobileActionBar[data-placement="dock"] {
+    transform: translate3d(-50%, 0, 0) !important;
+  }
+
+  .mobileActionBar.hidden {
+    transform: translate3d(-50%, 12px, 0) scale(.98) !important;
+  }
+
+  .mobileActionButtons {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 7px;
+  }
+
+  .mobileActionButton {
+    min-height: 52px;
+  }
+
+  #flowMap {
+    top: auto;
+    right: calc(10px + env(safe-area-inset-right, 0px));
+    bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+    width: 104px;
+    height: 136px;
+    border-radius: 16px;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(6px) scale(.96);
+  }
+
+  #flowMap.visible,
+  #flowMap.active,
+  #flowMap:focus-within {
+    opacity: .92;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
+  }
+
+  .flowMapChrome {
+    left: 8px;
+    right: 8px;
+    bottom: 6px;
+    font-size: 9px;
+  }
+
+  .laneLabel {
+    background: transparent;
+    border: 0;
+    border-left: 3px solid color-mix(in srgb, var(--lane-today-line) 54%, transparent);
+    border-radius: 0;
+    box-shadow: none;
+    padding: 1px 0 1px 7px;
+  }
+
+  .laneLabel.monthStart {
+    background: transparent;
+    border: 0;
+    border-left: 3px solid var(--lane-today-line);
+    box-shadow: none;
+  }
+
+  .laneMonthMarker {
+    padding: 1px 5px;
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+  }
+
+  .verticalMode .laneLabel,
+  .verticalMode .laneLabel.monthStart {
+    background: transparent;
+    border-top: 0;
+    border-right: 0;
+    border-bottom: 0;
+    border-left: 3px solid color-mix(in srgb, var(--lane-today-line) 54%, transparent);
+    box-shadow: none;
+  }
+
+  .verticalMode .laneLabel.monthStart {
+    border-left-color: var(--lane-today-line);
+  }
+}
