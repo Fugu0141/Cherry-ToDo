@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The welcome splash is a lightweight first-run concept window for new Cherry-ToDo users.
+The welcome splash is a lightweight first-run concept window for new Cherry users.
 
 It should communicate the product idea quickly:
 
@@ -10,7 +10,7 @@ It should communicate the product idea quickly:
 Flow first, date second.
 ```
 
-Cherry-ToDo is an open-source app, but the first-run window should not feel like a project dashboard. It should first explain the Cherry-ToDo concept, then provide small community links for users who want them.
+Cherry is an open-source app, but the first-run window should not feel like a project dashboard. It should first explain the Cherry concept, then provide small community links for users who want them.
 
 ## Current behavior
 
@@ -35,7 +35,7 @@ quest-sticky-todo-v10
 
 The current splash intentionally stays simple:
 
-- Cherry-ToDo brand
+- Cherry brand
 - short concept line
 - one concise product description
 - a small flow example: root task → child task → today's task
@@ -50,7 +50,7 @@ Release notes currently point to GitHub Releases so the destination can work bef
 
 - The splash must not reappear for returning users after they dismiss it once.
 - The splash must not clear or rewrite task data.
-- The splash should feel light and close to Cherry-ToDo's existing task-block UI.
+- The splash should feel light and close to Cherry's existing task-block UI.
 - The splash should be usable on desktop and mobile viewports.
 - The splash should be dismissible by mouse, touch, and keyboard.
 - Keyboard focus should stay inside the splash while it is open.
