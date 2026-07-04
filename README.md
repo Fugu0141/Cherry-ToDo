@@ -7,11 +7,9 @@ Cherry-ToDo is an open-source task flow todo app for organizing task blocks as f
 Instead of treating tasks as a flat list, Cherry-ToDo lets you start from a root task and extend child tasks like branches. The board is for building and viewing the flow of work, while the future list view is intended for quickly checking what needs to be done today or soon.
 
 > Current status: prototype / early OSS migration
-
 ## Demo
 
-- Introduction page: https://fugu0141.github.io/Cherry-ToDo/home.html
-- App demo: https://fugu0141.github.io/Cherry-ToDo/
+https://fugu0141.github.io/Cherry-ToDo/
 
 ## Concept
 
@@ -77,8 +75,6 @@ http://localhost:8000/
 ```text
 .
 ├── index.html
-├── home.html
-├── home.css
 ├── style.css
 ├── app.js
 ├── ux-fix.css
@@ -155,4 +151,4 @@ Please read [`CONTRIBUTING.md`](CONTRIBUTING.md) before opening issues or pull r
 
 ## License
 
-MIT License. See [`LICENSE`](LICENSE).
+MIT License. See [`LICENSE`).
