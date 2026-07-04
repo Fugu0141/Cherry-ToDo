@@ -3,7 +3,18 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
   <title>Cherry</title>
+  <script>
+    (() => {
+      try {
+        const mode = localStorage.getItem("cherry-theme-mode") || "system";
+        document.documentElement.dataset.theme = ["system", "light", "dark"].includes(mode) ? mode : "system";
+      } catch (_) {
+        document.documentElement.dataset.theme = "system";
+      }
+    })();
+  </script>
   <link rel="stylesheet" href="./style.css?v=20260628-101" />
   <link rel="stylesheet" href="./ux-fix.css?v=20260628-13" />
   <link rel="stylesheet" href="./safety-fix.css?v=20260628-14" />
@@ -14,7 +25,7 @@
   <link rel="stylesheet" href="./same-day-link-style.css?v=20260630-1" />
   <link rel="stylesheet" href="./mobile-flow-map.css?v=20260703-6" />
   <link rel="stylesheet" href="./welcome-splash.css?v=20260703-1" />
-  <link rel="stylesheet" href="./visual-cleanup.css?v=20260704-64" />
+  <link rel="stylesheet" href="./visual-cleanup.css?v=20260705-64-theme" />
 </head>
 <body>
   <div class="app">
@@ -32,6 +43,7 @@
         <button id="treeLayoutBtn">自動整列</button>
         <button id="verticalLayoutBtn">縦整列</button>
         <button id="toggleLanesBtn">日付レーン ON</button>
+        <button id="themeToggleBtn" type="button" aria-label="テーマを切り替え">テーマ: 自動</button>
         <button id="undoBtn">戻る</button>
         <button id="deleteBtn" class="danger" disabled>削除</button>
         <button id="resetBtn" class="danger">リセット</button>
@@ -111,5 +123,6 @@
   <script src="./relationship-layout-fix.js?v=20260704-2"></script>
   <script src="./layout-debug.js?v=20260704-1"></script>
   <script src="./welcome-splash.js?v=20260703-1"></script>
+  <script src="./theme-toggle.js?v=20260705-1"></script>
 </body>
 </html>
