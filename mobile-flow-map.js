@@ -137,7 +137,7 @@
     mapEl.setAttribute("aria-hidden", "false");
     window.clearTimeout(activeTimer);
     activeTimer = window.setTimeout(() => {
-      if (!isPointerActive && !hasSelectedTask()) hideFlowMap();
+      if (!isPointerActive) hideFlowMap();
     }, ACTIVE_TIMEOUT);
   }
 
@@ -225,7 +225,6 @@
     }
 
     if (!Array.isArray(dates) || !dates.length) return;
-
     let vertical = true;
     try {
       if (typeof isVerticalMode === "function") vertical = isVerticalMode();
@@ -385,7 +384,6 @@
     drawLinks(tasks, taskById, noteSize, transform, selectedId);
     drawNodes(tasks, noteSize, transform, selectedId);
 
-    if (selectedId) showFlowMap();
     if (chromeHint) chromeHint.textContent = selectedId ? "Selected" : "Flow Map";
   }
 
@@ -445,7 +443,7 @@
     let handled = true;
     if (event.key === "ArrowUp") board.scrollTop -= step;
     else if (event.key === "ArrowDown") board.scrollTop += step;
-    else if (event.key === "ArrowLeft") board.scrollLeft -= step;
+    else if (event.key === "ArrowLeft") board.scrollLeft += -step;
     else if (event.key === "ArrowRight") board.scrollLeft += step;
     else handled = false;
 
@@ -462,10 +460,10 @@
     document.addEventListener("pointerdown", suppressFlowMapForTopToolbar, true);
     document.addEventListener("click", suppressFlowMapForTopToolbar, true);
     board.addEventListener("scroll", () => scheduleRender({ active: true }), { passive: true });
-    window.addEventListener("resize", () => scheduleRender({ active: true }), { passive: true });
-    mobileQuery.addEventListener("change", () => scheduleRender({ active: true }));
+    window.addEventListener("resize", () => scheduleRender({ active: false }), { passive: true });
+    mobileQuery.addEventListener("change", () => scheduleRender({ active: false }));
 
-    const observer = new MutationObserver(() => scheduleRender({ active: true }));
+    const observer = new MutationObserver(() => scheduleRender({ active: false }));
     observer.observe(board, {
       subtree: true,
       childList: true,
@@ -477,7 +475,7 @@
   function init() {
     ensureFlowMap();
     observeBoard();
-    scheduleRender({ active: true });
+    scheduleRender({ active: false });
   }
 
   if (document.readyState === "loading") {
