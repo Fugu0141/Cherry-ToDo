@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document defines how Cherry-ToDo decides the target date when a sticky note is placed on a date lane, boundary line, or blank area.
+This document defines how Cherry-ToDo decides the target date when a task block is placed on a date lane, boundary line, or blank area.
 
 The goal is to keep drag-and-drop date behavior stable and predictable.
 
@@ -147,7 +147,7 @@ The helper keeps local "today" local, while keeping date arithmetic stable acros
 
 ## New task creation rule
 
-When creating a child task by dragging from the `+` handle, the ghost note should move freely during drag.
+When creating a child task by dragging from the `+` handle, the ghost task block should move freely during drag.
 
 It should not snap to a date lane while the user is still deciding where to place it.
 
