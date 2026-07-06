@@ -1,5 +1,5 @@
 (() => {
-  const version = "20260706-6";
+  const version = "20260706-7";
 
   function loadCssOnce(id, href) {
     if (document.querySelector(`link[data-release-prep-id="${id}"]`)) return;
@@ -30,6 +30,7 @@
     loadCssOnce("layout-polish", `./release-layout-polish.css?v=${version}`);
     loadCssOnce("contrast", `./release-contrast.css?v=${version}`);
     loadCssOnce("dialog", `./cherry-dialog.css?v=${version}`);
+    loadCssOnce("task-delete", `./task-delete-dialog.css?v=${version}`);
     loadCssOnce("flow-popovers", `./release-flow-popovers.css?v=${version}`);
     loadCssOnce("tutorial", `./tutorial.css?v=${version}`);
     loadCssOnce("tabs", `./tab-manager.css?v=${version}`);
@@ -40,6 +41,7 @@
       await loadScriptOnce("i18n", `./i18n.js?v=${version}`);
       await loadScriptOnce("dialog", `./cherry-dialog.js?v=${version}`);
       await loadScriptOnce("ui", `./release-prep-ui.js?v=${version}`);
+      await loadScriptOnce("task-delete", `./task-delete-dialog.js?v=${version}`);
       await loadScriptOnce("flow-popovers", `./release-flow-popovers.js?v=${version}`);
       await loadScriptOnce("tutorial", `./tutorial.js?v=${version}`);
       await loadScriptOnce("tabs", `./tab-manager.js?v=${version}`);
