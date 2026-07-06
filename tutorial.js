@@ -28,13 +28,7 @@
         </div>
         <div class="tutorialBody">
           <p class="tutorialText"></p>
-          <div class="tutorialPreview" aria-hidden="true">
-            <span class="tutorialPreviewChip">Root</span>
-            <span>→</span>
-            <span class="tutorialPreviewChip">Task</span>
-            <span>→</span>
-            <span class="tutorialPreviewChip">Today</span>
-          </div>
+          <div class="tutorialPreview" aria-hidden="true"></div>
         </div>
         <div class="tutorialActions">
           <button type="button" class="tutorialSecondary tutorialBack"></button>
@@ -62,6 +56,75 @@
     });
   }
 
+  function renderPreview(stepIndex) {
+    const preview = backdrop.querySelector(".tutorialPreview");
+    const language = window.CherryI18n.getLanguage?.() === "en" ? "en" : "ja";
+    const labels = language === "en"
+      ? {
+          root: "Root",
+          child: "Child",
+          branch: "Branch",
+          date: "Date lane",
+          list: "List",
+          file: ".cherry",
+          allTabs: "All tabs",
+          today: "Today"
+        }
+      : {
+          root: "ルート",
+          child: "子タスク",
+          branch: "分岐",
+          date: "日付レーン",
+          list: "リスト",
+          file: ".cherry",
+          allTabs: "全タブ",
+          today: "今日"
+        };
+
+    const previews = [
+      `
+        <div class="tutorialScene rootScene">
+          <div class="tutorialToolbarChip">+ ${labels.root}</div>
+          <div class="tutorialArrow">→</div>
+          <div class="tutorialTaskCard strong">${labels.root}</div>
+        </div>
+      `,
+      `
+        <div class="tutorialScene branchScene">
+          <div class="tutorialTaskCard strong">${labels.root}</div>
+          <div class="tutorialLinkLine"></div>
+          <div class="tutorialTaskStack">
+            <div class="tutorialTaskCard">${labels.child}</div>
+            <div class="tutorialTaskCard offset">${labels.branch}</div>
+          </div>
+        </div>
+      `,
+      `
+        <div class="tutorialScene dateScene">
+          <div class="tutorialLane"><span>${labels.date}</span></div>
+          <div class="tutorialTaskCard floating">${labels.today}</div>
+          <div class="tutorialCalendarDots"><span></span><span></span><span></span></div>
+        </div>
+      `,
+      `
+        <div class="tutorialScene listScene">
+          <div class="tutorialListHeader">${labels.list} · ${labels.allTabs}</div>
+          <div class="tutorialListRow"><span class="dot"></span><strong>${labels.today}</strong><em>7/6</em></div>
+          <div class="tutorialListRow"><span class="dot hollow"></span><strong>${labels.child}</strong><em>7/7</em></div>
+        </div>
+      `,
+      `
+        <div class="tutorialScene fileScene">
+          <div class="tutorialTabsMini"><span>${labels.root}</span><span>${labels.branch}</span><span>+</span></div>
+          <div class="tutorialFileIcon">${labels.file}</div>
+          <div class="tutorialLock">🔒</div>
+        </div>
+      `
+    ];
+
+    preview.innerHTML = previews[stepIndex] || previews[0];
+  }
+
   function render() {
     if (!backdrop) build();
     const currentSteps = steps();
@@ -73,6 +136,7 @@
     backdrop.querySelector("#tutorialTitle").textContent = step.title;
     backdrop.querySelector(".tutorialText").textContent = step.body;
     backdrop.querySelector(".tutorialClose").setAttribute("aria-label", t("tutorial.close"));
+    renderPreview(index);
 
     const back = backdrop.querySelector(".tutorialBack");
     back.textContent = t("tutorial.previous");
