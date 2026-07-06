@@ -1,5 +1,5 @@
 (() => {
-  const version = "20260707-4";
+  const version = "20260707-5";
 
   function loadCssOnce(id, href) {
     if (document.querySelector(`link[data-release-prep-id="${id}"]`)) return;
@@ -42,6 +42,7 @@
     loadCssOnce("start-page-footer-oss", `./start-page-footer-oss.css?v=${version}`);
     loadCssOnce("mobile-list-filters", `./mobile-list-filter-collapse.css?v=${version}`);
     loadCssOnce("workspace-tab-overflow", `./workspace-tab-overflow-fix.css?v=${version}`);
+    loadCssOnce("list-overlap", `./list-view-overlap-fix.css?v=${version}`);
 
     await loadScriptOnce("i18n", `./i18n.js?v=${version}`);
     await loadScriptOnce("dialog", `./cherry-dialog.js?v=${version}`);
