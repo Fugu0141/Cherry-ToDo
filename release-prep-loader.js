@@ -1,5 +1,5 @@
 (() => {
-  const version = "20260706-10";
+  const version = "20260706-11";
 
   function loadCssOnce(id, href) {
     if (document.querySelector(`link[data-release-prep-id="${id}"]`)) return;
@@ -40,6 +40,7 @@
     loadCssOnce("start-page-oss", `./start-page-oss.css?v=${version}`);
     loadCssOnce("start-page-focus", `./start-page-focus.css?v=${version}`);
     loadCssOnce("mobile-rescue", `./mobile-release-rescue.css?v=${version}`);
+    loadCssOnce("start-page-footer-oss", `./start-page-footer-oss.css?v=${version}`);
 
     try {
       await loadScriptOnce("i18n", `./i18n.js?v=${version}`);
