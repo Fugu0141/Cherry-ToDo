@@ -10,10 +10,10 @@
   const copy = {
     ja: {
       pageTitle: "ようこそ、Cherryへ",
-      pageSubtitle: "作業タブの切り替え、追加、ファイルの読み書きはここから始められます。",
-      kicker: "OPEN SOURCE",
-      title: "CherryはOSSとして開発されています。",
-      lead: "バグ報告、要望、コードの改善、ドキュメント整備など、どんな形のフィードバックでもCherryの成長につながります。GitHubから開発状況やリリース情報を確認できます。",
+      pageSubtitle: "まずは新しい作業を始めるか、保存ファイルを読み込んでください。",
+      kicker: "OPEN SOURCE / FEEDBACK",
+      title: "Cherryの開発に参加する",
+      lead: "CherryはOSSです。使っていて気づいたバグ、UIの違和感、改善案があればGitHubから報告できます。",
       github: "GitHub",
       contribute: "貢献する",
       issues: "要望・バグ報告",
@@ -23,10 +23,10 @@
     },
     en: {
       pageTitle: "Welcome to Cherry",
-      pageSubtitle: "Start here to switch tabs, create workspaces, and import or export files.",
-      kicker: "OPEN SOURCE",
-      title: "Cherry is developed as open source.",
-      lead: "Bug reports, feature requests, code improvements, and documentation feedback all help Cherry grow. You can follow development and releases on GitHub.",
+      pageSubtitle: "Start new work or import a saved file first.",
+      kicker: "OPEN SOURCE / FEEDBACK",
+      title: "Join Cherry development",
+      lead: "Cherry is open source. Report bugs, UI friction, and ideas on GitHub whenever something feels off.",
       github: "GitHub",
       contribute: "Contribute",
       issues: "Issues / Feedback",
@@ -72,14 +72,14 @@
       </div>
       <div class="startPageOssLinks">
         <a class="startPageOssLink" data-oss-link="github" target="_blank" rel="noreferrer"><span></span><span></span></a>
-        <a class="startPageOssLink" data-oss-link="contribute" target="_blank" rel="noreferrer"><span></span><span></span></a>
         <a class="startPageOssLink" data-oss-link="issues" target="_blank" rel="noreferrer"><span></span><span></span></a>
+        <a class="startPageOssLink" data-oss-link="contribute" target="_blank" rel="noreferrer"><span></span><span></span></a>
         <a class="startPageOssLink" data-oss-link="releases" target="_blank" rel="noreferrer"><span></span><span></span></a>
         <a class="startPageOssLink startPageOssDonation" data-oss-link="donation" href="#" aria-disabled="true"><span></span><span></span></a>
       </div>
     `;
 
-    panel.insertBefore(section, body);
+    body.insertAdjacentElement("afterend", section);
     section.querySelector("[data-oss-link='donation']").addEventListener("click", event => event.preventDefault());
     return section;
   }
@@ -112,8 +112,8 @@
     };
 
     setLink("github", c("github"));
-    setLink("contribute", c("contribute"));
     setLink("issues", c("issues"));
+    setLink("contribute", c("contribute"));
     setLink("releases", c("releases"));
     setLink("donation", c("donation"), "#");
   }
