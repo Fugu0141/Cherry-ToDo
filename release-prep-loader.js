@@ -1,5 +1,5 @@
 (() => {
-  const version = "20260707-6";
+  const version = "20260707-7";
 
   function loadCssOnce(id, href) {
     if (document.querySelector(`link[data-release-prep-id="${id}"]`)) return;
@@ -56,6 +56,7 @@
     await loadScriptOnce("start-page-focus", `./start-page-focus.js?v=${version}`);
     await loadScriptOnce("toolbar-command-menu", `./toolbar-command-menu.js?v=${version}`);
     await loadScriptOnce("mobile-list-filters", `./mobile-list-filter-collapse.js?v=${version}`);
+    await loadScriptOnce("list-state-guard", `./list-view-state-guard.js?v=${version}`);
   }
 
   if (document.readyState === "loading") {
