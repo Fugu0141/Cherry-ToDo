@@ -1,5 +1,5 @@
 (() => {
-  const version = "20260706-7";
+  const version = "20260706-9";
 
   function loadCssOnce(id, href) {
     if (document.querySelector(`link[data-release-prep-id="${id}"]`)) return;
@@ -29,8 +29,10 @@
   async function loadReleasePrep() {
     loadCssOnce("layout-polish", `./release-layout-polish.css?v=${version}`);
     loadCssOnce("contrast", `./release-contrast.css?v=${version}`);
+    loadCssOnce("toolbar-priority", `./release-toolbar-priority.css?v=${version}`);
     loadCssOnce("dialog", `./cherry-dialog.css?v=${version}`);
     loadCssOnce("task-delete", `./task-delete-dialog.css?v=${version}`);
+    loadCssOnce("tab-rename", `./tab-rename-shortcut.css?v=${version}`);
     loadCssOnce("flow-popovers", `./release-flow-popovers.css?v=${version}`);
     loadCssOnce("tutorial", `./tutorial.css?v=${version}`);
     loadCssOnce("tabs", `./tab-manager.css?v=${version}`);
@@ -45,6 +47,7 @@
       await loadScriptOnce("flow-popovers", `./release-flow-popovers.js?v=${version}`);
       await loadScriptOnce("tutorial", `./tutorial.js?v=${version}`);
       await loadScriptOnce("tabs", `./tab-manager.js?v=${version}`);
+      await loadScriptOnce("tab-rename", `./tab-rename-shortcut.js?v=${version}`);
       await loadScriptOnce("start-page-oss", `./start-page-oss.js?v=${version}`);
     } catch (error) {
       console.error(error);
