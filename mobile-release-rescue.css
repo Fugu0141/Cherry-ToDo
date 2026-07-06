@@ -1,0 +1,351 @@
+/* Emergency mobile rescue layout for v0.1 release candidate.
+   Goal: make the app usable on phones before polishing the final mobile UX. */
+@media (max-width: 760px) {
+  :root {
+    --mobile-top-safe: env(safe-area-inset-top, 0px);
+    --mobile-bottom-safe: env(safe-area-inset-bottom, 0px);
+    --mobile-toolbar-height: 138px;
+    --mobile-tab-height: 40px;
+    --mobile-action-height: 118px;
+  }
+
+  html,
+  body {
+    width: 100%;
+    min-width: 0 !important;
+    overflow-x: hidden !important;
+    overscroll-behavior: none;
+  }
+
+  body {
+    min-height: 100dvh;
+  }
+
+  .app {
+    width: 100%;
+    min-width: 0 !important;
+    min-height: 100dvh;
+    overflow: hidden;
+  }
+
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 85;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    width: 100%;
+    min-width: 0 !important;
+    padding: calc(8px + var(--mobile-top-safe)) 10px 8px !important;
+    background: color-mix(in srgb, var(--topbar-bg, var(--surface)) 96%, transparent) !important;
+    border-bottom: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+    backdrop-filter: blur(16px);
+  }
+
+  .brand {
+    display: grid !important;
+    grid-template-columns: 44px minmax(0, 1fr) !important;
+    align-items: center !important;
+    gap: 10px !important;
+    min-width: 0 !important;
+    width: 100%;
+  }
+
+  .logo {
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 14px !important;
+    font-size: 22px !important;
+  }
+
+  .brand h1 {
+    margin: 0 !important;
+    font-size: 20px !important;
+    line-height: 1.05 !important;
+    white-space: nowrap;
+  }
+
+  .brand p {
+    margin: 3px 0 0 !important;
+    max-width: 100%;
+    overflow: hidden;
+    color: var(--muted);
+    font-size: 12px !important;
+    line-height: 1.3 !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .toolbar {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 7px !important;
+    width: 100%;
+    min-width: 0 !important;
+    max-width: 100%;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding: 0 2px 4px !important;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .toolbar::-webkit-scrollbar,
+  .workspaceBar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .toolbar button {
+    flex: 0 0 auto !important;
+    min-width: max-content !important;
+    min-height: 38px !important;
+    padding: 8px 13px !important;
+    border-radius: 999px !important;
+    font-size: 13px !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+  }
+
+  /* Keep dangerous / low-frequency actions from dominating the phone header. */
+  #deleteBtn,
+  #resetBtn {
+    opacity: .72;
+  }
+
+  #workspaceBar.workspaceBar,
+  .workspaceBar {
+    position: sticky;
+    top: var(--mobile-toolbar-height);
+    z-index: 82;
+    display: flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+    min-height: var(--mobile-tab-height) !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 5px 10px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    background: color-mix(in srgb, var(--surface) 96%, transparent) !important;
+    border-bottom: 1px solid color-mix(in srgb, var(--ink) 10%, transparent) !important;
+    backdrop-filter: blur(16px);
+  }
+
+  .workspaceTabList {
+    display: flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+    min-width: 0 !important;
+  }
+
+  .workspaceStartMini,
+  .workspaceAddTab,
+  .workspaceTab,
+  .workspaceTabClose {
+    min-height: 30px !important;
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+  }
+
+  .workspaceTabItem {
+    flex: 0 0 auto !important;
+    max-width: 190px !important;
+  }
+
+  .workspaceTab {
+    max-width: 142px !important;
+  }
+
+  .workspaceTabClose {
+    width: 28px !important;
+    padding-inline: 0 !important;
+  }
+
+  .stage {
+    position: relative;
+    width: 100%;
+    height: calc(100dvh - var(--mobile-toolbar-height) - var(--mobile-tab-height)) !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .stageHeader {
+    display: none !important;
+  }
+
+  .board {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    padding: 16px 14px calc(var(--mobile-action-height) + 32px) !important;
+    overflow: auto !important;
+    touch-action: pan-x pan-y !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .board.verticalMode {
+    min-width: 0 !important;
+  }
+
+  .notes,
+  .lanes,
+  .links {
+    min-width: 0 !important;
+  }
+
+  .note {
+    max-width: calc(100vw - 48px) !important;
+  }
+
+  #flowMap {
+    top: auto !important;
+    right: calc(10px + env(safe-area-inset-right, 0px)) !important;
+    bottom: calc(var(--mobile-action-height) + 22px + var(--mobile-bottom-safe)) !important;
+    z-index: 60 !important;
+    width: 92px !important;
+    height: 118px !important;
+    border-radius: 18px !important;
+    opacity: .82 !important;
+    transform: scale(1) !important;
+  }
+
+  #flowMap.visible,
+  #flowMap.active,
+  #flowMap:focus-within {
+    opacity: .94 !important;
+    transform: scale(1) !important;
+  }
+
+  .flowMapChrome {
+    left: 7px !important;
+    right: 7px !important;
+    bottom: 6px !important;
+    font-size: 9px !important;
+  }
+
+  .flowMapHint {
+    max-width: 62px !important;
+  }
+
+  .mobileActionBar {
+    left: 10px !important;
+    right: 10px !important;
+    bottom: calc(10px + var(--mobile-bottom-safe)) !important;
+    top: auto !important;
+    z-index: 95 !important;
+    width: auto !important;
+    max-width: none !important;
+    padding: 8px !important;
+    border-radius: 28px !important;
+    background: color-mix(in srgb, var(--surface) 92%, transparent) !important;
+    border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent) !important;
+    box-shadow: 0 18px 48px rgba(15, 23, 42, .28) !important;
+  }
+
+  .mobileActionButtons {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .mobileActionButton {
+    min-width: 0 !important;
+    min-height: 68px !important;
+    padding: 8px 4px !important;
+    border-radius: 22px !important;
+    font-size: 12px !important;
+    line-height: 1.15 !important;
+  }
+
+  .mobileActionButton strong {
+    margin-bottom: 3px;
+    font-size: 23px !important;
+  }
+
+  .listView {
+    height: 100% !important;
+    padding: 14px 12px calc(var(--mobile-action-height) + 24px) !important;
+    overflow: auto !important;
+  }
+
+  .listHeader {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .listControls {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    padding: 10px !important;
+    border-radius: 18px !important;
+  }
+
+  .listSegment {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .listSegment::-webkit-scrollbar {
+    display: none;
+  }
+
+  .startPageView {
+    height: 100% !important;
+    padding: 18px 14px calc(var(--mobile-bottom-safe) + 18px) !important;
+    overflow: auto !important;
+  }
+
+  .startPageHeader {
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    gap: 10px !important;
+  }
+
+  .startPageHeader h2 {
+    font-size: clamp(34px, 13vw, 52px) !important;
+  }
+
+  .startPageBody,
+  .startPageOss {
+    grid-template-columns: 1fr !important;
+  }
+
+  .startPageActions,
+  .startPageOss {
+    border-radius: 20px !important;
+  }
+
+  .tutorialBackdrop,
+  .cherryDialogLayer {
+    z-index: 260 !important;
+  }
+}
+
+@media (max-width: 390px) {
+  :root {
+    --mobile-toolbar-height: 132px;
+    --mobile-action-height: 108px;
+  }
+
+  .toolbar button {
+    min-height: 36px !important;
+    padding: 7px 11px !important;
+    font-size: 12px !important;
+  }
+
+  .mobileActionButton {
+    min-height: 62px !important;
+    font-size: 11px !important;
+  }
+
+  .mobileActionButton strong {
+    font-size: 21px !important;
+  }
+}
