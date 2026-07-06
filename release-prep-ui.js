@@ -39,11 +39,6 @@
     if (element) element.textContent = t(key);
   }
 
-  function setTitle(id, key) {
-    const element = document.getElementById(id);
-    if (element) element.title = t(key);
-  }
-
   function applyStaticUi() {
     document.documentElement.lang = window.CherryI18n.getLanguage();
     document.title = t("app.title");
@@ -103,7 +98,6 @@
     if (dateModalText) dateModalText.textContent = t("modal.changeDateDescription");
 
     translateDynamicControls();
-    translateWelcomeSplash();
   }
 
   function translateDynamicControls() {
@@ -148,57 +142,6 @@
     return map[value] || null;
   }
 
-  function translateWelcomeSplash() {
-    const splash = document.getElementById("welcomeSplash");
-    if (!splash) return;
-
-    const close = splash.querySelector(".welcomeSplashClose");
-    if (close) close.setAttribute("aria-label", t("welcome.close"));
-
-    const kicker = splash.querySelector(".welcomeSplashKicker");
-    if (kicker) kicker.textContent = t("welcome.kicker");
-
-    const title = splash.querySelector("#welcomeSplashTitle");
-    if (title) title.textContent = t("welcome.title");
-
-    const lead = splash.querySelector(".welcomeSplashLead");
-    if (lead) lead.textContent = t("welcome.lead");
-
-    const flow = splash.querySelector(".welcomeSplashFlow");
-    if (flow) {
-      flow.setAttribute("aria-label", t("welcome.conceptLabel"));
-      const spans = flow.querySelectorAll("span");
-      if (spans[0]) spans[0].textContent = t("welcome.root");
-      if (spans[2]) spans[2].textContent = t("welcome.child");
-      if (spans[4]) spans[4].textContent = t("welcome.today");
-    }
-
-    const hint = splash.querySelector(".welcomeSplashHint");
-    if (hint) hint.textContent = t("welcome.hint");
-
-    const start = splash.querySelector(".welcomeSplashStart");
-    if (start) start.textContent = t("welcome.start");
-
-    const footer = splash.querySelector(".welcomeSplashFooter");
-    if (footer) {
-      const items = footer.querySelectorAll("a, span");
-      if (items[0]) items[0].textContent = t("welcome.github");
-      if (items[1]) items[1].textContent = t("welcome.contribute");
-      if (items[2]) items[2].textContent = t("welcome.donationPending");
-      if (items[3]) items[3].textContent = t("welcome.releases");
-      if (!footer.querySelector("[data-tutorial-open]")) {
-        const guide = document.createElement("button");
-        guide.type = "button";
-        guide.className = "welcomeSplashFooterButton";
-        guide.dataset.tutorialOpen = "1";
-        guide.textContent = t("welcome.guide");
-        footer.appendChild(guide);
-      } else {
-        footer.querySelector("[data-tutorial-open]").textContent = t("welcome.guide");
-      }
-    }
-  }
-
   function patchTaskModalTitleKeys() {
     if (typeof openCreateTaskModal === "function") {
       const baseOpenCreate = openCreateTaskModal;
@@ -232,13 +175,21 @@
     if (!resetButton || resetButton.dataset.releasePrepResetBound) return;
     resetButton.dataset.releasePrepResetBound = "1";
 
-    resetButton.addEventListener("click", event => {
+    resetButton.addEventListener("click", async event => {
       event.preventDefault();
       event.stopImmediatePropagation();
-      if (!confirm(t("modal.resetConfirm"))) return;
+      const ok = await window.cherryDialog.confirm({
+        kicker: "Cherry",
+        title: t("toolbar.reset"),
+        message: t("modal.resetConfirm"),
+        confirmText: t("toolbar.reset"),
+        cancelText: t("modal.cancel"),
+        danger: true
+      });
+      if (!ok) return;
 
       snapshot();
-      state = makeInitialState();
+      state = { tasks: {}, showLanes: true, viewMode: "board" };
       selectedId = null;
       branchLayout();
       requestRender();
