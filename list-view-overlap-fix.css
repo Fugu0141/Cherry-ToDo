@@ -1,0 +1,28 @@
+/* Keep the execution list from creeping under the desktop chrome/tab rail. */
+@media (min-width: 761px) {
+  .stage.listMode {
+    box-sizing: border-box !important;
+    padding: 14px 18px 18px !important;
+    overflow: hidden !important;
+  }
+
+  .stage.listMode .listView {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    overflow: auto !important;
+  }
+
+  .stage.listMode .stageHeader,
+  .stage.listMode .board {
+    display: none !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .stage.listMode {
+    padding: 0 !important;
+  }
+}
