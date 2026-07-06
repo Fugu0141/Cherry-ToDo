@@ -9,6 +9,8 @@
 
   const copy = {
     ja: {
+      pageTitle: "ようこそ、Cherryへ",
+      pageSubtitle: "作業タブの切り替え、追加、ファイルの読み書きはここから始められます。",
       kicker: "OPEN SOURCE",
       title: "CherryはOSSとして開発されています。",
       lead: "バグ報告、要望、コードの改善、ドキュメント整備など、どんな形のフィードバックでもCherryの成長につながります。GitHubから開発状況やリリース情報を確認できます。",
@@ -20,6 +22,8 @@
       arrow: "↗"
     },
     en: {
+      pageTitle: "Welcome to Cherry",
+      pageSubtitle: "Start here to switch tabs, create workspaces, and import or export files.",
       kicker: "OPEN SOURCE",
       title: "Cherry is developed as open source.",
       lead: "Bug reports, feature requests, code improvements, and documentation feedback all help Cherry grow. You can follow development and releases on GitHub.",
@@ -80,8 +84,18 @@
     return section;
   }
 
+  function renderPageCopy() {
+    const page = document.getElementById("startPage");
+    if (!page) return;
+
+    setTextIfChanged(page.querySelector("#startPageTitle"), c("pageTitle"));
+    setTextIfChanged(page.querySelector(".startPageHeader p:not(.startPageKicker)"), c("pageSubtitle"));
+  }
+
   function render() {
     renderQueued = false;
+    renderPageCopy();
+
     const section = ensureSection();
     if (!section) return;
 
@@ -108,6 +122,7 @@
     if (renderQueued) return;
     renderQueued = true;
     requestAnimationFrame(render);
+    setTimeout(render, 0);
   }
 
   if (document.readyState === "loading") {
@@ -119,4 +134,8 @@
   window.CherryI18n?.onChange(queueRender);
   window.addEventListener("cherry-workspace-updated", queueRender);
   window.addEventListener("cherry-start-page-ready", queueRender);
+
+  document.addEventListener("click", event => {
+    if (event.target.closest("#startPageBtn, .workspaceStartMini, [data-action], [data-tab-action]")) queueRender();
+  });
 })();
