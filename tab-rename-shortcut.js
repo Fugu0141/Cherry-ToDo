@@ -1,6 +1,8 @@
 (() => {
   let clickTimer = null;
-  const doubleClickDelay = 230;
+  let lastTap = { tabId: null, time: 0 };
+  const doubleClickDelay = 260;
+  const doubleTapDelay = 360;
 
   function bind() {
     const bar = document.getElementById("workspaceBar");
@@ -22,13 +24,19 @@
       const tabId = tabButton.dataset.tabOpen;
       if (!tabId) return;
 
-      if (event.detail >= 2) {
+      const now = Date.now();
+      const isNativeDoubleClick = event.detail >= 2;
+      const isMobileDoubleTap = lastTap.tabId === tabId && now - lastTap.time <= doubleTapDelay;
+
+      if (isNativeDoubleClick || isMobileDoubleTap) {
         clearTimeout(clickTimer);
         clickTimer = null;
+        lastTap = { tabId: null, time: 0 };
         openRename(tabId);
         return;
       }
 
+      lastTap = { tabId, time: now };
       clearTimeout(clickTimer);
       clickTimer = setTimeout(() => {
         clickTimer = null;
@@ -44,6 +52,7 @@
       event.stopImmediatePropagation();
       clearTimeout(clickTimer);
       clickTimer = null;
+      lastTap = { tabId: null, time: 0 };
       openRename(tabButton.dataset.tabOpen);
     }, true);
   }
@@ -62,6 +71,7 @@
     document.querySelectorAll("#workspaceBar [data-tab-open]").forEach(button => {
       button.dataset.renameHint = "true";
       button.removeAttribute("title");
+      button.style.touchAction = "manipulation";
     });
   }
 
