@@ -1,0 +1,102 @@
+/* Release contrast fixes for list view and welcome splash. */
+.listView {
+  color: var(--ink);
+  background: var(--surface);
+}
+
+.listHeader h2,
+.listSection h3,
+.listTaskTitle,
+.listRootTitle {
+  color: var(--ink);
+}
+
+.listHeader p,
+.listSection p,
+.listTaskPath,
+.listEmpty {
+  color: var(--muted);
+}
+
+.listSummary,
+.listSectionCount {
+  background: color-mix(in srgb, var(--accent) 13%, var(--surface));
+  color: var(--ink);
+  border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.listEmpty,
+.listRootGroup {
+  background: color-mix(in srgb, var(--surface) 94%, var(--bg));
+  border-color: color-mix(in srgb, var(--ink) 12%, transparent);
+}
+
+.listRootTitle {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--note) 72%, var(--surface)),
+    color-mix(in srgb, var(--lane-today-line) 14%, var(--surface))
+  );
+  border-bottom-color: color-mix(in srgb, var(--ink) 12%, transparent);
+}
+
+.listTaskRow {
+  color: var(--ink);
+  border-top-color: color-mix(in srgb, var(--ink) 9%, transparent);
+}
+
+.listTaskRow:hover {
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+}
+
+.listTaskRow.done {
+  opacity: .72;
+}
+
+.listDoneToggle,
+.listOpenButton {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--surface) 88%, var(--bg));
+  border-color: color-mix(in srgb, var(--ink) 16%, transparent);
+}
+
+.listTaskRow.done .listDoneToggle {
+  color: var(--success);
+  background: color-mix(in srgb, var(--success) 16%, var(--surface));
+}
+
+.listTaskDate {
+  color: color-mix(in srgb, var(--lane-today-line) 76%, var(--ink));
+}
+
+.welcomeSplash {
+  --welcome-ink: #111827;
+  --welcome-muted: #596273;
+  --welcome-chip-bg-1: #fff4a8;
+  --welcome-chip-bg-2: #d9fbff;
+  --welcome-chip-ink: #1f2937;
+  color: var(--welcome-ink);
+}
+
+.welcomeSplashBrand,
+.welcomeSplash h2,
+.welcomeSplashFlow span,
+.welcomeSplashStart {
+  color: var(--welcome-ink);
+}
+
+.welcomeSplashLead,
+.welcomeSplashHint {
+  color: var(--welcome-muted);
+}
+
+.welcomeSplashFlow {
+  background: #f8fafc;
+  border-color: rgba(17, 24, 39, .10);
+}
+
+.welcomeSplashFlow span:nth-child(odd) {
+  color: var(--welcome-chip-ink);
+  background: linear-gradient(135deg, var(--welcome-chip-bg-1), var(--welcome-chip-bg-2));
+  border-color: rgba(17, 24, 39, .16);
+}
