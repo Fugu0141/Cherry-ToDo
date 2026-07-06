@@ -1,0 +1,85 @@
+.toolbar.commandMenuReady {
+  position: relative;
+  gap: 9px;
+}
+
+.toolbarPrimarySpacer {
+  width: 1px;
+  align-self: stretch;
+  min-height: 28px;
+  margin-inline: 3px;
+  background: color-mix(in srgb, var(--ink) 13%, transparent);
+}
+
+.toolbarMoreButton {
+  min-height: 38px;
+  padding-inline: 14px;
+  color: var(--button-soft-fg, var(--ink));
+  background: var(--button-soft-bg, color-mix(in srgb, var(--surface) 86%, var(--bg)));
+  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+}
+
+.toolbarMoreButton[aria-expanded="true"] {
+  color: #fff;
+  background: color-mix(in srgb, var(--accent) 82%, #111827);
+}
+
+.toolbarMorePanel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  z-index: 180;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(120px, 1fr));
+  gap: 8px;
+  width: min(380px, calc(100vw - 24px));
+  padding: 12px;
+  background: color-mix(in srgb, var(--surface) 96%, var(--bg));
+  border: 1px solid color-mix(in srgb, var(--ink) 13%, transparent);
+  border-radius: 20px;
+  box-shadow: 0 20px 52px rgba(0, 0, 0, .28);
+}
+
+.toolbarMorePanel.hidden {
+  display: none;
+}
+
+.toolbarMorePanel button {
+  justify-content: center;
+  min-height: 38px;
+  width: 100%;
+  padding: 8px 11px;
+  border-radius: 14px;
+  box-shadow: none;
+  font-size: 12px;
+}
+
+.toolbarMorePanel #deleteBtn,
+.toolbarMorePanel #resetBtn {
+  margin-left: 0;
+}
+
+@media (max-width: 760px) {
+  .toolbar.commandMenuReady {
+    overflow: visible !important;
+  }
+
+  .toolbarPrimarySpacer {
+    display: none;
+  }
+
+  .toolbarMorePanel {
+    position: fixed;
+    left: 10px;
+    right: 10px;
+    top: auto;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    width: auto;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    z-index: 240;
+  }
+
+  .toolbarMorePanel button {
+    min-height: 44px !important;
+  }
+}
