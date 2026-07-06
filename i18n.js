@@ -4,10 +4,7 @@
 
   const translations = {
     ja: {
-      app: {
-        title: "Cherry",
-        tagline: "タスクの流れを、ブロックで育てる。"
-      },
+      app: { title: "Cherry", tagline: "タスクの流れを、ブロックで育てる。" },
       toolbar: {
         addRoot: "＋ ルート",
         autoLayout: "自動整列",
@@ -23,9 +20,7 @@
         delete: "削除",
         reset: "リセット"
       },
-      stage: {
-        help: "PC: 日付は上に固定 / スマホ: 日付は左に固定 / 完了済みの日付はクリックで展開"
-      },
+      stage: { help: "PC: 日付は上に固定 / スマホ: 日付は左に固定 / 完了済みの日付はクリックで展開" },
       modal: {
         createTask: "タスクを作成",
         createRoot: "ルートタスクを作成",
@@ -59,15 +54,9 @@
         lead: "ルートを見出しとして、未定・今日まで・今後の実行タスクを確認できます。",
         summary: "未完了 {todo} / 完了 {done}",
         unscheduled: "未定",
-        unscheduledDescription: "まだ日付を決めていない実行タスクです。今日扱いにはしません。",
         today: "今日まで",
-        todayDescription: "今日以前の未処理を見落とさないための場所です。",
         upcoming: "今後",
-        upcomingDescription: "明日以降のタスクです。",
         count: "{count}件",
-        emptyUnscheduled: "未定の実行タスクはありません。",
-        emptyToday: "今日までの実行タスクはありません。",
-        emptyUpcoming: "今後の実行タスクはありません。",
         markTodo: "未完了に戻す",
         markDone: "完了にする",
         board: "ボード",
@@ -75,19 +64,12 @@
         rootDirect: "ルート直下",
         noDate: "未定"
       },
-      mobile: {
-        done: "完了",
-        restore: "戻す",
-        add: "追加",
-        edit: "編集",
-        delete: "削除"
-      },
+      mobile: { done: "完了", restore: "戻す", add: "追加", edit: "編集", delete: "削除" },
       welcome: {
         close: "閉じる",
         kicker: "FLOW FIRST, DATE SECOND.",
         title: "やることの流れを、見失わない。",
         lead: "Cherryは、タスクブロックを枝のようにつなぎながら、親子関係と日付で整理するOSSのToDoアプリです。",
-        conceptLabel: "Cherryの基本コンセプト",
         root: "ルート",
         child: "子タスク",
         today: "今日やること",
@@ -107,26 +89,11 @@
         done: "完了",
         stepCount: "{current} / {total}",
         steps: [
-          {
-            title: "1. まずはルートを作る",
-            body: "ルートはプロジェクトや大きな目的のようなものです。画面上部の「＋ ルート」から作れます。"
-          },
-          {
-            title: "2. 子タスクを枝のように伸ばす",
-            body: "タスク右下の「＋」から次の作業を作ります。横に伸ばすと同じ流れ、少しずらすと分岐として扱えます。"
-          },
-          {
-            title: "3. 日付は流れを補助するもの",
-            body: "Cherryは日付だけでなく、親子関係と流れを中心に整理します。タスクを日付レーンに置くと予定日を変えられます。"
-          },
-          {
-            title: "4. 実行リストで今日やることを見る",
-            body: "リスト表示では、未定・今日まで・今後のタスクをルートごとに確認できます。流れを作ってから実行に移るための場所です。"
-          },
-          {
-            title: "5. 保存はブラウザ内、共有はCherryファイルで",
-            body: "通常の作業はブラウザ内に保存されます。スタートページから、複数タブをまとめた暗号化Cherryファイルとして書き出せます。"
-          }
+          { title: "1. まずはルートを作る", body: "ルートはプロジェクトや大きな目的のようなものです。画面上部の「＋ ルート」から作れます。" },
+          { title: "2. 子タスクを枝のように伸ばす", body: "タスク右下の「＋」から次の作業を作ります。横に伸ばすと同じ流れ、少しずらすと分岐として扱えます。" },
+          { title: "3. 日付は流れを補助するもの", body: "Cherryは日付だけでなく、親子関係と流れを中心に整理します。タスクを日付レーンに置くと予定日を変えられます。" },
+          { title: "4. 実行リストで今日やることを見る", body: "リスト表示では、未定・今日まで・今後のタスクをルートごとに確認できます。流れを作ってから実行に移るための場所です。" },
+          { title: "5. 保存と共有", body: "スタートページから、暗号化されたCherryファイルやiCalendar形式で保存できます。" }
         ]
       },
       workspace: {
@@ -148,34 +115,23 @@
         newTabName: "新しいタブ",
         untitled: "無題",
         localNote: "ローカル保存中",
-        fileNote: "1つの .cherry ファイルに全タブをまとめて保存します。タブごとのファイル乱立を避けます。",
         securityNote: "CherryファイルはAES-GCMで暗号化されます。パスフレーズを忘れると復元できません。",
-        renamePrompt: "タブ名を入力してください",
-        deleteConfirm: "このタブを削除しますか？",
         passphrasePrompt: "Cherryファイルのパスフレーズを入力してください。忘れると復元できません。",
-        passphraseAgainPrompt: "確認のため、もう一度パスフレーズを入力してください。",
-        passphraseMismatch: "パスフレーズが一致しません。",
-        passphraseRequired: "パスフレーズが必要です。",
         importFailed: "読み込みに失敗しました。ファイル形式またはパスフレーズを確認してください。",
         exportFailed: "保存に失敗しました。",
         imported: "インポートしました。",
         exported: "保存ファイルを作成しました。"
-      },
-      release: {
-        notes: "リリースノート"
       },
       theme: {
         systemTitle: "システム設定に合わせてテーマを自動選択します",
         lightTitle: "ライトテーマを使用中です。クリックでダークテーマに切り替えます",
         darkTitle: "ダークテーマを使用中です。クリックで自動選択に戻します",
         aria: "{label}。クリックで切り替え"
-      }
+      },
+      dialog: { ok: "決定", cancel: "キャンセル" }
     },
     en: {
-      app: {
-        title: "Cherry",
-        tagline: "Grow task flows with blocks."
-      },
+      app: { title: "Cherry", tagline: "Grow task flows with blocks." },
       toolbar: {
         addRoot: "+ Root",
         autoLayout: "Auto layout",
@@ -191,9 +147,7 @@
         delete: "Delete",
         reset: "Reset"
       },
-      stage: {
-        help: "Desktop: dates stay at the top / Mobile: dates stay on the left / Click completed dates to expand"
-      },
+      stage: { help: "Desktop: dates stay at the top / Mobile: dates stay on the left / Click completed dates to expand" },
       modal: {
         createTask: "Create task",
         createRoot: "Create root task",
@@ -224,18 +178,12 @@
         openBoard: "Board view",
         buttonTitle: "View due and upcoming tasks as a list",
         title: "Execution list",
-        lead: "Use root tasks as headings and review unscheduled, due, and upcoming action tasks.",
+        lead: "Use root tasks as headings and review action tasks.",
         summary: "Todo {todo} / Done {done}",
         unscheduled: "Unscheduled",
-        unscheduledDescription: "Action tasks without dates. They are not treated as today.",
         today: "Due today",
-        todayDescription: "A place to avoid missing unfinished tasks due today or earlier.",
         upcoming: "Upcoming",
-        upcomingDescription: "Tasks scheduled for tomorrow or later.",
         count: "{count}",
-        emptyUnscheduled: "There are no unscheduled action tasks.",
-        emptyToday: "There are no action tasks due today.",
-        emptyUpcoming: "There are no upcoming action tasks.",
         markTodo: "Mark as todo",
         markDone: "Mark as done",
         board: "Board",
@@ -243,19 +191,12 @@
         rootDirect: "Directly under root",
         noDate: "No date"
       },
-      mobile: {
-        done: "Done",
-        restore: "Undo",
-        add: "Add",
-        edit: "Edit",
-        delete: "Delete"
-      },
+      mobile: { done: "Done", restore: "Undo", add: "Add", edit: "Edit", delete: "Delete" },
       welcome: {
         close: "Close",
         kicker: "FLOW FIRST, DATE SECOND.",
         title: "Never lose the flow of work.",
         lead: "Cherry is an open-source todo app that organizes task blocks by parent-child relationships and dates.",
-        conceptLabel: "Cherry basic concept",
         root: "Root",
         child: "Child task",
         today: "Today's work",
@@ -275,26 +216,11 @@
         done: "Done",
         stepCount: "{current} / {total}",
         steps: [
-          {
-            title: "1. Start with a root",
-            body: "A root is like a project or a large goal. Create one from the \"+ Root\" button in the toolbar."
-          },
-          {
-            title: "2. Extend child tasks like branches",
-            body: "Use the + handle on a task to create the next piece of work. Continue straight for the same flow, or offset it to create a branch."
-          },
-          {
-            title: "3. Dates support the flow",
-            body: "Cherry is not only a date list. Parent-child relationships and flow are the main structure. Drop tasks onto date lanes to change their target date."
-          },
-          {
-            title: "4. Use the list when it is time to execute",
-            body: "List view groups unscheduled, due, and upcoming tasks under their roots. Build the flow first, then decide what to do now."
-          },
-          {
-            title: "5. Work locally, share with Cherry files",
-            body: "Normal work is saved in your browser. The Start page can export all tabs into one encrypted Cherry file."
-          }
+          { title: "1. Start with a root", body: "A root is like a project or a large goal. Create one from the + Root button." },
+          { title: "2. Extend child tasks like branches", body: "Use the + handle on a task to create the next piece of work. Continue straight or offset it to branch." },
+          { title: "3. Dates support the flow", body: "Cherry is not only a date list. Drop tasks onto date lanes to change their target date." },
+          { title: "4. Use the list when it is time to execute", body: "List view groups tasks so you can build the flow first, then decide what to do now." },
+          { title: "5. Save and share", body: "The Start page can export encrypted Cherry files or iCalendar files." }
         ]
       },
       workspace: {
@@ -316,70 +242,36 @@
         newTabName: "New tab",
         untitled: "Untitled",
         localNote: "Saved locally",
-        fileNote: "All tabs are saved into one .cherry file to avoid file clutter.",
         securityNote: "Cherry files are encrypted with AES-GCM. If you forget the passphrase, the file cannot be recovered.",
-        renamePrompt: "Enter a tab name",
-        deleteConfirm: "Delete this tab?",
         passphrasePrompt: "Enter a passphrase for the Cherry file. It cannot be recovered if forgotten.",
-        passphraseAgainPrompt: "Enter the passphrase again to confirm.",
-        passphraseMismatch: "Passphrases do not match.",
-        passphraseRequired: "A passphrase is required.",
         importFailed: "Import failed. Check the file format or passphrase.",
         exportFailed: "Export failed.",
         imported: "Imported.",
         exported: "Export file created."
-      },
-      release: {
-        notes: "Release notes"
       },
       theme: {
         systemTitle: "Theme follows your system setting",
         lightTitle: "Light theme is active. Click to switch to dark.",
         darkTitle: "Dark theme is active. Click to return to auto.",
         aria: "{label}. Click to switch"
-      }
+      },
+      dialog: { ok: "OK", cancel: "Cancel" }
     }
   };
 
-  const dynamicTitleKeys = new Map([
-    ["タスクを作成", "modal.createTask"],
-    ["Create task", "modal.createTask"],
-    ["ルートタスクを作成", "modal.createRoot"],
-    ["Create root task", "modal.createRoot"],
-    ["同じブランチに追加", "modal.createSameBranch"],
-    ["Add to same branch", "modal.createSameBranch"],
-    ["分岐タスクを作成", "modal.createBranch"],
-    ["Create branch task", "modal.createBranch"],
-    ["タスクを追加", "modal.addTask"],
-    ["Add task", "modal.addTask"],
-    ["タスクを編集", "modal.editTask"],
-    ["Edit task", "modal.editTask"]
-  ]);
-
   const callbacks = new Set();
   let language = loadLanguage();
-  let observer = null;
-  let applying = false;
-  let applyQueued = false;
 
   function loadLanguage() {
     try {
       const saved = localStorage.getItem(storageKey);
       if (supportedLanguages.includes(saved)) return saved;
-    } catch (_) {
-      // Non-critical. Fall back to browser language.
-    }
-
-    const preferred = String(navigator.language || "ja").toLowerCase();
-    return preferred.startsWith("en") ? "en" : "ja";
+    } catch (_) {}
+    return String(navigator.language || "ja").toLowerCase().startsWith("en") ? "en" : "ja";
   }
 
   function saveLanguage(nextLanguage) {
-    try {
-      localStorage.setItem(storageKey, nextLanguage);
-    } catch (_) {
-      // Language switching should still work for the current session.
-    }
+    try { localStorage.setItem(storageKey, nextLanguage); } catch (_) {}
   }
 
   function readPath(source, key) {
@@ -401,79 +293,24 @@
     return Array.isArray(value) ? value : [];
   }
 
-  function setText(selector, key, values) {
-    const element = document.querySelector(selector);
-    if (element) element.textContent = t(key, values);
-  }
-
-  function translateAttributes(root = document) {
-    root.querySelectorAll?.("[data-i18n]").forEach(element => {
-      element.textContent = t(element.dataset.i18n);
-    });
-
-    root.querySelectorAll?.("[data-i18n-title]").forEach(element => {
-      element.title = t(element.dataset.i18nTitle);
-    });
-
-    root.querySelectorAll?.("[data-i18n-placeholder]").forEach(element => {
-      element.placeholder = t(element.dataset.i18nPlaceholder);
-    });
-
-    root.querySelectorAll?.("[data-i18n-aria-label]").forEach(element => {
-      element.setAttribute("aria-label", t(element.dataset.i18nAriaLabel));
-    });
-  }
-
-  function translateKnownDynamicUi() {
-    const laneButton = document.getElementById("toggleLanesBtn");
-    if (laneButton && typeof state !== "undefined") {
-      laneButton.textContent = t("toolbar.dateLanes", { state: state.showLanes ? "ON" : "OFF" });
-    }
-
-    const modalTitle = document.getElementById("taskModalTitle");
-    if (modalTitle) {
-      const key = dynamicTitleKeys.get(modalTitle.textContent.trim()) || modalTitle.dataset.i18nDynamicKey;
-      if (key) {
-        modalTitle.dataset.i18nDynamicKey = key;
-        modalTitle.textContent = t(key);
-      }
-    }
-
-    const nameInput = document.getElementById("taskNameInput");
-    if (nameInput) nameInput.placeholder = t("modal.taskNamePlaceholder");
-
-    document.querySelectorAll(".deleteBtn").forEach(element => {
-      element.title = t("note.delete");
-    });
-
-    document.querySelectorAll(".doneBtn").forEach(element => {
-      element.title = t("note.toggleDone");
-    });
-
-    const isVertical = document.getElementById("board")?.classList.contains("verticalMode");
-    document.querySelectorAll(".handle").forEach(element => {
-      element.title = t(isVertical ? "note.addSameMobile" : "note.addBranchDesktop");
-    });
-  }
-
   function apply(root = document) {
-    if (applying) return;
-    applying = true;
-
     document.documentElement.lang = language;
     document.title = t("app.title");
-    translateAttributes(root);
-    translateKnownDynamicUi();
-
-    applying = false;
-  }
-
-  function queueApply() {
-    if (applyQueued) return;
-    applyQueued = true;
-    requestAnimationFrame(() => {
-      applyQueued = false;
-      apply(document);
+    root.querySelectorAll?.("[data-i18n]").forEach(element => {
+      const value = t(element.dataset.i18n);
+      if (element.textContent !== value) element.textContent = value;
+    });
+    root.querySelectorAll?.("[data-i18n-title]").forEach(element => {
+      const value = t(element.dataset.i18nTitle);
+      if (element.title !== value) element.title = value;
+    });
+    root.querySelectorAll?.("[data-i18n-placeholder]").forEach(element => {
+      const value = t(element.dataset.i18nPlaceholder);
+      if (element.placeholder !== value) element.placeholder = value;
+    });
+    root.querySelectorAll?.("[data-i18n-aria-label]").forEach(element => {
+      const value = t(element.dataset.i18nAriaLabel);
+      if (element.getAttribute("aria-label") !== value) element.setAttribute("aria-label", value);
     });
   }
 
@@ -496,21 +333,8 @@
   }
 
   function init() {
-    const button = document.getElementById("languageToggleBtn");
-    if (button) {
-      button.addEventListener("click", toggleLanguage);
-    }
-
+    document.getElementById("languageToggleBtn")?.addEventListener("click", toggleLanguage);
     apply(document);
-
-    observer = new MutationObserver(queueApply);
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-      characterData: true,
-      attributes: true,
-      attributeFilter: ["class", "data-i18n", "data-i18n-title", "data-i18n-placeholder", "data-i18n-aria-label"]
-    });
   }
 
   window.CherryI18n = {
