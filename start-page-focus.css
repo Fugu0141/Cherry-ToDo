@@ -141,17 +141,9 @@ body.startPageFocusMode .startPageTabActions button {
   font-size: 12px !important;
 }
 
-body.startPageFocusMode .startPageTabActions [data-tab-action="duplicate"] {
-  display: none !important;
-}
-
+body.startPageFocusMode .startPageTabActions [data-tab-action="duplicate"],
 body.startPageFocusMode .startPageTabActions [data-tab-action="rename"] {
   display: none !important;
-}
-
-body.startPageFocusMode .startPageTabCard:hover .startPageTabActions [data-tab-action="rename"],
-body.startPageFocusMode .startPageTabCard:focus-within .startPageTabActions [data-tab-action="rename"] {
-  display: inline-flex !important;
 }
 
 body.startPageFocusMode .startPageEmpty {
@@ -287,10 +279,6 @@ body.startPageFocusMode .startPageFooter {
   body.startPageFocusMode .startPageTabActions {
     display: grid !important;
     grid-template-columns: 1fr 1fr;
-  }
-
-  body.startPageFocusMode .startPageTabActions [data-tab-action="rename"] {
-    display: none !important;
   }
 
   body.startPageFocusMode .startPageOssLead {
