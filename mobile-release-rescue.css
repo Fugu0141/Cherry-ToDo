@@ -5,7 +5,7 @@
     --mobile-top-safe: env(safe-area-inset-top, 0px);
     --mobile-bottom-safe: env(safe-area-inset-bottom, 0px);
     --mobile-toolbar-height: 138px;
-    --mobile-tab-height: 40px;
+    --mobile-tab-height: 48px;
     --mobile-action-height: 118px;
   }
 
@@ -119,11 +119,11 @@
     z-index: 82;
     display: flex !important;
     align-items: center !important;
-    gap: 7px !important;
+    gap: 8px !important;
     min-height: var(--mobile-tab-height) !important;
     width: 100% !important;
     max-width: 100% !important;
-    padding: 5px 10px !important;
+    padding: 6px 10px !important;
     overflow-x: auto !important;
     overflow-y: hidden !important;
     background: color-mix(in srgb, var(--surface) 96%, transparent) !important;
@@ -134,32 +134,34 @@
   .workspaceTabList {
     display: flex !important;
     align-items: center !important;
-    gap: 7px !important;
+    gap: 8px !important;
     min-width: 0 !important;
+  }
+
+  .workspaceTabItem {
+    flex: 0 0 auto !important;
+    max-width: 210px !important;
+    border-radius: 13px !important;
   }
 
   .workspaceStartMini,
   .workspaceAddTab,
   .workspaceTab,
   .workspaceTabClose {
-    min-height: 30px !important;
-    padding: 6px 10px !important;
-    font-size: 12px !important;
+    min-height: 36px !important;
+    padding: 8px 12px !important;
+    border-radius: 12px !important;
+    font-size: 13px !important;
     line-height: 1 !important;
     white-space: nowrap !important;
   }
 
-  .workspaceTabItem {
-    flex: 0 0 auto !important;
-    max-width: 190px !important;
-  }
-
   .workspaceTab {
-    max-width: 142px !important;
+    max-width: 156px !important;
   }
 
   .workspaceTabClose {
-    width: 28px !important;
+    width: 34px !important;
     padding-inline: 0 !important;
   }
 
@@ -328,11 +330,17 @@
   .startPageBody,
   .startPageOss {
     grid-template-columns: 1fr !important;
+    align-items: start !important;
   }
 
   .startPageActions,
   .startPageOss {
     border-radius: 20px !important;
+  }
+
+  .startPageEmpty {
+    align-content: start !important;
+    padding-top: 36px !important;
   }
 
   .tutorialBackdrop,
