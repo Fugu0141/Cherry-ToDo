@@ -138,6 +138,18 @@
     grid-template-columns: 1fr 1fr;
   }
 
+  /* Mobile safety: the first tap on the dock delete button is on the right.
+     Put the destructive confirmation action on the left so repeat taps hit Cancel instead. */
+  .taskDeleteConfirm {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .taskDeleteCancel {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
   .taskDeleteActions button {
     min-height: 46px;
   }
