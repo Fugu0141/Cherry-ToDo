@@ -1,0 +1,68 @@
+/* Keep the workspace add button independent from the scrollable tab list. */
+.workspaceBar {
+  overflow: hidden !important;
+}
+
+.workspaceStartMini,
+.workspaceAddTab {
+  flex: 0 0 auto !important;
+  position: relative;
+  z-index: 2;
+}
+
+.workspaceTabList {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  padding: 3px 4px !important;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.workspaceTabList::-webkit-scrollbar {
+  height: 5px;
+}
+
+.workspaceTabList::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--ink) 18%, transparent);
+  border-radius: 999px;
+}
+
+.workspaceTabItem {
+  flex: 0 0 auto !important;
+}
+
+.workspaceAddTab {
+  display: inline-grid !important;
+  place-items: center !important;
+  width: 38px !important;
+  min-width: 38px !important;
+  max-width: 38px !important;
+  padding-inline: 0 !important;
+  background: color-mix(in srgb, var(--surface) 94%, var(--bg)) !important;
+}
+
+@media (max-width: 760px) {
+  .workspaceBar {
+    overflow: hidden !important;
+  }
+
+  .workspaceTabList {
+    gap: 7px !important;
+    padding: 4px 3px !important;
+    scrollbar-width: none;
+  }
+
+  .workspaceTabList::-webkit-scrollbar {
+    display: none;
+  }
+
+  .workspaceAddTab {
+    width: 40px !important;
+    min-width: 40px !important;
+    max-width: 40px !important;
+    height: 36px !important;
+  }
+}
