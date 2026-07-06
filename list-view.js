@@ -132,13 +132,33 @@
   function rows() {
     const result = [];
     for (const tab of getSourceTabs()) {
-      for (const task of Object.values(tab.state?.tasks || {})) {
+      const tasks = Object.values(tab.state?.tasks || {});
+      for (const task of tasks) {
+        if (!shouldIncludeInExecutionList(task, tab.state, tasks)) continue;
         const root = rootOf(task, tab.state);
         const row = { tabId: tab.id, tabName: tab.name, state: tab.state, task, root, date: scheduleDate(task), depth: depthOf(task.id, tab.state) };
         if (matchesRange(row)) result.push(row);
       }
     }
     return result;
+  }
+
+  function isRootTask(task, sourceState) {
+    return !task?.parentId || !sourceState.tasks?.[task.parentId];
+  }
+
+  function hasChildren(task, tasks) {
+    return tasks.some(candidate => candidate.parentId === task.id);
+  }
+
+  function shouldIncludeInExecutionList(task, sourceState, tasks) {
+    if (!task?.id) return false;
+
+    // Root tasks act as headings once they have child tasks.
+    // Show a root only when it is still a standalone task with no branches.
+    if (isRootTask(task, sourceState)) return !hasChildren(task, tasks);
+
+    return true;
   }
 
   function matchesRange(row) {
