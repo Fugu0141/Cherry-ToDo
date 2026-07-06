@@ -1,40 +1,82 @@
 .workspaceBar {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 18px;
+  gap: 8px;
+  min-height: 38px;
+  padding: 6px 14px;
   background: color-mix(in srgb, var(--topbar-bg, var(--surface)) 88%, transparent);
   border-bottom: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
   overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
 }
 
 .workspaceTabList {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
   min-width: 0;
 }
 
+.workspaceTabItem {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 90%, var(--bg));
+}
+
+.workspaceTabItem.active {
+  border-color: color-mix(in srgb, var(--accent) 64%, transparent);
+  background: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 17%, transparent);
+}
+
 .workspaceTab,
+.workspaceTabClose,
 .workspaceAddTab,
 .workspaceStartMini {
-  min-height: 34px;
-  padding: 7px 12px;
+  min-height: 28px;
+  padding: 5px 10px;
   white-space: nowrap;
+  border: 0;
   border-radius: 999px;
   box-shadow: none;
+  font-size: 13px;
+  line-height: 1;
 }
 
 .workspaceTab {
+  max-width: 170px;
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: var(--button-soft-fg, var(--ink));
-  background: var(--button-soft-bg, color-mix(in srgb, var(--surface) 88%, var(--bg)));
-  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+  background: transparent;
 }
 
-.workspaceTab.active {
+.workspaceTabItem.active .workspaceTab {
   color: #fff;
-  background: var(--accent);
-  border-color: color-mix(in srgb, var(--accent) 80%, #fff);
+}
+
+.workspaceTabClose {
+  width: 28px;
+  padding-inline: 0;
+  color: color-mix(in srgb, var(--muted) 75%, var(--ink));
+  background: transparent;
+  opacity: .78;
+}
+
+.workspaceTabItem.active .workspaceTabClose {
+  color: rgba(255,255,255,.82);
+}
+
+.workspaceTabClose:hover {
+  color: #fff;
+  background: var(--danger);
+  opacity: 1;
 }
 
 .workspaceAddTab,
@@ -44,30 +86,33 @@
   border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
 }
 
-.startPageBackdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 250;
-  display: grid;
-  place-items: center;
-  padding: clamp(14px, 4vw, 28px);
-  background: rgba(2, 6, 23, .54);
-  backdrop-filter: blur(6px);
+.stage.startPageMode .stageHeader,
+.stage.startPageMode .board,
+.stage.startPageMode .listView {
+  display: none !important;
 }
 
-.startPageBackdrop.hidden {
+.startPageView.hidden {
   display: none;
 }
 
-.startPagePanel {
-  width: min(860px, 100%);
-  max-height: calc(100dvh - 28px);
-  overflow: auto;
+.startPageView {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: block;
   color: var(--ink);
-  background: var(--modal-bg, var(--surface));
-  border: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
-  border-radius: 28px;
-  box-shadow: 0 24px 70px rgba(0, 0, 0, .32);
+  overflow: auto;
+  padding: 22px;
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: 0 10px 28px rgba(0,0,0,.08);
+  outline: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+}
+
+.startPagePanel {
+  width: min(1080px, 100%);
+  margin: 0 auto;
+  color: var(--ink);
 }
 
 .startPageHeader,
@@ -79,17 +124,27 @@
 }
 
 .startPageHeader {
-  padding: 24px 26px 16px;
+  padding: 8px 0 18px;
   border-bottom: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+}
+
+.startPageKicker {
+  margin: 0 0 6px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
 }
 
 .startPageHeader h2 {
   margin: 0;
-  font-size: clamp(28px, 5vw, 42px);
-  letter-spacing: -.05em;
+  font-size: clamp(32px, 5vw, 56px);
+  line-height: 1;
+  letter-spacing: -.06em;
 }
 
-.startPageHeader p,
+.startPageHeader p:not(.startPageKicker),
 .startPageNote {
   color: var(--muted);
 }
@@ -107,9 +162,9 @@
 
 .startPageBody {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 280px;
-  gap: 18px;
-  padding: 22px 26px;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 22px;
+  padding: 22px 0;
 }
 
 .startPageTabs,
@@ -180,6 +235,10 @@
   display: grid;
   gap: 10px;
   align-content: start;
+  padding: 14px;
+  background: color-mix(in srgb, var(--surface) 92%, var(--bg));
+  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+  border-radius: 18px;
 }
 
 .startPageActions button {
@@ -202,13 +261,13 @@
 }
 
 .startPageNote {
-  margin: 10px 0 0;
+  margin: 8px 0 0;
   font-size: 12px;
   line-height: 1.6;
 }
 
 .startPageFooter {
-  padding: 14px 26px 24px;
+  padding: 14px 0 4px;
   border-top: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
 }
 
@@ -218,29 +277,25 @@
   font-weight: 800;
 }
 
-@media (max-width: 780px) {
+@media (max-width: 980px) {
   .workspaceBar {
     padding-inline: 10px;
   }
 
-  .startPageBackdrop {
-    align-items: stretch;
-    padding: 10px;
+  .workspaceTab {
+    max-width: 130px;
   }
+}
 
-  .startPagePanel {
-    max-height: calc(100dvh - 20px);
-    border-radius: 22px;
+@media (max-width: 780px) {
+  .startPageView {
+    padding: 14px;
+    border-radius: 16px;
   }
 
   .startPageBody {
     grid-template-columns: 1fr;
-    padding: 18px;
-  }
-
-  .startPageHeader,
-  .startPageFooter {
-    padding-inline: 18px;
+    gap: 14px;
   }
 
   .startPageTabCard {
