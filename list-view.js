@@ -5,11 +5,15 @@
 
   if (!stage || !toolbar || typeof getTasks !== "function" || typeof requestRender !== "function") return;
 
+  function t(key, values = {}) {
+    return window.CherryI18n?.t(key, values) || key;
+  }
+
   const listViewButton = document.createElement("button");
   listViewButton.id = "listViewBtn";
   listViewButton.type = "button";
-  listViewButton.textContent = "リスト表示";
-  listViewButton.title = "今日まで・今後のタスクをリストで見る";
+  listViewButton.textContent = t("list.openList");
+  listViewButton.title = t("list.buttonTitle");
 
   if (undoButton) toolbar.insertBefore(listViewButton, undoButton);
   else toolbar.appendChild(listViewButton);
@@ -17,7 +21,7 @@
   const listView = document.createElement("section");
   listView.id = "listView";
   listView.className = "listView hidden";
-  listView.setAttribute("aria-label", "実行リスト");
+  listView.setAttribute("aria-label", t("list.title"));
   stage.appendChild(listView);
 
   if (!state.viewMode) state.viewMode = "board";
@@ -27,6 +31,8 @@
     originalRender();
     renderListView();
   };
+
+  window.CherryI18n?.onChange(() => renderListView());
 
   listViewButton.addEventListener("click", () => {
     state.viewMode = state.viewMode === "list" ? "board" : "list";
@@ -43,7 +49,8 @@
     stage.classList.toggle("listMode", isListMode);
     listView.classList.toggle("hidden", !isListMode);
     listViewButton.classList.toggle("activeView", isListMode);
-    listViewButton.textContent = isListMode ? "ボード表示" : "リスト表示";
+    listViewButton.textContent = isListMode ? t("list.openBoard") : t("list.openList");
+    listViewButton.title = t("list.buttonTitle");
 
     if (!isListMode) return;
 
@@ -53,21 +60,22 @@
     const doneCount = actionTasks.length - todoCount;
 
     listView.innerHTML = "";
+    listView.setAttribute("aria-label", t("list.title"));
 
     const header = document.createElement("div");
     header.className = "listHeader";
 
     const titleWrap = document.createElement("div");
     const title = document.createElement("h2");
-    title.textContent = "実行リスト";
+    title.textContent = t("list.title");
     const lead = document.createElement("p");
-    lead.textContent = "ルートを見出しとして、未定・今日まで・今後の実行タスクを確認できます。";
+    lead.textContent = t("list.lead");
     titleWrap.appendChild(title);
     titleWrap.appendChild(lead);
 
     const summary = document.createElement("div");
     summary.className = "listSummary";
-    summary.textContent = `未完了 ${todoCount} / 完了 ${doneCount}`;
+    summary.textContent = t("list.summary", { todo: todoCount, done: doneCount });
 
     header.appendChild(titleWrap);
     header.appendChild(summary);
@@ -77,14 +85,14 @@
     const sections = [
       {
         key: "unscheduled",
-        title: "未定",
-        description: "まだ日付を決めていない実行タスクです。今日扱いにはしません。",
+        title: t("list.unscheduled"),
+        description: t("list.unscheduledDescription"),
         tasks: actionTasks.filter(task => !scheduleDate(task))
       },
       {
         key: "today",
-        title: "今日まで",
-        description: "今日以前の未処理を見落とさないための場所です。",
+        title: t("list.today"),
+        description: t("list.todayDescription"),
         tasks: actionTasks.filter(task => {
           const date = scheduleDate(task);
           return date && date <= today;
@@ -92,8 +100,8 @@
       },
       {
         key: "upcoming",
-        title: "今後",
-        description: "明日以降のタスクです。",
+        title: t("list.upcoming"),
+        description: t("list.upcomingDescription"),
         tasks: actionTasks.filter(task => {
           const date = scheduleDate(task);
           return date && date > today;
@@ -116,7 +124,7 @@
 
     const count = document.createElement("span");
     count.className = "listSectionCount";
-    count.textContent = `${section.tasks.length}件`;
+    count.textContent = t("list.count", { count: section.tasks.length });
 
     const description = document.createElement("p");
     description.textContent = section.description;
@@ -130,8 +138,8 @@
       const empty = document.createElement("div");
       empty.className = "listEmpty";
       empty.textContent = section.key === "unscheduled"
-        ? "未定の実行タスクはありません。"
-        : section.key === "today" ? "今日までの実行タスクはありません。" : "今後の実行タスクはありません。";
+        ? t("list.emptyUnscheduled")
+        : section.key === "today" ? t("list.emptyToday") : t("list.emptyUpcoming");
       sectionEl.appendChild(empty);
       listView.appendChild(sectionEl);
       return;
@@ -169,7 +177,7 @@
     toggle.type = "button";
     toggle.className = "listDoneToggle";
     toggle.textContent = task.status === "done" ? "✓" : "○";
-    toggle.title = task.status === "done" ? "未完了に戻す" : "完了にする";
+    toggle.title = task.status === "done" ? t("list.markTodo") : t("list.markDone");
     toggle.addEventListener("click", event => {
       event.stopPropagation();
       toggleTaskStatus(task.id);
@@ -202,8 +210,8 @@
     const openButton = document.createElement("button");
     openButton.type = "button";
     openButton.className = "listOpenButton";
-    openButton.textContent = "ボード";
-    openButton.title = "ボード上で見る";
+    openButton.textContent = t("list.board");
+    openButton.title = t("list.openOnBoard");
     openButton.addEventListener("click", event => {
       event.stopPropagation();
       openTaskOnBoard(task.id);
@@ -284,12 +292,12 @@
       current = parent;
     }
 
-    return names.length ? names.join(" → ") : "ルート直下";
+    return names.length ? names.join(" → ") : t("list.rootDirect");
   }
 
   function formatTaskDate(task) {
     const date = scheduleDate(task);
-    if (!date) return "未定";
+    if (!date) return t("list.noDate");
     const parts = formatDateParts(date);
     return `${parts.month}/${parts.day}`;
   }
@@ -302,13 +310,13 @@
 
     const rootA = getRootTask(a);
     const rootB = getRootTask(b);
-    const rootDiff = String(rootA.title).localeCompare(String(rootB.title), "ja");
+    const rootDiff = String(rootA.title).localeCompare(String(rootB.title), window.CherryI18n?.getLanguage?.() === "en" ? "en" : "ja");
     if (rootDiff !== 0) return rootDiff;
 
     const depthDiff = getTaskDepth(a.id) - getTaskDepth(b.id);
     if (depthDiff !== 0) return depthDiff;
 
-    return String(a.title).localeCompare(String(b.title), "ja");
+    return String(a.title).localeCompare(String(b.title), window.CherryI18n?.getLanguage?.() === "en" ? "en" : "ja");
   }
 
   renderListView();
