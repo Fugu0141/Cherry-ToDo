@@ -92,6 +92,12 @@
   display: none !important;
 }
 
+.stage.startPageMode {
+  display: grid;
+  min-height: calc(100dvh - 138px);
+  align-items: center;
+}
+
 .startPageView.hidden {
   display: none;
 }
@@ -102,11 +108,11 @@
   display: block;
   color: var(--ink);
   overflow: auto;
-  padding: 22px;
-  border-radius: 18px;
+  padding: clamp(22px, 5vw, 48px);
+  border-radius: 0;
   background: var(--surface);
-  box-shadow: 0 10px 28px rgba(0,0,0,.08);
-  outline: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+  box-shadow: none;
+  outline: 0;
 }
 
 .startPagePanel {
@@ -139,7 +145,7 @@
 
 .startPageHeader h2 {
   margin: 0;
-  font-size: clamp(32px, 5vw, 56px);
+  font-size: clamp(36px, 5vw, 64px);
   line-height: 1;
   letter-spacing: -.06em;
 }
@@ -147,6 +153,10 @@
 .startPageHeader p:not(.startPageKicker),
 .startPageNote {
   color: var(--muted);
+}
+
+.startPageClose.hidden {
+  display: none;
 }
 
 .startPageClose {
@@ -179,6 +189,28 @@
   letter-spacing: .06em;
   color: var(--muted);
   text-transform: uppercase;
+}
+
+.startPageEmpty {
+  display: grid;
+  gap: 6px;
+  min-height: 160px;
+  place-items: center;
+  text-align: center;
+  padding: 22px;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--surface) 92%, var(--bg));
+  border: 1px dashed color-mix(in srgb, var(--ink) 16%, transparent);
+  border-radius: 22px;
+}
+
+.startPageEmpty.hidden {
+  display: none;
+}
+
+.startPageEmpty strong {
+  color: var(--ink);
+  font-size: 20px;
 }
 
 .startPageTabList {
@@ -245,6 +277,11 @@
   width: 100%;
 }
 
+.startPageActions button:disabled {
+  opacity: .42;
+  cursor: not-allowed;
+}
+
 .startPagePrimary {
   background: var(--accent);
   color: #fff;
@@ -288,9 +325,12 @@
 }
 
 @media (max-width: 780px) {
+  .stage.startPageMode {
+    align-items: start;
+  }
+
   .startPageView {
-    padding: 14px;
-    border-radius: 16px;
+    padding: 18px 14px;
   }
 
   .startPageBody {
