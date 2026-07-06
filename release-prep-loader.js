@@ -1,5 +1,5 @@
 (() => {
-  const version = "20260707-2";
+  const version = "20260707-3";
 
   function loadCssOnce(id, href) {
     if (document.querySelector(`link[data-release-prep-id="${id}"]`)) return;
@@ -11,17 +11,16 @@
   }
 
   function loadScriptOnce(id, src) {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       if (document.querySelector(`script[data-release-prep-id="${id}"]`)) {
         resolve();
         return;
       }
-
       const script = document.createElement("script");
       script.src = src;
       script.dataset.releasePrepId = id;
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error(`Failed to load ${src}`));
+      script.onload = resolve;
+      script.onerror = resolve;
       document.body.appendChild(script);
     });
   }
@@ -43,22 +42,18 @@
     loadCssOnce("start-page-footer-oss", `./start-page-footer-oss.css?v=${version}`);
     loadCssOnce("mobile-list-filters", `./mobile-list-filter-collapse.css?v=${version}`);
 
-    try {
-      await loadScriptOnce("i18n", `./i18n.js?v=${version}`);
-      await loadScriptOnce("dialog", `./cherry-dialog.js?v=${version}`);
-      await loadScriptOnce("ui", `./release-prep-ui.js?v=${version}`);
-      await loadScriptOnce("task-delete", `./task-delete-dialog.js?v=${version}`);
-      await loadScriptOnce("flow-popovers", `./release-flow-popovers.js?v=${version}`);
-      await loadScriptOnce("tutorial", `./tutorial.js?v=${version}`);
-      await loadScriptOnce("tabs", `./tab-manager.js?v=${version}`);
-      await loadScriptOnce("tab-rename", `./tab-rename-shortcut.js?v=${version}`);
-      await loadScriptOnce("start-page-oss", `./start-page-oss.js?v=${version}`);
-      await loadScriptOnce("start-page-focus", `./start-page-focus.js?v=${version}`);
-      await loadScriptOnce("toolbar-command-menu", `./toolbar-command-menu.js?v=${version}`);
-      await loadScriptOnce("mobile-list-filters", `./mobile-list-filter-collapse.js?v=${version}`);
-    } catch (error) {
-      console.error(error);
-    }
+    await loadScriptOnce("i18n", `./i18n.js?v=${version}`);
+    await loadScriptOnce("dialog", `./cherry-dialog.js?v=${version}`);
+    await loadScriptOnce("ui", `./release-prep-ui.js?v=${version}`);
+    await loadScriptOnce("task-delete", `./task-delete-dialog.js?v=${version}`);
+    await loadScriptOnce("flow-popovers", `./release-flow-popovers.js?v=${version}`);
+    await loadScriptOnce("tutorial", `./tutorial.js?v=${version}`);
+    await loadScriptOnce("tabs", `./tab-manager.js?v=${version}`);
+    await loadScriptOnce("tab-rename", `./tab-rename-shortcut.js?v=${version}`);
+    await loadScriptOnce("start-page-oss", `./start-page-oss.js?v=${version}`);
+    await loadScriptOnce("start-page-focus", `./start-page-focus.js?v=${version}`);
+    await loadScriptOnce("toolbar-command-menu", `./toolbar-command-menu.js?v=${version}`);
+    await loadScriptOnce("mobile-list-filters", `./mobile-list-filter-collapse.js?v=${version}`);
   }
 
   if (document.readyState === "loading") {
