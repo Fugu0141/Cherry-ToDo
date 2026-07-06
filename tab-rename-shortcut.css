@@ -44,17 +44,27 @@ body.tabRenameDialogMode .cherryDialogField {
 
 @media (max-width: 760px) {
   body.tabRenameDialogMode .cherryDialogLayer {
+    align-items: center !important;
+    place-items: center !important;
+    padding: 14px 12px !important;
+    overflow: auto !important;
+  }
+
+  body.tabRenameDialogMode.tabRenameKeyboardOpen .cherryDialogLayer {
     align-items: flex-start !important;
     place-items: start center !important;
-    padding: calc(env(safe-area-inset-top, 0px) + 72px) 12px 12px !important;
-    overflow: auto !important;
+    padding: calc(env(safe-area-inset-top, 0px) + 56px) 12px 12px !important;
   }
 
   body.tabRenameDialogMode .cherryDialog {
     width: min(430px, calc(100vw - 24px)) !important;
-    max-height: calc(100dvh - 120px - env(safe-area-inset-top, 0px)) !important;
+    max-height: calc(100dvh - 28px - env(safe-area-inset-top, 0px)) !important;
     border-radius: 24px !important;
     transform: none !important;
+  }
+
+  body.tabRenameDialogMode.tabRenameKeyboardOpen .cherryDialog {
+    max-height: calc(100dvh - 92px - env(safe-area-inset-top, 0px)) !important;
   }
 
   body.tabRenameDialogMode .cherryDialogField {
