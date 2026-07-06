@@ -2,8 +2,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  min-height: 38px;
-  padding: 6px 14px;
+  min-height: 44px;
+  padding: 7px 14px;
   background: color-mix(in srgb, var(--topbar-bg, var(--surface)) 88%, transparent);
   border-bottom: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
   overflow-x: auto;
@@ -14,18 +14,18 @@
 .workspaceTabList {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
   min-width: 0;
 }
 
 .workspaceTabItem {
   display: inline-flex;
-  align-items: center;
+  align-items: stretch;
   flex: 0 0 auto;
   min-width: 0;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
-  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
+  border-radius: 13px;
   background: color-mix(in srgb, var(--surface) 90%, var(--bg));
 }
 
@@ -39,18 +39,18 @@
 .workspaceTabClose,
 .workspaceAddTab,
 .workspaceStartMini {
-  min-height: 28px;
-  padding: 5px 10px;
+  min-height: 34px;
+  padding: 8px 13px;
   white-space: nowrap;
   border: 0;
-  border-radius: 999px;
+  border-radius: 12px;
   box-shadow: none;
   font-size: 13px;
   line-height: 1;
 }
 
 .workspaceTab {
-  max-width: 170px;
+  max-width: 190px;
   overflow: hidden;
   text-overflow: ellipsis;
   color: var(--button-soft-fg, var(--ink));
@@ -62,7 +62,7 @@
 }
 
 .workspaceTabClose {
-  width: 28px;
+  width: 34px;
   padding-inline: 0;
   color: color-mix(in srgb, var(--muted) 75%, var(--ink));
   background: transparent;
@@ -83,7 +83,7 @@
 .workspaceStartMini {
   color: var(--ink);
   background: color-mix(in srgb, var(--surface) 90%, var(--bg));
-  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
 }
 
 .stage.startPageMode .stageHeader,
@@ -173,6 +173,7 @@
 .startPageBody {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 300px;
+  align-items: start;
   gap: 22px;
   padding: 22px 0;
 }
@@ -180,6 +181,10 @@
 .startPageTabs,
 .startPageActions {
   min-width: 0;
+}
+
+.startPageTabs {
+  align-self: start;
 }
 
 .startPageSectionTitle {
@@ -195,9 +200,10 @@
   display: grid;
   gap: 6px;
   min-height: 160px;
-  place-items: center;
+  align-content: start;
+  justify-items: center;
   text-align: center;
-  padding: 22px;
+  padding: 46px 22px 22px;
   color: var(--muted);
   background: color-mix(in srgb, var(--surface) 92%, var(--bg));
   border: 1px dashed color-mix(in srgb, var(--ink) 16%, transparent);
@@ -264,6 +270,7 @@
 }
 
 .startPageActions {
+  align-self: start;
   display: grid;
   gap: 10px;
   align-content: start;
@@ -320,7 +327,7 @@
   }
 
   .workspaceTab {
-    max-width: 130px;
+    max-width: 150px;
   }
 }
 
@@ -335,6 +342,7 @@
 
   .startPageBody {
     grid-template-columns: 1fr;
+    align-items: start;
     gap: 14px;
   }
 
