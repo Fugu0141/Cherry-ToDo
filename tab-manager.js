@@ -22,18 +22,28 @@
     return `tab-${Math.random().toString(36).slice(2, 9)}`;
   }
 
+  function normalizeTab(tab, index) {
+    const name = tab?.name || "";
+    const isMainName = ["メイン", "Main"].includes(name);
+    const isNewName = ["新しいタブ", "New tab"].includes(name);
+
+    return {
+      id: tab?.id || makeId(),
+      name: isMainName || isNewName ? "" : (name || ""),
+      systemNameKey: tab?.systemNameKey || (index === 0 && isMainName ? "workspace.defaultTabName" : isNewName ? "workspace.newTabName" : null),
+      state: tab?.state,
+      updatedAt: tab?.updatedAt || now()
+    };
+  }
+
   function normalizeWorkspace(candidate) {
     if (!candidate || !Array.isArray(candidate.tabs) || !candidate.tabs.length) return null;
     const tabs = candidate.tabs
       .filter(tab => tab && tab.state && tab.state.tasks)
-      .map((tab, index) => ({
-        id: tab.id || makeId(),
-        name: tab.name || (index === 0 ? t("workspace.defaultTabName") : t("workspace.newTabName")),
-        state: tab.state,
-        updatedAt: tab.updatedAt || now()
-      }));
+      .map(normalizeTab);
 
     if (!tabs.length) return null;
+    if (!tabs[0].name && !tabs[0].systemNameKey) tabs[0].systemNameKey = "workspace.defaultTabName";
 
     return {
       version: 1,
@@ -50,7 +60,8 @@
       tabs: [
         {
           id: "main",
-          name: t("workspace.defaultTabName"),
+          name: "",
+          systemNameKey: "workspace.defaultTabName",
           state: clone(state),
           updatedAt: now()
         }
@@ -78,12 +89,26 @@
     return workspace.tabs.find(tab => tab.id === workspace.activeTabId) || workspace.tabs[0];
   }
 
-  function commitActiveState() {
+  function tabDisplayName(tab) {
+    if (!tab) return t("workspace.untitled");
+    if (tab.systemNameKey) return t(tab.systemNameKey);
+    return tab.name || t("workspace.untitled");
+  }
+
+  function syncActiveState() {
     const tab = activeTab();
     if (!tab) return;
     tab.state = clone(state);
     tab.updatedAt = now();
     workspace.updatedAt = now();
+  }
+
+  function notifyWorkspaceChanged() {
+    window.dispatchEvent(new CustomEvent("cherry-workspace-updated", { detail: clone(workspace) }));
+  }
+
+  function commitActiveState() {
+    syncActiveState();
     try {
       localStorage.setItem(workspaceKey, JSON.stringify(workspace));
       localStorage.setItem(window.cherryStorage?.currentStorageKey || "quest-sticky-todo-v10", JSON.stringify(state));
@@ -91,6 +116,7 @@
       // Local persistence may be unavailable in strict browser modes.
     }
     renderTabRail();
+    notifyWorkspaceChanged();
   }
 
   function saveWorkspaceNow() {
@@ -108,6 +134,12 @@
     } catch (_) {
       // Non-critical for the current session.
     }
+    notifyWorkspaceChanged();
+  }
+
+  function closeStartPage() {
+    document.querySelector(".stage")?.classList.remove("startPageMode");
+    startPage?.classList.add("hidden");
   }
 
   function openTab(tabId) {
@@ -119,6 +151,7 @@
     selectedId = null;
     undoStack = [];
     persistWorkspaceOnly();
+    closeStartPage();
     branchLayout();
     requestRender();
     renderTabRail();
@@ -129,7 +162,8 @@
     commitActiveState();
     const tab = {
       id: makeId(),
-      name: t("workspace.newTabName"),
+      name: "",
+      systemNameKey: "workspace.newTabName",
       state: makeInitialState(),
       updatedAt: now()
     };
@@ -139,6 +173,7 @@
     selectedId = null;
     undoStack = [];
     persistWorkspaceOnly();
+    closeStartPage();
     branchLayout();
     requestRender();
     renderTabRail();
@@ -148,9 +183,10 @@
   function renameTab(tabId) {
     const tab = workspace.tabs.find(item => item.id === tabId);
     if (!tab) return;
-    const name = prompt(t("workspace.renamePrompt"), tab.name)?.trim();
+    const name = prompt(t("workspace.renamePrompt"), tabDisplayName(tab))?.trim();
     if (!name) return;
     tab.name = name;
+    tab.systemNameKey = null;
     tab.updatedAt = now();
     persistWorkspaceOnly();
     renderTabRail();
@@ -163,7 +199,8 @@
     commitActiveState();
     const copy = {
       id: makeId(),
-      name: `${source.name} copy`,
+      name: `${tabDisplayName(source)} copy`,
+      systemNameKey: null,
       state: clone(source.state),
       updatedAt: now()
     };
@@ -173,6 +210,7 @@
     selectedId = null;
     undoStack = [];
     persistWorkspaceOnly();
+    closeStartPage();
     branchLayout();
     requestRender();
     renderTabRail();
@@ -182,7 +220,7 @@
   function deleteTab(tabId) {
     if (workspace.tabs.length <= 1) return;
     const tab = workspace.tabs.find(item => item.id === tabId);
-    if (!tab || !confirm(t("workspace.deleteConfirm"))) return;
+    if (!tab || !confirm(`${t("workspace.deleteConfirm")}\n${tabDisplayName(tab)}`)) return;
 
     workspace.tabs = workspace.tabs.filter(item => item.id !== tabId);
     if (workspace.activeTabId === tabId) workspace.activeTabId = workspace.tabs[0].id;
@@ -199,9 +237,8 @@
 
   function ensureTabRail() {
     if (document.getElementById("workspaceBar")) return;
-    const app = document.querySelector(".app");
     const topbar = document.querySelector(".topbar");
-    if (!app || !topbar) return;
+    if (!topbar) return;
 
     const bar = document.createElement("div");
     bar.id = "workspaceBar";
@@ -216,8 +253,15 @@
     bar.querySelector(".workspaceStartMini").addEventListener("click", openStartPage);
     bar.querySelector(".workspaceAddTab").addEventListener("click", createTab);
     bar.querySelector(".workspaceTabList").addEventListener("click", event => {
-      const tabButton = event.target.closest("[data-tab-id]");
-      if (tabButton) openTab(tabButton.dataset.tabId);
+      const closeButton = event.target.closest("[data-tab-delete]");
+      if (closeButton) {
+        event.stopPropagation();
+        deleteTab(closeButton.dataset.tabDelete);
+        return;
+      }
+
+      const tabButton = event.target.closest("[data-tab-open]");
+      if (tabButton) openTab(tabButton.dataset.tabOpen);
     });
   }
 
@@ -232,25 +276,46 @@
     list.innerHTML = "";
 
     workspace.tabs.forEach(tab => {
+      const item = document.createElement("div");
+      item.className = `workspaceTabItem ${tab.id === workspace.activeTabId ? "active" : ""}`;
+
       const button = document.createElement("button");
       button.type = "button";
-      button.className = `workspaceTab ${tab.id === workspace.activeTabId ? "active" : ""}`;
-      button.dataset.tabId = tab.id;
-      button.textContent = tab.name || t("workspace.untitled");
-      list.appendChild(button);
+      button.className = "workspaceTab";
+      button.dataset.tabOpen = tab.id;
+      button.textContent = tabDisplayName(tab);
+      button.setAttribute("role", "tab");
+      button.setAttribute("aria-selected", tab.id === workspace.activeTabId ? "true" : "false");
+
+      item.appendChild(button);
+
+      if (workspace.tabs.length > 1) {
+        const close = document.createElement("button");
+        close.type = "button";
+        close.className = "workspaceTabClose";
+        close.dataset.tabDelete = tab.id;
+        close.textContent = "×";
+        close.title = t("workspace.delete");
+        item.appendChild(close);
+      }
+
+      list.appendChild(item);
     });
   }
 
   function ensureStartPage() {
     if (startPage) return startPage;
 
-    startPage = document.createElement("div");
+    const stage = document.querySelector(".stage");
+    startPage = document.createElement("section");
     startPage.id = "startPage";
-    startPage.className = "startPageBackdrop hidden";
+    startPage.className = "startPageView hidden";
+    startPage.setAttribute("aria-labelledby", "startPageTitle");
     startPage.innerHTML = `
-      <section class="startPagePanel" role="dialog" aria-modal="true" aria-labelledby="startPageTitle">
+      <div class="startPagePanel">
         <div class="startPageHeader">
           <div>
+            <p class="startPageKicker">Cherry workspace</p>
             <h2 id="startPageTitle"></h2>
             <p></p>
           </div>
@@ -272,9 +337,9 @@
         <div class="startPageFooter">
           <span class="startPageStatus"></span>
         </div>
-      </section>
+      </div>
     `;
-    document.body.appendChild(startPage);
+    stage?.appendChild(startPage);
 
     fileInput = document.createElement("input");
     fileInput.type = "file";
@@ -283,7 +348,7 @@
     document.body.appendChild(fileInput);
 
     startPage.addEventListener("click", event => {
-      if (event.target === startPage || event.target.closest(".startPageClose")) closeStartPage();
+      if (event.target.closest(".startPageClose")) closeStartPage();
 
       const action = event.target.closest("[data-action]")?.dataset.action;
       if (action === "new-tab") createTab();
@@ -313,7 +378,7 @@
   function renderStartPage() {
     const page = ensureStartPage();
     page.querySelector("#startPageTitle").textContent = t("workspace.title");
-    page.querySelector(".startPageHeader p").textContent = t("workspace.subtitle");
+    page.querySelector(".startPageHeader p:not(.startPageKicker)").textContent = t("workspace.subtitle");
     page.querySelector(".startPageClose").setAttribute("aria-label", t("workspace.close"));
     page.querySelector(".startPageSectionTitle").textContent = t("workspace.tabs");
     page.querySelector("[data-action='new-tab']").textContent = t("workspace.newTab");
@@ -343,7 +408,7 @@
           <button type="button" class="startPageDanger" data-tab-action="delete"></button>
         </div>
       `;
-      card.querySelector(".startPageTabName").textContent = tab.name || t("workspace.untitled");
+      card.querySelector(".startPageTabName").textContent = tabDisplayName(tab);
       card.querySelector(".startPageTabMeta").textContent = `${taskCount} tasks · ${tab.id === workspace.activeTabId ? t("workspace.active") : t("workspace.localNote")}`;
       card.querySelector("[data-tab-action='open']").textContent = t("workspace.open");
       card.querySelector("[data-tab-action='rename']").textContent = t("workspace.rename");
@@ -355,11 +420,8 @@
 
   function openStartPage() {
     renderStartPage();
+    document.querySelector(".stage")?.classList.add("startPageMode");
     ensureStartPage().classList.remove("hidden");
-  }
-
-  function closeStartPage() {
-    ensureStartPage().classList.add("hidden");
   }
 
   function bytesToBase64(bytes) {
@@ -487,6 +549,7 @@
       selectedId = null;
       undoStack = [];
       persistWorkspaceOnly();
+      closeStartPage();
       branchLayout();
       requestRender();
       renderTabRail();
@@ -498,7 +561,6 @@
     }
   }
 
-  const previousSaveNow = typeof saveNow === "function" ? saveNow : null;
   saveNow = saveWorkspaceNow;
   scheduleSave = scheduleWorkspaceSave;
   window.addEventListener("beforeunload", saveWorkspaceNow);
@@ -521,10 +583,20 @@
 
   window.cherryWorkspace = {
     openStartPage,
+    closeStartPage,
     createTab,
+    renameTab,
+    duplicateTab,
+    deleteTab,
     exportWorkspace,
     importWorkspace,
-    getWorkspace: () => clone(workspace),
-    previousSaveNow
+    getWorkspace: () => {
+      syncActiveState();
+      return clone(workspace);
+    },
+    getActiveTabId: () => workspace.activeTabId,
+    getTabDisplayName: tab => tabDisplayName(tab)
   };
+
+  notifyWorkspaceChanged();
 })();
