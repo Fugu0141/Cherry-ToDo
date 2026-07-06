@@ -32,12 +32,22 @@
     }
   };
 
+  let renderQueued = false;
+
   function language() {
     return window.CherryI18n?.getLanguage?.() === "en" ? "en" : "ja";
   }
 
   function c(key) {
     return copy[language()][key] || copy.ja[key] || key;
+  }
+
+  function setTextIfChanged(element, value) {
+    if (element && element.textContent !== value) element.textContent = value;
+  }
+
+  function setAttrIfChanged(element, name, value) {
+    if (element && element.getAttribute(name) !== value) element.setAttribute(name, value);
   }
 
   function ensureSection() {
@@ -71,19 +81,20 @@
   }
 
   function render() {
+    renderQueued = false;
     const section = ensureSection();
     if (!section) return;
 
-    section.querySelector(".startPageOssKicker").textContent = c("kicker");
-    section.querySelector(".startPageOssTitle").textContent = c("title");
-    section.querySelector(".startPageOssLead").textContent = c("lead");
+    setTextIfChanged(section.querySelector(".startPageOssKicker"), c("kicker"));
+    setTextIfChanged(section.querySelector(".startPageOssTitle"), c("title"));
+    setTextIfChanged(section.querySelector(".startPageOssLead"), c("lead"));
 
     const setLink = (name, label, href = links[name]) => {
       const link = section.querySelector(`[data-oss-link='${name}']`);
       if (!link) return;
-      if (href) link.href = href;
-      link.querySelector("span:first-child").textContent = label;
-      link.querySelector("span:last-child").textContent = name === "donation" ? "…" : c("arrow");
+      if (href) setAttrIfChanged(link, "href", href);
+      setTextIfChanged(link.querySelector("span:first-child"), label);
+      setTextIfChanged(link.querySelector("span:last-child"), name === "donation" ? "…" : c("arrow"));
     };
 
     setLink("github", c("github"));
@@ -93,21 +104,19 @@
     setLink("donation", c("donation"), "#");
   }
 
-  function observeStartPage() {
-    const observer = new MutationObserver(render);
-    observer.observe(document.body, { childList: true, subtree: true });
+  function queueRender() {
+    if (renderQueued) return;
+    renderQueued = true;
+    requestAnimationFrame(render);
   }
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", () => {
-      render();
-      observeStartPage();
-    }, { once: true });
+    document.addEventListener("DOMContentLoaded", queueRender, { once: true });
   } else {
-    render();
-    observeStartPage();
+    queueRender();
   }
 
-  window.CherryI18n?.onChange(render);
-  window.addEventListener("cherry-workspace-updated", render);
+  window.CherryI18n?.onChange(queueRender);
+  window.addEventListener("cherry-workspace-updated", queueRender);
+  window.addEventListener("cherry-start-page-ready", queueRender);
 })();
