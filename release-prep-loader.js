@@ -1,5 +1,5 @@
 (() => {
-  const version = "20260706-4";
+  const version = "20260706-5";
 
   function loadCssOnce(id, href) {
     if (document.querySelector(`link[data-release-prep-id="${id}"]`)) return;
@@ -33,6 +33,7 @@
     loadCssOnce("flow-popovers", `./release-flow-popovers.css?v=${version}`);
     loadCssOnce("tutorial", `./tutorial.css?v=${version}`);
     loadCssOnce("tabs", `./tab-manager.css?v=${version}`);
+    loadCssOnce("start-page-oss", `./start-page-oss.css?v=${version}`);
 
     try {
       await loadScriptOnce("i18n", `./i18n.js?v=${version}`);
@@ -41,6 +42,7 @@
       await loadScriptOnce("flow-popovers", `./release-flow-popovers.js?v=${version}`);
       await loadScriptOnce("tutorial", `./tutorial.js?v=${version}`);
       await loadScriptOnce("tabs", `./tab-manager.js?v=${version}`);
+      await loadScriptOnce("start-page-oss", `./start-page-oss.js?v=${version}`);
     } catch (error) {
       console.error(error);
     }
