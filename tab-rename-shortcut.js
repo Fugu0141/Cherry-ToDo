@@ -1,6 +1,7 @@
 (() => {
   let clickTimer = null;
   let lastTap = { tabId: null, time: 0 };
+  let viewportCleanup = null;
   const doubleClickDelay = 260;
   const doubleTapDelay = 360;
 
@@ -57,13 +58,58 @@
     }, true);
   }
 
+  function syncKeyboardClass() {
+    const viewport = window.visualViewport;
+    const keyboardOpen = viewport ? window.innerHeight - viewport.height > 140 : false;
+    document.body.classList.toggle("tabRenameKeyboardOpen", keyboardOpen);
+  }
+
+  function startViewportTracking() {
+    viewportCleanup?.();
+    const viewport = window.visualViewport;
+    syncKeyboardClass();
+
+    if (!viewport) {
+      const onFocusIn = event => {
+        if (event.target?.classList?.contains("cherryDialogField")) {
+          document.body.classList.add("tabRenameKeyboardOpen");
+        }
+      };
+      const onFocusOut = () => document.body.classList.remove("tabRenameKeyboardOpen");
+      document.addEventListener("focusin", onFocusIn);
+      document.addEventListener("focusout", onFocusOut);
+      viewportCleanup = () => {
+        document.removeEventListener("focusin", onFocusIn);
+        document.removeEventListener("focusout", onFocusOut);
+        document.body.classList.remove("tabRenameKeyboardOpen");
+      };
+      return;
+    }
+
+    viewport.addEventListener("resize", syncKeyboardClass);
+    viewport.addEventListener("scroll", syncKeyboardClass);
+    window.addEventListener("resize", syncKeyboardClass);
+    viewportCleanup = () => {
+      viewport.removeEventListener("resize", syncKeyboardClass);
+      viewport.removeEventListener("scroll", syncKeyboardClass);
+      window.removeEventListener("resize", syncKeyboardClass);
+      document.body.classList.remove("tabRenameKeyboardOpen");
+    };
+  }
+
   async function openRename(tabId) {
     if (!tabId || !window.cherryWorkspace?.renameTab) return;
     document.body.classList.add("tabRenameDialogMode");
+    startViewportTracking();
     try {
       await window.cherryWorkspace.renameTab(tabId);
     } finally {
-      setTimeout(() => document.body.classList.remove("tabRenameDialogMode"), 120);
+      viewportCleanup?.();
+      viewportCleanup = null;
+      setTimeout(() => {
+        document.body.classList.remove("tabRenameDialogMode");
+        document.body.classList.remove("tabRenameKeyboardOpen");
+      }, 120);
     }
   }
 
