@@ -311,9 +311,40 @@
     display: none;
   }
 
+  /* Start page on phones should behave like an entry screen, not like the full editor. */
+  body:has(.stage.startPageMode) {
+    --mobile-toolbar-height: 64px;
+    --mobile-tab-height: 0px;
+  }
+
+  body:has(.stage.startPageMode) .topbar {
+    position: sticky;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    padding-bottom: 10px !important;
+  }
+
+  body:has(.stage.startPageMode) .toolbar,
+  body:has(.stage.startPageMode) .workspaceBar {
+    display: none !important;
+  }
+
+  body:has(.stage.startPageMode) .stage {
+    height: calc(100dvh - 64px - var(--mobile-top-safe)) !important;
+  }
+
+  body:has(.stage.startPageMode) .brand {
+    grid-template-columns: 40px minmax(0, 1fr) !important;
+  }
+
+  body:has(.stage.startPageMode) .logo {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
   .startPageView {
     height: 100% !important;
-    padding: 18px 14px calc(var(--mobile-bottom-safe) + 18px) !important;
+    padding: 14px 16px calc(var(--mobile-bottom-safe) + 18px) !important;
     overflow: auto !important;
   }
 
@@ -321,10 +352,28 @@
     display: grid !important;
     grid-template-columns: 1fr auto !important;
     gap: 10px !important;
+    padding: 0 0 14px !important;
+  }
+
+  .startPageKicker {
+    margin-bottom: 6px !important;
+    font-size: 11px !important;
   }
 
   .startPageHeader h2 {
-    font-size: clamp(34px, 13vw, 52px) !important;
+    font-size: clamp(32px, 12vw, 46px) !important;
+    line-height: .98 !important;
+  }
+
+  .startPageHeader p:not(.startPageKicker) {
+    margin-top: 8px !important;
+    font-size: 13px !important;
+    line-height: 1.65 !important;
+  }
+
+  .startPageClose {
+    width: 34px !important;
+    height: 34px !important;
   }
 
   .startPageBody,
@@ -333,14 +382,82 @@
     align-items: start !important;
   }
 
+  .startPageBody {
+    display: flex !important;
+    flex-direction: column-reverse !important;
+    gap: 12px !important;
+    padding: 14px 0 0 !important;
+  }
+
+  .startPageSectionTitle {
+    margin-bottom: 8px !important;
+    font-size: 12px !important;
+  }
+
   .startPageActions,
-  .startPageOss {
-    border-radius: 20px !important;
+  .startPageOss,
+  .startPageTabCard,
+  .startPageEmpty {
+    border-radius: 18px !important;
+  }
+
+  .startPageActions {
+    padding: 12px !important;
+    gap: 8px !important;
+  }
+
+  .startPageActions button {
+    min-height: 44px !important;
+  }
+
+  .startPageTabs {
+    width: 100% !important;
+  }
+
+  .startPageTabCard {
+    padding: 14px !important;
+  }
+
+  .startPageTabActions {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .startPageTabActions button {
+    min-height: 40px !important;
   }
 
   .startPageEmpty {
     align-content: start !important;
-    padding-top: 36px !important;
+    min-height: 118px !important;
+    padding: 28px 18px 18px !important;
+  }
+
+  .startPageOss {
+    margin-top: 14px !important;
+    padding: 12px !important;
+  }
+
+  .startPageOssTitle {
+    font-size: 16px !important;
+  }
+
+  .startPageOssLead {
+    font-size: 12px !important;
+  }
+
+  .startPageOssLinks {
+    grid-template-columns: 1fr !important;
+    gap: 7px !important;
+  }
+
+  .startPageOssDonation {
+    display: none !important;
+  }
+
+  .startPageFooter {
+    padding-top: 12px !important;
   }
 
   .tutorialBackdrop,
@@ -376,6 +493,10 @@
 @media (max-width: 390px) {
   :root {
     --mobile-toolbar-height: 132px;
+  }
+
+  body:has(.stage.startPageMode) {
+    --mobile-toolbar-height: 64px;
   }
 
   .toolbar button {
