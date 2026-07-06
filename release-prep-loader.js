@@ -1,5 +1,5 @@
 (() => {
-  const version = "20260706-11";
+  const version = "20260707-2";
 
   function loadCssOnce(id, href) {
     if (document.querySelector(`link[data-release-prep-id="${id}"]`)) return;
@@ -41,6 +41,7 @@
     loadCssOnce("start-page-focus", `./start-page-focus.css?v=${version}`);
     loadCssOnce("mobile-rescue", `./mobile-release-rescue.css?v=${version}`);
     loadCssOnce("start-page-footer-oss", `./start-page-footer-oss.css?v=${version}`);
+    loadCssOnce("mobile-list-filters", `./mobile-list-filter-collapse.css?v=${version}`);
 
     try {
       await loadScriptOnce("i18n", `./i18n.js?v=${version}`);
@@ -54,6 +55,7 @@
       await loadScriptOnce("start-page-oss", `./start-page-oss.js?v=${version}`);
       await loadScriptOnce("start-page-focus", `./start-page-focus.js?v=${version}`);
       await loadScriptOnce("toolbar-command-menu", `./toolbar-command-menu.js?v=${version}`);
+      await loadScriptOnce("mobile-list-filters", `./mobile-list-filter-collapse.js?v=${version}`);
     } catch (error) {
       console.error(error);
     }
