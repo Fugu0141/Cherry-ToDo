@@ -1,0 +1,163 @@
+.tutorialBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 260;
+  display: grid;
+  place-items: center;
+  padding: clamp(14px, 4vw, 28px);
+  background: rgba(2, 6, 23, .52);
+  backdrop-filter: blur(5px);
+}
+
+.tutorialBackdrop.hidden {
+  display: none;
+}
+
+.tutorialPanel {
+  width: min(620px, 100%);
+  max-height: calc(100dvh - 28px);
+  overflow: auto;
+  color: #111827;
+  background: rgba(255, 255, 255, .98);
+  border: 1px solid rgba(15, 23, 42, .12);
+  border-radius: 26px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, .28);
+}
+
+.tutorialHead,
+.tutorialActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tutorialHead {
+  padding: 18px 20px 0;
+}
+
+.tutorialTitleBlock {
+  min-width: 0;
+}
+
+.tutorialStepCount {
+  margin: 0 0 4px;
+  color: #7357ff;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.tutorialPanel h2 {
+  margin: 0;
+  color: #111827;
+  font-size: clamp(24px, 5vw, 34px);
+  letter-spacing: -.04em;
+}
+
+.tutorialClose {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  color: #64748b;
+  background: #f1f5f9;
+  box-shadow: none;
+}
+
+.tutorialBody {
+  padding: 26px 24px 10px;
+}
+
+.tutorialBody p {
+  margin: 0;
+  color: #4b5563;
+  font-size: 15px;
+  line-height: 1.85;
+}
+
+.tutorialPreview {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 22px;
+  padding: 14px;
+  background: #f8fafc;
+  border: 1px solid rgba(15, 23, 42, .10);
+  border-radius: 18px;
+}
+
+.tutorialPreviewChip {
+  padding: 8px 11px;
+  color: #1f2937;
+  font-size: 13px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #fff4a8, #d9fbff);
+  border: 1px solid rgba(15, 23, 42, .14);
+  border-radius: 12px;
+}
+
+.tutorialActions {
+  padding: 16px 24px 22px;
+  border-top: 1px solid rgba(15, 23, 42, .08);
+}
+
+.tutorialActions button {
+  min-height: 42px;
+}
+
+.tutorialSecondary {
+  background: #e9eef7;
+  color: #263144;
+  box-shadow: none;
+}
+
+.tutorialPrimary {
+  background: linear-gradient(135deg, #7357ff, #17a9b8);
+  color: #fff;
+}
+
+.welcomeSplashFooterButton {
+  appearance: none;
+  padding: 0;
+  color: #64748b;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.welcomeSplashFooterButton:hover {
+  color: var(--accent, #7357ff);
+  text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+  .tutorialBackdrop {
+    align-items: stretch;
+    padding: 10px;
+  }
+
+  .tutorialPanel {
+    max-height: calc(100dvh - 20px);
+    border-radius: 22px;
+  }
+
+  .tutorialHead {
+    align-items: flex-start;
+  }
+
+  .tutorialBody,
+  .tutorialActions {
+    padding-inline: 18px;
+  }
+
+  .tutorialActions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+}
