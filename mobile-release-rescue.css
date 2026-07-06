@@ -107,7 +107,6 @@
     white-space: nowrap !important;
   }
 
-  /* Keep dangerous / low-frequency actions from dominating the phone header. */
   #deleteBtn,
   #resetBtn {
     opacity: .72;
@@ -232,30 +231,44 @@
   }
 
   .mobileActionBar {
-    left: 10px !important;
-    right: 10px !important;
-    bottom: calc(10px + var(--mobile-bottom-safe)) !important;
+    box-sizing: border-box !important;
+    position: fixed !important;
+    left: 50% !important;
+    right: auto !important;
     top: auto !important;
+    bottom: calc(10px + var(--mobile-bottom-safe)) !important;
     z-index: 95 !important;
-    width: auto !important;
-    max-width: none !important;
+    width: min(430px, calc(100vw - 20px)) !important;
+    max-width: calc(100vw - 20px) !important;
     padding: 8px !important;
+    overflow: hidden !important;
     border-radius: 28px !important;
     background: color-mix(in srgb, var(--surface) 92%, transparent) !important;
     border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent) !important;
     box-shadow: 0 18px 48px rgba(15, 23, 42, .28) !important;
+    transform: translateX(-50%) !important;
+  }
+
+  .mobileActionBar.hidden {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transform: translateX(-50%) translateY(8px) scale(.98) !important;
   }
 
   .mobileActionButtons {
+    box-sizing: border-box !important;
     display: grid !important;
     grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
     gap: 8px !important;
     width: 100% !important;
+    max-width: 100% !important;
   }
 
   .mobileActionButton {
+    box-sizing: border-box !important;
     min-width: 0 !important;
-    min-height: 68px !important;
+    width: 100% !important;
+    min-height: 64px !important;
     padding: 8px 4px !important;
     border-radius: 22px !important;
     font-size: 12px !important;
@@ -328,10 +341,33 @@
   }
 }
 
+@media (max-width: 430px) {
+  :root {
+    --mobile-action-height: 162px;
+  }
+
+  .mobileActionBar {
+    width: min(350px, calc(100vw - 20px)) !important;
+    border-radius: 26px !important;
+  }
+
+  .mobileActionButtons {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .mobileActionButton {
+    min-height: 58px !important;
+    border-radius: 20px !important;
+  }
+
+  #flowMap {
+    bottom: calc(var(--mobile-action-height) + 18px + var(--mobile-bottom-safe)) !important;
+  }
+}
+
 @media (max-width: 390px) {
   :root {
     --mobile-toolbar-height: 132px;
-    --mobile-action-height: 108px;
   }
 
   .toolbar button {
@@ -341,7 +377,6 @@
   }
 
   .mobileActionButton {
-    min-height: 62px !important;
     font-size: 11px !important;
   }
 
