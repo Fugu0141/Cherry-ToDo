@@ -1,12 +1,6 @@
-/* Keep the execution list from creeping under the desktop chrome or being pushed down by board-sized space. */
+/* Emergency rollback: do not touch .stage layout for list view.
+   The real fix is to keep startPageMode from leaking into list mode. */
 @media (min-width: 761px) {
-  .stage.listMode {
-    box-sizing: border-box !important;
-    position: relative !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-  }
-
   .stage.listMode .stageHeader,
   .stage.listMode .board,
   .stage.listMode .startPageView {
@@ -14,15 +8,10 @@
   }
 
   .stage.listMode .listView {
-    position: absolute !important;
-    inset: 14px 18px 18px !important;
-    box-sizing: border-box !important;
-    width: auto !important;
-    height: auto !important;
-    min-height: 0 !important;
-    margin: 0 !important;
-    overflow: auto !important;
     display: block !important;
+    margin: 14px 18px 18px !important;
+    max-height: calc(100dvh - 156px) !important;
+    overflow: auto !important;
   }
 }
 
