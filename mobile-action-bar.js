@@ -1,6 +1,10 @@
 (() => {
   const mobileActionQuery = window.matchMedia("(max-width: 980px)");
 
+  function t(key, values = {}) {
+    return window.CherryI18n?.t(key, values) || key;
+  }
+
   const bar = document.createElement("div");
   bar.id = "mobileActionBar";
   bar.className = "mobileActionBar hidden";
@@ -8,18 +12,20 @@
   const buttons = document.createElement("div");
   buttons.className = "mobileActionButtons";
 
-  function makeButton(className, icon, text) {
+  function makeButton(className, icon, textKey) {
     const button = document.createElement("button");
     button.type = "button";
     button.className = `mobileActionButton ${className}`;
-    button.innerHTML = `<strong>${icon}</strong>${text}`;
+    button.dataset.icon = icon;
+    button.dataset.textKey = textKey;
+    button.innerHTML = `<strong>${icon}</strong>${t(textKey)}`;
     return button;
   }
 
-  const doneButton = makeButton("done", "✓", "完了");
-  const addButton = makeButton("add", "＋", "追加");
-  const editButton = makeButton("edit", "✎", "編集");
-  const deleteButton = makeButton("delete", "×", "削除");
+  const doneButton = makeButton("done", "✓", "mobile.done");
+  const addButton = makeButton("add", "＋", "mobile.add");
+  const editButton = makeButton("edit", "✎", "mobile.edit");
+  const deleteButton = makeButton("delete", "×", "mobile.delete");
 
   buttons.appendChild(doneButton);
   buttons.appendChild(addButton);
@@ -112,8 +118,15 @@
     return true;
   }
 
+  function updateStaticButtonLabels() {
+    addButton.innerHTML = `<strong>＋</strong>${t("mobile.add")}`;
+    editButton.innerHTML = `<strong>✎</strong>${t("mobile.edit")}`;
+    deleteButton.innerHTML = `<strong>×</strong>${t("mobile.delete")}`;
+  }
+
   function updateMobileActionBar() {
     const task = selectedTask();
+    updateStaticButtonLabels();
 
     if (!shouldShowBar()) {
       bar.classList.add("hidden");
@@ -122,8 +135,8 @@
     }
 
     doneButton.innerHTML = task.status === "done"
-      ? "<strong>↺</strong>戻す"
-      : "<strong>✓</strong>完了";
+      ? `<strong>↺</strong>${t("mobile.restore")}`
+      : `<strong>✓</strong>${t("mobile.done")}`;
 
     bar.classList.remove("hidden");
     document.body.classList.add("mobileActionBarVisible");
@@ -132,6 +145,8 @@
       document.body.classList.remove("mobileActionBarVisible");
     }
   }
+
+  window.CherryI18n?.onChange(updateMobileActionBar);
 
   doneButton.addEventListener("click", event => {
     event.stopPropagation();
@@ -154,7 +169,8 @@
       targetAt: taskDateForChild(task),
       branchMode: "branch"
     });
-    taskModalTitle.textContent = "タスクを追加";
+    taskModalTitle.textContent = t("modal.addTask");
+    taskModalTitle.dataset.i18nDynamicKey = "modal.addTask";
     updateMobileActionBar();
   });
 
