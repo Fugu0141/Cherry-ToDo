@@ -164,4 +164,113 @@ body.startPageFocusMode .startPageFooter {
   .stage.startPageMode .startPageOss {
     margin-top: auto !important;
   }
+
+  body:not(.startPageFocusMode) {
+    --mobile-toolbar-height: 112px;
+    --mobile-tab-height: 44px;
+  }
+
+  body:not(.startPageFocusMode) .topbar {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 8px !important;
+    padding: calc(7px + env(safe-area-inset-top, 0px)) 10px 7px !important;
+  }
+
+  body:not(.startPageFocusMode) .brand {
+    grid-template-columns: 38px minmax(0, 1fr) !important;
+    gap: 9px !important;
+  }
+
+  body:not(.startPageFocusMode) .logo {
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 13px !important;
+    font-size: 20px !important;
+  }
+
+  body:not(.startPageFocusMode) .brand h1 {
+    font-size: 18px !important;
+  }
+
+  body:not(.startPageFocusMode) .brand p {
+    font-size: 11px !important;
+  }
+
+  body:not(.startPageFocusMode) .toolbar {
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+    gap: 7px !important;
+    width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding: 0 2px 3px !important;
+    scroll-snap-type: x proximity;
+  }
+
+  body:not(.startPageFocusMode) .toolbar button {
+    min-height: 38px !important;
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+    scroll-snap-align: start;
+  }
+
+  body:not(.startPageFocusMode) #listViewBtn {
+    order: 10 !important;
+  }
+
+  body:not(.startPageFocusMode) #addRootBtn {
+    order: 20 !important;
+  }
+
+  body:not(.startPageFocusMode) #toggleLanesBtn {
+    order: 30 !important;
+  }
+
+  body:not(.startPageFocusMode) #treeLayoutBtn {
+    order: 40 !important;
+  }
+
+  body:not(.startPageFocusMode) #verticalLayoutBtn {
+    order: 50 !important;
+  }
+
+  body:not(.startPageFocusMode) #themeToggleBtn {
+    order: 60 !important;
+  }
+
+  body:not(.startPageFocusMode) #languageToggleBtn {
+    order: 70 !important;
+  }
+
+  body:not(.startPageFocusMode) #startPageBtn {
+    order: 80 !important;
+  }
+
+  body:not(.startPageFocusMode) #tutorialBtn {
+    order: 90 !important;
+  }
+
+  body:not(.startPageFocusMode) #undoBtn {
+    order: 100 !important;
+  }
+
+  body:not(.startPageFocusMode) #deleteBtn {
+    order: 110 !important;
+  }
+
+  body:not(.startPageFocusMode) #resetBtn {
+    order: 120 !important;
+  }
+
+  body:not(.startPageFocusMode) .workspaceBar {
+    top: var(--mobile-toolbar-height) !important;
+    min-height: var(--mobile-tab-height) !important;
+    padding: 5px 10px !important;
+  }
+
+  body:not(.startPageFocusMode) .stage {
+    height: calc(100dvh - var(--mobile-toolbar-height) - var(--mobile-tab-height)) !important;
+  }
 }
