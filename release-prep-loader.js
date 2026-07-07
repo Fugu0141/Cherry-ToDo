@@ -1,5 +1,5 @@
 (() => {
-  const version = "20260707-11";
+  const version = "20260707-12";
 
   function loadCssOnce(id, href) {
     if (document.querySelector(`link[data-release-prep-id="${id}"]`)) return;
@@ -35,6 +35,7 @@
     loadCssOnce("tab-rename", `./tab-rename-shortcut.css?v=${version}`);
     loadCssOnce("flow-popovers", `./release-flow-popovers.css?v=${version}`);
     loadCssOnce("tutorial", `./tutorial.css?v=${version}`);
+    loadCssOnce("tutorial-preview-fix", `./tutorial-preview-fix.css?v=${version}`);
     loadCssOnce("tabs", `./tab-manager.css?v=${version}`);
     loadCssOnce("workspace-grid", `./workspace-grid-row-fix.css?v=${version}`);
     loadCssOnce("start-page-oss", `./start-page-oss.css?v=${version}`);
