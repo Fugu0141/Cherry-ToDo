@@ -1,7 +1,7 @@
 /* Android Chrome's "Desktop site" keeps a coarse pointer but often uses a wider CSS viewport.
    In that state the normal mobile toolbar rules do not always apply, so the toolbar can wrap into a small dense block on the left.
-   Fit the action buttons to the available width instead of letting them bunch up. */
-@media (max-width: 980px) and (pointer: coarse) {
+   Keep this fix above the regular phone breakpoint so the normal mobile toolbar stays as a horizontal scroll rail. */
+@media (min-width: 761px) and (max-width: 980px) and (pointer: coarse) {
   body:not(.startPageFocusMode) .topbar {
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) !important;
@@ -42,18 +42,5 @@
   body:not(.startPageFocusMode) #addRootBtn,
   body:not(.startPageFocusMode) #toggleLanesBtn {
     min-height: 40px !important;
-  }
-}
-
-@media (max-width: 700px) and (pointer: coarse) {
-  body:not(.startPageFocusMode) .toolbar {
-    grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)) !important;
-    gap: 6px !important;
-  }
-
-  body:not(.startPageFocusMode) .toolbar button {
-    min-height: 34px !important;
-    padding: 7px 8px !important;
-    font-size: 11px !important;
   }
 }
