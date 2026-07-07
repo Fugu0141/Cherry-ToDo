@@ -1,5 +1,5 @@
 (() => {
-  const version = "20260707-13";
+  const version = "20260707-14";
 
   function loadCssOnce(id, href) {
     if (document.querySelector(`link[data-release-prep-id="${id}"]`)) return;
@@ -47,6 +47,8 @@
     loadCssOnce("tab-add-button-inline", `./tab-add-button-inline.css?v=${version}`);
     loadCssOnce("list-overlap", `./list-view-overlap-fix.css?v=${version}`);
     loadCssOnce("mobile-desktop-toolbar-fit", `./mobile-desktop-toolbar-fit.css?v=${version}`);
+    loadCssOnce("v02-mobile-toolbar", `./v02-mobile-toolbar.css?v=${version}`);
+    loadCssOnce("v02-mobile-actions", `./v02-mobile-actions.css?v=${version}`);
 
     await loadScriptOnce("i18n", `./i18n.js?v=${version}`);
     await loadScriptOnce("dialog", `./cherry-dialog.js?v=${version}`);
