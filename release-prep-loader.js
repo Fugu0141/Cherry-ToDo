@@ -1,5 +1,5 @@
 (() => {
-  const version = "20260707-14";
+  const version = "20260707-15";
 
   function loadCssOnce(id, href) {
     if (document.querySelector(`link[data-release-prep-id="${id}"]`)) return;
@@ -45,6 +45,7 @@
     loadCssOnce("mobile-list-filters", `./mobile-list-filter-collapse.css?v=${version}`);
     loadCssOnce("workspace-tab-overflow", `./workspace-tab-overflow-fix.css?v=${version}`);
     loadCssOnce("tab-add-button-inline", `./tab-add-button-inline.css?v=${version}`);
+    loadCssOnce("connect-existing-tasks", `./connect-existing-tasks.css?v=${version}`);
     loadCssOnce("list-overlap", `./list-view-overlap-fix.css?v=${version}`);
     loadCssOnce("mobile-desktop-toolbar-fit", `./mobile-desktop-toolbar-fit.css?v=${version}`);
     loadCssOnce("v02-mobile-toolbar", `./v02-mobile-toolbar.css?v=${version}`);
@@ -58,6 +59,7 @@
     await loadScriptOnce("tutorial", `./tutorial.js?v=${version}`);
     await loadScriptOnce("tabs", `./tab-manager.js?v=${version}`);
     await loadScriptOnce("tab-add-button-inline", `./tab-add-button-inline.js?v=${version}`);
+    await loadScriptOnce("connect-existing-tasks", `./connect-existing-tasks.js?v=${version}`);
     await loadScriptOnce("tab-rename", `./tab-rename-shortcut.js?v=${version}`);
     await loadScriptOnce("start-page-oss", `./start-page-oss.js?v=${version}`);
     await loadScriptOnce("start-page-focus", `./start-page-focus.js?v=${version}`);
