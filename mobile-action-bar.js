@@ -163,6 +163,23 @@
     const task = selectedTask();
     if (!task) return;
 
+    const addRequest = new CustomEvent("cherry-mobile-add-request", {
+      cancelable: true,
+      detail: {
+        task,
+        parentId: task.id,
+        targetAt: taskDateForChild(task),
+        branchMode: "branch",
+        clientX: event.clientX,
+        clientY: event.clientY
+      }
+    });
+    window.dispatchEvent(addRequest);
+    if (addRequest.defaultPrevented) {
+      updateMobileActionBar();
+      return;
+    }
+
     mobileAddParentContext = { parentId: task.id };
     openCreateTaskModal({
       parentId: task.id,
