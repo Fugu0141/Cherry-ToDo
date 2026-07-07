@@ -1,0 +1,183 @@
+/* v0.2 tutorial preview stabilization.
+   Keep the tutorial illustration area consistent so labels and mock UI do not collapse. */
+.tutorialPreview {
+  width: 100%;
+  min-height: 0;
+  aspect-ratio: 16 / 7;
+  display: grid;
+  place-items: center;
+  padding: clamp(12px, 2.4vw, 18px);
+}
+
+.tutorialScene {
+  width: 100%;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.tutorialTaskCard,
+.tutorialToolbarChip,
+.tutorialFileIcon,
+.tutorialTabsMini span,
+.tutorialListRow,
+.tutorialListHeader,
+.tutorialLane {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+
+.tutorialToolbarChip {
+  white-space: nowrap;
+  background: linear-gradient(135deg, #7357ff, #8b78ff);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.26);
+}
+
+.rootScene,
+.branchScene,
+.fileScene {
+  padding-inline: clamp(4px, 1vw, 12px);
+}
+
+.branchScene {
+  display: grid;
+  grid-template-columns: minmax(92px, 0.86fr) minmax(42px, 0.34fr) minmax(128px, 1fr);
+  align-items: center;
+}
+
+.branchScene .tutorialLinkLine {
+  width: 100%;
+  min-width: 34px;
+}
+
+.tutorialTaskStack {
+  min-width: 0;
+}
+
+.tutorialTaskCard.offset {
+  transform: translateX(min(22px, 8vw));
+}
+
+.dateScene {
+  width: 100%;
+}
+
+.tutorialLane {
+  width: min(70%, 360px);
+}
+
+.tutorialTaskCard.floating {
+  right: clamp(10px, 4vw, 24px);
+  top: 50%;
+  transform: translateY(-20%);
+}
+
+.listScene {
+  width: min(440px, 100%);
+}
+
+.tutorialListRow {
+  width: 100%;
+  min-width: 0;
+}
+
+.tutorialFileIcon {
+  min-width: clamp(74px, 17vw, 92px);
+  min-height: clamp(74px, 17vw, 92px);
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .tutorialPreview {
+    aspect-ratio: 1 / 0.82;
+    margin-top: 16px;
+  }
+
+  .tutorialScene {
+    gap: 10px;
+  }
+
+  .rootScene {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+  }
+
+  .branchScene {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .branchScene .tutorialLinkLine {
+    width: 4px;
+    height: 30px;
+  }
+
+  .tutorialTaskStack {
+    justify-items: center;
+  }
+
+  .tutorialTaskCard.offset {
+    transform: none;
+  }
+
+  .dateScene {
+    padding-inline: 8px;
+  }
+
+  .tutorialLane {
+    width: 100%;
+    height: 104px;
+  }
+
+  .tutorialTaskCard.floating {
+    right: 16px;
+    top: auto;
+    bottom: 18px;
+    transform: none;
+  }
+
+  .tutorialCalendarDots {
+    left: 22px;
+  }
+
+  .fileScene {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    justify-items: center;
+  }
+
+  .tutorialTabsMini {
+    width: 100%;
+  }
+
+  .tutorialLock {
+    position: absolute;
+    right: 16px;
+    bottom: 14px;
+    width: 40px;
+    height: 40px;
+  }
+}
+
+@media (max-width: 420px) {
+  .tutorialPreview {
+    aspect-ratio: 1 / 0.95;
+    padding: 10px;
+  }
+
+  .tutorialTaskCard,
+  .tutorialToolbarChip,
+  .tutorialFileIcon {
+    padding: 9px 11px;
+    font-size: 12px;
+  }
+
+  .tutorialListRow {
+    grid-template-columns: 18px minmax(0, 1fr) auto;
+    gap: 8px;
+    padding: 9px 10px;
+  }
+}
