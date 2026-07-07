@@ -149,6 +149,10 @@
     });
   }
 
+  function removeDuplicateStartButton() {
+    document.getElementById("startPageBtn")?.remove();
+  }
+
   function patchVisibleText(root = document.body) {
     if (!root) return;
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
@@ -175,6 +179,7 @@
     patchCreateButton();
     patchTaskModalTitle();
     patchListControls();
+    removeDuplicateStartButton();
     patchVisibleText(root);
   }
 
