@@ -46,8 +46,7 @@
       ["まずはルートを作って、必要な作業を枝のように伸ばしてみてください。", "まずはタスクを作成して、必要な作業を枝のように伸ばしてみてください。"],
       ["1. まずはルートを作る", "1. まずはタスクを作る"],
       ["ルートはプロジェクトや大きな目的のようなものです。画面上部の「＋ ルート」から作れます。", "最初のタスクは、プロジェクトや大きな目的の出発点です。画面上部の「+ タスクを追加」から作れます。"],
-      ["リスト表示では、未定・今日まで・今後のタスクをルートごとに確認できます。", "リスト表示では、未定・今日まで・今後のタスクを流れごとに確認できます。"],
-      ["ルート", "最初のタスク"]
+      ["リスト表示では、未定・今日まで・今後のタスクをルートごとに確認できます。", "リスト表示では、未定・今日まで・今後のタスクを流れごとに確認できます。"]
     ],
     en: [
       ["+ Root", "+ Add task"],
@@ -55,15 +54,13 @@
       ["Execution list / By root", "Execution list / By flow"],
       ["Root sort", "Flow sort"],
       ["By root", "By flow"],
-      ["Root", "Flow"],
+      ["Root: ", "Flow: "],
       ["Directly under root", "Start of this flow"],
       ["Use root tasks as headings and review action tasks.", "Use the first task as a heading and review action tasks."],
       ["Start with a root task, then extend the work like branches.", "Start by creating a task, then extend the work like branches."],
       ["1. Start with a root", "1. Create a task first"],
       ["A root is like a project or a large goal. Create one from the + Root button.", "The first task is the starting point for a project or larger goal. Create one from the + Add task button."],
-      ["Review tasks grouped by root and flow.", "Review tasks grouped by flow."],
-      ["root and flow", "flow"],
-      ["root", "flow"]
+      ["Review tasks grouped by root and flow.", "Review tasks grouped by flow."]
     ]
   };
 
@@ -134,19 +131,30 @@
   function patchTaskModalTitle() {
     const title = document.getElementById("taskModalTitle");
     if (!title) return;
-    const replacements = textReplacements[language()];
-    let next = title.textContent;
-    for (const [from, to] of replacements) next = next.split(from).join(to);
-    if (title.textContent !== next) title.textContent = next;
+    replaceTextNode(title.firstChild);
+  }
+
+  function replaceTextNode(node) {
+    if (!node || node.nodeType !== Node.TEXT_NODE) return;
+    let next = node.nodeValue;
+    for (const [from, to] of textReplacements[language()]) next = next.split(from).join(to);
+    if (node.nodeValue !== next) node.nodeValue = next;
+  }
+
+  function patchListControls() {
+    const isEnglish = language() === "en";
+    document.querySelectorAll(".listControls button").forEach(button => {
+      if (isEnglish && button.textContent === "Root") button.textContent = "Flow";
+      if (!isEnglish && button.textContent === "ルート別") button.textContent = "流れ別";
+    });
   }
 
   function patchVisibleText(root = document.body) {
     if (!root) return;
-    const replacements = textReplacements[language()];
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
       acceptNode(node) {
         const parent = node.parentElement;
-        if (!parent || parent.closest("script, style, input, textarea")) return NodeFilter.FILTER_REJECT;
+        if (!parent || parent.closest("script, style, input, textarea, .noteText, .listTaskTitle, .listRootTitle")) return NodeFilter.FILTER_REJECT;
         return node.nodeValue.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
       }
     });
@@ -158,11 +166,7 @@
       nodes.push(node);
     }
 
-    for (const node of nodes) {
-      let next = node.nodeValue;
-      for (const [from, to] of replacements) next = next.split(from).join(to);
-      if (node.nodeValue !== next) node.nodeValue = next;
-    }
+    nodes.forEach(replaceTextNode);
   }
 
   function applyTaskWording(root = document.body) {
@@ -170,6 +174,7 @@
     patchCreateModal();
     patchCreateButton();
     patchTaskModalTitle();
+    patchListControls();
     patchVisibleText(root);
   }
 
