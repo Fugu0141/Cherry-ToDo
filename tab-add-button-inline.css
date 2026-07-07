@@ -1,4 +1,4 @@
-/* v0.2: place the new-tab action directly after the visible tab group. */
+/* v0.2: keep the new-tab action after the tab group, then stick it to the right edge when reached. */
 .workspaceBar {
   overflow-x: auto !important;
   overflow-y: hidden !important;
@@ -26,6 +26,9 @@
 }
 
 .workspaceAddTabInline {
+  position: sticky !important;
+  right: 4px !important;
+  z-index: 4 !important;
   display: inline-grid !important;
   place-items: center !important;
   width: 38px !important;
@@ -38,7 +41,16 @@
   background: color-mix(in srgb, var(--surface) 94%, var(--bg)) !important;
   border: 1px solid color-mix(in srgb, var(--ink) 14%, transparent) !important;
   border-radius: 13px !important;
-  box-shadow: none !important;
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--bg) 42%, transparent) !important;
+}
+
+.workspaceAddTabInline::before {
+  content: "";
+  position: absolute;
+  inset: -4px auto -4px -12px;
+  width: 12px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--surface) 86%, transparent));
 }
 
 .workspaceAddTabInline:hover {
@@ -61,6 +73,7 @@
   }
 
   .workspaceAddTabInline {
+    right: 3px !important;
     width: 40px !important;
     min-width: 40px !important;
     max-width: 40px !important;
