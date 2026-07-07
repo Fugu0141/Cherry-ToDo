@@ -60,15 +60,39 @@
     const preview = backdrop.querySelector(".tutorialPreview");
     const language = window.CherryI18n.getLanguage?.() === "en" ? "en" : "ja";
     const labels = language === "en"
-      ? { root: "Root", child: "Child", branch: "Branch", date: "Date lane", list: "List", file: ".cherry / .ics", allTabs: "All tabs", today: "Today" }
-      : { root: "ルート", child: "子タスク", branch: "分岐", date: "日付レーン", list: "リスト", file: ".cherry / .ics", allTabs: "全タブ", today: "今日" };
+      ? {
+          addTask: "+ Add task",
+          firstTask: "First task",
+          nextTask: "Next task",
+          branch: "Branch",
+          date: "Date lane",
+          list: "List",
+          file: ".cherry / .ics",
+          allTabs: "All tabs",
+          today: "Today",
+          start: "Start",
+          flow: "Task flow"
+        }
+      : {
+          addTask: "+ タスクを追加",
+          firstTask: "最初のタスク",
+          nextTask: "次のタスク",
+          branch: "分岐",
+          date: "日付レーン",
+          list: "リスト",
+          file: ".cherry / .ics",
+          allTabs: "全タブ",
+          today: "今日",
+          start: "スタート",
+          flow: "タスクの流れ"
+        };
 
     const previews = [
-      `<div class="tutorialScene rootScene"><div class="tutorialToolbarChip">+ ${labels.root}</div><div class="tutorialArrow">→</div><div class="tutorialTaskCard strong">${labels.root}</div></div>`,
-      `<div class="tutorialScene branchScene"><div class="tutorialTaskCard strong">${labels.root}</div><div class="tutorialLinkLine"></div><div class="tutorialTaskStack"><div class="tutorialTaskCard">${labels.child}</div><div class="tutorialTaskCard offset">${labels.branch}</div></div></div>`,
+      `<div class="tutorialScene rootScene"><div class="tutorialToolbarChip">${labels.addTask}</div><div class="tutorialArrow">→</div><div class="tutorialTaskCard strong">${labels.firstTask}</div></div>`,
+      `<div class="tutorialScene branchScene"><div class="tutorialTaskCard strong">${labels.firstTask}</div><div class="tutorialLinkLine"></div><div class="tutorialTaskStack"><div class="tutorialTaskCard">${labels.nextTask}</div><div class="tutorialTaskCard offset">${labels.branch}</div></div></div>`,
       `<div class="tutorialScene dateScene"><div class="tutorialLane"><span>${labels.date}</span></div><div class="tutorialTaskCard floating">${labels.today}</div><div class="tutorialCalendarDots"><span></span><span></span><span></span></div></div>`,
-      `<div class="tutorialScene listScene"><div class="tutorialListHeader">${labels.list} · ${labels.allTabs}</div><div class="tutorialListRow"><span class="dot"></span><strong>${labels.today}</strong><em>7/6</em></div><div class="tutorialListRow"><span class="dot hollow"></span><strong>${labels.child}</strong><em>7/7</em></div></div>`,
-      `<div class="tutorialScene fileScene"><div class="tutorialTabsMini"><span>${labels.root}</span><span>${labels.branch}</span><span>+</span></div><div class="tutorialFileIcon">${labels.file}</div><div class="tutorialLock">🔒</div></div>`
+      `<div class="tutorialScene listScene"><div class="tutorialListHeader">${labels.list} · ${labels.allTabs}</div><div class="tutorialListRow"><span class="dot"></span><strong>${labels.today}</strong><em>7/6</em></div><div class="tutorialListRow"><span class="dot hollow"></span><strong>${labels.nextTask}</strong><em>7/7</em></div></div>`,
+      `<div class="tutorialScene fileScene"><div class="tutorialTabsMini"><span>${labels.start}</span><span>${labels.flow}</span><span>+</span></div><div class="tutorialFileIcon">${labels.file}</div><div class="tutorialLock">🔒</div></div>`
     ];
 
     preview.innerHTML = previews[stepIndex] || previews[0];

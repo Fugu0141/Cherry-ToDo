@@ -1,6 +1,6 @@
-/* Toolbar information hierarchy for v0.1 RC.
-   Primary actions: switch board/list, create root, toggle date lanes.
-   Secondary actions: layout/settings/help/undo/reset. */
+/* Toolbar information hierarchy for v0.2 UI cleanup.
+   Primary action: create a task.
+   Navigation belongs to the workspace tab rail, so the toolbar does not show a second Start button. */
 .toolbar {
   align-items: center;
   gap: 8px;
@@ -14,16 +14,21 @@
   transform: translateY(-1px);
 }
 
-#listViewBtn,
-#addRootBtn,
-#toggleLanesBtn {
+#addRootBtn {
   min-height: 42px;
-  padding-inline: 17px;
+  padding-inline: 18px;
   font-weight: 950;
   color: #fff;
   background: linear-gradient(135deg, var(--accent, #7357ff), color-mix(in srgb, var(--accent, #7357ff) 74%, #17a9b8));
   border: 1px solid color-mix(in srgb, var(--accent, #7357ff) 70%, #fff);
-  box-shadow: 0 8px 20px color-mix(in srgb, var(--accent, #7357ff) 22%, transparent);
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--accent, #7357ff) 24%, transparent);
+}
+
+#listViewBtn,
+#toggleLanesBtn {
+  min-height: 40px;
+  padding-inline: 15px;
+  font-weight: 850;
 }
 
 #listViewBtn.activeView {
@@ -38,10 +43,13 @@
 #verticalLayoutBtn,
 #themeToggleBtn,
 #languageToggleBtn,
-#startPageBtn,
 #tutorialBtn,
 #undoBtn {
   opacity: .92;
+}
+
+#startPageBtn {
+  display: none !important;
 }
 
 #deleteBtn,
@@ -58,23 +66,22 @@
 }
 
 @media (min-width: 761px) {
-  #listViewBtn { order: 10; }
-  #addRootBtn { order: 20; }
+  #addRootBtn { order: 10; }
+  #listViewBtn { order: 20; }
   #toggleLanesBtn { order: 30; }
   #treeLayoutBtn { order: 40; }
   #verticalLayoutBtn { order: 50; }
-  #themeToggleBtn { order: 60; }
-  #languageToggleBtn { order: 70; }
-  #startPageBtn { order: 80; }
-  #tutorialBtn { order: 90; }
+  #tutorialBtn { order: 60; }
+  #themeToggleBtn { order: 70; }
+  #languageToggleBtn { order: 80; }
   #undoBtn { order: 100; }
   #deleteBtn { order: 110; }
   #resetBtn { order: 120; }
 }
 
 @media (max-width: 760px) {
-  #listViewBtn,
   #addRootBtn,
+  #listViewBtn,
   #toggleLanesBtn {
     min-height: 40px !important;
     padding-inline: 15px !important;

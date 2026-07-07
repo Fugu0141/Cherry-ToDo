@@ -1,5 +1,5 @@
 (() => {
-  const version = "20260707-11";
+  const version = "20260707-14";
 
   function loadCssOnce(id, href) {
     if (document.querySelector(`link[data-release-prep-id="${id}"]`)) return;
@@ -35,6 +35,7 @@
     loadCssOnce("tab-rename", `./tab-rename-shortcut.css?v=${version}`);
     loadCssOnce("flow-popovers", `./release-flow-popovers.css?v=${version}`);
     loadCssOnce("tutorial", `./tutorial.css?v=${version}`);
+    loadCssOnce("tutorial-preview-fix", `./tutorial-preview-fix.css?v=${version}`);
     loadCssOnce("tabs", `./tab-manager.css?v=${version}`);
     loadCssOnce("workspace-grid", `./workspace-grid-row-fix.css?v=${version}`);
     loadCssOnce("start-page-oss", `./start-page-oss.css?v=${version}`);
@@ -43,8 +44,11 @@
     loadCssOnce("start-page-footer-oss", `./start-page-footer-oss.css?v=${version}`);
     loadCssOnce("mobile-list-filters", `./mobile-list-filter-collapse.css?v=${version}`);
     loadCssOnce("workspace-tab-overflow", `./workspace-tab-overflow-fix.css?v=${version}`);
+    loadCssOnce("tab-add-button-inline", `./tab-add-button-inline.css?v=${version}`);
     loadCssOnce("list-overlap", `./list-view-overlap-fix.css?v=${version}`);
     loadCssOnce("mobile-desktop-toolbar-fit", `./mobile-desktop-toolbar-fit.css?v=${version}`);
+    loadCssOnce("v02-mobile-toolbar", `./v02-mobile-toolbar.css?v=${version}`);
+    loadCssOnce("v02-mobile-actions", `./v02-mobile-actions.css?v=${version}`);
 
     await loadScriptOnce("i18n", `./i18n.js?v=${version}`);
     await loadScriptOnce("dialog", `./cherry-dialog.js?v=${version}`);
@@ -53,6 +57,7 @@
     await loadScriptOnce("flow-popovers", `./release-flow-popovers.js?v=${version}`);
     await loadScriptOnce("tutorial", `./tutorial.js?v=${version}`);
     await loadScriptOnce("tabs", `./tab-manager.js?v=${version}`);
+    await loadScriptOnce("tab-add-button-inline", `./tab-add-button-inline.js?v=${version}`);
     await loadScriptOnce("tab-rename", `./tab-rename-shortcut.js?v=${version}`);
     await loadScriptOnce("start-page-oss", `./start-page-oss.js?v=${version}`);
     await loadScriptOnce("start-page-focus", `./start-page-focus.js?v=${version}`);

@@ -31,6 +31,10 @@
     return button;
   }
 
+  function removeToolbarStartButton() {
+    document.getElementById("startPageBtn")?.remove();
+  }
+
   function ensureReleaseButtons() {
     const languageButton = ensureToolbarButton("languageToggleBtn", "toolbar.language", "undoBtn");
     if (languageButton && !languageButton.dataset.releasePrepBound) {
@@ -38,7 +42,7 @@
       languageButton.addEventListener("click", () => window.CherryI18n.toggleLanguage());
     }
 
-    ensureToolbarButton("startPageBtn", "toolbar.start", "undoBtn");
+    removeToolbarStartButton();
     ensureToolbarButton("tutorialBtn", "toolbar.guide", "undoBtn");
   }
 
@@ -47,6 +51,7 @@
   }
 
   function applyStaticUi() {
+    removeToolbarStartButton();
     document.documentElement.lang = window.CherryI18n.getLanguage();
     document.title = t("app.title");
 
@@ -57,7 +62,6 @@
     setText("treeLayoutBtn", "toolbar.autoLayout");
     setText("verticalLayoutBtn", "toolbar.verticalLayout");
     setText("languageToggleBtn", "toolbar.language");
-    setText("startPageBtn", "toolbar.start");
     setText("tutorialBtn", "toolbar.guide");
     setText("undoBtn", "toolbar.undo");
     setText("deleteBtn", "toolbar.delete");
@@ -132,6 +136,8 @@
       "Create task": "modal.createTask",
       "ルートタスクを作成": "modal.createRoot",
       "Create root task": "modal.createRoot",
+      "新しいタスクを作成": "modal.createRoot",
+      "Create new task": "modal.createRoot",
       "同じブランチに追加": "modal.createSameBranch",
       "Add to same branch": "modal.createSameBranch",
       "分岐タスクを作成": "modal.createBranch",

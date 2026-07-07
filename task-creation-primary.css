@@ -1,0 +1,63 @@
+/* v0.2 UX wording pass: make task creation the clear primary action. */
+.toolbar button {
+  border: 1px solid transparent;
+}
+
+.toolbar button:not(#addRootBtn):not(.danger) {
+  background: rgba(255, 255, 255, 0.78);
+  color: #334155;
+  border-color: rgba(15, 23, 42, 0.12);
+  box-shadow: none;
+}
+
+.toolbar button.danger:not(#addRootBtn) {
+  background: rgba(226, 74, 74, 0.10);
+  color: var(--danger, #e24a4a);
+  border-color: rgba(226, 74, 74, 0.22);
+  box-shadow: none;
+}
+
+#addRootBtn,
+#addRootBtn.primaryCreateAction {
+  background: linear-gradient(135deg, var(--accent, #7357ff), #8b78ff);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.22);
+  font-weight: 800;
+  box-shadow: 0 8px 20px rgba(115, 87, 255, 0.30);
+}
+
+#addRootBtn:hover,
+#addRootBtn.primaryCreateAction:hover {
+  filter: brightness(1.07);
+}
+
+#addRootBtn:focus-visible,
+#addRootBtn.primaryCreateAction:focus-visible {
+  outline: 3px solid rgba(115, 87, 255, 0.28);
+  outline-offset: 3px;
+}
+
+#startPageBtn {
+  display: none !important;
+}
+
+html[data-theme="dark"] .toolbar button:not(#addRootBtn):not(.danger) {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e5e7eb;
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+html[data-theme="dark"] .toolbar button.danger:not(#addRootBtn) {
+  background: rgba(226, 74, 74, 0.14);
+  color: #ff9c9c;
+  border-color: rgba(255, 156, 156, 0.24);
+}
+
+@media (max-width: 980px) {
+  #addRootBtn,
+  #addRootBtn.primaryCreateAction {
+    position: sticky;
+    left: 2px;
+    z-index: 3;
+  }
+}
