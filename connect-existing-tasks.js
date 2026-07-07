@@ -70,10 +70,6 @@
     return document.querySelector(`.note[data-id="${escapeId(taskId)}"]`);
   }
 
-  function selectedNoteElement() {
-    return document.querySelector(".note.selected[data-id]");
-  }
-
   function taskAtPoint(clientX, clientY, sourceId) {
     const notes = [...document.querySelectorAll(".note[data-id]")];
     return notes.find(note => {
@@ -472,48 +468,43 @@
     if (drag?.pointerId === event.pointerId) cleanupDrag();
   }, true);
 
+  window.addEventListener("cherry-mobile-add-request", event => {
+    if (!mobileQuery.matches) return;
+    const detail = event.detail || {};
+    const sourceId = detail.parentId || detail.task?.id;
+    if (!sourceId || !findTask(sourceId)) return;
+
+    event.preventDefault();
+    openMobileSourceChoice({
+      sourceId,
+      targetAt: detail.targetAt || sourceDate(sourceId),
+      branchMode: detail.branchMode || "branch",
+      clientX: detail.clientX || window.innerWidth / 2,
+      clientY: detail.clientY || window.innerHeight / 2
+    });
+  });
+
   document.addEventListener("click", event => {
-    if (connectPick) {
-      const noteEl = event.target.closest?.(".note[data-id]");
-      if (!noteEl) return;
-
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation();
-
-      const targetId = noteEl.dataset.id;
-      const context = {
-        sourceId: connectPick.sourceId,
-        targetId,
-        targetAt: connectPick.targetAt,
-        branchMode: "branch",
-        clientX: event.clientX,
-        clientY: event.clientY
-      };
-      exitConnectPickMode();
-
-      if (connectionStatus(context.sourceId, context.targetId).canConnect) connectExistingTask(context);
-      else openTargetChoice(context);
-      return;
-    }
-
-    const mobileAdd = event.target.closest?.(".mobileActionButton.add");
-    if (!mobileAdd || !mobileQuery.matches) return;
-
-    const noteEl = selectedNoteElement();
+    if (!connectPick) return;
+    const noteEl = event.target.closest?.(".note[data-id]");
     if (!noteEl) return;
 
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
 
+    const targetId = noteEl.dataset.id;
     const context = {
-      sourceId: noteEl.dataset.id,
-      targetAt: sourceDate(noteEl.dataset.id),
+      sourceId: connectPick.sourceId,
+      targetId,
+      targetAt: connectPick.targetAt,
       branchMode: "branch",
       clientX: event.clientX,
       clientY: event.clientY
     };
-    openMobileSourceChoice(context);
+    exitConnectPickMode();
+
+    if (connectionStatus(context.sourceId, context.targetId).canConnect) connectExistingTask(context);
+    else openTargetChoice(context);
   }, true);
 })();
