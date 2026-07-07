@@ -37,6 +37,10 @@
   outline-offset: 3px;
 }
 
+#startPageBtn {
+  display: none !important;
+}
+
 html[data-theme="dark"] .toolbar button:not(#addRootBtn):not(.danger) {
   background: rgba(255, 255, 255, 0.08);
   color: #e5e7eb;
