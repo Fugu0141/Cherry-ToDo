@@ -58,23 +58,6 @@
 }
 
 @media (min-width: 761px) {
-  .toolbar::before,
-  .toolbar::after {
-    content: "";
-    flex: 0 0 1px;
-    height: 28px;
-    margin-inline: 2px;
-    background: color-mix(in srgb, var(--ink) 14%, transparent);
-  }
-
-  .toolbar::before {
-    order: 35;
-  }
-
-  .toolbar::after {
-    order: 75;
-  }
-
   #listViewBtn { order: 10; }
   #addRootBtn { order: 20; }
   #toggleLanesBtn { order: 30; }
