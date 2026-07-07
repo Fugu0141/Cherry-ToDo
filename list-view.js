@@ -2,22 +2,89 @@
   const stage = document.querySelector(".stage");
   const toolbar = document.querySelector(".toolbar");
   const undoButton = document.getElementById("undoBtn");
+  if (!stage || !toolbar || typeof requestRender !== "function") return;
 
-  if (!stage || !toolbar || typeof getTasks !== "function" || typeof requestRender !== "function") return;
+  const settingsKey = "cherry-list-settings-v2";
+  const labels = {
+    ja: {
+      scope: "範囲", allTabs: "すべてのタブ", currentTab: "現在のタブ",
+      sort: "並び", dateSort: "日付順", rootSort: "ルート別",
+      range: "表示", all: "すべて", unscheduled: "未定", due: "今日まで", future: "今後",
+      titleDate: "実行リスト", titleRoot: "実行リスト / ルート別",
+      leadDate: "すべてのタブから、日付を最優先してやることを確認できます。",
+      leadRoot: "ルートを見出しとして、タスクの流れごとに確認できます。",
+      empty: "条件に合うタスクはありません。", count: "{count}件", todoDone: "未完了 {todo} / 完了 {done}",
+      tab: "タブ", root: "ルート", noRoot: "ルート", noDate: "未定", today: "今日",
+      rootDirect: "ルート直下", board: "ボード", openOnBoard: "ボード上で見る", markTodo: "未完了に戻す", markDone: "完了にする"
+    },
+    en: {
+      scope: "Scope", allTabs: "All tabs", currentTab: "Current tab",
+      sort: "Sort", dateSort: "Date", rootSort: "Root",
+      range: "Show", all: "All", unscheduled: "No date", due: "Due", future: "Upcoming",
+      titleDate: "Execution list", titleRoot: "Execution list / By root",
+      leadDate: "Review work from all tabs with date as the top priority.",
+      leadRoot: "Review tasks grouped by root and flow.",
+      empty: "No tasks match these filters.", count: "{count}", todoDone: "Todo {todo} / Done {done}",
+      tab: "Tab", root: "Root", noRoot: "Root", noDate: "No date", today: "Today",
+      rootDirect: "Directly under root", board: "Board", openOnBoard: "Open on board", markTodo: "Mark as todo", markDone: "Mark as done"
+    }
+  };
+
+  function lang() {
+    return window.CherryI18n?.getLanguage?.() === "en" ? "en" : "ja";
+  }
+
+  function l(key, values = {}) {
+    const raw = labels[lang()][key] || labels.ja[key] || key;
+    return raw.replace(/\{(\w+)\}/g, (_, name) => values[name] ?? "");
+  }
+
+  function t(key, values = {}) {
+    return window.CherryI18n?.t(key, values) || key;
+  }
+
+  function loadSettings() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(settingsKey) || "{}");
+      const range = Array.isArray(saved.range) ? saved.range : (saved.range ? [saved.range] : ["all"]);
+      return {
+        scope: ["all", "current"].includes(saved.scope) ? saved.scope : "all",
+        sort: ["date", "root"].includes(saved.sort) ? saved.sort : "date",
+        range: normalizeRange(range)
+      };
+    } catch (_) {
+      return { scope: "all", sort: "date", range: ["all"] };
+    }
+  }
+
+  function normalizeRange(range) {
+    const allowed = range.filter(value => ["all", "unscheduled", "due", "future"].includes(value));
+    if (!allowed.length || allowed.includes("all")) return ["all"];
+    return [...new Set(allowed)];
+  }
+
+  function saveSettings() {
+    try {
+      localStorage.setItem(settingsKey, JSON.stringify(listSettings));
+    } catch (_) {
+      // Non-critical.
+    }
+  }
+
+  const listSettings = loadSettings();
 
   const listViewButton = document.createElement("button");
   listViewButton.id = "listViewBtn";
   listViewButton.type = "button";
-  listViewButton.textContent = "リスト表示";
-  listViewButton.title = "今日まで・今後のタスクをリストで見る";
-
+  listViewButton.textContent = t("list.openList");
+  listViewButton.title = t("list.buttonTitle");
   if (undoButton) toolbar.insertBefore(listViewButton, undoButton);
   else toolbar.appendChild(listViewButton);
 
   const listView = document.createElement("section");
   listView.id = "listView";
   listView.className = "listView hidden";
-  listView.setAttribute("aria-label", "実行リスト");
+  listView.setAttribute("aria-label", t("list.title"));
   stage.appendChild(listView);
 
   if (!state.viewMode) state.viewMode = "board";
@@ -28,14 +95,79 @@
     renderListView();
   };
 
+  window.CherryI18n?.onChange(() => renderListView());
+  window.addEventListener("cherry-workspace-updated", () => renderListView());
+
   listViewButton.addEventListener("click", () => {
+    document.querySelector(".stage")?.classList.remove("startPageMode");
+    window.cherryWorkspace?.closeStartPage?.();
     state.viewMode = state.viewMode === "list" ? "board" : "list";
     requestRender();
   });
 
   function scheduleDate(task) {
-    if (typeof getTaskDate === "function") return getTaskDate(task);
-    return task.targetAt ? normalizeDate(task.targetAt) : null;
+    const raw = task?.schedule?.date || task?.targetAt || "";
+    const value = String(raw).slice(0, 10);
+    return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : null;
+  }
+
+  function activeTabId() {
+    return window.cherryWorkspace?.getActiveTabId?.() || "current";
+  }
+
+  function tabName(tab) {
+    if (!tab) return l("currentTab");
+    return window.cherryWorkspace?.getTabDisplayName?.(tab) || tab.name || l("currentTab");
+  }
+
+  function getSourceTabs() {
+    const workspace = window.cherryWorkspace?.getWorkspace?.();
+    if (!workspace?.tabs?.length || listSettings.scope === "current") {
+      const active = workspace?.tabs?.find(tab => tab.id === workspace.activeTabId);
+      return [{ id: activeTabId(), name: tabName(active), state }];
+    }
+    return workspace.tabs.map(tab => ({ id: tab.id, name: tabName(tab), state: tab.state }));
+  }
+
+  function rows() {
+    const result = [];
+    for (const tab of getSourceTabs()) {
+      const tasks = Object.values(tab.state?.tasks || {});
+      for (const task of tasks) {
+        if (!shouldIncludeInExecutionList(task, tab.state, tasks)) continue;
+        const root = rootOf(task, tab.state);
+        const row = { tabId: tab.id, tabName: tab.name, state: tab.state, task, root, date: scheduleDate(task), depth: depthOf(task.id, tab.state) };
+        if (matchesRange(row)) result.push(row);
+      }
+    }
+    return result;
+  }
+
+  function isRootTask(task, sourceState) {
+    return !task?.parentId || !sourceState.tasks?.[task.parentId];
+  }
+
+  function hasChildren(task, tasks) {
+    return tasks.some(candidate => candidate.parentId === task.id);
+  }
+
+  function shouldIncludeInExecutionList(task, sourceState, tasks) {
+    if (!task?.id) return false;
+
+    // Root tasks act as headings once they have child tasks.
+    // Show a root only when it is still a standalone task with no branches.
+    if (isRootTask(task, sourceState)) return !hasChildren(task, tasks);
+
+    return true;
+  }
+
+  function matchesRange(row) {
+    const selected = listSettings.range;
+    if (selected.includes("all")) return true;
+    if (!row.date && selected.includes("unscheduled")) return true;
+    if (row.date && row.date <= todayISO() && selected.includes("due")) return true;
+    if (row.date && row.date > todayISO() && selected.includes("future")) return true;
+    return false;
   }
 
   function renderListView() {
@@ -43,272 +175,282 @@
     stage.classList.toggle("listMode", isListMode);
     listView.classList.toggle("hidden", !isListMode);
     listViewButton.classList.toggle("activeView", isListMode);
-    listViewButton.textContent = isListMode ? "ボード表示" : "リスト表示";
-
+    listViewButton.textContent = isListMode ? t("list.openBoard") : t("list.openList");
+    listViewButton.title = t("list.buttonTitle");
     if (!isListMode) return;
 
-    const tasks = getTasks().slice().sort(sortByListOrder);
-    const actionTasks = tasks.filter(isActionTask);
-    const todoCount = actionTasks.filter(task => task.status !== "done").length;
-    const doneCount = actionTasks.length - todoCount;
+    const data = rows();
+    const todoCount = data.filter(row => row.task.status !== "done").length;
+    const doneCount = data.length - todoCount;
 
     listView.innerHTML = "";
-
     const header = document.createElement("div");
-    header.className = "listHeader";
-
-    const titleWrap = document.createElement("div");
-    const title = document.createElement("h2");
-    title.textContent = "実行リスト";
-    const lead = document.createElement("p");
-    lead.textContent = "ルートを見出しとして、未定・今日まで・今後の実行タスクを確認できます。";
-    titleWrap.appendChild(title);
-    titleWrap.appendChild(lead);
-
-    const summary = document.createElement("div");
-    summary.className = "listSummary";
-    summary.textContent = `未完了 ${todoCount} / 完了 ${doneCount}`;
-
-    header.appendChild(titleWrap);
-    header.appendChild(summary);
+    header.className = "listHeader enhancedListHeader";
+    header.innerHTML = `
+      <div><h2></h2><p></p></div>
+      <div class="listSummary"></div>
+    `;
+    header.querySelector("h2").textContent = listSettings.sort === "root" ? l("titleRoot") : l("titleDate");
+    header.querySelector("p").textContent = listSettings.sort === "root" ? l("leadRoot") : l("leadDate");
+    header.querySelector(".listSummary").textContent = l("todoDone", { todo: todoCount, done: doneCount });
     listView.appendChild(header);
+    listView.appendChild(renderControls());
 
-    const today = todayISO();
-    const sections = [
-      {
-        key: "unscheduled",
-        title: "未定",
-        description: "まだ日付を決めていない実行タスクです。今日扱いにはしません。",
-        tasks: actionTasks.filter(task => !scheduleDate(task))
-      },
-      {
-        key: "today",
-        title: "今日まで",
-        description: "今日以前の未処理を見落とさないための場所です。",
-        tasks: actionTasks.filter(task => {
-          const date = scheduleDate(task);
-          return date && date <= today;
-        })
-      },
-      {
-        key: "upcoming",
-        title: "今後",
-        description: "明日以降のタスクです。",
-        tasks: actionTasks.filter(task => {
-          const date = scheduleDate(task);
-          return date && date > today;
-        })
-      }
-    ];
-
-    for (const section of sections) renderListSection(section);
-  }
-
-  function renderListSection(section) {
-    const sectionEl = document.createElement("section");
-    sectionEl.className = `listSection listSection-${section.key}`;
-
-    const head = document.createElement("div");
-    head.className = "listSectionHead";
-
-    const title = document.createElement("h3");
-    title.textContent = section.title;
-
-    const count = document.createElement("span");
-    count.className = "listSectionCount";
-    count.textContent = `${section.tasks.length}件`;
-
-    const description = document.createElement("p");
-    description.textContent = section.description;
-
-    head.appendChild(title);
-    head.appendChild(count);
-    sectionEl.appendChild(head);
-    sectionEl.appendChild(description);
-
-    if (!section.tasks.length) {
+    if (!data.length) {
       const empty = document.createElement("div");
       empty.className = "listEmpty";
-      empty.textContent = section.key === "unscheduled"
-        ? "未定の実行タスクはありません。"
-        : section.key === "today" ? "今日までの実行タスクはありません。" : "今後の実行タスクはありません。";
-      sectionEl.appendChild(empty);
-      listView.appendChild(sectionEl);
+      empty.textContent = l("empty");
+      listView.appendChild(empty);
       return;
     }
 
-    const groups = groupByRoot(section.tasks);
-    for (const group of groups) sectionEl.appendChild(renderRootGroup(group));
-
-    listView.appendChild(sectionEl);
+    if (listSettings.sort === "root") renderRootGroups(data);
+    else renderDateGroups(data);
   }
 
-  function renderRootGroup(group) {
-    const groupEl = document.createElement("div");
-    groupEl.className = "listRootGroup";
-
-    const rootTitle = document.createElement("div");
-    rootTitle.className = "listRootTitle";
-    rootTitle.textContent = group.root.title;
-    groupEl.appendChild(rootTitle);
-
-    const rows = document.createElement("div");
-    rows.className = "listTaskRows";
-
-    for (const task of group.tasks) rows.appendChild(renderTaskRow(task, group.root));
-
-    groupEl.appendChild(rows);
-    return groupEl;
+  function renderControls() {
+    const controls = document.createElement("div");
+    controls.className = "listControls";
+    controls.appendChild(renderSingleSegment(l("scope"), "scope", [["all", l("allTabs")], ["current", l("currentTab")]]));
+    controls.appendChild(renderSingleSegment(l("sort"), "sort", [["date", l("dateSort")], ["root", l("rootSort")]]));
+    controls.appendChild(renderRangeSegment());
+    return controls;
   }
 
-  function renderTaskRow(task, root) {
-    const row = document.createElement("div");
-    row.className = `listTaskRow ${task.status === "done" ? "done" : ""}`;
+  function renderSingleSegment(label, key, options) {
+    const group = document.createElement("div");
+    group.className = "listControlGroup";
+    group.innerHTML = `<span class="listControlLabel"></span><div class="listSegment"></div>`;
+    group.querySelector(".listControlLabel").textContent = label;
+    const segment = group.querySelector(".listSegment");
+    options.forEach(([value, title]) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = listSettings[key] === value ? "active" : "";
+      button.textContent = title;
+      button.addEventListener("click", () => {
+        listSettings[key] = value;
+        saveSettings();
+        renderListView();
+      });
+      segment.appendChild(button);
+    });
+    return group;
+  }
 
+  function renderRangeSegment() {
+    const group = document.createElement("div");
+    group.className = "listControlGroup";
+    group.innerHTML = `<span class="listControlLabel"></span><div class="listSegment listRangeSegment"></div>`;
+    group.querySelector(".listControlLabel").textContent = l("range");
+    const segment = group.querySelector(".listSegment");
+    [["all", l("all")], ["unscheduled", l("unscheduled")], ["due", l("due")], ["future", l("future")]].forEach(([value, title]) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = listSettings.range.includes(value) ? "active" : "";
+      button.textContent = title;
+      button.addEventListener("click", () => {
+        if (value === "all") {
+          listSettings.range = ["all"];
+        } else {
+          const current = listSettings.range.filter(item => item !== "all");
+          if (current.includes(value)) listSettings.range = current.filter(item => item !== value);
+          else listSettings.range = [...current, value];
+          if (!listSettings.range.length) listSettings.range = ["all"];
+        }
+        listSettings.range = normalizeRange(listSettings.range);
+        saveSettings();
+        renderListView();
+      });
+      segment.appendChild(button);
+    });
+    return group;
+  }
+
+  function renderDateGroups(data) {
+    const sorted = data.slice().sort(sortByDate);
+    const grouped = new Map();
+    sorted.forEach(row => {
+      const key = row.date || "__none";
+      if (!grouped.has(key)) grouped.set(key, []);
+      grouped.get(key).push(row);
+    });
+    grouped.forEach((groupRows, key) => {
+      const section = document.createElement("section");
+      section.className = "listSection listDateSection";
+      section.innerHTML = `<div class="listSectionHead"><h3></h3><span class="listSectionCount"></span></div><div class="listTaskRows"></div>`;
+      section.querySelector("h3").textContent = dateGroupTitle(key);
+      section.querySelector(".listSectionCount").textContent = l("count", { count: groupRows.length });
+      const container = section.querySelector(".listTaskRows");
+      groupRows.forEach(row => container.appendChild(taskRow(row, { showTab: listSettings.scope === "all", showRoot: true })));
+      listView.appendChild(section);
+    });
+  }
+
+  function renderRootGroups(data) {
+    const sorted = data.slice().sort(sortByRoot);
+    const grouped = new Map();
+    sorted.forEach(row => {
+      const key = `${row.tabId}:${row.root?.id || "root"}`;
+      if (!grouped.has(key)) grouped.set(key, { row, rows: [] });
+      grouped.get(key).rows.push(row);
+    });
+    grouped.forEach(group => {
+      const groupEl = document.createElement("div");
+      groupEl.className = "listRootGroup";
+      const title = document.createElement("div");
+      title.className = "listRootTitle";
+      title.textContent = listSettings.scope === "all" ? `${group.row.tabName} / ${group.row.root?.title || l("noRoot")}` : group.row.root?.title || l("noRoot");
+      const container = document.createElement("div");
+      container.className = "listTaskRows";
+      group.rows.forEach(row => container.appendChild(taskRow(row, { showTab: false, showRoot: false })));
+      groupEl.appendChild(title);
+      groupEl.appendChild(container);
+      listView.appendChild(groupEl);
+    });
+  }
+
+  function taskRow(row, options) {
+    const el = document.createElement("div");
+    el.className = `listTaskRow ${row.task.status === "done" ? "done" : ""}`;
     const toggle = document.createElement("button");
     toggle.type = "button";
     toggle.className = "listDoneToggle";
-    toggle.textContent = task.status === "done" ? "✓" : "○";
-    toggle.title = task.status === "done" ? "未完了に戻す" : "完了にする";
+    toggle.textContent = row.task.status === "done" ? "✓" : "○";
+    toggle.title = row.task.status === "done" ? l("markTodo") : l("markDone");
     toggle.addEventListener("click", event => {
       event.stopPropagation();
-      toggleTaskStatus(task.id);
+      toggleDone(row);
     });
 
     const main = document.createElement("div");
     main.className = "listTaskMain";
-
     const titleLine = document.createElement("div");
     titleLine.className = "listTaskTitleLine";
-
     const title = document.createElement("span");
     title.className = "listTaskTitle";
-    title.textContent = task.title;
-
+    title.textContent = row.task.title;
     const date = document.createElement("span");
     date.className = "listTaskDate";
-    date.textContent = formatTaskDate(task);
-
+    date.textContent = row.date ? dateLabel(row.date) : l("noDate");
     titleLine.appendChild(title);
     titleLine.appendChild(date);
-
     const path = document.createElement("div");
     path.className = "listTaskPath";
-    path.textContent = makeTaskPath(task, root);
-
+    const meta = [];
+    if (options.showTab) meta.push(`${l("tab")}: ${row.tabName}`);
+    if (options.showRoot && row.root) meta.push(`${l("root")}: ${row.root.title}`);
+    const branchPath = taskPath(row.task, row.root, row.state);
+    if (branchPath) meta.push(branchPath);
+    path.textContent = meta.join(" / ") || l("rootDirect");
     main.appendChild(titleLine);
     main.appendChild(path);
 
-    const openButton = document.createElement("button");
-    openButton.type = "button";
-    openButton.className = "listOpenButton";
-    openButton.textContent = "ボード";
-    openButton.title = "ボード上で見る";
-    openButton.addEventListener("click", event => {
+    const open = document.createElement("button");
+    open.type = "button";
+    open.className = "listOpenButton";
+    open.textContent = l("board");
+    open.title = l("openOnBoard");
+    open.addEventListener("click", event => {
       event.stopPropagation();
-      openTaskOnBoard(task.id);
+      openOnBoard(row);
     });
-
-    row.addEventListener("click", () => setSelected(task.id));
-
-    row.appendChild(toggle);
-    row.appendChild(main);
-    row.appendChild(openButton);
-    return row;
+    el.addEventListener("click", () => openOnBoard(row));
+    el.appendChild(toggle);
+    el.appendChild(main);
+    el.appendChild(open);
+    return el;
   }
 
-  function isActionTask(task) {
-    return Boolean(task.parentId && state.tasks[task.parentId]);
-  }
-
-  function toggleTaskStatus(taskId) {
-    const task = state.tasks[taskId];
-    if (!task || !isActionTask(task)) return;
-    snapshot();
-    task.status = task.status === "done" ? "todo" : "done";
-    requestRender();
-  }
-
-  function openTaskOnBoard(taskId) {
-    const task = state.tasks[taskId];
-    if (!task) return;
-
-    state.viewMode = "board";
-    setSelected(taskId);
-    requestRender();
-
-    requestAnimationFrame(() => {
-      board.scrollTo({
-        left: Math.max(0, task.x - 160),
-        top: Math.max(0, task.y - 140),
-        behavior: "smooth"
-      });
+  function toggleDone(row) {
+    window.cherryWorkspace?.updateTabState?.(row.tabId, tabState => {
+      const task = tabState.tasks?.[row.task.id];
+      if (task) task.status = task.status === "done" ? "todo" : "done";
     });
-  }
-
-  function groupByRoot(tasks) {
-    const map = new Map();
-
-    for (const task of tasks) {
-      const root = getRootTask(task);
-      if (!map.has(root.id)) map.set(root.id, { root, tasks: [] });
-      map.get(root.id).tasks.push(task);
+    if (!window.cherryWorkspace?.updateTabState) {
+      const task = state.tasks?.[row.task.id];
+      if (task) {
+        snapshot();
+        task.status = task.status === "done" ? "todo" : "done";
+        requestRender();
+      }
     }
-
-    return [...map.values()]
-      .map(group => ({ ...group, tasks: group.tasks.sort(sortByListOrder) }))
-      .sort((a, b) => sortByListOrder(a.root, b.root));
+    renderListView();
   }
 
-  function getRootTask(task) {
+  function openOnBoard(row) {
+    if (row.tabId !== activeTabId()) window.cherryWorkspace?.openTab?.(row.tabId);
+    document.querySelector(".stage")?.classList.remove("startPageMode");
+    state.viewMode = "board";
+    requestAnimationFrame(() => {
+      const task = state.tasks?.[row.task.id];
+      if (!task) return;
+      setSelected(task.id);
+      requestRender();
+      requestAnimationFrame(() => board.scrollTo({ left: Math.max(0, task.x - 160), top: Math.max(0, task.y - 140), behavior: "smooth" }));
+    });
+  }
+
+  function rootOf(task, sourceState) {
     let current = task;
     const seen = new Set();
-
-    while (current.parentId && state.tasks[current.parentId] && !seen.has(current.parentId)) {
+    while (current?.parentId && sourceState.tasks?.[current.parentId] && !seen.has(current.parentId)) {
       seen.add(current.id);
-      current = state.tasks[current.parentId];
+      current = sourceState.tasks[current.parentId];
     }
-
-    return current;
+    return current || task;
   }
 
-  function makeTaskPath(task, root) {
+  function depthOf(taskId, sourceState) {
+    let depth = 0;
+    let current = sourceState.tasks?.[taskId];
+    const seen = new Set();
+    while (current?.parentId && sourceState.tasks?.[current.parentId] && !seen.has(current.parentId)) {
+      seen.add(current.id);
+      depth += 1;
+      current = sourceState.tasks[current.parentId];
+    }
+    return depth;
+  }
+
+  function taskPath(task, root, sourceState) {
     const names = [];
     let current = task;
     const seen = new Set();
-
-    while (current.parentId && state.tasks[current.parentId] && !seen.has(current.parentId)) {
+    while (current?.parentId && sourceState.tasks?.[current.parentId] && !seen.has(current.parentId)) {
       seen.add(current.id);
-      const parent = state.tasks[current.parentId];
+      const parent = sourceState.tasks[current.parentId];
       if (parent.id !== root.id) names.unshift(parent.title);
       current = parent;
     }
-
-    return names.length ? names.join(" → ") : "ルート直下";
+    return names.length ? names.join(" → ") : l("rootDirect");
   }
 
-  function formatTaskDate(task) {
-    const date = scheduleDate(task);
-    if (!date) return "未定";
-    const parts = formatDateParts(date);
-    return `${parts.month}/${parts.day}`;
+  function dateLabel(date) {
+    const [, month, day] = date.split("-").map(Number);
+    return `${month}/${day}`;
   }
 
-  function sortByListOrder(a, b) {
-    const dateA = scheduleDate(a) || "9999-12-31";
-    const dateB = scheduleDate(b) || "9999-12-31";
-    const dateDiff = dateA.localeCompare(dateB);
-    if (dateDiff !== 0) return dateDiff;
+  function dateGroupTitle(key) {
+    if (key === "__none") return l("noDate");
+    const label = dateLabel(key);
+    return key === todayISO() ? `${label} · ${l("today")}` : label;
+  }
 
-    const rootA = getRootTask(a);
-    const rootB = getRootTask(b);
-    const rootDiff = String(rootA.title).localeCompare(String(rootB.title), "ja");
-    if (rootDiff !== 0) return rootDiff;
+  function sortByDate(a, b) {
+    const dateDiff = (a.date || "0000-00-00").localeCompare(b.date || "0000-00-00");
+    if (dateDiff) return dateDiff;
+    return `${a.tabName} ${a.root?.title || ""} ${a.task.title}`.localeCompare(`${b.tabName} ${b.root?.title || ""} ${b.task.title}`, lang());
+  }
 
-    const depthDiff = getTaskDepth(a.id) - getTaskDepth(b.id);
-    if (depthDiff !== 0) return depthDiff;
-
-    return String(a.title).localeCompare(String(b.title), "ja");
+  function sortByRoot(a, b) {
+    const rootDiff = `${a.tabName} ${a.root?.title || ""}`.localeCompare(`${b.tabName} ${b.root?.title || ""}`, lang());
+    if (rootDiff) return rootDiff;
+    const dateDiff = (a.date || "9999-12-31").localeCompare(b.date || "9999-12-31");
+    if (dateDiff) return dateDiff;
+    const depthDiff = a.depth - b.depth;
+    if (depthDiff) return depthDiff;
+    return String(a.task.title).localeCompare(String(b.task.title), lang());
   }
 
   renderListView();

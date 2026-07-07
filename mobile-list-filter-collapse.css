@@ -1,0 +1,77 @@
+/* Mobile list filters should not dominate the task list. */
+.mobileListFilterToggle {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .listView .mobileListFilterToggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    min-height: 44px;
+    margin: 8px 0 10px;
+    padding: 10px 12px;
+    color: var(--ink);
+    background: color-mix(in srgb, var(--surface) 92%, var(--bg));
+    border: 1px solid color-mix(in srgb, var(--ink) 11%, transparent);
+    border-radius: 16px;
+    box-shadow: none;
+  }
+
+  .mobileListFilterToggleMain {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+    text-align: left;
+  }
+
+  .mobileListFilterToggleLabel {
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
+  .mobileListFilterToggleSummary {
+    overflow: hidden;
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 900;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mobileListFilterToggleIcon {
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    color: #fff;
+    background: var(--accent);
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 900;
+    transition: transform .15s ease;
+  }
+
+  .listView.mobileFiltersOpen .mobileListFilterToggleIcon {
+    transform: rotate(180deg);
+  }
+
+  .listView:not(.mobileFiltersOpen) .listControls {
+    display: none !important;
+  }
+
+  .listView.mobileFiltersOpen .listControls {
+    display: grid !important;
+    margin-top: 0 !important;
+  }
+
+  .listView .listControls {
+    padding: 10px !important;
+  }
+}

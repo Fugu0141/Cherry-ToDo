@@ -1,0 +1,99 @@
+/* Final Start page rescue for v0.1 RC.
+   Use desktop width better and prevent mobile editor chrome from leaking into Start page. */
+
+@media (min-width: 900px) {
+  body.startPageFocusMode .startPagePanel {
+    width: min(1180px, calc(100vw - 96px)) !important;
+  }
+
+  body.startPageFocusMode .startPageHeader h2 {
+    max-width: 900px !important;
+  }
+
+  body.startPageFocusMode .startPageHeader p:not(.startPageKicker) {
+    max-width: 680px !important;
+  }
+
+  body.startPageFocusMode .startPageBody {
+    grid-template-columns: minmax(560px, 1fr) minmax(320px, 420px) !important;
+    column-gap: 28px !important;
+  }
+
+  body.startPageFocusMode .startPageActions {
+    width: 100% !important;
+  }
+
+  body.startPageFocusMode .startPageTabs,
+  body.startPageFocusMode .startPageEmpty,
+  body.startPageFocusMode .startPageOss,
+  body.startPageFocusMode .startPageFooter {
+    width: 100% !important;
+  }
+
+  body.startPageFocusMode .startPageTabCard {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+  }
+}
+
+@media (min-width: 1320px) {
+  body.startPageFocusMode .startPagePanel {
+    width: min(1280px, calc(100vw - 128px)) !important;
+  }
+
+  body.startPageFocusMode .startPageBody {
+    grid-template-columns: minmax(720px, 1fr) 420px !important;
+  }
+}
+
+/* Mobile fallback that does not depend on body.startPageFocusMode being synced immediately. */
+@media (max-width: 760px) {
+  .stage.startPageMode {
+    height: calc(100dvh - 60px - env(safe-area-inset-top, 0px)) !important;
+    overflow: auto !important;
+  }
+
+  body:has(.stage.startPageMode) .toolbar,
+  body:has(.stage.startPageMode) #workspaceBar,
+  body:has(.stage.startPageMode) .workspaceBar {
+    display: none !important;
+  }
+
+  body:has(.stage.startPageMode) .topbar {
+    min-height: 60px !important;
+    padding: calc(8px + env(safe-area-inset-top, 0px)) 12px 8px !important;
+  }
+
+  .stage.startPageMode .startPageView {
+    height: auto !important;
+    min-height: 100% !important;
+    padding: 16px 16px calc(env(safe-area-inset-bottom, 0px) + 18px) !important;
+    overflow: visible !important;
+  }
+
+  .stage.startPageMode .startPagePanel {
+    width: 100% !important;
+    min-height: calc(100dvh - 96px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .stage.startPageMode .startPageBody {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 14px !important;
+  }
+
+  .stage.startPageMode .startPageActions {
+    order: 0 !important;
+    width: 100% !important;
+  }
+
+  .stage.startPageMode .startPageTabs {
+    order: 1 !important;
+    width: 100% !important;
+  }
+
+  .stage.startPageMode .startPageOss {
+    margin-top: auto !important;
+  }
+}

@@ -1,0 +1,82 @@
+/* Toolbar information hierarchy for v0.1 RC.
+   Primary actions: switch board/list, create root, toggle date lanes.
+   Secondary actions: layout/settings/help/undo/reset. */
+.toolbar {
+  align-items: center;
+  gap: 8px;
+}
+
+.toolbar button {
+  transition: transform .12s ease, background .12s ease, border-color .12s ease, box-shadow .12s ease;
+}
+
+.toolbar button:hover {
+  transform: translateY(-1px);
+}
+
+#listViewBtn,
+#addRootBtn,
+#toggleLanesBtn {
+  min-height: 42px;
+  padding-inline: 17px;
+  font-weight: 950;
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent, #7357ff), color-mix(in srgb, var(--accent, #7357ff) 74%, #17a9b8));
+  border: 1px solid color-mix(in srgb, var(--accent, #7357ff) 70%, #fff);
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--accent, #7357ff) 22%, transparent);
+}
+
+#listViewBtn.activeView {
+  color: #fff;
+  background: color-mix(in srgb, var(--accent, #7357ff) 84%, #111827);
+  border-color: color-mix(in srgb, var(--accent, #7357ff) 52%, #fff);
+  outline: 0;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .18), 0 7px 18px color-mix(in srgb, var(--accent, #7357ff) 18%, transparent);
+}
+
+#treeLayoutBtn,
+#verticalLayoutBtn,
+#themeToggleBtn,
+#languageToggleBtn,
+#startPageBtn,
+#tutorialBtn,
+#undoBtn {
+  opacity: .92;
+}
+
+#deleteBtn,
+#resetBtn {
+  margin-left: 2px;
+}
+
+#deleteBtn {
+  opacity: .64;
+}
+
+#resetBtn {
+  font-weight: 900;
+}
+
+@media (min-width: 761px) {
+  #listViewBtn { order: 10; }
+  #addRootBtn { order: 20; }
+  #toggleLanesBtn { order: 30; }
+  #treeLayoutBtn { order: 40; }
+  #verticalLayoutBtn { order: 50; }
+  #themeToggleBtn { order: 60; }
+  #languageToggleBtn { order: 70; }
+  #startPageBtn { order: 80; }
+  #tutorialBtn { order: 90; }
+  #undoBtn { order: 100; }
+  #deleteBtn { order: 110; }
+  #resetBtn { order: 120; }
+}
+
+@media (max-width: 760px) {
+  #listViewBtn,
+  #addRootBtn,
+  #toggleLanesBtn {
+    min-height: 40px !important;
+    padding-inline: 15px !important;
+  }
+}

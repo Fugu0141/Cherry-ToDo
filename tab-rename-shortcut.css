@@ -1,0 +1,77 @@
+.workspaceTab {
+  cursor: pointer;
+}
+
+.workspaceTab:hover {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.workspaceTabItem.active .workspaceTab:hover {
+  background: color-mix(in srgb, #fff 10%, transparent);
+}
+
+.workspaceTab[data-rename-hint="true"]::after {
+  content: "";
+}
+
+body.tabRenameDialogMode .cherryDialog {
+  border-color: color-mix(in srgb, var(--accent, #7357ff) 34%, transparent);
+  box-shadow: 0 24px 64px rgba(115, 87, 255, .22), 0 18px 48px rgba(0, 0, 0, .24);
+}
+
+body.tabRenameDialogMode .cherryDialogKicker {
+  color: var(--accent, #7357ff);
+}
+
+body.tabRenameDialogMode .cherryDialogTitle::before {
+  content: "✎";
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  margin-right: 8px;
+  color: #fff;
+  background: var(--accent, #7357ff);
+  border-radius: 10px;
+  font-size: 15px;
+  vertical-align: middle;
+}
+
+body.tabRenameDialogMode .cherryDialogField {
+  font-size: 16px;
+  font-weight: 800;
+}
+
+@media (max-width: 760px) {
+  body.tabRenameDialogMode .cherryDialogLayer {
+    align-items: center !important;
+    place-items: center !important;
+    padding: 14px 12px !important;
+    overflow: auto !important;
+  }
+
+  body.tabRenameDialogMode.tabRenameKeyboardOpen .cherryDialogLayer {
+    align-items: flex-start !important;
+    place-items: start center !important;
+    padding: calc(env(safe-area-inset-top, 0px) + 56px) 12px 12px !important;
+  }
+
+  body.tabRenameDialogMode .cherryDialog {
+    width: min(430px, calc(100vw - 24px)) !important;
+    max-height: calc(100dvh - 28px - env(safe-area-inset-top, 0px)) !important;
+    border-radius: 24px !important;
+    transform: none !important;
+  }
+
+  body.tabRenameDialogMode.tabRenameKeyboardOpen .cherryDialog {
+    max-height: calc(100dvh - 92px - env(safe-area-inset-top, 0px)) !important;
+  }
+
+  body.tabRenameDialogMode .cherryDialogField {
+    font-size: 16px !important;
+  }
+
+  body.tabRenameDialogMode .cherryDialogActions {
+    padding-bottom: 14px !important;
+  }
+}

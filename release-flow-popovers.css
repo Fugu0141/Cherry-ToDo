@@ -1,0 +1,62 @@
+/* Contextual popovers for task/date dialogs. Avoid full-screen interruption. */
+.modalBackdrop.flowPopover {
+  position: fixed;
+  inset: 0;
+  display: block;
+  padding: 0;
+  background: transparent;
+  pointer-events: none;
+  z-index: 240;
+}
+
+.modalBackdrop.flowPopover.hidden {
+  display: none;
+}
+
+.modalBackdrop.flowPopover .modal {
+  position: fixed;
+  width: min(360px, calc(100vw - 28px));
+  max-height: calc(100dvh - 28px);
+  margin: 0;
+  overflow: auto;
+  pointer-events: auto;
+  border: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
+  border-radius: 22px;
+  box-shadow: 0 22px 54px rgba(0, 0, 0, .26);
+}
+
+.modalBackdrop.flowPopover .smallModal {
+  width: min(330px, calc(100vw - 28px));
+}
+
+.modalBackdrop.flowPopover .modal::before {
+  content: "";
+  position: absolute;
+  top: 18px;
+  left: -8px;
+  width: 16px;
+  height: 16px;
+  background: inherit;
+  border-left: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
+  transform: rotate(45deg);
+}
+
+@media (max-width: 760px) {
+  .modalBackdrop.flowPopover {
+    display: grid;
+    place-items: end center;
+    padding: 10px;
+    background: rgba(2, 6, 23, .28);
+    pointer-events: auto;
+  }
+
+  .modalBackdrop.flowPopover .modal {
+    position: static;
+    width: 100%;
+  }
+
+  .modalBackdrop.flowPopover .modal::before {
+    display: none;
+  }
+}

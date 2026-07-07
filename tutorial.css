@@ -1,0 +1,337 @@
+.tutorialBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 260;
+  display: grid;
+  place-items: center;
+  padding: clamp(14px, 4vw, 28px);
+  background: rgba(2, 6, 23, .52);
+  backdrop-filter: blur(5px);
+}
+
+.tutorialBackdrop.hidden {
+  display: none;
+}
+
+.tutorialPanel {
+  width: min(620px, 100%);
+  max-height: calc(100dvh - 28px);
+  overflow: auto;
+  color: #111827;
+  background: rgba(255, 255, 255, .98);
+  border: 1px solid rgba(15, 23, 42, .12);
+  border-radius: 26px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, .28);
+}
+
+.tutorialHead,
+.tutorialActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tutorialHead {
+  padding: 18px 20px 0;
+}
+
+.tutorialTitleBlock {
+  min-width: 0;
+}
+
+.tutorialStepCount {
+  margin: 0 0 4px;
+  color: #7357ff;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.tutorialPanel h2 {
+  margin: 0;
+  color: #111827;
+  font-size: clamp(24px, 5vw, 34px);
+  letter-spacing: -.04em;
+}
+
+.tutorialClose {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  color: #64748b;
+  background: #f1f5f9;
+  box-shadow: none;
+}
+
+.tutorialBody {
+  padding: 24px 24px 10px;
+}
+
+.tutorialBody p {
+  margin: 0;
+  color: #4b5563;
+  font-size: 15px;
+  line-height: 1.85;
+}
+
+.tutorialPreview {
+  min-height: 160px;
+  margin-top: 22px;
+  padding: 16px;
+  background: linear-gradient(135deg, #f8fafc, #eefcff);
+  border: 1px solid rgba(15, 23, 42, .10);
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.tutorialScene {
+  min-height: 128px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  position: relative;
+}
+
+.tutorialTaskCard,
+.tutorialToolbarChip,
+.tutorialFileIcon {
+  padding: 10px 14px;
+  color: #1f2937;
+  font-size: 13px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #fff4a8, #b9f3ff);
+  border: 1px solid rgba(15, 23, 42, .16);
+  border-radius: 14px;
+  box-shadow: 0 7px 18px rgba(15, 23, 42, .10);
+}
+
+.tutorialTaskCard.strong {
+  transform: scale(1.05);
+}
+
+.tutorialArrow {
+  color: #7357ff;
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.branchScene {
+  align-items: center;
+}
+
+.tutorialLinkLine {
+  width: 76px;
+  height: 4px;
+  background: #7357ff;
+  border-radius: 999px;
+  opacity: .55;
+}
+
+.tutorialTaskStack {
+  display: grid;
+  gap: 10px;
+}
+
+.tutorialTaskCard.offset {
+  transform: translateX(28px);
+  background: linear-gradient(135deg, #e7ddff, #b9f3ff);
+}
+
+.dateScene {
+  justify-content: flex-start;
+  padding-inline: 16px;
+}
+
+.tutorialLane {
+  width: 72%;
+  height: 88px;
+  display: grid;
+  place-items: start;
+  padding: 10px;
+  color: #0f7280;
+  background: rgba(112, 199, 209, .16);
+  border-left: 4px solid #70c7d1;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.tutorialTaskCard.floating {
+  position: absolute;
+  right: 20px;
+  top: 48px;
+}
+
+.tutorialCalendarDots {
+  position: absolute;
+  left: 34px;
+  bottom: 18px;
+  display: flex;
+  gap: 8px;
+}
+
+.tutorialCalendarDots span {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #70c7d1;
+  opacity: .75;
+}
+
+.listScene {
+  display: grid;
+  align-content: center;
+  gap: 8px;
+}
+
+.tutorialListHeader {
+  color: #7357ff;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .04em;
+}
+
+.tutorialListRow {
+  display: grid;
+  grid-template-columns: 20px minmax(120px, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  width: min(420px, 100%);
+  padding: 10px 12px;
+  color: #1f2937;
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, .10);
+  border-radius: 14px;
+}
+
+.tutorialListRow em {
+  color: #0f7280;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.tutorialListRow .dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: #7357ff;
+}
+
+.tutorialListRow .dot.hollow {
+  background: #fff;
+  border: 2px solid #d8c665;
+}
+
+.fileScene {
+  gap: 18px;
+}
+
+.tutorialTabsMini {
+  display: grid;
+  gap: 7px;
+}
+
+.tutorialTabsMini span {
+  padding: 7px 12px;
+  color: #1f2937;
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, .12);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.tutorialFileIcon {
+  min-width: 86px;
+  min-height: 86px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #e7ddff, #b9f3ff);
+  border-radius: 22px;
+}
+
+.tutorialLock {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  background: #111827;
+  border-radius: 16px;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, .20);
+}
+
+.tutorialActions {
+  padding: 16px 24px 22px;
+  border-top: 1px solid rgba(15, 23, 42, .08);
+}
+
+.tutorialActions button {
+  min-height: 42px;
+}
+
+.tutorialSecondary {
+  background: #e9eef7;
+  color: #263144;
+  box-shadow: none;
+}
+
+.tutorialPrimary {
+  background: linear-gradient(135deg, #7357ff, #17a9b8);
+  color: #fff;
+}
+
+.welcomeSplashFooterButton {
+  appearance: none;
+  padding: 0;
+  color: #64748b;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.welcomeSplashFooterButton:hover {
+  color: var(--accent, #7357ff);
+  text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+  .tutorialBackdrop {
+    align-items: stretch;
+    padding: 10px;
+  }
+
+  .tutorialPanel {
+    max-height: calc(100dvh - 20px);
+    border-radius: 22px;
+  }
+
+  .tutorialHead {
+    align-items: flex-start;
+  }
+
+  .tutorialBody,
+  .tutorialActions {
+    padding-inline: 18px;
+  }
+
+  .tutorialActions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .tutorialScene {
+    min-height: 150px;
+  }
+
+  .branchScene,
+  .fileScene {
+    flex-wrap: wrap;
+  }
+}

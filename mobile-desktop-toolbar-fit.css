@@ -1,0 +1,46 @@
+/* Android Chrome's "Desktop site" keeps a coarse pointer but often uses a wider CSS viewport.
+   In that state the normal mobile toolbar rules do not always apply, so the toolbar can wrap into a small dense block on the left.
+   Keep this fix above the regular phone breakpoint so the normal mobile toolbar stays as a horizontal scroll rail. */
+@media (min-width: 761px) and (max-width: 980px) and (pointer: coarse) {
+  body:not(.startPageFocusMode) .topbar {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    align-items: start !important;
+    gap: 8px !important;
+  }
+
+  body:not(.startPageFocusMode) .brand {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  body:not(.startPageFocusMode) .toolbar {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(112px, 1fr)) !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+    gap: 7px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+    padding: 0 0 3px !important;
+    scroll-snap-type: none !important;
+  }
+
+  body:not(.startPageFocusMode) .toolbar button {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 36px !important;
+    padding: 7px 9px !important;
+    overflow: hidden !important;
+    text-align: center !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  body:not(.startPageFocusMode) #listViewBtn,
+  body:not(.startPageFocusMode) #addRootBtn,
+  body:not(.startPageFocusMode) #toggleLanesBtn {
+    min-height: 40px !important;
+  }
+}

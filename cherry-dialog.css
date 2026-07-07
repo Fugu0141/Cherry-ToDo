@@ -1,0 +1,139 @@
+.cherryDialogLayer {
+  position: fixed;
+  inset: 0;
+  z-index: 320;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(2, 6, 23, .36);
+  backdrop-filter: blur(5px);
+}
+
+.cherryDialogLayer.hidden {
+  display: none;
+}
+
+.cherryDialog {
+  width: min(420px, 100%);
+  color: var(--ink, #111827);
+  background: var(--modal-bg, #fff);
+  border: 1px solid color-mix(in srgb, var(--ink, #111827) 14%, transparent);
+  border-radius: 22px;
+  box-shadow: 0 22px 60px rgba(0, 0, 0, .28);
+  overflow: hidden;
+}
+
+.cherryDialogHeader {
+  padding: 18px 20px 8px;
+}
+
+.cherryDialogKicker {
+  margin: 0 0 6px;
+  color: var(--accent, #7357ff);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.cherryDialogTitle {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.2;
+  letter-spacing: -.03em;
+}
+
+.cherryDialogBody {
+  padding: 8px 20px 18px;
+}
+
+.cherryDialogMessage {
+  margin: 0;
+  color: var(--muted, #64748b);
+  line-height: 1.7;
+  white-space: pre-line;
+}
+
+.cherryDialogField,
+.cherryDialogSelect {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  color: var(--ink, #111827);
+  background: var(--modal-input-bg, #f8fafc);
+  border: 1px solid var(--modal-border, rgba(148, 163, 184, .34));
+  border-radius: 14px;
+  font: inherit;
+}
+
+.cherryDialogChoices {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.cherryDialogChoice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 44px;
+  padding: 10px 12px;
+  color: var(--ink, #111827);
+  background: color-mix(in srgb, var(--surface, #fff) 90%, var(--bg, #eef2f7));
+  border: 1px solid color-mix(in srgb, var(--ink, #111827) 12%, transparent);
+  border-radius: 14px;
+  box-shadow: none;
+}
+
+.cherryDialogChoice.active {
+  color: #fff;
+  background: var(--accent, #7357ff);
+}
+
+.cherryDialogActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 14px 20px 18px;
+  border-top: 1px solid color-mix(in srgb, var(--ink, #111827) 10%, transparent);
+}
+
+.cherryDialogActions button {
+  min-height: 40px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  box-shadow: none;
+}
+
+.cherryDialogCancel {
+  color: var(--button-soft-fg, #263144);
+  background: var(--button-soft-bg, #e9eef7);
+}
+
+.cherryDialogConfirm {
+  color: #fff;
+  background: var(--accent, #7357ff);
+}
+
+.cherryDialogDanger {
+  color: #fff;
+  background: var(--danger, #e65a54);
+}
+
+@media (max-width: 640px) {
+  .cherryDialogLayer {
+    align-items: end;
+    padding: 10px;
+  }
+
+  .cherryDialog {
+    border-radius: 22px;
+  }
+
+  .cherryDialogActions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+}

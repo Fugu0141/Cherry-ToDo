@@ -18,7 +18,7 @@
   width: min(560px, 100%);
   max-height: calc(100dvh - 28px);
   overflow: auto;
-  color: var(--ink, #151923);
+  color: #151923;
   background: rgba(255, 255, 255, .96);
   border: 1px solid rgba(17, 24, 39, .10);
   border-radius: 26px;
@@ -49,7 +49,7 @@
   place-items: center;
   flex: 0 0 auto;
   color: #171b25;
-  background: linear-gradient(135deg, #ffe678, #9ff4ff);
+  background: linear-gradient(135deg, #fff4a8, #9ff4ff);
   border-radius: 12px;
   box-shadow: inset 0 0 0 1px rgba(0,0,0,.10);
 }
@@ -71,7 +71,7 @@
 
 .welcomeSplashKicker {
   margin: 0 0 10px;
-  color: var(--accent, #7357ff);
+  color: #7357ff;
   font-size: 12px;
   font-weight: 900;
   letter-spacing: .08em;
@@ -113,7 +113,8 @@
 
 .welcomeSplashFlow span:nth-child(odd) {
   padding: 8px 10px;
-  background: linear-gradient(180deg, var(--note, #ffe678), var(--note2, #fff0a3));
+  color: #1f2937;
+  background: linear-gradient(135deg, #fff4a8, #d9fbff);
   border: 1px solid rgba(17, 24, 39, .16);
   border-radius: 12px;
   box-shadow: 0 3px 0 rgba(17, 24, 39, .06);
@@ -132,7 +133,7 @@
   margin-top: 22px;
   color: #171b25;
   font-weight: 900;
-  background: linear-gradient(135deg, #ffe678, #9ff4ff);
+  background: linear-gradient(135deg, #fff4a8, #9ff4ff);
   box-shadow: 0 8px 18px rgba(17, 24, 39, .10);
 }
 
@@ -153,7 +154,7 @@
 }
 
 .welcomeSplashFooter a:hover {
-  color: var(--accent, #7357ff);
+  color: #7357ff;
   text-decoration: underline;
 }
 

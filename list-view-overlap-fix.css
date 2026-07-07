@@ -1,0 +1,22 @@
+/* Emergency rollback: do not touch .stage layout for list view.
+   The real fix is to keep startPageMode from leaking into list mode. */
+@media (min-width: 761px) {
+  .stage.listMode .stageHeader,
+  .stage.listMode .board,
+  .stage.listMode .startPageView {
+    display: none !important;
+  }
+
+  .stage.listMode .listView {
+    display: block !important;
+    margin: 14px 18px 18px !important;
+    max-height: calc(100dvh - 156px) !important;
+    overflow: auto !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .stage.listMode {
+    padding: 0 !important;
+  }
+}

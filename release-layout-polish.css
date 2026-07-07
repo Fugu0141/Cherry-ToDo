@@ -1,0 +1,55 @@
+/* Compact the release toolbar and prevent the tab rail from visually breaking the app. */
+.topbar {
+  gap: 14px;
+}
+
+.toolbar {
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 3px;
+  scrollbar-width: thin;
+}
+
+.toolbar button {
+  min-height: 34px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.brand {
+  flex: 0 1 auto;
+  min-width: 220px;
+}
+
+.brand h1 {
+  line-height: 1;
+}
+
+.brand p {
+  margin-top: 4px;
+  line-height: 1.25;
+}
+
+.logo,
+.welcomeSplashMark {
+  color: #111827 !important;
+}
+
+@media (max-width: 980px) {
+  .topbar {
+    align-items: flex-start;
+  }
+
+  .brand {
+    min-width: 0;
+  }
+
+  .toolbar {
+    width: 100%;
+  }
+}

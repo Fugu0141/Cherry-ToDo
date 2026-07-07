@@ -1,0 +1,156 @@
+.taskDeleteLayer {
+  position: fixed;
+  inset: 0;
+  z-index: 330;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(2, 6, 23, .36);
+  backdrop-filter: blur(5px);
+}
+
+.taskDeleteLayer.hidden {
+  display: none;
+}
+
+.taskDeleteDialog {
+  width: min(420px, calc(100vw - 28px));
+  color: var(--ink, #111827);
+  background: var(--modal-bg, #fff);
+  border: 1px solid color-mix(in srgb, var(--danger, #e65a54) 24%, transparent);
+  border-radius: 24px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, .30);
+  overflow: hidden;
+}
+
+.taskDeleteHeader {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  padding: 18px 20px 10px;
+}
+
+.taskDeleteIcon {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: var(--danger, #e65a54);
+  border-radius: 16px;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.taskDeleteKicker {
+  margin: 0 0 4px;
+  color: var(--danger, #e65a54);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.taskDeleteTitle {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.2;
+  letter-spacing: -.03em;
+}
+
+.taskDeleteBody {
+  padding: 8px 20px 18px;
+}
+
+.taskDeleteTaskName {
+  margin: 0 0 10px;
+  padding: 12px 13px;
+  color: var(--ink, #111827);
+  background: color-mix(in srgb, var(--surface, #fff) 86%, var(--bg, #eef2f7));
+  border: 1px solid color-mix(in srgb, var(--ink, #111827) 10%, transparent);
+  border-radius: 16px;
+  font-weight: 900;
+  overflow-wrap: anywhere;
+}
+
+.taskDeleteMessage {
+  margin: 0;
+  color: var(--muted, #64748b);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.taskDeleteActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 14px 20px 18px;
+  border-top: 1px solid color-mix(in srgb, var(--ink, #111827) 10%, transparent);
+}
+
+.taskDeleteActions button {
+  min-height: 40px;
+  padding: 8px 15px;
+  border-radius: 999px;
+  box-shadow: none;
+  font-weight: 900;
+}
+
+.taskDeleteCancel {
+  color: var(--button-soft-fg, #263144);
+  background: var(--button-soft-bg, #e9eef7);
+}
+
+.taskDeleteConfirm {
+  color: #fff;
+  background: var(--danger, #e65a54);
+}
+
+@media (min-width: 761px) {
+  .taskDeleteLayer.contextual {
+    display: block;
+    background: transparent;
+    pointer-events: none;
+    backdrop-filter: none;
+  }
+
+  .taskDeleteLayer.contextual .taskDeleteDialog {
+    position: fixed;
+    pointer-events: auto;
+  }
+}
+
+@media (max-width: 760px) {
+  .taskDeleteLayer {
+    align-items: end;
+    place-items: end center;
+    padding: 10px;
+  }
+
+  .taskDeleteDialog {
+    width: min(430px, calc(100vw - 20px));
+    border-radius: 26px;
+  }
+
+  .taskDeleteActions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* Mobile safety: the first tap on the dock delete button is on the right.
+     Put the destructive confirmation action on the left so repeat taps hit Cancel instead. */
+  .taskDeleteConfirm {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .taskDeleteCancel {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .taskDeleteActions button {
+    min-height: 46px;
+  }
+}

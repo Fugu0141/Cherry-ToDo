@@ -1,0 +1,36 @@
+/* Keep the workspace tab rail in its own app-grid row.
+   tab-manager.js inserts .workspaceBar between .topbar and .stage.
+   The original two-row app grid gave the tab rail the 1fr editor row, which pushed the board away on desktop-sized viewports, especially Android Chrome's "Desktop site" mode. */
+.app {
+  grid-template-rows: auto auto minmax(0, 1fr);
+}
+
+.topbar {
+  grid-row: 1;
+}
+
+.workspaceBar {
+  grid-row: 2;
+}
+
+.stage {
+  grid-row: 3;
+  min-height: 0;
+}
+
+.workspaceBar + .stage .board {
+  height: calc(100vh - 182px);
+  min-height: 0;
+}
+
+@supports (height: 100dvh) {
+  .workspaceBar + .stage .board {
+    height: calc(100dvh - 182px);
+  }
+}
+
+@media (max-width: 760px) {
+  .workspaceBar + .stage .board {
+    height: 100% !important;
+  }
+}

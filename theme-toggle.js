@@ -1,17 +1,22 @@
 (() => {
   const STORAGE_KEY = "cherry-theme-mode";
   const MODES = ["system", "light", "dark"];
-  const LABELS = {
-    system: "テーマ: 自動",
-    light: "テーマ: ライト",
-    dark: "テーマ: ダーク",
-  };
 
-  const TITLES = {
-    system: "システム設定に合わせてテーマを自動選択します",
-    light: "ライトテーマを使用中です。クリックでダークテーマに切り替えます",
-    dark: "ダークテーマを使用中です。クリックで自動選択に戻します",
-  };
+  function t(key, fallback) {
+    return window.CherryI18n?.t(key) || fallback;
+  }
+
+  function labelFor(mode) {
+    if (mode === "light") return t("toolbar.themeLight", "テーマ: ライト");
+    if (mode === "dark") return t("toolbar.themeDark", "テーマ: ダーク");
+    return t("toolbar.themeAuto", "テーマ: 自動");
+  }
+
+  function titleFor(mode) {
+    if (mode === "light") return t("theme.lightTitle", "ライトテーマを使用中です。クリックでダークテーマに切り替えます");
+    if (mode === "dark") return t("theme.darkTitle", "ダークテーマを使用中です。クリックで自動選択に戻します");
+    return t("theme.systemTitle", "システム設定に合わせてテーマを自動選択します");
+  }
 
   function loadStylesheetOnce(id, href) {
     if (document.querySelector(`link[data-experiment-id="${id}"]`)) return;
@@ -23,9 +28,21 @@
     document.head.appendChild(link);
   }
 
+  function loadScriptOnce(id, src) {
+    if (document.querySelector(`script[data-experiment-id="${id}"]`)) return;
+    const script = document.createElement("script");
+    script.src = src;
+    script.dataset.experimentId = id;
+    document.body.appendChild(script);
+  }
+
   function loadExperimentStylesheets() {
     loadStylesheetOnce("paper-canvas", "./theme-experiment-a.css?v=20260705-1");
     loadStylesheetOnce("mobile-control-cleanup", "./mobile-control-cleanup.css?v=20260705-1");
+  }
+
+  function loadReleasePrepAssets() {
+    loadScriptOnce("release-prep-loader", "./release-prep-loader.js?v=20260707-11");
   }
 
   function safeGetMode() {
@@ -54,10 +71,11 @@
     document.documentElement.dataset.theme = nextMode;
 
     if (button) {
-      button.textContent = LABELS[nextMode];
-      button.title = TITLES[nextMode];
+      const label = labelFor(nextMode);
+      button.textContent = label;
+      button.title = titleFor(nextMode);
       button.dataset.themeMode = nextMode;
-      button.setAttribute("aria-label", `${LABELS[nextMode]}。クリックで切り替え`);
+      button.setAttribute("aria-label", window.CherryI18n?.t("theme.aria", { label }) || `${label}。クリックで切り替え`);
     }
   }
 
@@ -69,6 +87,7 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     loadExperimentStylesheets();
+    loadReleasePrepAssets();
 
     const button = document.getElementById("themeToggleBtn");
     let currentMode = safeGetMode();
@@ -81,6 +100,8 @@
       safeSetMode(currentMode);
       applyMode(currentMode, button);
     });
+
+    window.CherryI18n?.onChange(() => applyMode(currentMode, button));
 
     const media = window.matchMedia?.("(prefers-color-scheme: dark)");
     media?.addEventListener?.("change", () => {
