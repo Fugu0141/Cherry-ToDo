@@ -340,6 +340,9 @@
       const dy = event.clientY - pendingMobileAdd.startY;
       if (Math.hypot(dx, dy) > 12) {
         suppressNextMobileAddClick = true;
+        window.setTimeout(() => {
+          suppressNextMobileAddClick = false;
+        }, 450);
         startDrag(event, pendingMobileAdd.noteEl, pendingMobileAdd.sourceId, { preventStart: true, fromMobileAdd: true });
         pendingMobileAdd = null;
       }
