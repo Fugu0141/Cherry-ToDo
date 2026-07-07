@@ -28,6 +28,8 @@
   };
 
   let drag = null;
+  let pendingMobileAdd = null;
+  let suppressNextMobileAddClick = false;
   let previewPath = null;
   let highlightedTargetId = null;
   let choiceCleanup = null;
@@ -264,19 +266,23 @@
     return typeof window.todayISO === "function" ? window.todayISO() : new Date().toISOString().slice(0, 10);
   }
 
-  document.addEventListener("pointerdown", event => {
-    const handle = event.target.closest?.(".handle");
-    if (!handle) return;
-    const noteEl = handle.closest(".note[data-id]");
-    if (!noteEl) return;
+  function selectedNoteElement() {
+    return document.querySelector(".note.selected[data-id]");
+  }
 
-    const sourceId = noteEl.dataset.id;
+  function sourceDate(sourceId) {
+    return findTask(sourceId)?.targetAt || targetDateForPointer({ clientX: 0, clientY: 0 });
+  }
+
+  function startDrag(event, noteEl, sourceId, { preventStart = true, fromMobileAdd = false } = {}) {
     const source = findTask(sourceId);
     if (!source) return;
 
-    event.preventDefault();
-    event.stopPropagation();
-    event.stopImmediatePropagation();
+    if (preventStart) {
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+    }
 
     closeChoice();
     if (typeof window.startPointerSession === "function") window.startPointerSession();
@@ -290,10 +296,11 @@
       pointerId: event.pointerId,
       size,
       point,
-      branchMode: "same",
-      targetAt: targetDateForPointer(event),
+      branchMode: fromMobileAdd ? "branch" : "same",
+      targetAt: fromMobileAdd ? sourceDate(sourceId) : targetDateForPointer(event),
       clientX: event.clientX,
-      clientY: event.clientY
+      clientY: event.clientY,
+      fromMobileAdd
     };
 
     ghost.classList.remove("hidden");
@@ -302,9 +309,42 @@
     board.classList.add("grabbing");
     noteEl.setPointerCapture?.(event.pointerId);
     updatePreview(point);
+  }
+
+  document.addEventListener("pointerdown", event => {
+    const handle = event.target.closest?.(".handle");
+    if (handle) {
+      const noteEl = handle.closest(".note[data-id]");
+      if (!noteEl) return;
+      startDrag(event, noteEl, noteEl.dataset.id, { preventStart: true });
+      return;
+    }
+
+    const mobileAdd = event.target.closest?.(".mobileActionButton.add");
+    if (!mobileAdd) return;
+    const noteEl = selectedNoteElement();
+    if (!noteEl) return;
+
+    pendingMobileAdd = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      noteEl,
+      sourceId: noteEl.dataset.id
+    };
   }, true);
 
   window.addEventListener("pointermove", event => {
+    if (!drag && pendingMobileAdd && pendingMobileAdd.pointerId === event.pointerId) {
+      const dx = event.clientX - pendingMobileAdd.startX;
+      const dy = event.clientY - pendingMobileAdd.startY;
+      if (Math.hypot(dx, dy) > 12) {
+        suppressNextMobileAddClick = true;
+        startDrag(event, pendingMobileAdd.noteEl, pendingMobileAdd.sourceId, { preventStart: true, fromMobileAdd: true });
+        pendingMobileAdd = null;
+      }
+    }
+
     if (!drag) return;
     event.preventDefault();
     event.stopPropagation();
@@ -316,8 +356,8 @@
 
     const targetId = taskAtPoint(event.clientX, event.clientY, drag.sourceId);
     drag.point = point;
-    drag.branchMode = inferMode(source, point);
-    drag.targetAt = targetDateForPointer(event);
+    drag.branchMode = drag.fromMobileAdd ? "branch" : inferMode(source, point);
+    drag.targetAt = drag.fromMobileAdd && !targetId ? sourceDate(drag.sourceId) : targetDateForPointer(event);
     drag.targetId = targetId;
     drag.clientX = event.clientX;
     drag.clientY = event.clientY;
@@ -328,16 +368,22 @@
   }, true);
 
   window.addEventListener("pointerup", event => {
+    if (pendingMobileAdd && pendingMobileAdd.pointerId === event.pointerId && !drag) {
+      pendingMobileAdd = null;
+      return;
+    }
+
     if (!drag) return;
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
 
+    const targetId = drag.targetId || taskAtPoint(event.clientX, event.clientY, drag.sourceId);
     const context = {
       sourceId: drag.sourceId,
-      targetId: drag.targetId || taskAtPoint(event.clientX, event.clientY, drag.sourceId),
-      targetAt: targetDateForPointer(event),
-      branchMode: drag.branchMode,
+      targetId,
+      targetAt: drag.fromMobileAdd && !targetId ? sourceDate(drag.sourceId) : targetDateForPointer(event),
+      branchMode: drag.fromMobileAdd && !targetId ? "branch" : drag.branchMode,
       clientX: event.clientX,
       clientY: event.clientY
     };
@@ -350,5 +396,19 @@
     }
 
     openCreateFromContext(context);
+  }, true);
+
+  window.addEventListener("pointercancel", event => {
+    if (pendingMobileAdd?.pointerId === event.pointerId) pendingMobileAdd = null;
+    if (drag?.pointerId === event.pointerId) cleanupDrag();
+  }, true);
+
+  document.addEventListener("click", event => {
+    if (!suppressNextMobileAddClick) return;
+    if (!event.target.closest?.(".mobileActionButton.add")) return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+    suppressNextMobileAddClick = false;
   }, true);
 })();
