@@ -42,7 +42,7 @@
   }
 
   function loadReleasePrepAssets() {
-    loadScriptOnce("release-prep-loader", "./release-prep-loader.js?v=20260706-1");
+    loadScriptOnce("release-prep-loader", "./release-prep-loader.js?v=20260707-8");
   }
 
   function safeGetMode() {
