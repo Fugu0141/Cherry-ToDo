@@ -5,22 +5,19 @@
   const board = document.getElementById("board");
   if (!board) return;
 
-  const edge = 82;
   const mobileQuery = window.matchMedia("(max-width: 980px)");
+  // Mobile card dragging has its own gesture model. Keep this helper desktop-only to avoid touch-drag conflicts.
+  if (mobileQuery.matches) return;
+
+  const edge = 82;
+  const maxSpeed = 13;
   let lastPointer = null;
   let rafId = null;
   let syntheticMove = false;
 
-  function axisMaxSpeed(axis) {
-    if (mobileQuery.matches) {
-      return axis === "y" ? 8 : 12;
-    }
-    return axis === "x" ? 12 : 18;
-  }
-
-  function clampSpeed(distanceIntoEdge, axis) {
+  function clampSpeed(distanceIntoEdge) {
     const ratio = Math.min(1, Math.max(0, distanceIntoEdge / edge));
-    return Math.round(axisMaxSpeed(axis) * ratio * ratio);
+    return Math.round(maxSpeed * ratio * ratio);
   }
 
   function getScrollDelta(clientX, clientY) {
@@ -28,19 +25,17 @@
     let dx = 0;
     let dy = 0;
 
-    if (clientX < rect.left + edge) dx = -clampSpeed(rect.left + edge - clientX, "x");
-    else if (clientX > rect.right - edge) dx = clampSpeed(clientX - (rect.right - edge), "x");
+    if (clientX < rect.left + edge) dx = -clampSpeed(rect.left + edge - clientX);
+    else if (clientX > rect.right - edge) dx = clampSpeed(clientX - (rect.right - edge));
 
-    if (clientY < rect.top + edge) dy = -clampSpeed(rect.top + edge - clientY, "y");
-    else if (clientY > rect.bottom - edge) dy = clampSpeed(clientY - (rect.bottom - edge), "y");
+    if (clientY < rect.top + edge) dy = -clampSpeed(rect.top + edge - clientY);
+    else if (clientY > rect.bottom - edge) dy = clampSpeed(clientY - (rect.bottom - edge));
 
     return { dx, dy };
   }
 
   function dispatchSyntheticPointerMove(source) {
-    // On mobile, synthetic pointermove competes with the core card-drag gesture and can make downward scrolling jumpy.
-    if (!source || mobileQuery.matches) return;
-
+    if (!source) return;
     syntheticMove = true;
     const event = new PointerEvent("pointermove", {
       bubbles: true,
