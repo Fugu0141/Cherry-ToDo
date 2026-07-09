@@ -30,7 +30,7 @@
   };
 
   let handleDrag = null;
-  let mobileNoteDrag = null;
+  let mobileFlowDrag = null;
   let previewPath = null;
   let highlightedTargetId = null;
   let choiceCleanup = null;
@@ -93,14 +93,13 @@
     return !isAncestor(taskId, parentId);
   }
 
-  function taskAtPoint(clientX, clientY, sourceId, { requireAttachable = false } = {}) {
+  function taskAtPoint(clientX, clientY, sourceId) {
     const noteEls = [...notes.querySelectorAll(".note[data-id]")];
 
     for (let i = noteEls.length - 1; i >= 0; i--) {
       const noteEl = noteEls[i];
       const targetId = noteEl.dataset.id;
       if (!targetId || targetId === sourceId) continue;
-      if (requireAttachable && !canAttachTaskToParent(sourceId, targetId)) continue;
 
       const rect = noteEl.getBoundingClientRect();
       const inside = clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
@@ -108,6 +107,11 @@
     }
 
     return null;
+  }
+
+  function connectableTargetAtPoint(clientX, clientY, sourceId) {
+    const targetId = taskAtPoint(clientX, clientY, sourceId);
+    return targetId && canAttachTaskToParent(targetId, sourceId) ? targetId : null;
   }
 
   function clearHighlight() {
@@ -185,30 +189,13 @@
     closeChoice();
     const source = task(context.sourceId);
     const target = task(context.targetId);
-    if (!source || !target) return;
-    if (!canAttachTaskToParent(target.id, source.id)) return;
+    if (!source || !target) return false;
+    if (!canAttachTaskToParent(target.id, source.id)) return false;
 
     snapshot();
     target.parentId = source.id;
     target.branchMode = context.branchMode || "branch";
     setSelected(target.id);
-    refreshLaneDates();
-    branchLayout();
-    requestRender();
-  }
-
-  function attachDraggedTaskToTarget(taskId, parentId, event) {
-    const child = task(taskId);
-    const parent = task(parentId);
-    if (!child || !parent) return false;
-    if (!canAttachTaskToParent(child.id, parent.id)) return false;
-
-    snapshot();
-    child.parentId = parent.id;
-    child.branchMode = typeof inferBranchMode === "function"
-      ? inferBranchMode(parent, boardPointFor(event))
-      : "branch";
-    setSelected(child.id);
     refreshLaneDates();
     branchLayout();
     requestRender();
@@ -317,6 +304,25 @@
     updateHandlePreview(point);
   }, true);
 
+  document.addEventListener("pointerdown", event => {
+    if (!mobileQuery.matches) return;
+    if (event.target.closest?.(".handle, .doneBtn, .deleteBtn, button, input, textarea, select, .mobileActionBar")) return;
+
+    const noteEl = event.target.closest?.(".note[data-id]");
+    if (!noteEl) return;
+
+    mobileFlowDrag = {
+      pointerId: event.pointerId,
+      sourceId: noteEl.dataset.id,
+      startX: event.clientX,
+      startY: event.clientY,
+      moved: false,
+      targetId: null
+    };
+
+    noteEl.setPointerCapture?.(event.pointerId);
+  }, true);
+
   window.addEventListener("pointermove", event => {
     if (handleDrag) {
       event.preventDefault();
@@ -327,7 +333,7 @@
       const source = task(handleDrag.sourceId);
       if (!source) return;
 
-      const targetId = taskAtPoint(event.clientX, event.clientY, handleDrag.sourceId, { requireAttachable: false });
+      const targetId = taskAtPoint(event.clientX, event.clientY, handleDrag.sourceId);
       handleDrag.branchMode = typeof inferBranchMode === "function" ? inferBranchMode(source, point) : "branch";
       handleDrag.targetAt = targetDateFor(event);
       handleDrag.targetId = targetId;
@@ -337,16 +343,20 @@
       return;
     }
 
-    if (mobileNoteDrag && event.pointerId === mobileNoteDrag.pointerId) {
-      const dx = event.clientX - mobileNoteDrag.startX;
-      const dy = event.clientY - mobileNoteDrag.startY;
-      if (Math.hypot(dx, dy) > 10) mobileNoteDrag.moved = true;
+    if (mobileFlowDrag && event.pointerId === mobileFlowDrag.pointerId) {
+      const dx = event.clientX - mobileFlowDrag.startX;
+      const dy = event.clientY - mobileFlowDrag.startY;
+      if (Math.hypot(dx, dy) > 10) mobileFlowDrag.moved = true;
 
-      if (mobileNoteDrag.moved) {
-        const targetId = taskAtPoint(event.clientX, event.clientY, mobileNoteDrag.taskId, { requireAttachable: true });
-        setHighlight(targetId);
-        mobileNoteDrag.targetId = targetId;
-      }
+      if (!mobileFlowDrag.moved) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+
+      const targetId = connectableTargetAtPoint(event.clientX, event.clientY, mobileFlowDrag.sourceId);
+      setHighlight(targetId);
+      mobileFlowDrag.targetId = targetId;
     }
   }, true);
 
@@ -372,39 +382,29 @@
       return;
     }
 
-    if (!mobileNoteDrag || event.pointerId !== mobileNoteDrag.pointerId) return;
+    if (!mobileFlowDrag || event.pointerId !== mobileFlowDrag.pointerId) return;
 
-    const current = mobileNoteDrag;
-    mobileNoteDrag = null;
-    const targetId = current.targetId || taskAtPoint(event.clientX, event.clientY, current.taskId, { requireAttachable: true });
+    const current = mobileFlowDrag;
+    mobileFlowDrag = null;
+    const targetId = current.targetId || connectableTargetAtPoint(event.clientX, event.clientY, current.sourceId);
     clearHighlight();
 
     if (!current.moved || !targetId) return;
-    attachDraggedTaskToTarget(current.taskId, targetId, event);
-  });
+
+    attachTargetToSource({
+      sourceId: current.sourceId,
+      targetId,
+      branchMode: "branch",
+      clientX: event.clientX,
+      clientY: event.clientY
+    });
+  }, true);
 
   window.addEventListener("pointercancel", event => {
     if (handleDrag?.pointerId === event.pointerId) cleanupHandleDrag();
-    if (mobileNoteDrag?.pointerId === event.pointerId) {
-      mobileNoteDrag = null;
+    if (mobileFlowDrag?.pointerId === event.pointerId) {
+      mobileFlowDrag = null;
       clearHighlight();
     }
-  }, true);
-
-  document.addEventListener("pointerdown", event => {
-    if (!mobileQuery.matches) return;
-    if (event.target.closest?.(".handle, .doneBtn, .deleteBtn, button, input, textarea, select, .mobileActionBar")) return;
-
-    const noteEl = event.target.closest?.(".note[data-id]");
-    if (!noteEl) return;
-
-    mobileNoteDrag = {
-      pointerId: event.pointerId,
-      taskId: noteEl.dataset.id,
-      startX: event.clientX,
-      startY: event.clientY,
-      moved: false,
-      targetId: null
-    };
   }, true);
 })();
