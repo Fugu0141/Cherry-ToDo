@@ -5,15 +5,22 @@
   const board = document.getElementById("board");
   if (!board) return;
 
-  const edge = 74;
-  const maxSpeed = 24;
+  const edge = 82;
+  const mobileQuery = window.matchMedia("(max-width: 980px)");
   let lastPointer = null;
   let rafId = null;
   let syntheticMove = false;
 
-  function clampSpeed(distanceIntoEdge) {
+  function axisMaxSpeed(axis) {
+    if (mobileQuery.matches) {
+      return axis === "y" ? 9 : 12;
+    }
+    return axis === "x" ? 10 : 16;
+  }
+
+  function clampSpeed(distanceIntoEdge, axis) {
     const ratio = Math.min(1, Math.max(0, distanceIntoEdge / edge));
-    return Math.round(maxSpeed * ratio * ratio);
+    return Math.round(axisMaxSpeed(axis) * ratio * ratio);
   }
 
   function getScrollDelta(clientX, clientY) {
@@ -21,11 +28,11 @@
     let dx = 0;
     let dy = 0;
 
-    if (clientX < rect.left + edge) dx = -clampSpeed(rect.left + edge - clientX);
-    else if (clientX > rect.right - edge) dx = clampSpeed(clientX - (rect.right - edge));
+    if (clientX < rect.left + edge) dx = -clampSpeed(rect.left + edge - clientX, "x");
+    else if (clientX > rect.right - edge) dx = clampSpeed(clientX - (rect.right - edge), "x");
 
-    if (clientY < rect.top + edge) dy = -clampSpeed(rect.top + edge - clientY);
-    else if (clientY > rect.bottom - edge) dy = clampSpeed(clientY - (rect.bottom - edge));
+    if (clientY < rect.top + edge) dy = -clampSpeed(rect.top + edge - clientY, "y");
+    else if (clientY > rect.bottom - edge) dy = clampSpeed(clientY - (rect.bottom - edge), "y");
 
     return { dx, dy };
   }
