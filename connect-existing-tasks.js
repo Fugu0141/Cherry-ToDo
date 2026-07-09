@@ -1,8 +1,12 @@
 (() => {
+  if (window.__cherryConnectExistingTasksLoaded) return;
+  window.__cherryConnectExistingTasksLoaded = true;
+
   const board = document.getElementById("board");
   const links = document.getElementById("links");
+  const notes = document.getElementById("notes");
   const ghost = document.getElementById("ghost");
-  if (!board || !links || !ghost) return;
+  if (!board || !links || !notes || !ghost) return;
 
   const mobileQuery = window.matchMedia("(max-width: 980px)");
 
@@ -13,38 +17,23 @@
       create: "新しいタスクを作成",
       createHelp: "新しいタスクを作って、この流れに追加します。",
       connect: "このタスクにつなげる",
-      connectHelp: "接続先のタスクを選びます。",
-      connectToTarget: "このタスクにつなげる",
-      connectToTargetHelp: "既存のタスクへ流れをつなげます。",
-      pickTitle: "接続先を選択中",
-      pickHelp: "つなげたいタスクをタップしてください。",
-      cancel: "キャンセル",
-      alreadyConnected: "このタスクはすでにつながっています。",
-      unsafe: "この接続は循環するため作成できません。"
+      connectHelp: "既存のタスクへ流れをつなげます。"
     },
     en: {
       kicker: "Task flow",
       title: "What should happen to this flow?",
       create: "Create a new task",
       createHelp: "Create a new task and add it to this flow.",
-      connect: "Connect to an existing task",
-      connectHelp: "Choose the existing task to connect to.",
-      connectToTarget: "Connect to this task",
-      connectToTargetHelp: "Connect the flow to the existing task.",
-      pickTitle: "Choose a target task",
-      pickHelp: "Tap the task you want to connect to.",
-      cancel: "Cancel",
-      alreadyConnected: "This task is already connected.",
-      unsafe: "This connection would create a loop."
+      connect: "Connect to this task",
+      connectHelp: "Connect the flow to the existing task."
     }
   };
 
-  let drag = null;
-  let connectPick = null;
+  let handleDrag = null;
+  let mobileNoteDrag = null;
   let previewPath = null;
   let highlightedTargetId = null;
   let choiceCleanup = null;
-  let bannerCleanup = null;
 
   function lang() {
     return window.CherryI18n?.getLanguage?.() === "en" ? "en" : "ja";
@@ -54,12 +43,8 @@
     return labels[lang()]?.[key] || labels.ja[key] || key;
   }
 
-  function tasks() {
-    return typeof window.getTasks === "function" ? window.getTasks() : [];
-  }
-
-  function findTask(taskId) {
-    return tasks().find(task => task.id === taskId) || null;
+  function task(taskId) {
+    return state.tasks[taskId] || null;
   }
 
   function escapeId(taskId) {
@@ -67,59 +52,7 @@
   }
 
   function noteForTask(taskId) {
-    return document.querySelector(`.note[data-id="${escapeId(taskId)}"]`);
-  }
-
-  function taskAtPoint(clientX, clientY, sourceId) {
-    const notes = [...document.querySelectorAll(".note[data-id]")];
-    return notes.find(note => {
-      const taskId = note.dataset.id;
-      if (!taskId || taskId === sourceId) return false;
-      const rect = note.getBoundingClientRect();
-      return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
-    })?.dataset.id || null;
-  }
-
-  function isAncestor(possibleAncestorId, taskId) {
-    let task = findTask(taskId);
-    const seen = new Set();
-    while (task?.parentId && !seen.has(task.id)) {
-      if (task.parentId === possibleAncestorId) return true;
-      seen.add(task.id);
-      task = findTask(task.parentId);
-    }
-    return false;
-  }
-
-  function connectionStatus(sourceId, targetId) {
-    const target = findTask(targetId);
-    if (!target || sourceId === targetId) return { canConnect: false, reason: "unsafe" };
-    if (target.parentId === sourceId) return { canConnect: false, reason: "alreadyConnected" };
-    if (isAncestor(targetId, sourceId)) return { canConnect: false, reason: "unsafe" };
-    return { canConnect: true, reason: null };
-  }
-
-  function setObjectPos(el, x, y) {
-    el.style.setProperty("--x", `${x}px`);
-    el.style.setProperty("--y", `${y}px`);
-  }
-
-  function getBoardPoint(event) {
-    if (typeof window.boardPoint === "function") return window.boardPoint(event);
-    const rect = board.getBoundingClientRect();
-    return {
-      x: event.clientX - rect.left + board.scrollLeft,
-      y: event.clientY - rect.top + board.scrollTop
-    };
-  }
-
-  function targetDateForPointer(event) {
-    if (typeof window.getDateForPointer === "function") return window.getDateForPointer(event);
-    return typeof window.todayISO === "function" ? window.todayISO() : new Date().toISOString().slice(0, 10);
-  }
-
-  function sourceDate(sourceId) {
-    return findTask(sourceId)?.targetAt || (typeof window.todayISO === "function" ? window.todayISO() : new Date().toISOString().slice(0, 10));
+    return notes.querySelector(`.note[data-id="${escapeId(taskId)}"]`);
   }
 
   function noteSize(noteEl) {
@@ -127,44 +60,54 @@
     return { width: rect.width || 180, height: rect.height || 90 };
   }
 
-  function createPreviewPath() {
-    if (previewPath?.isConnected) return previewPath;
-    previewPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    previewPath.setAttribute("fill", "none");
-    previewPath.setAttribute("stroke", "#7357ff");
-    previewPath.setAttribute("stroke-width", "4");
-    previewPath.setAttribute("stroke-linecap", "round");
-    previewPath.setAttribute("stroke-linejoin", "round");
-    previewPath.setAttribute("stroke-dasharray", "8 8");
-    previewPath.dataset.connectExistingPreview = "1";
-    links.appendChild(previewPath);
-    return previewPath;
+  function boardPointFor(event) {
+    if (typeof boardPoint === "function") return boardPoint(event);
+    const rect = board.getBoundingClientRect();
+    return {
+      x: event.clientX - rect.left + board.scrollLeft,
+      y: event.clientY - rect.top + board.scrollTop
+    };
   }
 
-  function inferMode(sourceTask, point) {
-    if (typeof window.inferBranchMode === "function") return window.inferBranchMode(sourceTask, point);
-    const sourceNote = noteForTask(sourceTask.id);
-    const size = sourceNote ? noteSize(sourceNote) : { width: 180, height: 90 };
-    return Math.abs(point.y - (sourceTask.y + size.height / 2)) < size.height ? "same" : "branch";
+  function targetDateFor(event) {
+    if (typeof getDateForPointer === "function") return getDateForPointer(event);
+    return typeof todayISO === "function" ? todayISO() : new Date().toISOString().slice(0, 10);
   }
 
-  function updatePreview(point, targetId = null) {
-    if (!drag) return;
-    const source = findTask(drag.sourceId);
-    if (!source) return;
+  function isAncestor(possibleAncestorId, taskId) {
+    let current = task(taskId);
+    const seen = new Set();
 
-    const sourceCenterX = source.x + drag.size.width / 2;
-    const sourceCenterY = source.y + drag.size.height / 2;
-    let endX = point.x;
-    let endY = point.y;
-
-    const target = targetId ? findTask(targetId) : null;
-    if (target) {
-      endX = target.x + drag.size.width / 2;
-      endY = target.y + drag.size.height / 2;
+    while (current?.parentId && !seen.has(current.id)) {
+      if (current.parentId === possibleAncestorId) return true;
+      seen.add(current.id);
+      current = task(current.parentId);
     }
 
-    createPreviewPath().setAttribute("d", `M ${sourceCenterX} ${sourceCenterY} L ${endX} ${endY}`);
+    return false;
+  }
+
+  function canAttachTaskToParent(taskId, parentId) {
+    if (!taskId || !parentId || taskId === parentId) return false;
+    if (!task(taskId) || !task(parentId)) return false;
+    return !isAncestor(taskId, parentId);
+  }
+
+  function taskAtPoint(clientX, clientY, sourceId, { requireAttachable = false } = {}) {
+    const noteEls = [...notes.querySelectorAll(".note[data-id]")];
+
+    for (let i = noteEls.length - 1; i >= 0; i--) {
+      const noteEl = noteEls[i];
+      const targetId = noteEl.dataset.id;
+      if (!targetId || targetId === sourceId) continue;
+      if (requireAttachable && !canAttachTaskToParent(sourceId, targetId)) continue;
+
+      const rect = noteEl.getBoundingClientRect();
+      const inside = clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
+      if (inside) return targetId;
+    }
+
+    return null;
   }
 
   function clearHighlight() {
@@ -180,63 +123,104 @@
     if (targetId) noteForTask(targetId)?.classList.add("connectDropTarget");
   }
 
-  function closeChoice() {
-    choiceCleanup?.();
-    choiceCleanup = null;
+  function createPreviewPath() {
+    if (previewPath?.isConnected) return previewPath;
+
+    previewPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    previewPath.setAttribute("fill", "none");
+    previewPath.setAttribute("stroke", "#7357ff");
+    previewPath.setAttribute("stroke-width", "4");
+    previewPath.setAttribute("stroke-linecap", "round");
+    previewPath.setAttribute("stroke-linejoin", "round");
+    previewPath.setAttribute("stroke-dasharray", "8 8");
+    previewPath.dataset.connectExistingPreview = "1";
+    links.appendChild(previewPath);
+    return previewPath;
   }
 
-  function cleanupDrag() {
+  function updateHandlePreview(point, targetId = null) {
+    if (!handleDrag) return;
+    const source = task(handleDrag.sourceId);
+    if (!source) return;
+
+    const sourceCenterX = source.x + handleDrag.size.width / 2;
+    const sourceCenterY = source.y + handleDrag.size.height / 2;
+    let endX = point.x;
+    let endY = point.y;
+
+    const target = targetId ? task(targetId) : null;
+    if (target) {
+      endX = target.x + handleDrag.size.width / 2;
+      endY = target.y + handleDrag.size.height / 2;
+    }
+
+    createPreviewPath().setAttribute("d", `M ${sourceCenterX} ${sourceCenterY} L ${endX} ${endY}`);
+  }
+
+  function cleanupHandleDrag() {
     clearHighlight();
     ghost.classList.add("hidden");
     previewPath?.remove();
     previewPath = null;
     board.classList.remove("grabbing");
-    drag?.sourceEl?.classList.remove("dragging");
-    drag = null;
+    handleDrag?.sourceEl?.classList.remove("dragging");
+    handleDrag = null;
   }
 
-  function openCreateFromContext(context) {
-    closeChoice();
-    exitConnectPickMode();
-    if (typeof window.openCreateTaskModal === "function") {
-      window.openCreateTaskModal({
-        parentId: context.sourceId,
-        targetAt: context.targetAt,
-        branchMode: context.branchMode || "branch"
-      });
-    }
+  function closeChoice() {
+    choiceCleanup?.();
+    choiceCleanup = null;
   }
 
-  function connectExistingTask(context) {
+  function openCreateFromHandle(context) {
     closeChoice();
-    const source = findTask(context.sourceId);
-    const target = findTask(context.targetId);
+    openCreateTaskModal({
+      parentId: context.sourceId,
+      targetAt: context.targetAt,
+      branchMode: context.branchMode || "branch"
+    });
+  }
+
+  function attachTargetToSource(context) {
+    closeChoice();
+    const source = task(context.sourceId);
+    const target = task(context.targetId);
     if (!source || !target) return;
-    const status = connectionStatus(source.id, target.id);
-    if (!status.canConnect) return;
+    if (!canAttachTaskToParent(target.id, source.id)) return;
 
-    if (typeof window.snapshot === "function") window.snapshot();
+    snapshot();
     target.parentId = source.id;
     target.branchMode = context.branchMode || "branch";
-    if (typeof window.setSelected === "function") window.setSelected(target.id);
-    if (typeof window.refreshLaneDates === "function") window.refreshLaneDates();
-    if (typeof window.branchLayout === "function") window.branchLayout();
-    if (typeof window.requestRender === "function") window.requestRender();
+    setSelected(target.id);
+    refreshLaneDates();
+    branchLayout();
+    requestRender();
   }
 
-  function positionMenu(menu, context) {
-    if (mobileQuery.matches) return;
-    const width = Math.min(360, window.innerWidth - 28);
-    const left = Math.min(Math.max(14, context.clientX + 12), window.innerWidth - width - 14);
-    const top = Math.min(Math.max(14, context.clientY + 12), window.innerHeight - 260);
-    menu.style.left = `${left}px`;
-    menu.style.top = `${top}px`;
+  function attachDraggedTaskToTarget(taskId, parentId, event) {
+    const child = task(taskId);
+    const parent = task(parentId);
+    if (!child || !parent) return false;
+    if (!canAttachTaskToParent(child.id, parent.id)) return false;
+
+    snapshot();
+    child.parentId = parent.id;
+    child.branchMode = typeof inferBranchMode === "function"
+      ? inferBranchMode(parent, boardPointFor(event))
+      : "branch";
+    setSelected(child.id);
+    refreshLaneDates();
+    branchLayout();
+    requestRender();
+    return true;
   }
 
-  function makeChoiceShell(title = copy("title")) {
+  function makeChoiceShell(context) {
     closeChoice();
+
     const backdrop = document.createElement("div");
     backdrop.className = "connectChoiceBackdrop";
+
     const menu = document.createElement("section");
     menu.className = "connectChoiceMenu";
     menu.setAttribute("role", "dialog");
@@ -244,22 +228,48 @@
     menu.innerHTML = `
       <p class="connectChoiceKicker"></p>
       <h2 class="connectChoiceTitle"></h2>
-      <div class="connectChoiceActions"></div>
+      <div class="connectChoiceActions">
+        <button type="button" class="connectChoiceAction" data-action="create">
+          <strong></strong>
+          <span></span>
+        </button>
+        <button type="button" class="connectChoiceAction primary" data-action="connect">
+          <strong></strong>
+          <span></span>
+        </button>
+      </div>
     `;
+
     menu.querySelector(".connectChoiceKicker").textContent = copy("kicker");
-    menu.querySelector(".connectChoiceTitle").textContent = title;
+    menu.querySelector(".connectChoiceTitle").textContent = copy("title");
+    menu.querySelector("[data-action='create'] strong").textContent = copy("create");
+    menu.querySelector("[data-action='create'] span").textContent = copy("createHelp");
+    menu.querySelector("[data-action='connect'] strong").textContent = copy("connect");
+    menu.querySelector("[data-action='connect'] span").textContent = copy("connectHelp");
+
     backdrop.appendChild(menu);
     document.body.appendChild(backdrop);
 
+    if (!mobileQuery.matches) {
+      const width = Math.min(360, window.innerWidth - 28);
+      const left = Math.min(Math.max(14, context.clientX + 12), window.innerWidth - width - 14);
+      const top = Math.min(Math.max(14, context.clientY + 12), window.innerHeight - 260);
+      menu.style.left = `${left}px`;
+      menu.style.top = `${top}px`;
+    }
+
     const onKey = event => {
-      if (event.key === "Escape") {
-        closeChoice();
-        exitConnectPickMode();
-      }
+      if (event.key === "Escape") closeChoice();
     };
 
     backdrop.addEventListener("pointerdown", event => {
       if (event.target === backdrop) closeChoice();
+    });
+
+    menu.addEventListener("click", event => {
+      const action = event.target.closest("[data-action]")?.dataset.action;
+      if (action === "create") openCreateFromHandle(context);
+      if (action === "connect") attachTargetToSource(context);
     });
 
     window.addEventListener("keydown", onKey);
@@ -267,114 +277,17 @@
       window.removeEventListener("keydown", onKey);
       backdrop.remove();
     };
-
-    return { menu, actions: menu.querySelector(".connectChoiceActions") };
   }
 
-  function addChoiceAction(actions, { action, label, help, primary = false, disabled = false }) {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = `connectChoiceAction ${primary ? "primary" : ""}`;
-    button.dataset.action = action;
-    button.disabled = disabled;
-    button.innerHTML = `<strong></strong><span></span>`;
-    button.querySelector("strong").textContent = label;
-    button.querySelector("span").textContent = help;
-    actions.appendChild(button);
-    return button;
-  }
+  document.addEventListener("pointerdown", event => {
+    const handle = event.target.closest?.(".handle");
+    if (!handle || mobileQuery.matches) return;
 
-  function openTargetChoice(context) {
-    const status = connectionStatus(context.sourceId, context.targetId);
-    const { menu, actions } = makeChoiceShell();
-    addChoiceAction(actions, {
-      action: "create",
-      label: copy("create"),
-      help: copy("createHelp")
-    });
-    addChoiceAction(actions, {
-      action: "connect",
-      label: copy("connectToTarget"),
-      help: status.reason ? copy(status.reason) : copy("connectToTargetHelp"),
-      primary: true,
-      disabled: !status.canConnect
-    });
-    positionMenu(menu, context);
+    const noteEl = handle.closest(".note[data-id]");
+    if (!noteEl) return;
 
-    menu.addEventListener("click", event => {
-      const action = event.target.closest("[data-action]")?.dataset.action;
-      if (action === "create") openCreateFromContext(context);
-      if (action === "connect") connectExistingTask(context);
-    });
-  }
-
-  function openMobileSourceChoice(context) {
-    const { menu, actions } = makeChoiceShell();
-    addChoiceAction(actions, {
-      action: "create",
-      label: copy("create"),
-      help: copy("createHelp")
-    });
-    addChoiceAction(actions, {
-      action: "pick",
-      label: copy("connect"),
-      help: copy("connectHelp"),
-      primary: true
-    });
-    positionMenu(menu, context);
-
-    menu.addEventListener("click", event => {
-      const action = event.target.closest("[data-action]")?.dataset.action;
-      if (action === "create") openCreateFromContext(context);
-      if (action === "pick") enterConnectPickMode(context);
-    });
-  }
-
-  function enterConnectPickMode(context) {
-    closeChoice();
-    exitConnectPickMode();
-    connectPick = {
-      sourceId: context.sourceId,
-      targetAt: context.targetAt || sourceDate(context.sourceId),
-      branchMode: "branch"
-    };
-    document.body.classList.add("connectPickMode");
-    noteForTask(connectPick.sourceId)?.classList.add("connectSourceTask");
-
-    const banner = document.createElement("div");
-    banner.className = "connectPickBanner";
-    banner.innerHTML = `
-      <div><strong></strong><span></span></div>
-      <button type="button"></button>
-    `;
-    banner.querySelector("strong").textContent = copy("pickTitle");
-    banner.querySelector("span").textContent = copy("pickHelp");
-    banner.querySelector("button").textContent = copy("cancel");
-    banner.querySelector("button").addEventListener("click", exitConnectPickMode);
-    document.body.appendChild(banner);
-
-    const onKey = event => {
-      if (event.key === "Escape") exitConnectPickMode();
-    };
-    window.addEventListener("keydown", onKey);
-    bannerCleanup = () => {
-      window.removeEventListener("keydown", onKey);
-      banner.remove();
-    };
-  }
-
-  function exitConnectPickMode() {
-    if (!connectPick && !bannerCleanup) return;
-    document.body.classList.remove("connectPickMode");
-    if (connectPick?.sourceId) noteForTask(connectPick.sourceId)?.classList.remove("connectSourceTask");
-    clearHighlight();
-    bannerCleanup?.();
-    bannerCleanup = null;
-    connectPick = null;
-  }
-
-  function startHandleDrag(event, noteEl, sourceId) {
-    const source = findTask(sourceId);
+    const sourceId = noteEl.dataset.id;
+    const source = task(sourceId);
     if (!source) return;
 
     event.preventDefault();
@@ -382,22 +295,18 @@
     event.stopImmediatePropagation();
 
     closeChoice();
-    exitConnectPickMode();
-    if (typeof window.startPointerSession === "function") window.startPointerSession();
-    if (typeof window.setSelected === "function") window.setSelected(sourceId);
+    if (typeof startPointerSession === "function") startPointerSession();
+    setSelected(sourceId);
 
-    const point = getBoardPoint(event);
+    const point = boardPointFor(event);
     const size = noteSize(noteEl);
-    drag = {
+    handleDrag = {
       sourceId,
       sourceEl: noteEl,
       pointerId: event.pointerId,
       size,
-      point,
       branchMode: "same",
-      targetAt: targetDateForPointer(event),
-      clientX: event.clientX,
-      clientY: event.clientY
+      targetAt: targetDateFor(event)
     };
 
     ghost.classList.remove("hidden");
@@ -405,106 +314,97 @@
     noteEl.classList.add("dragging");
     board.classList.add("grabbing");
     noteEl.setPointerCapture?.(event.pointerId);
-    updatePreview(point);
-  }
-
-  document.addEventListener("pointerdown", event => {
-    const handle = event.target.closest?.(".handle");
-    if (!handle) return;
-    const noteEl = handle.closest(".note[data-id]");
-    if (!noteEl) return;
-    startHandleDrag(event, noteEl, noteEl.dataset.id);
+    updateHandlePreview(point);
   }, true);
 
   window.addEventListener("pointermove", event => {
-    if (!drag) return;
-    event.preventDefault();
-    event.stopPropagation();
-    event.stopImmediatePropagation();
+    if (handleDrag) {
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
 
-    const point = getBoardPoint(event);
-    const source = findTask(drag.sourceId);
-    if (!source) return;
+      const point = boardPointFor(event);
+      const source = task(handleDrag.sourceId);
+      if (!source) return;
 
-    const targetId = taskAtPoint(event.clientX, event.clientY, drag.sourceId);
-    drag.point = point;
-    drag.branchMode = inferMode(source, point);
-    drag.targetAt = targetDateForPointer(event);
-    drag.targetId = targetId;
-    drag.clientX = event.clientX;
-    drag.clientY = event.clientY;
-
-    setObjectPos(ghost, Math.max(40, point.x - drag.size.width / 2), Math.max(30, point.y - drag.size.height / 2));
-    setHighlight(targetId);
-    updatePreview(point, targetId);
-  }, true);
-
-  window.addEventListener("pointerup", event => {
-    if (!drag) return;
-    event.preventDefault();
-    event.stopPropagation();
-    event.stopImmediatePropagation();
-
-    const context = {
-      sourceId: drag.sourceId,
-      targetId: drag.targetId || taskAtPoint(event.clientX, event.clientY, drag.sourceId),
-      targetAt: targetDateForPointer(event),
-      branchMode: drag.branchMode,
-      clientX: event.clientX,
-      clientY: event.clientY
-    };
-
-    cleanupDrag();
-
-    if (context.targetId) {
-      openTargetChoice(context);
+      const targetId = taskAtPoint(event.clientX, event.clientY, handleDrag.sourceId, { requireAttachable: false });
+      handleDrag.branchMode = typeof inferBranchMode === "function" ? inferBranchMode(source, point) : "branch";
+      handleDrag.targetAt = targetDateFor(event);
+      handleDrag.targetId = targetId;
+      setObjectPos(ghost, Math.max(40, point.x - handleDrag.size.width / 2), Math.max(30, point.y - handleDrag.size.height / 2));
+      setHighlight(targetId && canAttachTaskToParent(targetId, handleDrag.sourceId) ? targetId : null);
+      updateHandlePreview(point, targetId);
       return;
     }
 
-    openCreateFromContext(context);
+    if (mobileNoteDrag && event.pointerId === mobileNoteDrag.pointerId) {
+      const dx = event.clientX - mobileNoteDrag.startX;
+      const dy = event.clientY - mobileNoteDrag.startY;
+      if (Math.hypot(dx, dy) > 10) mobileNoteDrag.moved = true;
+
+      if (mobileNoteDrag.moved) {
+        const targetId = taskAtPoint(event.clientX, event.clientY, mobileNoteDrag.taskId, { requireAttachable: true });
+        setHighlight(targetId);
+        mobileNoteDrag.targetId = targetId;
+      }
+    }
   }, true);
 
-  window.addEventListener("pointercancel", event => {
-    if (drag?.pointerId === event.pointerId) cleanupDrag();
-  }, true);
+  window.addEventListener("pointerup", event => {
+    if (handleDrag) {
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
 
-  window.addEventListener("cherry-mobile-add-request", event => {
-    if (!mobileQuery.matches) return;
-    const detail = event.detail || {};
-    const sourceId = detail.parentId || detail.task?.id;
-    if (!sourceId || !findTask(sourceId)) return;
+      const context = {
+        sourceId: handleDrag.sourceId,
+        targetId: handleDrag.targetId || taskAtPoint(event.clientX, event.clientY, handleDrag.sourceId),
+        targetAt: targetDateFor(event),
+        branchMode: handleDrag.branchMode,
+        clientX: event.clientX,
+        clientY: event.clientY
+      };
 
-    event.preventDefault();
-    openMobileSourceChoice({
-      sourceId,
-      targetAt: detail.targetAt || sourceDate(sourceId),
-      branchMode: detail.branchMode || "branch",
-      clientX: detail.clientX || window.innerWidth / 2,
-      clientY: detail.clientY || window.innerHeight / 2
-    });
+      cleanupHandleDrag();
+
+      if (context.targetId && canAttachTaskToParent(context.targetId, context.sourceId)) makeChoiceShell(context);
+      else openCreateFromHandle(context);
+      return;
+    }
+
+    if (!mobileNoteDrag || event.pointerId !== mobileNoteDrag.pointerId) return;
+
+    const current = mobileNoteDrag;
+    mobileNoteDrag = null;
+    const targetId = current.targetId || taskAtPoint(event.clientX, event.clientY, current.taskId, { requireAttachable: true });
+    clearHighlight();
+
+    if (!current.moved || !targetId) return;
+    attachDraggedTaskToTarget(current.taskId, targetId, event);
   });
 
-  document.addEventListener("click", event => {
-    if (!connectPick) return;
+  window.addEventListener("pointercancel", event => {
+    if (handleDrag?.pointerId === event.pointerId) cleanupHandleDrag();
+    if (mobileNoteDrag?.pointerId === event.pointerId) {
+      mobileNoteDrag = null;
+      clearHighlight();
+    }
+  }, true);
+
+  document.addEventListener("pointerdown", event => {
+    if (!mobileQuery.matches) return;
+    if (event.target.closest?.(".handle, .doneBtn, .deleteBtn, button, input, textarea, select, .mobileActionBar")) return;
+
     const noteEl = event.target.closest?.(".note[data-id]");
     if (!noteEl) return;
 
-    event.preventDefault();
-    event.stopPropagation();
-    event.stopImmediatePropagation();
-
-    const targetId = noteEl.dataset.id;
-    const context = {
-      sourceId: connectPick.sourceId,
-      targetId,
-      targetAt: connectPick.targetAt,
-      branchMode: "branch",
-      clientX: event.clientX,
-      clientY: event.clientY
+    mobileNoteDrag = {
+      pointerId: event.pointerId,
+      taskId: noteEl.dataset.id,
+      startX: event.clientX,
+      startY: event.clientY,
+      moved: false,
+      targetId: null
     };
-    exitConnectPickMode();
-
-    if (connectionStatus(context.sourceId, context.targetId).canConnect) connectExistingTask(context);
-    else openTargetChoice(context);
   }, true);
 })();
