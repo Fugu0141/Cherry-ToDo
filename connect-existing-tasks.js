@@ -231,13 +231,11 @@
     backdrop.appendChild(menu);
     document.body.appendChild(backdrop);
 
-    if (!mobileQuery.matches) {
-      const width = Math.min(360, window.innerWidth - 28);
-      const left = Math.min(Math.max(14, context.clientX + 12), window.innerWidth - width - 14);
-      const top = Math.min(Math.max(14, context.clientY + 12), window.innerHeight - 260);
-      menu.style.left = `${left}px`;
-      menu.style.top = `${top}px`;
-    }
+    const width = Math.min(360, window.innerWidth - 28);
+    const left = Math.min(Math.max(14, context.clientX + 12), window.innerWidth - width - 14);
+    const top = Math.min(Math.max(14, context.clientY + 12), window.innerHeight - 260);
+    menu.style.left = `${left}px`;
+    menu.style.top = `${top}px`;
 
     const onKey = event => {
       if (event.key === "Escape") closeChoice();
@@ -261,7 +259,9 @@
   }
 
   document.addEventListener("pointerdown", event => {
-    // Only hook the explicit connection handle. Card dragging stays owned by the core app.
+    // Mobile creation is handled by the selected-task bottom + button, so this desktop-only hook must not intercept it.
+    if (mobileQuery.matches) return;
+
     const handle = event.target.closest?.(".handle");
     if (!handle) return;
 
