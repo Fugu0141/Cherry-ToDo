@@ -99,28 +99,6 @@
   opacity: 1;
 }
 
-@media (max-width: 980px) {
-  .board.verticalMode .handle {
-    width: 34px;
-    height: 34px;
-    border-radius: 999px;
-    font-size: 18px;
-    touch-action: none;
-  }
-
-  .board.verticalMode .handle::after {
-    content: "↓";
-    position: absolute;
-    right: 50%;
-    top: 100%;
-    color: var(--muted);
-    font-size: 12px;
-    font-weight: 900;
-    transform: translateX(50%);
-    opacity: .72;
-  }
-}
-
 @media (max-width: 760px) {
   .connectChoiceBackdrop {
     display: grid;
