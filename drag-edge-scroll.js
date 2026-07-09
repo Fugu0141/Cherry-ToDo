@@ -13,9 +13,9 @@
 
   function axisMaxSpeed(axis) {
     if (mobileQuery.matches) {
-      return axis === "y" ? 9 : 12;
+      return axis === "y" ? 8 : 12;
     }
-    return axis === "x" ? 10 : 16;
+    return axis === "x" ? 12 : 18;
   }
 
   function clampSpeed(distanceIntoEdge, axis) {
@@ -38,7 +38,9 @@
   }
 
   function dispatchSyntheticPointerMove(source) {
-    if (!source) return;
+    // On mobile, synthetic pointermove competes with the core card-drag gesture and can make downward scrolling jumpy.
+    if (!source || mobileQuery.matches) return;
+
     syntheticMove = true;
     const event = new PointerEvent("pointermove", {
       bubbles: true,
