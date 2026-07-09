@@ -30,7 +30,6 @@
   };
 
   let handleDrag = null;
-  let mobileFlowDrag = null;
   let previewPath = null;
   let highlightedTargetId = null;
   let choiceCleanup = null;
@@ -109,11 +108,6 @@
     return null;
   }
 
-  function connectableTargetAtPoint(clientX, clientY, sourceId) {
-    const targetId = taskAtPoint(clientX, clientY, sourceId);
-    return targetId && canAttachTaskToParent(targetId, sourceId) ? targetId : null;
-  }
-
   function clearHighlight() {
     if (!highlightedTargetId) return;
     noteForTask(highlightedTargetId)?.classList.remove("connectDropTarget");
@@ -142,7 +136,7 @@
     return previewPath;
   }
 
-  function updateHandlePreview(point, targetId = null) {
+  function updatePreview(point, targetId = null) {
     if (!handleDrag) return;
     const source = task(handleDrag.sourceId);
     if (!source) return;
@@ -161,7 +155,7 @@
     createPreviewPath().setAttribute("d", `M ${sourceCenterX} ${sourceCenterY} L ${endX} ${endY}`);
   }
 
-  function cleanupHandleDrag() {
+  function cleanupDrag() {
     clearHighlight();
     ghost.classList.add("hidden");
     previewPath?.remove();
@@ -176,7 +170,7 @@
     choiceCleanup = null;
   }
 
-  function openCreateFromHandle(context) {
+  function openCreateFromContext(context) {
     closeChoice();
     openCreateTaskModal({
       parentId: context.sourceId,
@@ -185,7 +179,7 @@
     });
   }
 
-  function attachTargetToSource(context) {
+  function connectTargetToSource(context) {
     closeChoice();
     const source = task(context.sourceId);
     const target = task(context.targetId);
@@ -202,7 +196,7 @@
     return true;
   }
 
-  function makeChoiceShell(context) {
+  function openChoice(context) {
     closeChoice();
 
     const backdrop = document.createElement("div");
@@ -237,13 +231,11 @@
     backdrop.appendChild(menu);
     document.body.appendChild(backdrop);
 
-    if (!mobileQuery.matches) {
-      const width = Math.min(360, window.innerWidth - 28);
-      const left = Math.min(Math.max(14, context.clientX + 12), window.innerWidth - width - 14);
-      const top = Math.min(Math.max(14, context.clientY + 12), window.innerHeight - 260);
-      menu.style.left = `${left}px`;
-      menu.style.top = `${top}px`;
-    }
+    const width = Math.min(360, window.innerWidth - 28);
+    const left = Math.min(Math.max(14, context.clientX + 12), window.innerWidth - width - 14);
+    const top = Math.min(Math.max(14, context.clientY + 12), window.innerHeight - 260);
+    menu.style.left = `${left}px`;
+    menu.style.top = `${top}px`;
 
     const onKey = event => {
       if (event.key === "Escape") closeChoice();
@@ -255,8 +247,8 @@
 
     menu.addEventListener("click", event => {
       const action = event.target.closest("[data-action]")?.dataset.action;
-      if (action === "create") openCreateFromHandle(context);
-      if (action === "connect") attachTargetToSource(context);
+      if (action === "create") openCreateFromContext(context);
+      if (action === "connect") connectTargetToSource(context);
     });
 
     window.addEventListener("keydown", onKey);
@@ -267,8 +259,11 @@
   }
 
   document.addEventListener("pointerdown", event => {
+    // Do not hook mobile card dragging here. Mobile drag is owned by the core app.
+    if (mobileQuery.matches) return;
+
     const handle = event.target.closest?.(".handle");
-    if (!handle || mobileQuery.matches) return;
+    if (!handle) return;
 
     const noteEl = handle.closest(".note[data-id]");
     if (!noteEl) return;
@@ -301,110 +296,57 @@
     noteEl.classList.add("dragging");
     board.classList.add("grabbing");
     noteEl.setPointerCapture?.(event.pointerId);
-    updateHandlePreview(point);
-  }, true);
-
-  document.addEventListener("pointerdown", event => {
-    if (!mobileQuery.matches) return;
-    if (event.target.closest?.(".handle, .doneBtn, .deleteBtn, button, input, textarea, select, .mobileActionBar")) return;
-
-    const noteEl = event.target.closest?.(".note[data-id]");
-    if (!noteEl) return;
-
-    mobileFlowDrag = {
-      pointerId: event.pointerId,
-      sourceId: noteEl.dataset.id,
-      startX: event.clientX,
-      startY: event.clientY,
-      moved: false,
-      targetId: null
-    };
-
-    noteEl.setPointerCapture?.(event.pointerId);
+    updatePreview(point);
   }, true);
 
   window.addEventListener("pointermove", event => {
-    if (handleDrag) {
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation();
+    if (!handleDrag) return;
 
-      const point = boardPointFor(event);
-      const source = task(handleDrag.sourceId);
-      if (!source) return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
 
-      const targetId = taskAtPoint(event.clientX, event.clientY, handleDrag.sourceId);
-      handleDrag.branchMode = typeof inferBranchMode === "function" ? inferBranchMode(source, point) : "branch";
-      handleDrag.targetAt = targetDateFor(event);
-      handleDrag.targetId = targetId;
-      setObjectPos(ghost, Math.max(40, point.x - handleDrag.size.width / 2), Math.max(30, point.y - handleDrag.size.height / 2));
-      setHighlight(targetId && canAttachTaskToParent(targetId, handleDrag.sourceId) ? targetId : null);
-      updateHandlePreview(point, targetId);
-      return;
-    }
+    const point = boardPointFor(event);
+    const source = task(handleDrag.sourceId);
+    if (!source) return;
 
-    if (mobileFlowDrag && event.pointerId === mobileFlowDrag.pointerId) {
-      const dx = event.clientX - mobileFlowDrag.startX;
-      const dy = event.clientY - mobileFlowDrag.startY;
-      if (Math.hypot(dx, dy) > 10) mobileFlowDrag.moved = true;
+    const targetId = taskAtPoint(event.clientX, event.clientY, handleDrag.sourceId);
+    handleDrag.branchMode = typeof inferBranchMode === "function" ? inferBranchMode(source, point) : "branch";
+    handleDrag.targetAt = targetDateFor(event);
+    handleDrag.targetId = targetId;
 
-      if (!mobileFlowDrag.moved) return;
-
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation();
-
-      const targetId = connectableTargetAtPoint(event.clientX, event.clientY, mobileFlowDrag.sourceId);
-      setHighlight(targetId);
-      mobileFlowDrag.targetId = targetId;
-    }
+    setObjectPos(ghost, Math.max(40, point.x - handleDrag.size.width / 2), Math.max(30, point.y - handleDrag.size.height / 2));
+    setHighlight(targetId && canAttachTaskToParent(targetId, handleDrag.sourceId) ? targetId : null);
+    updatePreview(point, targetId);
   }, true);
 
   window.addEventListener("pointerup", event => {
-    if (handleDrag) {
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation();
+    if (!handleDrag) return;
 
-      const context = {
-        sourceId: handleDrag.sourceId,
-        targetId: handleDrag.targetId || taskAtPoint(event.clientX, event.clientY, handleDrag.sourceId),
-        targetAt: targetDateFor(event),
-        branchMode: handleDrag.branchMode,
-        clientX: event.clientX,
-        clientY: event.clientY
-      };
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
 
-      cleanupHandleDrag();
+    const context = {
+      sourceId: handleDrag.sourceId,
+      targetId: handleDrag.targetId || taskAtPoint(event.clientX, event.clientY, handleDrag.sourceId),
+      targetAt: targetDateFor(event),
+      branchMode: handleDrag.branchMode,
+      clientX: event.clientX,
+      clientY: event.clientY
+    };
 
-      if (context.targetId && canAttachTaskToParent(context.targetId, context.sourceId)) makeChoiceShell(context);
-      else openCreateFromHandle(context);
+    cleanupDrag();
+
+    if (context.targetId && canAttachTaskToParent(context.targetId, context.sourceId)) {
+      openChoice(context);
       return;
     }
 
-    if (!mobileFlowDrag || event.pointerId !== mobileFlowDrag.pointerId) return;
-
-    const current = mobileFlowDrag;
-    mobileFlowDrag = null;
-    const targetId = current.targetId || connectableTargetAtPoint(event.clientX, event.clientY, current.sourceId);
-    clearHighlight();
-
-    if (!current.moved || !targetId) return;
-
-    attachTargetToSource({
-      sourceId: current.sourceId,
-      targetId,
-      branchMode: "branch",
-      clientX: event.clientX,
-      clientY: event.clientY
-    });
+    openCreateFromContext(context);
   }, true);
 
   window.addEventListener("pointercancel", event => {
-    if (handleDrag?.pointerId === event.pointerId) cleanupHandleDrag();
-    if (mobileFlowDrag?.pointerId === event.pointerId) {
-      mobileFlowDrag = null;
-      clearHighlight();
-    }
+    if (handleDrag?.pointerId === event.pointerId) cleanupDrag();
   }, true);
 })();
