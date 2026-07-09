@@ -231,11 +231,13 @@
     backdrop.appendChild(menu);
     document.body.appendChild(backdrop);
 
-    const width = Math.min(360, window.innerWidth - 28);
-    const left = Math.min(Math.max(14, context.clientX + 12), window.innerWidth - width - 14);
-    const top = Math.min(Math.max(14, context.clientY + 12), window.innerHeight - 260);
-    menu.style.left = `${left}px`;
-    menu.style.top = `${top}px`;
+    if (!mobileQuery.matches) {
+      const width = Math.min(360, window.innerWidth - 28);
+      const left = Math.min(Math.max(14, context.clientX + 12), window.innerWidth - width - 14);
+      const top = Math.min(Math.max(14, context.clientY + 12), window.innerHeight - 260);
+      menu.style.left = `${left}px`;
+      menu.style.top = `${top}px`;
+    }
 
     const onKey = event => {
       if (event.key === "Escape") closeChoice();
@@ -259,9 +261,7 @@
   }
 
   document.addEventListener("pointerdown", event => {
-    // Do not hook mobile card dragging here. Mobile drag is owned by the core app.
-    if (mobileQuery.matches) return;
-
+    // Only hook the explicit connection handle. Card dragging stays owned by the core app.
     const handle = event.target.closest?.(".handle");
     if (!handle) return;
 
@@ -288,7 +288,10 @@
       pointerId: event.pointerId,
       size,
       branchMode: "same",
-      targetAt: targetDateFor(event)
+      targetAt: targetDateFor(event),
+      moved: false,
+      startX: event.clientX,
+      startY: event.clientY
     };
 
     ghost.classList.remove("hidden");
@@ -309,6 +312,10 @@
     const point = boardPointFor(event);
     const source = task(handleDrag.sourceId);
     if (!source) return;
+
+    if (Math.hypot(event.clientX - handleDrag.startX, event.clientY - handleDrag.startY) > 8) {
+      handleDrag.moved = true;
+    }
 
     const targetId = taskAtPoint(event.clientX, event.clientY, handleDrag.sourceId);
     handleDrag.branchMode = typeof inferBranchMode === "function" ? inferBranchMode(source, point) : "branch";
@@ -333,12 +340,13 @@
       targetAt: targetDateFor(event),
       branchMode: handleDrag.branchMode,
       clientX: event.clientX,
-      clientY: event.clientY
+      clientY: event.clientY,
+      moved: handleDrag.moved
     };
 
     cleanupDrag();
 
-    if (context.targetId && canAttachTaskToParent(context.targetId, context.sourceId)) {
+    if (context.moved && context.targetId && canAttachTaskToParent(context.targetId, context.sourceId)) {
       openChoice(context);
       return;
     }
