@@ -1,22 +1,27 @@
 (() => {
   const currentStorageKey = "quest-sticky-todo-v10";
   const legacyStorageKeys = [
-    "quest-sticky-todo-v9",
-    "quest-sticky-todo-v8",
-    "quest-sticky-todo-v6",
-    "quest-sticky-todo-v5",
-    "quest-sticky-todo-v4",
-    "quest-sticky-todo-v3",
-    "quest-sticky-todo-v2"
+    "quest-sticky-todo-v9", "quest-sticky-todo-v8", "quest-sticky-todo-v6",
+    "quest-sticky-todo-v5", "quest-sticky-todo-v4", "quest-sticky-todo-v3", "quest-sticky-todo-v2"
   ];
   const saveDelayMs = 160;
   const maxUndoSnapshots = 80;
   const appBootSaveNow = typeof saveNow === "function" ? saveNow : null;
+  const adapters = window.CherryStorageAdapters;
+  const primaryStorage = adapters?.local;
+  const fallbackStorage = adapters?.memory;
+
+  function readItem(key) {
+    return primaryStorage?.get(key) ?? fallbackStorage?.get(key) ?? null;
+  }
+
+  function writeItem(key, value) {
+    if (primaryStorage?.set(key, value)) return true;
+    return fallbackStorage?.set(key, value) ?? false;
+  }
 
   function storedStateRaw() {
-    return [currentStorageKey, ...legacyStorageKeys]
-      .map(key => localStorage.getItem(key))
-      .find(Boolean) || null;
+    return [currentStorageKey, ...legacyStorageKeys].map(readItem).find(Boolean) || null;
   }
 
   function normalizeLegacyBranchModes(nextState) {
@@ -26,7 +31,7 @@
   }
 
   function saveNowFromState() {
-    localStorage.setItem(currentStorageKey, JSON.stringify(state));
+    writeItem(currentStorageKey, JSON.stringify(state));
   }
 
   function scheduleStateSave() {
@@ -37,7 +42,6 @@
   function loadStoredState() {
     const raw = storedStateRaw();
     if (!raw) return;
-
     try {
       const parsed = JSON.parse(raw);
       if (parsed && parsed.tasks) {
@@ -55,12 +59,10 @@
   }
 
   if (appBootSaveNow) window.removeEventListener("beforeunload", appBootSaveNow);
-
   saveNow = saveNowFromState;
   scheduleSave = scheduleStateSave;
   load = loadStoredState;
   snapshot = snapshotState;
-
   window.addEventListener("beforeunload", saveNowFromState);
 
   window.cherryStorage = {
