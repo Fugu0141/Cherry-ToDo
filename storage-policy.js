@@ -1,1 +1,1 @@
-(()=>{const A=window.CherryStorageAdapters,K="cherry-storage-mode-v1",P="persistent",S="session";const safe=(f,d=null)=>{try{return f()}catch{return d}};const mode=()=>safe(()=>sessionStorage.getItem(K))===S?S:(safe(()=>localStorage.getItem(K))===P?P:P);const set=m=>{if(m===S){safe(()=>sessionStorage.setItem(K,S));return S}safe(()=>sessionStorage.removeItem(K));safe(()=>localStorage.setItem(K,P));
+(()=>{const a=window.CherryStorageAdapters;window.CherryStoragePolicy={mode:()=>"persistent",storage:()=>a.local||a.memory}})();
