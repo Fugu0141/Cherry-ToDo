@@ -1,0 +1,1 @@
+(()=>{const w=s=>({get:k=>{try{return s.getItem(k)}catch{return null}},set:(k,v)=>{try{s.setItem(k,String(v));return true}catch{return false}},remove:k=>{try{s.removeItem(k);return true}catch{return false}}});const d=new Map();window.CherryStorageAdapters={local:w(localStorage),memory:w({getItem:k=>d.get(k)??null,setItem:(k,v)=>d.set(k,v),removeItem:k=>d.delete(k)})}})();
