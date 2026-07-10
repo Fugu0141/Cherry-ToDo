@@ -18,13 +18,16 @@ Read these in order:
 2. [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md)  
    Canonical implementation sequence, dependencies, release phases, and mapping of current GitHub issues.
 
-3. [`PRODUCT_VISION.md`](PRODUCT_VISION.md)  
+3. [`UI_SYSTEM.md`](UI_SYSTEM.md)  
+   Cherry-owned design system and reusable UI component policy, technology candidates, testing requirements, and incremental migration plan.
+
+4. [`PRODUCT_VISION.md`](PRODUCT_VISION.md)  
    The concise product purpose and “flow first, schedule second” philosophy.
 
-4. [`TECHNICAL_ARCHITECTURE.md`](TECHNICAL_ARCHITECTURE.md)  
+5. [`TECHNICAL_ARCHITECTURE.md`](TECHNICAL_ARCHITECTURE.md)  
    Description of the current prototype architecture. This is primarily an **as-is** document; the target architecture is defined in `REQUIREMENTS.md`.
 
-5. [`MANUAL_TEST_CHECKLIST.md`](MANUAL_TEST_CHECKLIST.md)  
+6. [`MANUAL_TEST_CHECKLIST.md`](MANUAL_TEST_CHECKLIST.md)  
    Current browser/manual regression checks.
 
 ---
@@ -37,7 +40,7 @@ When documents disagree, use this order:
 1. REQUIREMENTS.md
 2. Accepted Architecture Decision Record (future docs/adr/)
 3. IMPLEMENTATION_PLAN.md
-4. Focused feature specification
+4. Focused feature specification, including UI_SYSTEM.md
 5. Current GitHub issue and accepted maintainer decision
 6. Historical roadmap/progress/release notes
 ```
@@ -58,10 +61,11 @@ A recent issue may propose changing a canonical rule, but the rule is not change
 
 These documents should stay relatively small in number. Do not create another broad “master spec” without replacing or updating one of them.
 
-### Product and UX specifications
+### Product, UI, and UX specifications
 
 | Document | Scope |
 | --- | --- |
+| [`UI_SYSTEM.md`](UI_SYSTEM.md) | Cherry UI design tokens, components, dependency policy, testing, extension use, and migration |
 | [`PRODUCT_VISION.md`](PRODUCT_VISION.md) | Product purpose and long-term character |
 | [`PROJECT_SPEC.md`](PROJECT_SPEC.md) | Prototype-era product overview and terminology |
 | [`LAYOUT_AND_SCHEDULE_SPEC.md`](LAYOUT_AND_SCHEDULE_SPEC.md) | Flow/layout/schedule interaction details |
@@ -114,6 +118,12 @@ Update `REQUIREMENTS.md`. If it is a major trade-off or reversal, add an ADR as 
 
 Create or update a GitHub issue. Link it to the relevant requirement and implementation phase. Do not add an entire speculative feature to the canonical requirements unless the direction is accepted.
 
+### A reusable UI component or visual-system rule
+
+Update `UI_SYSTEM.md`. Product-specific interaction details may also belong in the relevant UX/mobile/layout specification.
+
+A feature must not introduce a new one-off control style when an equivalent Cherry UI component or token already exists.
+
 ### Detailed interaction design
 
 Update the focused UX/mobile/layout specification and link the issue.
@@ -150,6 +160,8 @@ Update release notes. Release notes are historical and should not be silently re
 6. Do not put implementation status in a timeless product-vision document.
 7. Update the “Last reviewed” date only after checking the document against current code/issues.
 8. Use user-facing term `Cherry`; use `Cherry-ToDo` only for repository/URL/legacy compatibility contexts.
+9. New application UI should use Cherry UI components/tokens or document why a new primitive is necessary.
+10. Third-party UI libraries must remain implementation details behind Cherry-owned APIs wherever practical.
 
 ---
 
@@ -161,5 +173,6 @@ The documentation-only cleanup should proceed separately from behavior changes:
 2. Audit detailed specs for repeated or contradictory product rules.
 3. Mark completed prototype specifications as implemented/historical where appropriate.
 4. Remove or redirect duplicate root-level documentation files.
-5. Create `docs/adr/README.md` and the first ADR when a major model decision is implemented (likely structural edge model or storage strategy).
+5. Create `docs/adr/README.md` and the first ADR when a major model decision is implemented (likely structural edge model, storage strategy, or final UI dependency selection).
 6. Update `README.md` and `README_ja.md` to point contributors to this documentation guide.
+7. Create a temporary UI inventory before component migration and remove it when the migration tracker replaces it.
