@@ -1,80 +1,112 @@
 (() => {
   const STORAGE_KEY = "cherry-session-context-v1";
+  const WORKSPACE_ID = "local-workspace-v1";
   const VALID_ROUTES = new Set(["start", "workspace"]);
+  const VALID_VIEWS = new Set(["board", "list"]);
 
-  function safeRead() {
+  function workspaceSnapshot() {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return null;
-      const parsed = JSON.parse(raw);
-      if (!VALID_ROUTES.has(parsed?.lastRoute)) return null;
-      return {
-        lastRoute: parsed.lastRoute,
-        activeTabId: typeof parsed.activeTabId === "string" ? parsed.activeTabId : null
-      };
+      return window.cherryWorkspace?.getWorkspace?.() || null;
     } catch (_) {
       return null;
     }
   }
 
-  function currentRoute() {
-    const startPage = document.getElementById("startPage");
-    return startPage && !startPage.classList.contains("hidden") ? "start" : "workspace";
+  function isStartPageOpen() {
+    const page = document.getElementById("startPage");
+    return Boolean(page && !page.classList.contains("hidden"));
   }
 
-  function currentContext() {
+  function currentView() {
+    return VALID_VIEWS.has(state?.viewMode) ? state.viewMode : "board";
+  }
+
+  function normalize(candidate) {
+    if (!candidate || typeof candidate !== "object") return null;
     return {
-      lastRoute: currentRoute(),
-      activeTabId: window.cherryWorkspace?.getActiveTabId?.() || null
+      lastRoute: VALID_ROUTES.has(candidate.lastRoute) ? candidate.lastRoute : "start",
+      activeWorkspaceId: candidate.activeWorkspaceId === WORKSPACE_ID ? WORKSPACE_ID : null,
+      activeTabId: typeof candidate.activeTabId === "string" ? candidate.activeTabId : null,
+      activeView: VALID_VIEWS.has(candidate.activeView) ? candidate.activeView : "board"
     };
   }
 
-  function safeWrite() {
+  function loadContext() {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(currentContext()));
+      return normalize(JSON.parse(localStorage.getItem(STORAGE_KEY) || "null"));
     } catch (_) {
-      // Session restoration is optional when storage is unavailable.
+      return null;
     }
   }
 
-  function restore() {
-    const api = window.cherryWorkspace;
-    if (!api) return;
-
-    const saved = safeRead();
-    const workspace = api.getWorkspace?.();
-    const tabs = Array.isArray(workspace?.tabs) ? workspace.tabs : [];
-    const restorableTab = saved?.activeTabId
-      ? tabs.find(tab => tab?.id === saved.activeTabId)
+  function saveContext(route = isStartPageOpen() ? "start" : "workspace") {
+    const workspace = workspaceSnapshot();
+    const activeTabId = workspace?.tabs?.some(tab => tab.id === workspace.activeTabId)
+      ? workspace.activeTabId
       : null;
 
-    if (saved?.lastRoute === "workspace" && restorableTab) {
-      api.openTab(restorableTab.id);
-    } else {
-      api.openStartPage();
+    const context = {
+      lastRoute: route === "workspace" && activeTabId ? "workspace" : "start",
+      activeWorkspaceId: workspace ? WORKSPACE_ID : null,
+      activeTabId,
+      activeView: currentView()
+    };
+
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(context));
+    } catch (_) {
+      // Session restoration is optional when browser storage is unavailable.
+    }
+  }
+
+  function restoreContext() {
+    const saved = loadContext();
+    const workspace = workspaceSnapshot();
+    if (!saved || saved.lastRoute !== "workspace" || saved.activeWorkspaceId !== WORKSPACE_ID) {
+      saveContext("start");
+      return;
     }
 
-    safeWrite();
+    const tabExists = workspace?.tabs?.some(tab => tab.id === saved.activeTabId);
+    if (!tabExists) {
+      saveContext("start");
+      return;
+    }
+
+    window.cherryWorkspace?.openTab?.(saved.activeTabId);
+    if (VALID_VIEWS.has(saved.activeView)) {
+      state.viewMode = saved.activeView;
+      requestRender?.();
+    }
+    saveContext("workspace");
   }
 
   function observeRouteChanges() {
-    const startPage = document.getElementById("startPage");
-    if (!startPage) return;
-
-    const observer = new MutationObserver(() => safeWrite());
-    observer.observe(startPage, { attributes: true, attributeFilter: ["class"] });
+    const page = document.getElementById("startPage");
+    if (!page) return;
+    const observer = new MutationObserver(() => saveContext());
+    observer.observe(page, { attributes: true, attributeFilter: ["class"] });
   }
 
-  window.addEventListener("cherry-workspace-updated", safeWrite);
-  window.addEventListener("pagehide", safeWrite);
-  window.addEventListener("beforeunload", safeWrite);
+  document.addEventListener("click", event => {
+    if (event.target.closest("#startPageBtn, .workspaceStartMini")) {
+      queueMicrotask(() => saveContext("start"));
+      return;
+    }
+    if (event.target.closest(".startPageClose, [data-tab-open], [data-action='new-tab'], #listViewBtn")) {
+      queueMicrotask(() => saveContext());
+    }
+  }, true);
 
-  restore();
+  window.addEventListener("cherry-workspace-updated", () => queueMicrotask(() => saveContext()));
+  window.addEventListener("beforeunload", () => saveContext());
+
   observeRouteChanges();
+  restoreContext();
 
   window.cherrySessionContext = {
     storageKey: STORAGE_KEY,
-    read: safeRead,
-    save: safeWrite
+    load: loadContext,
+    save: saveContext
   };
 })();
