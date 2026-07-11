@@ -200,6 +200,59 @@
   color: var(--muted, #64748b) !important;
 }
 
+.storageChoiceLanguage {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 18px;
+  padding: 10px;
+  border: 1px solid color-mix(in srgb, var(--accent, #6857f5) 28%, transparent);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--surface, #fbfcff) 88%, transparent);
+}
+
+.storageChoiceLanguageLabel {
+  color: var(--ink, #1f2937);
+  font-size: 12px;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.storageChoiceLanguageOptions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  border-radius: 999px;
+  background: color-mix(in srgb, #000 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ink, #1f2937) 8%, transparent);
+}
+
+.storageChoiceLanguageButton {
+  min-height: 34px;
+  padding: 6px 14px;
+  color: var(--muted, #64748b);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  box-shadow: none;
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.storageChoiceLanguageButton:hover {
+  color: var(--ink, #1f2937);
+  background: color-mix(in srgb, var(--ink, #1f2937) 8%, transparent);
+}
+
+.storageChoiceLanguageButton[aria-pressed="true"] {
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent, #6857f5), color-mix(in srgb, var(--accent, #6857f5) 78%, #fff));
+  border-color: color-mix(in srgb, var(--accent, #6857f5) 72%, #fff);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--accent, #6857f5) 24%, transparent);
+}
+
 .storageChoiceOptions {
   display: grid;
   gap: 12px;
@@ -295,7 +348,7 @@
   }
 
   .welcomeSplashContent {
-    padding: 24px 20px 20px;
+    padding: 20px 18px 18px;
   }
 
   .welcomeSplashFooter {
@@ -321,9 +374,32 @@
     max-height: calc(100dvh - 20px);
   }
 
+  .storageChoiceDialog h2 {
+    font-size: clamp(26px, 8vw, 34px);
+  }
+
+  .storageChoiceLanguage {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .storageChoiceLanguageOptions {
+    width: 100%;
+  }
+
+  .storageChoiceLanguageButton {
+    flex: 1;
+  }
+
+  .storageChoiceOptions {
+    margin-top: 18px;
+  }
+
   .storageChoiceOption {
-    min-height: 102px;
-    padding: 18px;
+    min-height: 96px;
+    padding: 16px;
   }
 
   .storageChoicePrimary {
