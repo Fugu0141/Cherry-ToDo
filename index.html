@@ -19,7 +19,6 @@
   <link rel="stylesheet" href="./ux-fix.css?v=20260628-13" />
   <link rel="stylesheet" href="./safety-fix.css?v=20260628-14" />
   <link rel="stylesheet" href="./list-view.css?v=20260630-1" />
-  <link rel="stylesheet" href="./board-guidance-removal.css?v=20260712-1" />
   <link rel="stylesheet" href="./mobile-ux.css?v=20260630-8" />
   <link rel="stylesheet" href="./mobile-modal-stabilize.css?v=20260630-1" />
   <link rel="stylesheet" href="./mobile-action-bar.css?v=20260630-1" />
@@ -54,6 +53,13 @@
     </header>
 
     <main class="stage">
+      <div class="stageHeader" aria-hidden="true">
+        <div class="monthCard">
+          <div id="monthBig">5</div>
+          <div id="monthName">May</div>
+        </div>
+      </div>
+
       <div id="board" class="board">
         <svg id="links" class="links"></svg>
         <div id="lanes" class="lanes"></div>
