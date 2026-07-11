@@ -43,6 +43,29 @@
   background: var(--accent);
 }
 
+.storageChoiceLanguageHost {
+  position: relative;
+}
+
+.storageChoiceLanguage {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 0 14px auto;
+  padding: 6px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 76%, transparent);
+}
+
+.storageChoiceLanguage .startPageLanguageLabel {
+  font-size: 11px;
+}
+
+.storageChoiceLanguage .startPageLanguageButton {
+  min-height: 28px !important;
+  padding: 4px 10px !important;
+  font-size: 11px !important;
+}
+
 @media (max-width: 520px) {
   .startPageLanguage {
     align-items: stretch;
@@ -55,5 +78,10 @@
 
   .startPageLanguageButton {
     flex: 1;
+  }
+
+  .storageChoiceLanguage {
+    width: 100%;
+    margin-left: 0;
   }
 }
