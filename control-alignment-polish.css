@@ -1,0 +1,53 @@
+/* Issue #76: shared visual alignment rules for card/list controls.
+   Keep hit-area sizes unchanged while centering controls on their anchor edges. */
+.note {
+  --card-corner-control-size: 28px;
+  --card-edge-control-size: 26px;
+}
+
+.note .handle,
+.note .doneBtn,
+.note .deleteBtn,
+.listDoneToggle {
+  box-sizing: border-box;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  line-height: 1;
+}
+
+.note .handle {
+  width: var(--card-edge-control-size);
+  height: var(--card-edge-control-size);
+  right: calc(var(--card-edge-control-size) / -2);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.note .doneBtn,
+.note .deleteBtn {
+  width: var(--card-corner-control-size);
+  height: var(--card-corner-control-size);
+  top: calc(var(--card-corner-control-size) / -2);
+}
+
+.note .doneBtn {
+  right: calc(var(--card-corner-control-size) / -2);
+}
+
+.note .deleteBtn {
+  left: calc(var(--card-corner-control-size) / -2);
+}
+
+.listTaskRow {
+  align-items: center;
+}
+
+.listDoneToggle {
+  --list-done-toggle-size: 32px;
+  width: var(--list-done-toggle-size);
+  height: var(--list-done-toggle-size);
+  align-self: center;
+  justify-self: center;
+  flex: 0 0 auto;
+}
