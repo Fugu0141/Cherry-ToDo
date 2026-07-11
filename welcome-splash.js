@@ -1,1 +1,14 @@
-(()=>{const P=window.CherryStoragePolicy;if(!P||P.hasPersistentConsent())return;const b=document.createElement("div");b.className="welcomeSplashBackdrop storageChoiceBackdrop";b.innerHTML='<section class="welcomeSplash storageChoiceDialog" role="dialog" aria-modal="true" aria-labelledby="saveTitle"><div class="welcomeSplashContent"><p class="welcomeSplashKicker" style="color:var(--accent,#8d7cff)">最初に選んでください</p><h2 id="saveTitle" style="color:var(--ink,#e8edf5)">作ったタスクを、この端末に残しますか？</h2><p class="welcomeSplashLead" style="color:var(--muted,#9aa6b8)">Cherryから外へ送信されることはありません。あとで変更もできます。</p><div class="storageChoiceOptions"><button class="storageChoiceOption storageChoicePrimary" data-mode="persistent"><b>この端末に保存する</b><small>次に開いたときも、続きから使えます。</small><i>おすすめ</i></button><button class="storageChoiceOption" data-mode="session"><b>今だけ使う</b><small>この画面を閉じると、今回の内容は消えます。</small></button></div><p class="storageChoiceNote">どちらを選んでも、タスクはインターネットへ送信されません。</p><p class="storageChoiceError" aria-live="polite"></p></div></section>';document.body.append(b);document.documentElement.classList.add("storageChoiceOpen");const e=b.querySelector(".storageChoiceError");b.querySelectorAll("button").forEach(x=>x.onclick=()=>{if(x.dataset.mode==="persistent"){if(!P.setMode("persistent")){e.textContent="この端末では保存を利用できません。「今だけ使う」を選んでください。";return}location.reload();return}P.setMode("session");b.remove();document.documentElement.classList.remove("storageChoiceOpen")});setTimeout(()=>b.classList.add("storageChoiceVisible"),0);b.querySelector("button").focus()})()
+(() => {
+  const policy = window.CherryStoragePolicy;
+  if (!policy || policy.hasPersistentConsent()) return;
+
+  const languageKey = "cherry-language-v1";
+  const supportedLanguages = ["ja", "en"];
+  const copy = {
+    ja: {
+      languageLabel: "🌐 表示言語 / Display language",
+      japanese: "日本語",
+      english: "English",
+      kicker: "最初に選んでください",
+      title: "作ったタスクを、この端末に残しますか？",
+      lead:
