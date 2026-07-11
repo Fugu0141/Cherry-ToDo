@@ -2,8 +2,8 @@
   if (!window.CherryI18n) return;
 
   const labels = {
-    ja: { label: "言語", japanese: "日本語", english: "English" },
-    en: { label: "Language", japanese: "日本語", english: "English" }
+    ja: { label: "🌐 表示言語 / Display language", japanese: "日本語", english: "English" },
+    en: { label: "🌐 表示言語 / Display language", japanese: "日本語", english: "English" }
   };
 
   const storagePromptCopy = {
@@ -76,7 +76,7 @@
     selector.className = className;
     selector.innerHTML = `
       <span class="startPageLanguageLabel"></span>
-      <div class="startPageLanguageOptions" role="group"></div>
+      <div class="startPageLanguageOptions" role="group" aria-label="Display language"></div>
     `;
 
     const options = selector.querySelector(".startPageLanguageOptions");
@@ -131,10 +131,10 @@
   function translateStoragePrompt(prompt) {
     if (!prompt) return;
     const current = language();
-    const replacements = new Map();
+    const replacements = [];
     storagePromptKeys.forEach(key => {
-      replacements.set(storagePromptCopy.ja[key], storagePromptCopy[current][key]);
-      replacements.set(storagePromptCopy.en[key], storagePromptCopy[current][key]);
+      replacements.push([storagePromptCopy.ja[key], storagePromptCopy[current][key]]);
+      replacements.push([storagePromptCopy.en[key], storagePromptCopy[current][key]]);
     });
 
     const walker = document.createTreeWalker(prompt, NodeFilter.SHOW_TEXT);
@@ -142,10 +142,12 @@
     while (walker.nextNode()) nodes.push(walker.currentNode);
 
     nodes.forEach(node => {
-      const trimmed = node.nodeValue.trim();
-      if (!trimmed || !replacements.has(trimmed)) return;
-      const next = replacements.get(trimmed);
-      if (trimmed !== next) node.nodeValue = node.nodeValue.replace(trimmed, next);
+      let nextValue = node.nodeValue;
+      replacements.forEach(([source, target]) => {
+        if (!source || source === target || !nextValue.includes(source)) return;
+        nextValue = nextValue.replaceAll(source, target);
+      });
+      if (node.nodeValue !== nextValue) node.nodeValue = nextValue;
     });
   }
 
@@ -157,11 +159,7 @@
     if (selector) return selector;
 
     selector = createSelector("startPageLanguage storageChoiceLanguage");
-    const title = Array.from(prompt.querySelectorAll("h1, h2, [role='heading']"))
-      .find(element => /作ったタスクを|Save your tasks/.test(visibleText(element)));
-
-    if (title?.parentElement) title.parentElement.insertBefore(selector, title);
-    else prompt.insertAdjacentElement("afterbegin", selector);
+    prompt.insertAdjacentElement("afterbegin", selector);
     return selector;
   }
 
