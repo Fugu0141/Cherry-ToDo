@@ -52,35 +52,6 @@
   box-shadow: 0 8px 18px color-mix(in srgb, var(--accent) 24%, transparent) !important;
 }
 
-.storageChoiceLanguageHost {
-  position: relative;
-}
-
-.storageChoiceLanguage {
-  width: min(100%, 520px);
-  margin: 0 0 22px;
-  padding: 12px;
-  border-radius: 20px;
-  background: color-mix(in srgb, var(--surface) 86%, transparent);
-  border-color: color-mix(in srgb, var(--accent) 28%, transparent);
-  box-shadow: 0 12px 30px color-mix(in srgb, #000 16%, transparent);
-}
-
-.storageChoiceLanguage .startPageLanguageLabel {
-  color: var(--ink);
-  font-size: 13px;
-}
-
-.storageChoiceLanguage .startPageLanguageOptions {
-  background: color-mix(in srgb, #000 14%, transparent);
-}
-
-.storageChoiceLanguage .startPageLanguageButton {
-  min-height: 38px !important;
-  padding: 7px 16px !important;
-  font-size: 13px !important;
-}
-
 @media (max-width: 520px) {
   .startPageLanguage {
     align-items: stretch;
@@ -93,9 +64,5 @@
 
   .startPageLanguageButton {
     flex: 1;
-  }
-
-  .storageChoiceLanguage {
-    width: 100%;
   }
 }
