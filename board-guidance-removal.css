@@ -1,0 +1,20 @@
+/*
+ * Issue #77: remove the board date guidance message without leaving a blank
+ * header band above the board on desktop. Mobile already owns its own stage
+ * sizing in the release rescue layer, so these sizing tweaks stay desktop-only.
+ */
+.stageHeader,
+.help {
+  display: none !important;
+}
+
+@media (min-width: 761px) {
+  .stage {
+    padding-top: 18px;
+  }
+
+  .board,
+  .listView {
+    height: calc(100vh - 112px);
+  }
+}
