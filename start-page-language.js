@@ -55,9 +55,8 @@
     return labels[lang]?.[key] || labels.ja[key] || key;
   }
 
-  function storageCopy(key) {
-    const lang = language();
-    return storagePromptCopy[lang]?.[key] || storagePromptCopy.ja[key] || key;
+  function setTextIfChanged(element, value) {
+    if (element && element.textContent !== value) element.textContent = value;
   }
 
   function ensureStartPageSelector() {
@@ -105,9 +104,9 @@
   function renderSelector(selector) {
     if (!selector) return;
     const activeLanguage = language();
-    selector.querySelector(".startPageLanguageLabel").textContent = copy("label");
+    setTextIfChanged(selector.querySelector(".startPageLanguageLabel"), copy("label"));
     selector.querySelectorAll(".startPageLanguageButton").forEach(button => {
-      button.textContent = copy(button.dataset.labelKey);
+      setTextIfChanged(button, copy(button.dataset.labelKey));
       button.setAttribute("aria-pressed", button.dataset.language === activeLanguage ? "true" : "false");
     });
   }
@@ -145,7 +144,8 @@
     nodes.forEach(node => {
       const trimmed = node.nodeValue.trim();
       if (!trimmed || !replacements.has(trimmed)) return;
-      node.nodeValue = node.nodeValue.replace(trimmed, replacements.get(trimmed));
+      const next = replacements.get(trimmed);
+      if (trimmed !== next) node.nodeValue = node.nodeValue.replace(trimmed, next);
     });
   }
 
