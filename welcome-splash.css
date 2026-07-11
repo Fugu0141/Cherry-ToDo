@@ -178,6 +178,11 @@
   opacity: 1;
 }
 
+.welcomeSplash.storageChoiceDialog {
+  --welcome-ink: var(--ink, #1f2937);
+  --welcome-muted: var(--muted, #64748b);
+}
+
 .storageChoiceDialog {
   width: min(580px, 100%);
   color: var(--ink, #1f2937);
@@ -186,13 +191,13 @@
 }
 
 .storageChoiceDialog h2 {
-  color: var(--ink, #1f2937);
+  color: var(--ink, #1f2937) !important;
   font-size: clamp(28px, 5vw, 38px);
   letter-spacing: -.045em;
 }
 
 .storageChoiceDialog .welcomeSplashLead {
-  color: var(--muted, #64748b);
+  color: var(--muted, #64748b) !important;
 }
 
 .storageChoiceOptions {
