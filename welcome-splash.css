@@ -17,4 +17,406 @@
 .welcomeSplash {
   box-sizing: border-box;
   width: min(560px, 100%);
-  max-height: calc(100dvh - 28
+  max-height: calc(100dvh - 28px);
+  overflow: auto;
+  color: #151923;
+  background: rgba(255, 255, 255, .96);
+  border: 1px solid rgba(17, 24, 39, .10);
+  border-radius: 26px;
+  box-shadow: 0 18px 48px rgba(17, 24, 39, .18);
+}
+
+.welcomeSplashHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 18px 0;
+}
+
+.welcomeSplashBrand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #202636;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.welcomeSplashMark {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  color: #171b25;
+  background: linear-gradient(135deg, #fff4a8, #9ff4ff);
+  border-radius: 12px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.10);
+}
+
+.welcomeSplashClose {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  color: #64748b;
+  background: #f1f5f9;
+  box-shadow: none;
+}
+
+.welcomeSplashContent {
+  padding: 28px 30px 24px;
+}
+
+.welcomeSplashKicker {
+  margin: 0 0 10px;
+  color: #7357ff;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.welcomeSplash h2 {
+  margin: 0;
+  color: #111827;
+  font-size: clamp(28px, 6vw, 42px);
+  line-height: 1.08;
+  letter-spacing: -.055em;
+}
+
+.welcomeSplashLead {
+  margin: 14px 0 0;
+  color: #596273;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.welcomeSplashFlow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 22px 0 0;
+  padding: 14px;
+  background: #f8fafc;
+  border: 1px solid rgba(17, 24, 39, .08);
+  border-radius: 18px;
+}
+
+.welcomeSplashFlow span {
+  color: #334155;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.welcomeSplashFlow span:nth-child(odd) {
+  padding: 8px 10px;
+  color: #1f2937;
+  background: linear-gradient(135deg, #fff4a8, #d9fbff);
+  border: 1px solid rgba(17, 24, 39, .16);
+  border-radius: 12px;
+  box-shadow: 0 3px 0 rgba(17, 24, 39, .06);
+}
+
+.welcomeSplashHint {
+  margin: 14px 0 0;
+  color: #717b8d;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.welcomeSplashStart {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 22px;
+  color: #171b25;
+  font-weight: 900;
+  background: linear-gradient(135deg, #fff4a8, #9ff4ff);
+  box-shadow: 0 8px 18px rgba(17, 24, 39, .10);
+}
+
+.welcomeSplashFooter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  padding: 14px 30px 22px;
+  border-top: 1px solid rgba(17, 24, 39, .08);
+}
+
+.welcomeSplashFooter a,
+.welcomeSplashFooter span {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.welcomeSplashFooter a:hover {
+  color: #7357ff;
+  text-decoration: underline;
+}
+
+.welcomeSplashFooter span {
+  opacity: .62;
+}
+
+.storageChoiceOpen {
+  overflow: hidden;
+}
+
+.storageChoiceBackdrop {
+  box-sizing: border-box;
+  z-index: 1000;
+  background: rgba(15, 23, 42, .52);
+  backdrop-filter: blur(7px);
+  opacity: 0;
+  transition: opacity .18s ease;
+}
+
+.storageChoiceBackdrop.storageChoiceVisible {
+  opacity: 1;
+}
+
+.welcomeSplash.storageChoiceDialog {
+  --welcome-ink: var(--ink, #1f2937);
+  --welcome-muted: var(--muted, #64748b);
+}
+
+.storageChoiceDialog {
+  box-sizing: border-box;
+  width: min(580px, 100%);
+  margin-inline: auto;
+  color: var(--ink, #1f2937);
+  background: var(--modal-bg, #fff);
+  border-color: var(--modal-border, rgba(148, 163, 184, .34));
+}
+
+.storageChoiceDialog h2 {
+  color: var(--ink, #1f2937) !important;
+  font-size: clamp(28px, 5vw, 38px);
+  letter-spacing: -.045em;
+}
+
+.storageChoiceDialog .welcomeSplashLead {
+  color: var(--muted, #64748b) !important;
+}
+
+.storageChoiceLanguage {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 18px;
+  padding: 10px;
+  border: 1px solid color-mix(in srgb, var(--accent, #6857f5) 28%, transparent);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--surface, #fbfcff) 88%, transparent);
+}
+
+.storageChoiceLanguageLabel {
+  color: var(--ink, #1f2937);
+  font-size: 12px;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.storageChoiceLanguageOptions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  border-radius: 999px;
+  background: color-mix(in srgb, #000 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ink, #1f2937) 8%, transparent);
+}
+
+.storageChoiceLanguageButton {
+  min-height: 34px;
+  padding: 6px 14px;
+  color: var(--muted, #64748b);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  box-shadow: none;
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.storageChoiceLanguageButton:hover {
+  color: var(--ink, #1f2937);
+  background: color-mix(in srgb, var(--ink, #1f2937) 8%, transparent);
+}
+
+.storageChoiceLanguageButton[aria-pressed="true"] {
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent, #6857f5), color-mix(in srgb, var(--accent, #6857f5) 78%, #fff));
+  border-color: color-mix(in srgb, var(--accent, #6857f5) 72%, #fff);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--accent, #6857f5) 24%, transparent);
+}
+
+.storageChoiceOptions {
+  display: grid;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.storageChoiceOption {
+  position: relative;
+  width: 100%;
+  min-height: 106px;
+  padding: 20px;
+  text-align: left;
+  color: var(--ink, #1f2937);
+  background: var(--surface, #fbfcff);
+  border: 2px solid var(--line, #c3cad5);
+  border-radius: 18px;
+  box-shadow: none;
+}
+
+.storageChoiceOption:hover,
+.storageChoiceOption:focus-visible {
+  border-color: var(--accent, #6857f5);
+  transform: translateY(-1px);
+}
+
+.storageChoiceOption:focus-visible {
+  outline: 4px solid var(--accent-soft, #ece9ff);
+  outline-offset: 2px;
+}
+
+.storageChoiceOption b,
+.storageChoiceOption small {
+  display: block;
+}
+
+.storageChoiceOption b {
+  font-size: 17px;
+}
+
+.storageChoiceOption small {
+  margin-top: 5px;
+  color: var(--muted, #64748b);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.storageChoicePrimary {
+  padding-top: 30px;
+  background: linear-gradient(135deg, rgba(255,244,168,.36), rgba(159,244,255,.24)), var(--surface, #fbfcff);
+  border-color: rgba(104, 87, 245, .55);
+}
+
+.storageChoiceOption i {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  padding: 4px 8px;
+  color: var(--accent, #6857f5);
+  background: var(--accent-soft, #ece9ff);
+  border-radius: 999px;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.storageChoiceNote,
+.storageChoiceError {
+  margin: 16px 0 0;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.storageChoiceNote {
+  color: var(--muted, #64748b);
+}
+
+.storageChoiceError {
+  min-height: 1.5em;
+  color: var(--danger, #e65a54);
+  font-weight: 800;
+}
+
+@media (max-width: 640px) {
+  .welcomeSplashBackdrop {
+    align-items: stretch;
+    padding: 10px;
+  }
+
+  .welcomeSplash {
+    max-height: calc(100dvh - 20px);
+    border-radius: 22px;
+  }
+
+  .welcomeSplashContent {
+    padding: 20px 18px 18px;
+  }
+
+  .welcomeSplashFooter {
+    padding: 14px 20px 20px;
+  }
+
+  .welcomeSplashFlow {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .welcomeSplashFlow span:nth-child(even) {
+    transform: rotate(90deg);
+    margin-left: 16px;
+  }
+
+  .storageChoiceBackdrop {
+    align-items: flex-end;
+    justify-content: center;
+    padding-inline: 10px;
+  }
+
+  .storageChoiceDialog {
+    width: min(100%, calc(100vw - 20px));
+    max-height: calc(100dvh - 20px);
+    margin-inline: auto;
+  }
+
+  .storageChoiceDialog h2 {
+    font-size: clamp(26px, 8vw, 34px);
+  }
+
+  .storageChoiceLanguage {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .storageChoiceLanguageOptions {
+    width: 100%;
+  }
+
+  .storageChoiceLanguageButton {
+    flex: 1;
+  }
+
+  .storageChoiceOptions {
+    margin-top: 18px;
+  }
+
+  .storageChoiceOption {
+    min-height: 96px;
+    padding: 16px;
+  }
+
+  .storageChoicePrimary {
+    padding-top: 28px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .storageChoiceBackdrop,
+  .storageChoiceOption {
+    transition: none;
+  }
+}
