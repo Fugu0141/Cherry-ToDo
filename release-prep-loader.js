@@ -40,6 +40,7 @@
     loadCssOnce("workspace-grid", `./workspace-grid-row-fix.css?v=${version}`);
     loadCssOnce("start-page-oss", `./start-page-oss.css?v=${version}`);
     loadCssOnce("start-page-focus", `./start-page-focus.css?v=${version}`);
+    loadCssOnce("start-page-language", `./start-page-language.css?v=${version}`);
     loadCssOnce("mobile-rescue", `./mobile-release-rescue.css?v=${version}`);
     loadCssOnce("start-page-footer-oss", `./start-page-footer-oss.css?v=${version}`);
     loadCssOnce("mobile-list-filters", `./mobile-list-filter-collapse.css?v=${version}`);
@@ -61,6 +62,7 @@
     await loadScriptOnce("tab-rename", `./tab-rename-shortcut.js?v=${version}`);
     await loadScriptOnce("start-page-oss", `./start-page-oss.js?v=${version}`);
     await loadScriptOnce("start-page-focus", `./start-page-focus.js?v=${version}`);
+    await loadScriptOnce("start-page-language", `./start-page-language.js?v=${version}`);
     await loadScriptOnce("toolbar-command-menu", `./toolbar-command-menu.js?v=${version}`);
     await loadScriptOnce("mobile-list-filters", `./mobile-list-filter-collapse.js?v=${version}`);
     await loadScriptOnce("list-state-guard", `./list-view-state-guard.js?v=${version}`);

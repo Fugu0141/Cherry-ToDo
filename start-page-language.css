@@ -1,0 +1,68 @@
+/* Issue #91: language selector shortcut for the focused Start page. */
+.startPageLanguage {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 48px;
+  padding: 9px 10px;
+  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+}
+
+.startPageLanguageLabel {
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.startPageLanguageOptions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ink) 7%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ink) 8%, transparent);
+}
+
+.startPageLanguageButton {
+  min-height: 34px !important;
+  padding: 6px 14px !important;
+  border: 1px solid transparent !important;
+  border-radius: 999px !important;
+  box-shadow: none !important;
+  color: var(--muted);
+  background: transparent;
+  font-size: 12px !important;
+  font-weight: 950;
+}
+
+.startPageLanguageButton:hover {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--ink) 8%, transparent);
+}
+
+.startPageLanguageButton[aria-pressed="true"] {
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 78%, #fff));
+  border-color: color-mix(in srgb, var(--accent) 72%, #fff) !important;
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--accent) 24%, transparent) !important;
+}
+
+@media (max-width: 520px) {
+  .startPageLanguage {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .startPageLanguageOptions {
+    width: 100%;
+  }
+
+  .startPageLanguageButton {
+    flex: 1;
+  }
+}
