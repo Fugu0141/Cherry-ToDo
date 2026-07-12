@@ -1,0 +1,16 @@
+/*
+ * Stable first-paint scene.
+ * Keep one branded canvas on screen until the selected Cherry surface is ready.
+ */
+html[data-cherry-startup-state="booting"] .app {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+html[data-cherry-startup-state="booting"] .stage::before,
+html[data-cherry-startup-state="booting"] .stage::after {
+  content: none !important;
+  display: none !important;
+}
+
+html:not
