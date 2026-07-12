@@ -1,5 +1,5 @@
 (() => {
-  const version = "20260710-1";
+  const version = "20260712-1";
 
   function loadCssOnce(id, href) {
     if (document.querySelector(`link[data-release-prep-id="${id}"]`)) return;
