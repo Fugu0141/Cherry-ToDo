@@ -1,9 +1,18 @@
 /*
  * Stable first-paint scene.
- * Keep one branded canvas on screen until the selected Cherry surface is ready.
+ * It is the only visible startup surface until the selected route is fully painted.
  */
-html[data-cherry-startup-state="booting"] .app {
+html[data-cherry-startup-state="booting"] .startupShell {
+  z-index: 5000;
+}
+
+html[data-cherry-startup-state="booting"]:not([data-cherry-startup-releasing="true"]) .app {
   visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+html[data-cherry-startup-state="booting"][data-cherry-startup-releasing="true"] .app {
+  visibility: visible !important;
   pointer-events: none !important;
 }
 
