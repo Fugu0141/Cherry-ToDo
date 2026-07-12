@@ -109,7 +109,72 @@
   margin-top: 22px;
 }
 
-html[data-cherry-startup-state="booting"] .app,
+/*
+ * Keep Cherry itself on screen while startup state is restored.
+ * Only unstable data surfaces are hidden, so loading feels like part of the app.
+ */
+html[data-cherry-startup-state="booting"] .app {
+  visibility: visible;
+  pointer-events: none;
+  user-select: none;
+}
+
+html[data-cherry-startup-state="booting"] .topbar {
+  opacity: .86;
+}
+
+html[data-cherry-startup-state="booting"] .stage {
+  position: relative;
+  overflow: hidden;
+  background: var(--bg, #f5f7fb);
+}
+
+html[data-cherry-startup-state="booting"] #board > *,
+html[data-cherry-startup-state="booting"] #listView,
+html[data-cherry-startup-state="booting"] #startPage {
+  visibility: hidden !important;
+}
+
+html[data-cherry-startup-state="booting"] .stage::before {
+  content: "";
+  position: absolute;
+  inset: 18px;
+  z-index: 20;
+  border-radius: 20px;
+  background:
+    linear-gradient(90deg,
+      color-mix(in srgb, var(--surface, #fff) 76%, transparent) 0 18%,
+      transparent 18% 20%,
+      color-mix(in srgb, var(--surface, #fff) 58%, transparent) 20% 39%,
+      transparent 39% 41%,
+      color-mix(in srgb, var(--surface, #fff) 68%, transparent) 41% 62%,
+      transparent 62% 64%,
+      color-mix(in srgb, var(--surface, #fff) 54%, transparent) 64% 100%),
+    repeating-linear-gradient(0deg,
+      transparent 0 118px,
+      color-mix(in srgb, var(--ink, #202636) 7%, transparent) 118px 119px);
+  border: 1px solid color-mix(in srgb, var(--ink, #202636) 8%, transparent);
+  opacity: .72;
+}
+
+html[data-cherry-startup-state="booting"] .stage::after {
+  content: "";
+  position: absolute;
+  z-index: 21;
+  width: min(220px, 30vw);
+  height: 86px;
+  top: 74px;
+  left: 8%;
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--surface, #fff) 90%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ink, #202636) 10%, transparent);
+  box-shadow:
+    min(290px, 34vw) 112px 0 color-mix(in srgb, var(--surface, #fff) 84%, transparent),
+    min(570px, 64vw) 14px 0 color-mix(in srgb, var(--surface, #fff) 78%, transparent);
+  opacity: .82;
+  animation: cherryStartupScenePulse 1.5s ease-in-out infinite alternate;
+}
+
 html[data-cherry-startup-state="fatal-recovery"] .app {
   visibility: hidden;
   pointer-events: none;
@@ -168,6 +233,11 @@ html[data-cherry-startup-state="fatal-recovery"] .startupShellProgress {
   to { transform: translateX(175%); }
 }
 
+@keyframes cherryStartupScenePulse {
+  from { opacity: .58; transform: translateY(0); }
+  to { opacity: .9; transform: translateY(2px); }
+}
+
 @media (max-width: 780px) {
   html:not([data-cherry-startup-state="fatal-recovery"])[data-cherry-startup-route="start"] .startupShell,
   html:not([data-cherry-startup-state="fatal-recovery"])[data-cherry-startup-route="storage-choice"] .startupShell,
@@ -181,6 +251,22 @@ html[data-cherry-startup-state="fatal-recovery"] .startupShellProgress {
   html:not([data-cherry-startup-state="fatal-recovery"])[data-cherry-startup-route="workspace"] .startupShellCard {
     width: min(280px, calc(100vw - 24px));
   }
+
+  html[data-cherry-startup-state="booting"] .stage::before {
+    inset: 12px;
+    background:
+      repeating-linear-gradient(0deg,
+        color-mix(in srgb, var(--surface, #fff) 62%, transparent) 0 104px,
+        color-mix(in srgb, var(--ink, #202636) 6%, transparent) 104px 105px);
+  }
+
+  html[data-cherry-startup-state="booting"] .stage::after {
+    width: 176px;
+    height: 74px;
+    top: 64px;
+    left: 28px;
+    box-shadow: 36px 126px 0 color-mix(in srgb, var(--surface, #fff) 82%, transparent);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -189,8 +275,8 @@ html[data-cherry-startup-state="fatal-recovery"] .startupShellProgress {
     transition: none;
   }
 
-  .startupShellProgress::after {
-    width: 100%;
+  .startupShellProgress::after,
+  html[data-cherry-startup-state="booting"] .stage::after {
     animation: none;
   }
 }
