@@ -4,8 +4,6 @@
   const sessionKey = "cherry-session-context-v1";
   const workspaceKey = "cherry-workspace-v1";
   const workspaceId = "local-workspace-v1";
-  const shellRevealDelayMs = 160;
-  const shellMinimumVisibleMs = 220;
   const shellFadeDurationMs = 140;
 
   function safeGet(key) {
@@ -126,52 +124,25 @@
 
   let observer = null;
   let recoveryTimer = null;
-  let shellRevealTimer = null;
   let shellHideTimer = null;
-  let shellShownAt = 0;
   let ready = false;
 
-  function revealShell({ immediate = false } = {}) {
-    if (ready) return;
+  function showShell() {
+    clearTimeout(shellHideTimer);
     const shell = document.getElementById("startupShell");
     if (!shell) return;
-
-    clearTimeout(shellRevealTimer);
-    clearTimeout(shellHideTimer);
     shell.removeAttribute("hidden");
-
-    const show = () => {
-      if (ready) return;
-      shell.dataset.startupVisible = "true";
-      shellShownAt = performance.now();
-    };
-
-    if (immediate || reducedMotion()) show();
-    else requestAnimationFrame(show);
+    shell.dataset.startupVisible = "true";
   }
 
   function dismissShell() {
-    clearTimeout(shellRevealTimer);
     clearTimeout(shellHideTimer);
-
     const shell = document.getElementById("startupShell");
     if (!shell) return;
 
-    if (!shellShownAt) {
-      shell.setAttribute("hidden", "");
-      return;
-    }
-
-    const noMotion = reducedMotion();
-    const elapsed = performance.now() - shellShownAt;
-    const minimumVisible = noMotion ? 0 : shellMinimumVisibleMs;
-    const fadeDuration = noMotion ? 0 : shellFadeDurationMs;
-    const wait = Math.max(0, minimumVisible - elapsed);
-
-    shellHideTimer = setTimeout(() => {
-      shell.dataset.startupVisible = "false";
-      shellHideTimer = setTimeout(() => shell.setAttribute("hidden", ""), fadeDuration);
-    }, wait);
+    shell.dataset.startupVisible = "false";
+    const fadeDuration = reducedMotion() ? 0 : shellFadeDurationMs;
+    shellHideTimer = setTimeout(() => shell.setAttribute("hidden", ""), fadeDuration);
   }
 
   function finishStartup() {
@@ -191,11 +162,7 @@
 
   function beginWatching() {
     document.querySelector(".app")?.setAttribute("aria-hidden", "true");
-    const shell = document.getElementById("startupShell");
-    if (shell) {
-      shell.dataset.startupVisible = "false";
-      shell.removeAttribute("hidden");
-    }
+    showShell();
     setShellCopy();
 
     document.querySelector("[data-startup-reload]")?.addEventListener("click", () => location.reload());
@@ -213,13 +180,11 @@
     window.addEventListener("cherry-workspace-view-ready", checkReady);
     checkReady();
 
-    if (!ready) shellRevealTimer = setTimeout(revealShell, shellRevealDelayMs);
-
     recoveryTimer = setTimeout(() => {
       if (ready) return;
       root.dataset.cherryStartupState = "fatal-recovery";
       setShellCopy({ recovery: true });
-      revealShell({ immediate: true });
+      showShell();
     }, 12000);
   }
 
