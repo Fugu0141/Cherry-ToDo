@@ -101,10 +101,10 @@ html[data-cherry-startup-state="fatal-recovery"] .app {
 }
 
 /*
- * The storage-choice route only exists for a very short hand-off to the
- * first-run dialog. Keep that status lightweight instead of flashing a full
- * page card immediately before the real dialog appears.
+ * The Start and storage-choice routes are short hand-offs to real surfaces.
+ * Keep their status lightweight instead of flashing a full-page card.
  */
+html[data-cherry-startup-route="start"] .startupShell,
 html[data-cherry-startup-route="storage-choice"] .startupShell {
   place-items: end;
   padding: 18px;
@@ -112,6 +112,7 @@ html[data-cherry-startup-route="storage-choice"] .startupShell {
   pointer-events: none;
 }
 
+html[data-cherry-startup-route="start"] .startupShellCard,
 html[data-cherry-startup-route="storage-choice"] .startupShellCard {
   width: min(320px, calc(100vw - 36px));
   padding: 12px 14px;
@@ -119,6 +120,11 @@ html[data-cherry-startup-route="storage-choice"] .startupShellCard {
   box-shadow: 0 10px 30px color-mix(in srgb, var(--ink, #202636) 14%, transparent);
 }
 
+html[data-cherry-startup-route="start"] .startupShellBrand,
+html[data-cherry-startup-route="start"] .startupShellKicker,
+html[data-cherry-startup-route="start"] .startupShellBody,
+html[data-cherry-startup-route="start"] .startupShellProgress,
+html[data-cherry-startup-route="start"] .startupShellReload,
 html[data-cherry-startup-route="storage-choice"] .startupShellBrand,
 html[data-cherry-startup-route="storage-choice"] .startupShellKicker,
 html[data-cherry-startup-route="storage-choice"] .startupShellBody,
@@ -127,6 +133,7 @@ html[data-cherry-startup-route="storage-choice"] .startupShellReload {
   display: none;
 }
 
+html[data-cherry-startup-route="start"] .startupShell h1,
 html[data-cherry-startup-route="storage-choice"] .startupShell h1 {
   font-size: 14px;
   line-height: 1.45;
@@ -143,11 +150,13 @@ html[data-cherry-startup-state="fatal-recovery"] .startupShellProgress {
 }
 
 @media (max-width: 780px) {
+  html[data-cherry-startup-route="start"] .startupShell,
   html[data-cherry-startup-route="storage-choice"] .startupShell {
     place-items: start end;
     padding: max(12px, env(safe-area-inset-top)) 12px 12px;
   }
 
+  html[data-cherry-startup-route="start"] .startupShellCard,
   html[data-cherry-startup-route="storage-choice"] .startupShellCard {
     width: min(280px, calc(100vw - 24px));
   }
