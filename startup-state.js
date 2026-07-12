@@ -112,7 +112,7 @@
       return startPage.classList.contains("hidden");
     }
 
-    return !startPage.classList.contains("hidden");
+    return !startPage.classList.contains("hidden") && startPage.dataset.enhancedReady === "true";
   }
 
   let observer = null;
@@ -145,10 +145,11 @@
       childList: true,
       subtree: true,
       attributes: true,
-      attributeFilter: ["class"]
+      attributeFilter: ["class", "data-enhanced-ready"]
     });
 
     window.addEventListener("cherry-workspace-updated", checkReady);
+    window.addEventListener("cherry-start-page-ready", checkReady);
     checkReady();
 
     recoveryTimer = setTimeout(() => {
