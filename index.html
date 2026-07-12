@@ -15,7 +15,9 @@
       }
     })();
   </script>
+  <script src="./startup-state.js?v=20260712-1"></script>
   <link rel="stylesheet" href="./style.css?v=20260628-101" />
+  <link rel="stylesheet" href="./startup-shell.css?v=20260712-1" />
   <link rel="stylesheet" href="./ux-fix.css?v=20260628-13" />
   <link rel="stylesheet" href="./safety-fix.css?v=20260628-14" />
   <link rel="stylesheet" href="./list-view.css?v=20260630-1" />
@@ -32,6 +34,23 @@
   <link rel="stylesheet" href="./connect-existing-tasks.css?v=20260709-1" />
 </head>
 <body>
+  <section id="startupShell" class="startupShell" role="status" aria-live="polite" aria-labelledby="startupShellTitle">
+    <div class="startupShellCard">
+      <div class="startupShellBrand">
+        <div class="startupShellMark" aria-hidden="true">C</div>
+        <div>
+          <strong>Cherry</strong>
+          <span>Flow first, date second.</span>
+        </div>
+      </div>
+      <p class="startupShellKicker" data-startup-copy="kicker">Cherry を準備しています</p>
+      <h1 id="startupShellTitle" data-startup-copy="title">スタート画面を準備しています</h1>
+      <p class="startupShellBody" data-startup-copy="body">保存済みの作業と利用できる操作を確認しています。</p>
+      <div class="startupShellProgress" aria-hidden="true"></div>
+      <button type="button" class="startupShellReload" data-startup-reload hidden>再読み込み</button>
+    </div>
+  </section>
+
   <div class="app">
     <header class="topbar">
       <div class="brand">
@@ -105,10 +124,11 @@
     </div>
   </div>
 
+  <script src="./storage-adapter.js?v=20260710-1"></script>
+  <script src="./welcome-splash.js?v=20260712-2"></script>
   <script src="./app.js?v=20260628-10"></script>
   <script src="./date-only-utils.js?v=20260703-1"></script>
-  <script src="./storage-adapter.js?v=20260710-1"></script>
-  <script src="./state-storage.js?v=20260710-2"></script>
+  <script src="./state-storage.js?v=20260712-3"></script>
   <script src="./ux-fix.js?v=20260628-132"></script>
   <script src="./mobile.js?v=20260628-10"></script>
   <script src="./safety-fix.js?v=20260628-15"></script>
@@ -126,7 +146,6 @@
   <script src="./mobile-flow-map.js?v=20260703-11"></script>
   <script src="./relationship-layout-fix.js?v=20260704-2"></script>
   <script src="./layout-debug.js?v=20260704-1"></script>
-  <script src="./welcome-splash.js?v=20260703-1"></script>
   <script src="./theme-toggle.js?v=20260707-15"></script>
   <script src="./task-wording-fix.js?v=20260707-2"></script>
 </body>
