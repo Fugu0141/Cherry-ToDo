@@ -40,6 +40,7 @@
 
   root.dataset.cherryStartupRoute = route;
   root.dataset.cherryStartupState = "booting";
+  if (route === "workspace") root.dataset.cherryWorkspacePhase = "pending";
 
   const copy = {
     ja: {
@@ -109,7 +110,8 @@
     if (!startPage || !workspaceBar) return false;
 
     if (route === "workspace") {
-      return startPage.classList.contains("hidden");
+      return startPage.classList.contains("hidden")
+        && root.dataset.cherryWorkspacePhase === "ready";
     }
 
     return !startPage.classList.contains("hidden") && startPage.dataset.enhancedReady === "true";
@@ -145,11 +147,12 @@
       childList: true,
       subtree: true,
       attributes: true,
-      attributeFilter: ["class", "data-enhanced-ready"]
+      attributeFilter: ["class", "data-enhanced-ready", "data-cherry-workspace-phase"]
     });
 
     window.addEventListener("cherry-workspace-updated", checkReady);
     window.addEventListener("cherry-start-page-ready", checkReady);
+    window.addEventListener("cherry-workspace-view-ready", checkReady);
     checkReady();
 
     recoveryTimer = setTimeout(() => {
