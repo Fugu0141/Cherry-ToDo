@@ -84,7 +84,7 @@
   const backdrop = document.createElement("div");
   backdrop.className = "welcomeSplashBackdrop storageChoiceBackdrop";
   backdrop.innerHTML = `
-    <section class="welcomeSplash storageChoiceDialog" role="dialog" aria-modal="true" aria-labelledby="saveTitle">
+    <section class="welcomeSplash storageChoiceDialog" role="dialog" aria-modal="true" aria-labelledby="saveTitle" tabindex="-1">
       <div class="welcomeSplashContent">
         <div class="storageChoiceLanguage" aria-label="Display language">
           <span class="storageChoiceLanguageLabel" data-storage-copy="languageLabel"></span>
@@ -117,6 +117,7 @@
   document.documentElement.classList.add("storageChoiceOpen");
   renderLanguage(backdrop);
 
+  const dialog = backdrop.querySelector(".storageChoiceDialog");
   const error = backdrop.querySelector(".storageChoiceError");
   backdrop.querySelectorAll("[data-language]").forEach(button => {
     button.addEventListener("click", event => {
@@ -149,5 +150,5 @@
   });
 
   setTimeout(() => backdrop.classList.add("storageChoiceVisible"), 0);
-  backdrop.querySelector("[data-mode]")?.focus();
+  dialog?.focus({ preventScroll: true });
 })();
