@@ -10,15 +10,15 @@
   background:
     radial-gradient(circle at 18% 18%, color-mix(in srgb, var(--accent, #7357ff) 16%, transparent), transparent 34%),
     var(--bg, #f5f7fb);
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 140ms ease, visibility 0s linear;
+}
+
+.startupShell[data-startup-visible="false"] {
   opacity: 0;
   visibility: hidden;
   transition: opacity 140ms ease, visibility 0s linear 140ms;
-}
-
-.startupShell[data-startup-visible="true"] {
-  opacity: 1;
-  visibility: visible;
-  transition: opacity 140ms ease;
 }
 
 .startupShell[hidden] {
@@ -32,12 +32,12 @@
   border-radius: 28px;
   background: color-mix(in srgb, var(--surface, #fff) 94%, transparent);
   box-shadow: 0 24px 70px color-mix(in srgb, var(--ink, #202636) 12%, transparent);
-  transform: translateY(4px) scale(.985);
+  transform: translateY(0) scale(1);
   transition: transform 140ms ease;
 }
 
-.startupShell[data-startup-visible="true"] .startupShellCard {
-  transform: translateY(0) scale(1);
+.startupShell[data-startup-visible="false"] .startupShellCard {
+  transform: translateY(4px) scale(.985);
 }
 
 .startupShellBrand {
