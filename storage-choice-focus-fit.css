@@ -26,4 +26,16 @@
 
 .storageChoiceOption:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--accent, #6857f5) 74%, #fff) !important;
-  outline-offset:
+  outline-offset: -6px !important;
+  box-shadow: none !important;
+}
+
+.storageChoicePrimary:focus-visible {
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent, #6857f5) 58%, transparent) !important;
+}
+
+@media (max-width: 640px) {
+  .storageChoiceOption:focus-visible {
+    outline-offset: -5px !important;
+  }
+}
