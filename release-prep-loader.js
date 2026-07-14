@@ -1,5 +1,5 @@
 (() => {
-  const version = "20260712-5";
+  const version = "20260714-1";
 
   function loadCssOnce(id, href) {
     if (document.querySelector(`link[data-release-prep-id="${id}"]`)) return;
@@ -57,6 +57,7 @@
     await loadScriptOnce("task-delete", `./task-delete-dialog.js?v=${version}`);
     await loadScriptOnce("flow-popovers", `./release-flow-popovers.js?v=${version}`);
     await loadScriptOnce("tutorial", `./tutorial.js?v=${version}`);
+    await loadScriptOnce("storage-session-bridge", `./storage-session-bridge.js?v=${version}`);
     await loadScriptOnce("tabs", `./tab-manager.js?v=${version}`);
     await loadScriptOnce("tab-add-button-inline", `./tab-add-button-inline.js?v=${version}`);
     await loadScriptOnce("tab-rename", `./tab-rename-shortcut.js?v=${version}`);
