@@ -1,5 +1,3 @@
-const STORAGE_KEY = "quest-sticky-todo-v10";
-
 const board = document.getElementById("board");
 const links = document.getElementById("links");
 const lanesEl = document.getElementById("lanes");
@@ -131,38 +129,14 @@ function makeInitialState() {
   return { tasks: { root, a, b, c, d }, showLanes: true };
 }
 
-function saveNow() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-}
+function saveNow() {}
 
 function scheduleSave() {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(saveNow, 160);
 }
 
-function load() {
-  const raw = localStorage.getItem(STORAGE_KEY)
-    || localStorage.getItem("quest-sticky-todo-v9")
-    || localStorage.getItem("quest-sticky-todo-v8")
-    || localStorage.getItem("quest-sticky-todo-v6")
-    || localStorage.getItem("quest-sticky-todo-v5")
-    || localStorage.getItem("quest-sticky-todo-v4")
-    || localStorage.getItem("quest-sticky-todo-v3")
-    || localStorage.getItem("quest-sticky-todo-v2");
-
-  if (!raw) return;
-
-  try {
-    const parsed = JSON.parse(raw);
-    if (parsed && parsed.tasks) state = parsed;
-  } catch {
-    state = makeInitialState();
-  }
-
-  for (const task of getTasks()) {
-    if (task.parentId && !task.branchMode) task.branchMode = "same";
-  }
-}
+function load() {}
 
 function snapshot() {
   undoStack.push(JSON.stringify(state));
@@ -1218,9 +1192,6 @@ mobileQuery.addEventListener("change", () => {
   requestRender();
 });
 
-window.addEventListener("beforeunload", saveNow);
-
-load();
 refreshLaneDates();
 branchLayout();
 render();
