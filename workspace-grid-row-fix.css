@@ -8,3 +8,25 @@
 }
 
 .topbar {
+  grid-row: 1;
+}
+
+.workspaceBar {
+  grid-row: 2;
+}
+
+.stage {
+  grid-row: 3;
+  min-height: 0;
+}
+
+.workspaceBar + .stage .board {
+  height: 100%;
+  min-height: 0;
+}
+
+@media (max-width: 760px) {
+  .workspaceBar + .stage .board {
+    height: 100% !important;
+  }
+}
