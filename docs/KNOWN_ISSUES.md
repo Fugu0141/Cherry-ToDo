@@ -10,60 +10,64 @@ The canonical product and architecture rules are in [`REQUIREMENTS.md`](REQUIREM
 
 ## Current limitations
 
-### Startup is still assembled after the legacy board boot
+### Startup has an explicit visual boundary, but legacy initialization still happens behind it
 
-The current application initializes the legacy board and then loads the Start page, workspace tabs, tutorial, and other release UI through later scripts.
+Cherry now selects an explicit startup route (`storage-choice`, `start`, or `workspace`) and keeps one startup surface visible until the selected final surface is ready. This prevents the old Start/board/storage-choice flashing behavior from being exposed to the user.
 
-Impact:
+Remaining limitation:
 
-- The first screen is not controlled by an explicit startup state machine.
-- Board work can happen before the user has chosen or restored a workspace.
-- Startup behavior and performance depend on script order.
-- A failure in a late-loaded script can leave partially initialized UI.
+- The legacy application scripts still initialize more board-related code than the final route strictly needs.
+- The startup boundary currently hides incomplete work rather than fully lazy-mounting every route-specific subsystem.
+- Startup performance and module ownership are still affected by the existing script-loading chain.
 
 Planned direction:
 
-- Implement the explicit `booting` / storage choice / Start / workspace / recovery states from #87.
-- Mount the board only after a valid workspace route is selected.
-- Restore active context through validated session metadata.
+- Keep the explicit startup state as the public boundary.
+- Move route-specific initialization behind clearer module seams.
+- Avoid initializing heavy board systems until the `workspace` route actually needs them.
+- Replace script-order dependencies incrementally rather than adding new broad runtime patches.
+
+Tracking: #87 and #6
 
 ---
 
-### Active workspace, tab, and view restoration is incomplete
+### Active route, tab, and board/list restoration now exist, but the context model is still narrow
 
-Workspace tabs are persisted, but reload behavior does not yet implement the validated context-restoration contract required for v0.2.
+Cherry persists validated session metadata separately from full workspace content and can restore the last Start/workspace route, active tab, and Board/List view when the saved references remain valid.
 
-Impact:
+Remaining limitation:
 
-- Reload may not return users to the exact workspace, tab, and board/list state they expected.
-- Missing or stale identifiers are not handled through a single recovery path.
+- Restoration currently targets the single local workspace model used by the prototype.
+- Session metadata still depends on current browser-storage conventions and compatibility code.
+- Future multiple-workspace, file-backed, or synchronized contexts will need a broader identity and migration model.
 
-Planned direction:
+Safety behavior that must remain:
 
-- Persist minimal session metadata separately from full workspace content.
-- Validate workspace, tab, and view references before restoration.
-- Fall back to the Start page without creating placeholder data or overwriting readable data.
+- Missing or stale tab identifiers fall back to Start safely.
+- Corrupt session metadata must not overwrite readable workspace data.
+- No fake placeholder tab should be created merely to satisfy stale restoration metadata.
 
-Tracking: #88
+Tracking: #88 and #6
 
 ---
 
-### Persistence is coupled directly to `localStorage`
+### A storage policy boundary exists, but persistence is not fully decoupled from browser storage
 
-Several feature scripts still read and write browser storage directly.
+Cherry now offers a first-run choice between persistent local storage and an ephemeral in-memory session through a storage-policy/adaptor boundary.
 
-Impact:
+Remaining limitation:
 
-- Persistent local mode and ephemeral session mode are not cleanly separated.
-- Storage-unavailable and quota-error behavior is inconsistent.
-- Future file, backup, or sync providers cannot share a stable storage contract yet.
-- Users are not yet offered a clear persistence choice at startup.
+- Several legacy feature scripts still read or write browser storage directly.
+- The current adapter boundary does not yet make every feature module storage-provider independent.
+- Storage-unavailable and quota-error handling is still inconsistent across older code paths.
+- Future file, backup, or sync providers cannot yet share one complete storage orchestration contract.
 
 Planned direction:
 
-- Introduce memory/session and local-browser storage adapters.
-- Route feature code through a storage interface.
-- Add transparent local-saving controls without making refusal block basic use.
+- Route feature persistence through named storage/state modules.
+- Keep persistent local mode and ephemeral session mode behavior explicit.
+- Move compatibility access behind one documented legacy bridge during modularization.
+- Preserve readable data when storage operations or migrations fail.
 
 Tracking: #92 and #6
 
@@ -230,6 +234,7 @@ Impact:
 Planned direction:
 
 - Run [`MANUAL_TEST_CHECKLIST.md`](MANUAL_TEST_CHECKLIST.md) against the release commit.
+- Run the focused [`STARTUP_STATE_TESTS.md`](STARTUP_STATE_TESTS.md) cases for startup, storage choice, and restoration.
 - Record browser/version, viewport, import/export checks, console output, and blocking failures in #66.
 - Publish/tag v0.1 only after the release evidence is recorded.
 
