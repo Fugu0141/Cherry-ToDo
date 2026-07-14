@@ -1,7 +1,8 @@
 (() => {
   if (!window.CherryI18n || typeof state === "undefined") return;
 
-  const workspaceKey = "cherry-workspace-v1";
+  const workData = window.CherryWorkDataStorage;
+  const workspaceKey = workData?.keys?.workspace || "cherry-workspace-v1";
   const fileFormat = "cherry-workspace-encrypted";
   const fileVersion = 1;
   const kdfIterations = 250000;
@@ -134,10 +135,10 @@
   }
 
   function loadWorkspace() {
+    const raw = workData?.get(workspaceKey);
+    if (!raw) return makeDefaultWorkspace();
     try {
-      const raw = localStorage.getItem(workspaceKey);
-      const parsed = raw ? normalizeWorkspace(JSON.parse(raw)) : null;
-      return parsed || makeDefaultWorkspace();
+      return normalizeWorkspace(JSON.parse(raw)) || makeDefaultWorkspace();
     } catch (_) {
       return makeDefaultWorkspace();
     }
@@ -172,11 +173,10 @@
 
   function commitActiveState() {
     syncActiveState();
-    try {
-      localStorage.setItem(workspaceKey, JSON.stringify(workspace));
-      if (activeTab()) localStorage.setItem(window.cherryStorage?.currentStorageKey || "quest-sticky-todo-v10", JSON.stringify(state));
-    } catch (_) {
-      // Local persistence may be unavailable in strict browser modes.
+    workData?.setJson(workspaceKey, workspace);
+    if (activeTab()) {
+      const taskStateKey = workData?.keys?.taskState || window.cherryStorage?.currentStorageKey || "quest-sticky-todo-v10";
+      workData?.setJson(taskStateKey, state);
     }
     renderTabRail();
     notifyWorkspaceChanged();
@@ -192,11 +192,7 @@
   }
 
   function persistWorkspaceOnly() {
-    try {
-      localStorage.setItem(workspaceKey, JSON.stringify(workspace));
-    } catch (_) {
-      // Non-critical for the current session.
-    }
+    workData?.setJson(workspaceKey, workspace);
     notifyWorkspaceChanged();
   }
 
