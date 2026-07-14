@@ -48,7 +48,37 @@
     return originalRemoveItem.call(this, key);
   };
 
+  function hasEphemeralWork() {
+    if (policy.mode() !== "session") return false;
+
+    const rawWorkspace = memory.get("cherry-workspace-v1");
+    if (rawWorkspace) {
+      try {
+        const workspace = JSON.parse(rawWorkspace);
+        if (Array.isArray(workspace?.tabs) && workspace.tabs.length > 0) return true;
+      } catch (_) {
+        return true;
+      }
+    }
+
+    const rawState = memory.get("quest-sticky-todo-v10");
+    if (!rawState) return false;
+    try {
+      const savedState = JSON.parse(rawState);
+      return Object.keys(savedState?.tasks || {}).length > 0;
+    } catch (_) {
+      return true;
+    }
+  }
+
+  window.addEventListener("beforeunload", event => {
+    if (!hasEphemeralWork()) return;
+    event.preventDefault();
+    event.returnValue = "";
+  });
+
   window.CherryStorageSessionBridge = {
-    routedKeys: [...routedKeys]
+    routedKeys: [...routedKeys],
+    hasEphemeralWork
   };
 })();
