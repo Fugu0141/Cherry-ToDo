@@ -1,5 +1,6 @@
 (() => {
-  const STORAGE_KEY = "cherry-session-context-v1";
+  const workData = window.CherryWorkDataStorage;
+  const STORAGE_KEY = workData?.keys?.sessionContext || "cherry-session-context-v1";
   const WORKSPACE_ID = "local-workspace-v1";
   const VALID_ROUTES = new Set(["start", "workspace"]);
   const VALID_VIEWS = new Set(["board", "list"]);
@@ -32,11 +33,8 @@
   }
 
   function loadContext() {
-    try {
-      return normalize(JSON.parse(localStorage.getItem(STORAGE_KEY) || "null"));
-    } catch (_) {
-      return null;
-    }
+    if (!workData) return null;
+    return normalize(workData.getJson(STORAGE_KEY, null));
   }
 
   function saveContext(route = isStartPageOpen() ? "start" : "workspace") {
@@ -52,11 +50,7 @@
       activeView: currentView()
     };
 
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(context));
-    } catch (_) {
-      // Session restoration is optional when browser storage is unavailable.
-    }
+    workData?.setJson(STORAGE_KEY, context);
   }
 
   function restoreContext() {
