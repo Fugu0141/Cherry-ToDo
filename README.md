@@ -6,7 +6,7 @@ Cherry is an open-source task-flow planning app for organizing work as connected
 
 Instead of starting from a flat list or calendar, Cherry lets you begin with a goal, break it into actions, and connect those actions into a visible flow. The board is for building and understanding that flow. The list view is for finding work that needs attention now or soon.
 
-> Current status: v0.1 public-prototype baseline / early OSS development
+> Current status: v0.1 public-prototype baseline / v0.2 foundation development
 >
 > Repository name: `Cherry-ToDo`
 
@@ -45,10 +45,14 @@ The canonical product and architecture requirements are in [`docs/REQUIREMENTS.m
 - Automatic and vertical layout commands
 - Start page and multiple workspace tabs
 - Tab open, rename, duplicate, delete, and inline new-tab controls
+- Explicit startup routing so Start, workspace, and first-run storage choice are selected before the final surface is revealed
+- Startup loading and recovery states that keep incomplete app surfaces hidden until the selected route is ready
+- First-run choice between persistent browser storage and an ephemeral in-memory session
+- Safe restoration of the last Start/workspace route, active tab, and board/list view when saved references remain valid
 - Japanese and English UI
 - First-run introduction and interactive tutorial
 - Light, dark, and system themes
-- Local browser persistence with compatibility for older storage keys
+- Compatibility support for older local storage keys and persisted prototype data
 - Encrypted `.cherry` workspace import/export
 - Basic iCalendar VTODO (`.ics`) import/export
 - Mobile vertical board layout, selected-task action dock, bottom-sheet dialogs, and Flow Map/minimap
@@ -58,9 +62,6 @@ The canonical product and architecture requirements are in [`docs/REQUIREMENTS.m
 
 The next implementation phases are intentionally foundation-first:
 
-- Explicit startup states instead of mounting the board before the Start view
-- Storage adapters for persistent local mode and ephemeral session mode
-- Reliable restoration of the active workspace, tab, and view
 - Native ES-module boundaries for state, storage, commands, events, and views
 - A normalized `none` / `date` / `datetime` schedule model
 - Independent date-lane, auto-layout, and time-guide settings
@@ -86,7 +87,7 @@ Then open:
 http://localhost:8000/
 ```
 
-Basic use does not require an account or network connection. Work is currently saved in the browser. Use an encrypted `.cherry` export for a portable backup; the export passphrase cannot be recovered if lost.
+Basic use does not require an account or network connection. On first use, Cherry lets you choose whether to keep work in persistent browser storage or use an ephemeral session. Ephemeral-session data is kept in memory and is not intended to survive closing or reloading the page. Use an encrypted `.cherry` export for a portable backup; the export passphrase cannot be recovered if lost.
 
 ## Repository structure
 
@@ -95,14 +96,19 @@ The current prototype still contains legacy scripts and focused compatibility la
 ```text
 .
 ├── index.html                    # static application shell
+├── startup-state.js              # chooses the initial startup route and controls the startup boundary
+├── startup-shell.css             # startup/loading/recovery presentation
+├── storage-adapter.js            # persistent-local and in-memory storage policy boundary
+├── session-context.js            # Start/workspace, active-tab, and active-view restoration metadata
+├── workspace-startup-guard.js    # final workspace readiness hand-off
 ├── app.js                        # current legacy application core
-├── state-storage.js              # legacy-compatible local state persistence
+├── state-storage.js              # legacy-compatible task-state persistence bridge
 ├── schedule-model.js             # schedule normalization helpers
 ├── list-view.js                  # execution-list view
 ├── tab-manager.js                # Start page, workspace tabs, import/export
 ├── connect-existing-tasks.js     # desktop existing-task connection flow
 ├── mobile-*.js / mobile-*.css    # mobile-specific interactions and presentation
-├── release-prep-loader.js        # loads current release UI modules
+├── release-prep-loader.js        # loads current release UI modules and compatibility layers
 ├── docs/
 │   ├── README.md                 # documentation map
 │   ├── REQUIREMENTS.md           # canonical product and architecture rules
