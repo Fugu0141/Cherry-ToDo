@@ -40,7 +40,10 @@
 
   function loadStoredState() {
     const raw = storedStateRaw();
-    if (!raw) return;
+    if (!raw) {
+      state = makeInitialState();
+      return;
+    }
     try {
       const parsed = JSON.parse(raw);
       if (parsed && parsed.tasks) {
