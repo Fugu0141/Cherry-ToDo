@@ -20,7 +20,6 @@
 
   function loadStylesheetOnce(id, href) {
     if (document.querySelector(`link[data-experiment-id="${id}"]`)) return;
-
     const link = document.createElement("link");
     link.rel = "stylesheet";
     link.href = href;
@@ -42,7 +41,7 @@
   }
 
   function loadReleasePrepAssets() {
-    loadScriptOnce("release-prep-loader", "./release-prep-loader.js?v=20260707-16");
+    loadScriptOnce("release-prep-loader", "./release-prep-loader.js?v=20260712-4");
   }
 
   function safeGetMode() {
@@ -56,20 +55,14 @@
 
   function safeSetMode(mode) {
     try {
-      if (mode === "system") {
-        localStorage.removeItem(STORAGE_KEY);
-      } else {
-        localStorage.setItem(STORAGE_KEY, mode);
-      }
-    } catch (_) {
-      // Theme switching should still work for the current page even if storage is unavailable.
-    }
+      if (mode === "system") localStorage.removeItem(STORAGE_KEY);
+      else localStorage.setItem(STORAGE_KEY, mode);
+    } catch (_) {}
   }
 
   function applyMode(mode, button) {
     const nextMode = MODES.includes(mode) ? mode : "system";
     document.documentElement.dataset.theme = nextMode;
-
     if (button) {
       const label = labelFor(nextMode);
       button.textContent = label;
@@ -88,26 +81,19 @@
   document.addEventListener("DOMContentLoaded", () => {
     loadExperimentStylesheets();
     loadReleasePrepAssets();
-
     const button = document.getElementById("themeToggleBtn");
     let currentMode = safeGetMode();
     applyMode(currentMode, button);
-
     if (!button) return;
-
     button.addEventListener("click", () => {
       currentMode = getNextMode(currentMode);
       safeSetMode(currentMode);
       applyMode(currentMode, button);
     });
-
     window.CherryI18n?.onChange(() => applyMode(currentMode, button));
-
     const media = window.matchMedia?.("(prefers-color-scheme: dark)");
     media?.addEventListener?.("change", () => {
-      if (currentMode === "system") {
-        applyMode(currentMode, button);
-      }
+      if (currentMode === "system") applyMode(currentMode, button);
     });
   });
 })();

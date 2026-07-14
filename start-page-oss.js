@@ -116,6 +116,12 @@
     setLink("contribute", c("contribute"));
     setLink("releases", c("releases"));
     setLink("donation", c("donation"), "#");
+
+    const page = document.getElementById("startPage");
+    if (page && page.dataset.enhancedReady !== "true") {
+      page.dataset.enhancedReady = "true";
+      window.dispatchEvent(new CustomEvent("cherry-start-page-ready"));
+    }
   }
 
   function queueRender() {

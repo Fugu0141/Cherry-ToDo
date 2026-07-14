@@ -1,5 +1,5 @@
 (() => {
-  const version = "20260710-1";
+  const version = "20260712-5";
 
   function loadCssOnce(id, href) {
     if (document.querySelector(`link[data-release-prep-id="${id}"]`)) return;
@@ -67,6 +67,7 @@
     await loadScriptOnce("mobile-list-filters", `./mobile-list-filter-collapse.js?v=${version}`);
     await loadScriptOnce("list-state-guard", `./list-view-state-guard.js?v=${version}`);
     await loadScriptOnce("session-context", `./session-context.js?v=${version}`);
+    await loadScriptOnce("workspace-startup-guard", `./workspace-startup-guard.js?v=${version}`);
   }
 
   if (document.readyState === "loading") {

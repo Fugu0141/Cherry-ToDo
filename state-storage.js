@@ -74,8 +74,11 @@
     snapshot: snapshotState
   };
 
-  load();
-  refreshLaneDates();
-  branchLayout();
-  requestRender();
+  const shouldMountWorkspace = window.CherryStartupState?.shouldMountWorkspace?.() ?? true;
+  if (shouldMountWorkspace) {
+    load();
+    refreshLaneDates();
+    branchLayout();
+    requestRender();
+  }
 })();
