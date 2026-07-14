@@ -15,6 +15,7 @@
     "quest-sticky-todo-v3",
     "quest-sticky-todo-v2"
   ]);
+  const consentKey = "cherry-storage-consent-v1";
 
   const storagePrototype = Object.getPrototypeOf(window.localStorage);
   const originalGetItem = storagePrototype.getItem;
@@ -71,6 +72,24 @@
     }
   }
 
+  function hasPersistentData() {
+    try {
+      return [...routedKeys].some(key => originalGetItem.call(window.localStorage, key) !== null);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function clearPersistentData() {
+    try {
+      for (const key of routedKeys) originalRemoveItem.call(window.localStorage, key);
+      originalRemoveItem.call(window.localStorage, consentKey);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   window.addEventListener("beforeunload", event => {
     if (!hasEphemeralWork()) return;
     event.preventDefault();
@@ -79,6 +98,8 @@
 
   window.CherryStorageSessionBridge = {
     routedKeys: [...routedKeys],
-    hasEphemeralWork
+    hasEphemeralWork,
+    hasPersistentData,
+    clearPersistentData
   };
 })();

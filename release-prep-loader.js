@@ -1,5 +1,5 @@
 (() => {
-  const version = "20260714-1";
+  const version = "20260715-1";
 
   function loadCssOnce(id, href) {
     if (document.querySelector(`link[data-release-prep-id="${id}"]`)) return;
@@ -43,6 +43,7 @@
     loadCssOnce("start-page-language", `./start-page-language.css?v=${version}`);
     loadCssOnce("mobile-rescue", `./mobile-release-rescue.css?v=${version}`);
     loadCssOnce("start-page-footer-oss", `./start-page-footer-oss.css?v=${version}`);
+    loadCssOnce("storage-data-controls", `./storage-data-controls.css?v=${version}`);
     loadCssOnce("mobile-list-filters", `./mobile-list-filter-collapse.css?v=${version}`);
     loadCssOnce("workspace-tab-overflow", `./workspace-tab-overflow-fix.css?v=${version}`);
     loadCssOnce("tab-add-button-inline", `./tab-add-button-inline.css?v=${version}`);
@@ -62,6 +63,7 @@
     await loadScriptOnce("tab-add-button-inline", `./tab-add-button-inline.js?v=${version}`);
     await loadScriptOnce("tab-rename", `./tab-rename-shortcut.js?v=${version}`);
     await loadScriptOnce("start-page-oss", `./start-page-oss.js?v=${version}`);
+    await loadScriptOnce("storage-data-controls", `./storage-data-controls.js?v=${version}`);
     await loadScriptOnce("start-page-focus", `./start-page-focus.js?v=${version}`);
     await loadScriptOnce("start-page-language", `./start-page-language.js?v=${version}`);
     await loadScriptOnce("toolbar-command-menu", `./toolbar-command-menu.js?v=${version}`);
