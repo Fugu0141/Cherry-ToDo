@@ -1,27 +1,26 @@
 (() => {
-  const currentStorageKey = "quest-sticky-todo-v10";
-  const legacyStorageKeys = [
+  const workData = window.CherryWorkDataStorage;
+  const currentStorageKey = workData?.keys?.taskState || "quest-sticky-todo-v10";
+  const legacyStorageKeys = workData?.keys?.legacyTaskStates || [
     "quest-sticky-todo-v9", "quest-sticky-todo-v8", "quest-sticky-todo-v6",
     "quest-sticky-todo-v5", "quest-sticky-todo-v4", "quest-sticky-todo-v3", "quest-sticky-todo-v2"
   ];
   const saveDelayMs = 160;
   const maxUndoSnapshots = 80;
   const appBootSaveNow = typeof saveNow === "function" ? saveNow : null;
-  const adapters = window.CherryStorageAdapters;
-  const primaryStorage = adapters?.local;
-  const fallbackStorage = adapters?.memory;
 
   function readItem(key) {
-    return primaryStorage?.get(key) ?? fallbackStorage?.get(key) ?? null;
+    return workData?.get(key) ?? null;
   }
 
   function writeItem(key, value) {
-    if (primaryStorage?.set(key, value)) return true;
-    return fallbackStorage?.set(key, value) ?? false;
+    return workData?.set(key, value) ?? false;
   }
 
   function storedStateRaw() {
-    return [currentStorageKey, ...legacyStorageKeys].map(readItem).find(Boolean) || null;
+    return workData?.getFirst([currentStorageKey, ...legacyStorageKeys])
+      || [currentStorageKey, ...legacyStorageKeys].map(readItem).find(Boolean)
+      || null;
   }
 
   function normalizeLegacyBranchModes(nextState) {
