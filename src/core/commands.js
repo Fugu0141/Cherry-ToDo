@@ -69,14 +69,20 @@ export function createCommandRegistry() {
       if (handlers.has(commandName)) {
         throw new Error(`Command already registered: ${commandName}`);
       }
-      handlers.set(commandName, handler);
-      return () => handlers.delete(commandName);
+
+      const entry = Object.freeze({ handler });
+      handlers.set(commandName, entry);
+
+      return () => {
+        if (handlers.get(commandName) !== entry) return false;
+        return handlers.delete(commandName);
+      };
     },
     has(name) {
-      return handlers.has(name);
+      return handlers.has(assertCommandName(name));
     },
     get(name) {
-      return handlers.get(name) || null;
+      return handlers.get(assertCommandName(name))?.handler || null;
     },
     list() {
       return [...handlers.keys()];
