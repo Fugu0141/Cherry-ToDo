@@ -153,6 +153,18 @@
     });
   }
 
+  function routeStartPageTrigger(event) {
+    if (!event.target.closest("#startPageBtn, .workspaceStartMini")) return;
+
+    const view = window.CherryCore?.extensions?.views?.get("start-page");
+    if (!view?.open) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    view.open();
+    view.render?.();
+  }
+
   registerViewExtension();
 
   if (document.readyState === "loading") {
@@ -165,6 +177,7 @@
   window.addEventListener("cherry-workspace-updated", queueRender);
   window.addEventListener("cherry-start-page-ready", queueRender);
 
+  document.addEventListener("click", routeStartPageTrigger, true);
   document.addEventListener("click", event => {
     if (event.target.closest("#startPageBtn, .workspaceStartMini, [data-action], [data-tab-action]")) queueRender();
   });
