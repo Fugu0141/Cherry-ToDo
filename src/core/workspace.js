@@ -37,8 +37,11 @@ export function normalizeWorkspace(candidate, options = {}) {
   const now = options.now || (() => new Date().toISOString());
   if (!candidate || !Array.isArray(candidate.tabs)) return null;
 
+  // Match the current tab-manager acceptance rule during migration.
+  // Older saved workspaces may contain recoverable task containers that are
+  // truthy without satisfying a stricter object-type check.
   const tabs = candidate.tabs
-    .filter(tab => tab && tab.state && tab.state.tasks && typeof tab.state.tasks === "object")
+    .filter(tab => tab && tab.state && tab.state.tasks)
     .map((tab, index) => normalizeTab(tab, index, options));
 
   return {
