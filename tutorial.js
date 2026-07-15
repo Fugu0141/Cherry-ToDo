@@ -149,10 +149,18 @@
     render();
   }
 
+  function runOpenAction() {
+    const action = window.CherryCore?.extensions?.toolbarActions?.get("tutorial.open");
+    if (action?.run) {
+      return action.run();
+    }
+    return open();
+  }
+
   function bindOpenTriggers() {
-    document.getElementById("tutorialBtn")?.addEventListener("click", open);
+    document.getElementById("tutorialBtn")?.addEventListener("click", runOpenAction);
     document.body.addEventListener("click", event => {
-      if (event.target.closest("[data-tutorial-open]")) open();
+      if (event.target.closest("[data-tutorial-open]")) runOpenAction();
     });
   }
 
