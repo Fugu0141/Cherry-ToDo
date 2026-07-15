@@ -6,6 +6,15 @@
     return String(value).padStart(2, "0");
   }
 
+  function formatDateKey(year, month, day) {
+    return `${year}-${pad2(month)}-${pad2(day)}`;
+  }
+
+  function formatLocalToday() {
+    const now = new Date();
+    return formatDateKey(now.getFullYear(), now.getMonth() + 1, now.getDate());
+  }
+
   function isValidDateParts(year, month, day) {
     if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) return false;
     const date = new Date(Date.UTC(year, month - 1, day));
@@ -20,22 +29,6 @@
       month: Number(match[2]),
       day: Number(match[3])
     };
-  }
-
-  function formatDateKey(year, month, day) {
-    return `${year}-${pad2(month)}-${pad2(day)}`;
-  }
-
-  function formatLocalToday() {
-    const now = new Date();
-    return formatDateKey(now.getFullYear(), now.getMonth() + 1, now.getDate());
-  }
-
-  function isValidDateKey(value) {
-    const match = typeof value === "string" ? dateOnlyPattern.exec(value) : null;
-    if (!match) return false;
-    const { year, month, day } = partsFromMatch(match);
-    return isValidDateParts(year, month, day);
   }
 
   function normalizeDateKey(value, fallback = formatLocalToday()) {
@@ -65,18 +58,36 @@
     return formatDateKey(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate());
   }
 
-  window.cherryDateOnly = {
+  const fallbackDateOnly = {
     today: formatLocalToday,
     normalize: normalizeDateKey,
     addDays,
-    isValid: isValidDateKey
+    isValid(value) {
+      const match = typeof value === "string" ? dateOnlyPattern.exec(value) : null;
+      if (!match) return false;
+      const { year, month, day } = partsFromMatch(match);
+      return isValidDateParts(year, month, day);
+    }
+  };
+
+  let activeDateOnly = fallbackDateOnly;
+
+  window.cherryDateOnly = {
+    today: (...args) => activeDateOnly.today(...args),
+    normalize: (...args) => activeDateOnly.normalize(...args),
+    addDays: (...args) => activeDateOnly.addDays(...args),
+    isValid: (...args) => activeDateOnly.isValid(...args)
   };
 
   window.todayISO = function todayISO() {
-    return formatLocalToday();
+    return activeDateOnly.today();
   };
 
   window.normalizeDate = function normalizeDate(value) {
-    return normalizeDateKey(value, formatLocalToday());
+    return activeDateOnly.normalize(value, activeDateOnly.today());
   };
+
+  window.CherryLegacyCore?.withCore?.(core => {
+    if (core?.dateOnly) activeDateOnly = core.dateOnly;
+  });
 })();
