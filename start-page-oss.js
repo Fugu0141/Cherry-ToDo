@@ -131,6 +131,30 @@
     setTimeout(render, 0);
   }
 
+  function registerViewExtension() {
+    const bridge = window.CherryLegacyCore;
+    if (!bridge?.withCore) return;
+
+    bridge.withCore(core => {
+      const views = core.extensions?.views;
+      if (!views || views.has("start-page")) return;
+
+      views.register("start-page", Object.freeze({
+        id: "start-page",
+        elementId: "startPage",
+        readyEvent: "cherry-start-page-ready",
+        open() {
+          window.cherryWorkspace?.openStartPage?.();
+        },
+        render: queueRender
+      }));
+    }).catch(error => {
+      console.error("Failed to register the Start page view extension.", error);
+    });
+  }
+
+  registerViewExtension();
+
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", queueRender, { once: true });
   } else {
