@@ -5,11 +5,11 @@
     ["i18n", "i18n.js"],
     ["dialog", "cherry-dialog.js"],
     ["ui", "release-prep-ui.js"],
-    ["task-delete", "task-delete-dialog.js"],
+    ["task-delete", "src/features/task-delete/implementation.js"],
     ["task-delete-context-action-registration", "src/features/task-delete/registration.js"],
     ["auto-layout-board-tool-registration", "src/features/auto-layout/registration.js"],
     ["flow-popovers", "release-flow-popovers.js"],
-    ["tutorial", "tutorial.js"],
+    ["tutorial", "src/features/tutorial/implementation.js"],
     ["tutorial-extension-registration", "src/features/tutorial/registration.js"],
     ["storage-session-bridge", "storage-session-bridge.js"],
     ["tabs", "tab-manager.js"],
@@ -40,11 +40,11 @@
     ["storage-data-controls", "storage-data-controls.js"],
     ["start-page-oss", "start-page-oss.js"],
     ["ui", "release-prep-ui.js"],
-    ["task-delete", "task-delete-dialog.js"],
+    ["task-delete", "src/features/task-delete/implementation.js"],
     ["task-delete-context-action-registration", "src/features/task-delete/registration.js"],
     ["auto-layout-board-tool-registration", "src/features/auto-layout/registration.js"],
     ["flow-popovers", "release-flow-popovers.js"],
-    ["tutorial", "tutorial.js"],
+    ["tutorial", "src/features/tutorial/implementation.js"],
     ["tutorial-extension-registration", "src/features/tutorial/registration.js"],
     ["toolbar-command-menu", "toolbar-command-menu.js"],
     ["mobile-list-filters", "mobile-list-filter-collapse.js"],
@@ -117,11 +117,11 @@
     loadCssOnce("toolbar-priority", `./release-toolbar-priority.css?v=${version}`);
     loadCssOnce("toolbar-command-menu", `./toolbar-command-menu.css?v=${version}`);
     loadCssOnce("dialog", `./cherry-dialog.css?v=${version}`);
-    loadCssOnce("task-delete", `./task-delete-dialog.css?v=${version}`);
+    loadCssOnce("task-delete", `./src/features/task-delete/styles.css?v=${version}`);
     loadCssOnce("tab-rename", `./tab-rename-shortcut.css?v=${version}`);
     loadCssOnce("flow-popovers", `./release-flow-popovers.css?v=${version}`);
-    loadCssOnce("tutorial", `./tutorial.css?v=${version}`);
-    loadCssOnce("tutorial-preview-fix", `./tutorial-preview-fix.css?v=${version}`);
+    loadCssOnce("tutorial", `./src/features/tutorial/styles.css?v=${version}`);
+    loadCssOnce("tutorial-preview-fix", `./src/features/tutorial/preview-fix.css?v=${version}`);
     loadCssOnce("tabs", `./tab-manager.css?v=${version}`);
     loadCssOnce("workspace-grid", `./workspace-grid-row-fix.css?v=${version}`);
     loadCssOnce("start-page-oss", `./start-page-oss.css?v=${version}`);
