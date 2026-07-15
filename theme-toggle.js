@@ -27,21 +27,9 @@
     document.head.appendChild(link);
   }
 
-  function loadScriptOnce(id, src) {
-    if (document.querySelector(`script[data-experiment-id="${id}"]`)) return;
-    const script = document.createElement("script");
-    script.src = src;
-    script.dataset.experimentId = id;
-    document.body.appendChild(script);
-  }
-
   function loadExperimentStylesheets() {
     loadStylesheetOnce("paper-canvas", "./theme-experiment-a.css?v=20260705-1");
     loadStylesheetOnce("mobile-control-cleanup", "./mobile-control-cleanup.css?v=20260705-1");
-  }
-
-  function loadReleasePrepAssets() {
-    loadScriptOnce("release-prep-loader", "./release-prep-loader.js?v=20260712-4");
   }
 
   function safeGetMode() {
@@ -80,7 +68,6 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     loadExperimentStylesheets();
-    loadReleasePrepAssets();
     const button = document.getElementById("themeToggleBtn");
     let currentMode = safeGetMode();
     applyMode(currentMode, button);
