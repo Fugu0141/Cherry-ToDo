@@ -10,6 +10,10 @@ function createHistory(limit = 80) {
   const future = [];
   const maxEntries = Math.max(1, Number(limit) || 80);
 
+  function redoableEntries() {
+    return future.filter(entry => typeof entry?.redo === "function");
+  }
+
   return {
     push(entry) {
       past.push(entry);
@@ -28,9 +32,13 @@ function createHistory(limit = 80) {
       return true;
     },
     popRedo() {
-      const entry = future.pop() || null;
-      if (entry) past.push(entry);
-      return entry;
+      while (future.length) {
+        const entry = future.pop();
+        if (typeof entry?.redo !== "function") continue;
+        past.push(entry);
+        return entry;
+      }
+      return null;
     },
     rollbackRedo(entry) {
       if (past[past.length - 1] !== entry) return false;
@@ -46,12 +54,12 @@ function createHistory(limit = 80) {
       return past.length > 0;
     },
     canRedo() {
-      return future.length > 0;
+      return redoableEntries().length > 0;
     },
     snapshot() {
       return {
         undoCount: past.length,
-        redoCount: future.length
+        redoCount: redoableEntries().length
       };
     }
   };
@@ -128,7 +136,7 @@ export function createCommandDispatcher({ registry = createCommandRegistry(), hi
     if (!entry) return false;
 
     try {
-      if (entry.redo) await entry.redo(context);
+      await entry.redo(context);
       return true;
     } catch (error) {
       history.rollbackRedo(entry);
