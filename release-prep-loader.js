@@ -16,10 +16,10 @@
     ["workspace-transfer-extension-registration", "src/features/workspace-transfer/registration.js"],
     ["tab-add-button-inline", "tab-add-button-inline.js"],
     ["tab-rename", "tab-rename-shortcut.js"],
-    ["start-page-oss", "start-page-oss.js"],
+    ["start-page-oss", "src/features/start-page/implementation.js"],
     ["storage-data-controls", "storage-data-controls.js"],
-    ["start-page-focus", "start-page-focus.js"],
-    ["start-page-language", "start-page-language.js"],
+    ["start-page-focus", "src/features/start-page/focus.js"],
+    ["start-page-language", "src/features/start-page/language.js"],
     ["toolbar-command-menu", "toolbar-command-menu.js"],
     ["mobile-list-filters", "mobile-list-filter-collapse.js"],
     ["list-state-guard", "list-view-state-guard.js"],
@@ -35,10 +35,10 @@
     ["workspace-transfer-extension-registration", "src/features/workspace-transfer/registration.js"],
     ["tab-add-button-inline", "tab-add-button-inline.js"],
     ["tab-rename", "tab-rename-shortcut.js"],
-    ["start-page-focus", "start-page-focus.js"],
-    ["start-page-language", "start-page-language.js"],
+    ["start-page-focus", "src/features/start-page/focus.js"],
+    ["start-page-language", "src/features/start-page/language.js"],
     ["storage-data-controls", "storage-data-controls.js"],
-    ["start-page-oss", "start-page-oss.js"],
+    ["start-page-oss", "src/features/start-page/implementation.js"],
     ["ui", "release-prep-ui.js"],
     ["task-delete", "src/features/task-delete/implementation.js"],
     ["task-delete-context-action-registration", "src/features/task-delete/registration.js"],
@@ -124,11 +124,11 @@
     loadCssOnce("tutorial-preview-fix", `./src/features/tutorial/preview-fix.css?v=${version}`);
     loadCssOnce("tabs", `./tab-manager.css?v=${version}`);
     loadCssOnce("workspace-grid", `./workspace-grid-row-fix.css?v=${version}`);
-    loadCssOnce("start-page-oss", `./start-page-oss.css?v=${version}`);
-    loadCssOnce("start-page-focus", `./start-page-focus.css?v=${version}`);
-    loadCssOnce("start-page-language", `./start-page-language.css?v=${version}`);
+    loadCssOnce("start-page-oss", `./src/features/start-page/styles.css?v=${version}`);
+    loadCssOnce("start-page-focus", `./src/features/start-page/focus.css?v=${version}`);
+    loadCssOnce("start-page-language", `./src/features/start-page/language.css?v=${version}`);
     loadCssOnce("mobile-rescue", `./mobile-release-rescue.css?v=${version}`);
-    loadCssOnce("start-page-footer-oss", `./start-page-footer-oss.css?v=${version}`);
+    loadCssOnce("start-page-footer-oss", `./src/features/start-page/footer-layout.css?v=${version}`);
     loadCssOnce("storage-data-controls", `./storage-data-controls.css?v=${version}`);
     loadCssOnce("mobile-list-filters", `./mobile-list-filter-collapse.css?v=${version}`);
     loadCssOnce("workspace-tab-overflow", `./workspace-tab-overflow-fix.css?v=${version}`);
