@@ -169,10 +169,17 @@
 
   deleteTask = async function deleteTaskWithCherryDialog(taskId = selectedId) {
     const task = state.tasks?.[taskId];
-    if (!task) return;
+    if (!task) return false;
+
+    const action = window.CherryCore?.extensions?.contextActions?.get("task.delete");
+    if (action?.run) {
+      return action.run(task);
+    }
+
     const ok = await confirmTaskDelete(task);
-    if (!ok) return;
+    if (!ok) return false;
     performDelete(taskId);
+    return true;
   };
 
   window.cherryTaskDeleteDialog = {
