@@ -1,15 +1,26 @@
+function normalizeEventType(type) {
+  if (typeof type !== "string" || !type.trim()) {
+    throw new TypeError("Event type must be a non-empty string.");
+  }
+
+  return type.trim();
+}
+
+function assertEventListener(listener) {
+  if (typeof listener !== "function") {
+    throw new TypeError("Event listener must be a function.");
+  }
+
+  return listener;
+}
+
 export function createEventBus() {
   const listeners = new Map();
 
   function on(type, listener) {
-    if (typeof type !== "string" || !type.trim()) {
-      throw new TypeError("Event type must be a non-empty string.");
-    }
-    if (typeof listener !== "function") {
-      throw new TypeError("Event listener must be a function.");
-    }
+    const eventType = normalizeEventType(type);
+    assertEventListener(listener);
 
-    const eventType = type.trim();
     const bucket = listeners.get(eventType) || new Set();
     bucket.add(listener);
     listeners.set(eventType, bucket);
@@ -18,6 +29,8 @@ export function createEventBus() {
   }
 
   function once(type, listener) {
+    assertEventListener(listener);
+
     let unsubscribe = null;
     unsubscribe = on(type, event => {
       unsubscribe?.();
@@ -27,19 +40,17 @@ export function createEventBus() {
   }
 
   function off(type, listener) {
-    const bucket = listeners.get(type);
+    const eventType = normalizeEventType(type);
+    const bucket = listeners.get(eventType);
     if (!bucket) return false;
 
     const deleted = bucket.delete(listener);
-    if (!bucket.size) listeners.delete(type);
+    if (!bucket.size) listeners.delete(eventType);
     return deleted;
   }
 
   function emit(type, detail, metadata = {}) {
-    const eventType = typeof type === "string" ? type.trim() : "";
-    if (!eventType) {
-      throw new TypeError("Event type must be a non-empty string.");
-    }
+    const eventType = normalizeEventType(type);
 
     const event = Object.freeze({
       type: eventType,
@@ -59,14 +70,14 @@ export function createEventBus() {
 
   function clear(type) {
     if (typeof type === "string") {
-      return listeners.delete(type);
+      return listeners.delete(normalizeEventType(type));
     }
     listeners.clear();
     return true;
   }
 
   function listenerCount(type) {
-    return listeners.get(type)?.size || 0;
+    return listeners.get(normalizeEventType(type))?.size || 0;
   }
 
   return Object.freeze({
