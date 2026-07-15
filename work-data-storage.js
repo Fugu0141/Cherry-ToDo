@@ -19,19 +19,29 @@
     ])
   });
 
+  let storage = null;
+
   function get(key) {
-    return adapter.get(String(key));
+    const normalizedKey = String(key);
+    return storage ? storage.get(normalizedKey) : adapter.get(normalizedKey);
   }
 
   function set(key, value) {
-    return adapter.set(String(key), String(value));
+    const normalizedKey = String(key);
+    const normalizedValue = String(value);
+    return storage
+      ? storage.set(normalizedKey, normalizedValue)
+      : adapter.set(normalizedKey, normalizedValue);
   }
 
   function remove(key) {
-    return adapter.remove(String(key));
+    const normalizedKey = String(key);
+    return storage ? storage.remove(normalizedKey) : adapter.remove(normalizedKey);
   }
 
   function getJson(key, fallback = null) {
+    if (storage) return storage.getJson(String(key), { fallback });
+
     const raw = get(key);
     if (!raw) return fallback;
     try {
@@ -42,7 +52,9 @@
   }
 
   function setJson(key, value) {
-    return set(key, JSON.stringify(value));
+    return storage
+      ? storage.setJson(String(key), value)
+      : set(key, JSON.stringify(value));
   }
 
   function getFirst(keysToTry) {
@@ -62,4 +74,15 @@
     setJson,
     getFirst
   };
+
+  window.CherryLegacyCore?.withCore(core => {
+    const createStorageOrchestrator = core.storage?.createStorageOrchestrator;
+    if (typeof createStorageOrchestrator !== "function") return;
+
+    const orchestrator = createStorageOrchestrator({
+      defaultAdapterName: "work-data"
+    });
+    orchestrator.registerAdapter("work-data", adapter);
+    storage = orchestrator;
+  });
 })();
