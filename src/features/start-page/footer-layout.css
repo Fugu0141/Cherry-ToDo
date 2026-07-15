@@ -1,0 +1,276 @@
+/* Keep OSS presence visible without turning it into a content card. */
+body.startPageFocusMode .startPagePanel {
+  display: flex;
+  flex-direction: column;
+  min-height: min(720px, calc(100dvh - 110px));
+}
+
+body.startPageFocusMode .startPageOss {
+  width: 100% !important;
+  margin-top: auto !important;
+  padding: 12px 0 0 !important;
+  background: transparent !important;
+  border-top: 1px solid color-mix(in srgb, var(--ink) 10%, transparent) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+body.startPageFocusMode .startPageOssTitle {
+  color: var(--muted);
+  font-size: 11px !important;
+  font-weight: 800;
+}
+
+body.startPageFocusMode .startPageOssLead {
+  display: none !important;
+}
+
+body.startPageFocusMode .startPageOssLinks {
+  display: flex !important;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+body.startPageFocusMode .startPageOssLink {
+  min-height: 30px !important;
+  padding: 6px 9px !important;
+  border-radius: 999px !important;
+  font-size: 11px !important;
+  background: transparent !important;
+}
+
+body.startPageFocusMode .startPageFooter {
+  width: 100% !important;
+  margin-top: 8px !important;
+  padding-top: 8px !important;
+  border-top: 0 !important;
+}
+
+@media (min-width: 900px) {
+  body.startPageFocusMode .startPagePanel {
+    width: min(1180px, calc(100vw - 96px)) !important;
+  }
+
+  body.startPageFocusMode .startPageHeader h2 {
+    max-width: 900px !important;
+  }
+
+  body.startPageFocusMode .startPageHeader p:not(.startPageKicker) {
+    max-width: 680px !important;
+  }
+
+  body.startPageFocusMode .startPageBody {
+    grid-template-columns: minmax(560px, 1fr) minmax(320px, 420px) !important;
+    column-gap: 28px !important;
+  }
+
+  body.startPageFocusMode .startPageActions {
+    width: 100% !important;
+  }
+
+  body.startPageFocusMode .startPageTabs,
+  body.startPageFocusMode .startPageEmpty,
+  body.startPageFocusMode .startPageOss,
+  body.startPageFocusMode .startPageFooter {
+    width: 100% !important;
+  }
+
+  body.startPageFocusMode .startPageTabCard {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+  }
+}
+
+@media (min-width: 1320px) {
+  body.startPageFocusMode .startPagePanel {
+    width: min(1280px, calc(100vw - 128px)) !important;
+  }
+
+  body.startPageFocusMode .startPageBody {
+    grid-template-columns: minmax(720px, 1fr) 420px !important;
+  }
+}
+
+@media (max-width: 760px) {
+  body.startPageFocusMode .startPagePanel {
+    min-height: calc(100dvh - 96px - var(--mobile-top-safe) - var(--mobile-bottom-safe));
+  }
+
+  body.startPageFocusMode .startPageOss {
+    gap: 7px !important;
+    padding-top: 10px !important;
+  }
+
+  body.startPageFocusMode .startPageOssText {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  body.startPageFocusMode .startPageOssLinks {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  body.startPageFocusMode .startPageOssLink {
+    min-height: 32px !important;
+  }
+
+  .stage.startPageMode {
+    height: calc(100dvh - 60px - env(safe-area-inset-top, 0px)) !important;
+    overflow: auto !important;
+  }
+
+  body:has(.stage.startPageMode) .toolbar,
+  body:has(.stage.startPageMode) #workspaceBar,
+  body:has(.stage.startPageMode) .workspaceBar {
+    display: none !important;
+  }
+
+  body:has(.stage.startPageMode) .topbar {
+    min-height: 60px !important;
+    padding: calc(8px + env(safe-area-inset-top, 0px)) 12px 8px !important;
+  }
+
+  .stage.startPageMode .startPageView {
+    height: auto !important;
+    min-height: 100% !important;
+    padding: 16px 16px calc(env(safe-area-inset-bottom, 0px) + 18px) !important;
+    overflow: visible !important;
+  }
+
+  .stage.startPageMode .startPagePanel {
+    width: 100% !important;
+    min-height: calc(100dvh - 96px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .stage.startPageMode .startPageBody {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 14px !important;
+  }
+
+  .stage.startPageMode .startPageActions {
+    order: 0 !important;
+    width: 100% !important;
+  }
+
+  .stage.startPageMode .startPageTabs {
+    order: 1 !important;
+    width: 100% !important;
+  }
+
+  .stage.startPageMode .startPageOss {
+    margin-top: auto !important;
+  }
+
+  body:not(.startPageFocusMode) {
+    --mobile-toolbar-height: 112px;
+    --mobile-tab-height: 44px;
+  }
+
+  body:not(.startPageFocusMode) .topbar {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 8px !important;
+    padding: calc(7px + env(safe-area-inset-top, 0px)) 10px 7px !important;
+  }
+
+  body:not(.startPageFocusMode) .brand {
+    grid-template-columns: 38px minmax(0, 1fr) !important;
+    gap: 9px !important;
+  }
+
+  body:not(.startPageFocusMode) .logo {
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 13px !important;
+    font-size: 20px !important;
+  }
+
+  body:not(.startPageFocusMode) .brand h1 {
+    font-size: 18px !important;
+  }
+
+  body:not(.startPageFocusMode) .brand p {
+    font-size: 11px !important;
+  }
+
+  body:not(.startPageFocusMode) .toolbar {
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+    gap: 7px !important;
+    width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding: 0 2px 3px !important;
+    scroll-snap-type: x proximity;
+  }
+
+  body:not(.startPageFocusMode) .toolbar button {
+    min-height: 38px !important;
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+    scroll-snap-align: start;
+  }
+
+  body:not(.startPageFocusMode) #listViewBtn {
+    order: 10 !important;
+  }
+
+  body:not(.startPageFocusMode) #addRootBtn {
+    order: 20 !important;
+  }
+
+  body:not(.startPageFocusMode) #toggleLanesBtn {
+    order: 30 !important;
+  }
+
+  body:not(.startPageFocusMode) #treeLayoutBtn {
+    order: 40 !important;
+  }
+
+  body:not(.startPageFocusMode) #verticalLayoutBtn {
+    order: 50 !important;
+  }
+
+  body:not(.startPageFocusMode) #themeToggleBtn {
+    order: 60 !important;
+  }
+
+  body:not(.startPageFocusMode) #languageToggleBtn {
+    order: 70 !important;
+  }
+
+  body:not(.startPageFocusMode) #startPageBtn {
+    order: 80 !important;
+  }
+
+  body:not(.startPageFocusMode) #tutorialBtn {
+    order: 90 !important;
+  }
+
+  body:not(.startPageFocusMode) #undoBtn {
+    order: 100 !important;
+  }
+
+  body:not(.startPageFocusMode) #deleteBtn {
+    order: 110 !important;
+  }
+
+  body:not(.startPageFocusMode) #resetBtn {
+    order: 120 !important;
+  }
+
+  body:not(.startPageFocusMode) .workspaceBar {
+    top: var(--mobile-toolbar-height) !important;
+    min-height: var(--mobile-tab-height) !important;
+    padding: 5px 10px !important;
+  }
+
+  body:not(.startPageFocusMode) .stage {
+    height: calc(100dvh - var(--mobile-toolbar-height) - var(--mobile-tab-height)) !important;
+  }
+}
