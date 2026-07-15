@@ -21,9 +21,11 @@ export function createRegistry(options = {}) {
       throw new TypeError(`Invalid ${name} entry: ${key}`);
     }
 
-    entries.set(key, value);
+    const registration = Object.freeze({ value });
+    entries.set(key, registration);
 
     return function unregister() {
+      if (entries.get(key) !== registration) return false;
       return entries.delete(key);
     };
   }
@@ -37,18 +39,18 @@ export function createRegistry(options = {}) {
   }
 
   function get(entryName) {
-    return entries.get(assertName(entryName, name)) ?? null;
+    return entries.get(assertName(entryName, name))?.value ?? null;
   }
 
   function list() {
-    return [...entries.entries()].map(([entryName, value]) => ({
+    return [...entries.entries()].map(([entryName, registration]) => ({
       name: entryName,
-      value
+      value: registration.value
     }));
   }
 
   function values() {
-    return [...entries.values()];
+    return [...entries.values()].map(registration => registration.value);
   }
 
   function clear() {
