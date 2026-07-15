@@ -3,6 +3,7 @@ import { workspaceModel } from "../core/workspace.js";
 import { storeCore } from "../core/store.js";
 import { commandCore } from "../core/commands.js";
 import { eventCore } from "../core/events.js";
+import { storageCore } from "../core/storage.js";
 
 const existingCore = window.CherryCore && typeof window.CherryCore === "object"
   ? window.CherryCore
@@ -14,11 +15,12 @@ window.CherryCore = Object.freeze({
   workspace: workspaceModel,
   store: storeCore,
   commands: commandCore,
-  events: eventCore
+  events: eventCore,
+  storage: storageCore
 });
 
 window.dispatchEvent(new CustomEvent("cherry-core-ready", {
   detail: {
-    modules: ["dateOnly", "workspace", "store", "commands", "events"]
+    modules: ["dateOnly", "workspace", "store", "commands", "events", "storage"]
   }
 }));
