@@ -11,13 +11,13 @@
     ["flow-popovers", "release-flow-popovers.js"],
     ["tutorial", "src/features/tutorial/implementation.js"],
     ["tutorial-extension-registration", "src/features/tutorial/registration.js"],
-    ["storage-session-bridge", "storage-session-bridge.js"],
+    ["storage-session-bridge", "src/infrastructure/storage/session-bridge.js"],
     ["tabs", "tab-manager.js"],
     ["workspace-transfer-extension-registration", "src/features/workspace-transfer/registration.js"],
     ["tab-add-button-inline", "tab-add-button-inline.js"],
     ["tab-rename", "tab-rename-shortcut.js"],
     ["start-page-oss", "src/features/start-page/implementation.js"],
-    ["storage-data-controls", "storage-data-controls.js"],
+    ["storage-data-controls", "src/infrastructure/storage/data-controls.js"],
     ["start-page-focus", "src/features/start-page/focus.js"],
     ["start-page-language", "src/features/start-page/language.js"],
     ["toolbar-command-menu", "toolbar-command-menu.js"],
@@ -30,14 +30,14 @@
   const startFirstScriptOrder = [
     ["i18n", "i18n.js"],
     ["dialog", "cherry-dialog.js"],
-    ["storage-session-bridge", "storage-session-bridge.js"],
+    ["storage-session-bridge", "src/infrastructure/storage/session-bridge.js"],
     ["tabs", "tab-manager.js"],
     ["workspace-transfer-extension-registration", "src/features/workspace-transfer/registration.js"],
     ["tab-add-button-inline", "tab-add-button-inline.js"],
     ["tab-rename", "tab-rename-shortcut.js"],
     ["start-page-focus", "src/features/start-page/focus.js"],
     ["start-page-language", "src/features/start-page/language.js"],
-    ["storage-data-controls", "storage-data-controls.js"],
+    ["storage-data-controls", "src/infrastructure/storage/data-controls.js"],
     ["start-page-oss", "src/features/start-page/implementation.js"],
     ["ui", "release-prep-ui.js"],
     ["task-delete", "src/features/task-delete/implementation.js"],
@@ -129,7 +129,7 @@
     loadCssOnce("start-page-language", `./src/features/start-page/language.css?v=${version}`);
     loadCssOnce("mobile-rescue", `./mobile-release-rescue.css?v=${version}`);
     loadCssOnce("start-page-footer-oss", `./src/features/start-page/footer-layout.css?v=${version}`);
-    loadCssOnce("storage-data-controls", `./storage-data-controls.css?v=${version}`);
+    loadCssOnce("storage-data-controls", `./src/infrastructure/storage/data-controls.css?v=${version}`);
     loadCssOnce("mobile-list-filters", `./mobile-list-filter-collapse.css?v=${version}`);
     loadCssOnce("workspace-tab-overflow", `./workspace-tab-overflow-fix.css?v=${version}`);
     loadCssOnce("tab-add-button-inline", `./tab-add-button-inline.css?v=${version}`);
