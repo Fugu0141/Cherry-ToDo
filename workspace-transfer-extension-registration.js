@@ -16,4 +16,18 @@
       run: (...args) => workspace.exportWorkspace?.(...args)
     });
   }
+
+  document.addEventListener("click", event => {
+    const trigger = event.target.closest("#startPage [data-action='export']");
+    if (!trigger) return;
+
+    const exporter = extensions.exporters.get("workspace.cherry");
+    if (!exporter?.run) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    Promise.resolve(exporter.run()).catch(error => {
+      console.error("Workspace export failed through the exporter registry.", error);
+    });
+  }, true);
 })();
