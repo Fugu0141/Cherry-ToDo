@@ -21,10 +21,22 @@ function createHistory(limit = 80) {
       if (entry) future.push(entry);
       return entry;
     },
+    rollbackUndo(entry) {
+      if (future[future.length - 1] !== entry) return false;
+      future.pop();
+      past.push(entry);
+      return true;
+    },
     popRedo() {
       const entry = future.pop() || null;
       if (entry) past.push(entry);
       return entry;
+    },
+    rollbackRedo(entry) {
+      if (past[past.length - 1] !== entry) return false;
+      past.pop();
+      future.push(entry);
+      return true;
     },
     clear() {
       past.length = 0;
@@ -95,15 +107,27 @@ export function createCommandDispatcher({ registry = createCommandRegistry(), hi
   async function undo(context = {}) {
     const entry = history.popUndo();
     if (!entry) return false;
-    await entry.undo(context);
-    return true;
+
+    try {
+      await entry.undo(context);
+      return true;
+    } catch (error) {
+      history.rollbackUndo(entry);
+      throw error;
+    }
   }
 
   async function redo(context = {}) {
     const entry = history.popRedo();
     if (!entry) return false;
-    if (entry.redo) await entry.redo(context);
-    return true;
+
+    try {
+      if (entry.redo) await entry.redo(context);
+      return true;
+    } catch (error) {
+      history.rollbackRedo(entry);
+      throw error;
+    }
   }
 
   return Object.freeze({
