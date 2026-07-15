@@ -10,6 +10,8 @@ const existingCore = window.CherryCore && typeof window.CherryCore === "object"
   ? window.CherryCore
   : {};
 
+const extensions = existingCore.extensions || registryCore.createExtensionRegistries();
+
 window.CherryCore = Object.freeze({
   ...existingCore,
   dateOnly,
@@ -18,11 +20,12 @@ window.CherryCore = Object.freeze({
   commands: commandCore,
   events: eventCore,
   storage: storageCore,
-  registries: registryCore
+  registries: registryCore,
+  extensions
 });
 
 window.dispatchEvent(new CustomEvent("cherry-core-ready", {
   detail: {
-    modules: ["dateOnly", "workspace", "store", "commands", "events", "storage", "registries"]
+    modules: ["dateOnly", "workspace", "store", "commands", "events", "storage", "registries", "extensions"]
   }
 }));
