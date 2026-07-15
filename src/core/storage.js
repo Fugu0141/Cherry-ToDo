@@ -12,23 +12,35 @@ function assertStorageAdapter(adapter) {
   return adapter;
 }
 
+function normalizeAdapterName(name) {
+  if (typeof name !== "string" || !name.trim()) {
+    throw new TypeError("Storage adapter name must be a non-empty string.");
+  }
+
+  return name.trim();
+}
+
 export function createStorageOrchestrator(options = {}) {
   const adapters = new Map();
-  const defaultAdapterName = options.defaultAdapterName || null;
+  const defaultAdapterName = options.defaultAdapterName == null
+    ? null
+    : normalizeAdapterName(options.defaultAdapterName);
 
   function registerAdapter(name, adapter) {
-    if (typeof name !== "string" || !name.trim()) {
-      throw new TypeError("Storage adapter name must be a non-empty string.");
-    }
+    const normalizedName = normalizeAdapterName(name);
+    const entry = Object.freeze({
+      adapter: assertStorageAdapter(adapter)
+    });
+    adapters.set(normalizedName, entry);
 
-    const normalizedName = name.trim();
-    adapters.set(normalizedName, assertStorageAdapter(adapter));
-
-    return () => adapters.delete(normalizedName);
+    return () => {
+      if (adapters.get(normalizedName) !== entry) return false;
+      return adapters.delete(normalizedName);
+    };
   }
 
   function hasAdapter(name) {
-    return adapters.has(name);
+    return adapters.has(normalizeAdapterName(name));
   }
 
   function listAdapters() {
@@ -36,14 +48,16 @@ export function createStorageOrchestrator(options = {}) {
   }
 
   function resolveAdapter(name) {
-    const resolvedName = name || defaultAdapterName;
-    const adapter = resolvedName ? adapters.get(resolvedName) : null;
+    const resolvedName = name
+      ? normalizeAdapterName(name)
+      : defaultAdapterName;
+    const entry = resolvedName ? adapters.get(resolvedName) : null;
 
-    if (!adapter) {
+    if (!entry) {
       throw new Error(`Unknown storage adapter: ${resolvedName || "(none)"}`);
     }
 
-    return { name: resolvedName, adapter };
+    return { name: resolvedName, adapter: entry.adapter };
   }
 
   function get(key, options = {}) {
