@@ -1,4 +1,5 @@
 import { dateOnly } from "../core/date-only.js";
+import { workspaceModel } from "../core/workspace.js";
 
 const existingCore = window.CherryCore && typeof window.CherryCore === "object"
   ? window.CherryCore
@@ -6,11 +7,12 @@ const existingCore = window.CherryCore && typeof window.CherryCore === "object"
 
 window.CherryCore = Object.freeze({
   ...existingCore,
-  dateOnly
+  dateOnly,
+  workspace: workspaceModel
 });
 
 window.dispatchEvent(new CustomEvent("cherry-core-ready", {
   detail: {
-    modules: ["dateOnly"]
+    modules: ["dateOnly", "workspace"]
   }
 }));
