@@ -99,8 +99,8 @@ http://localhost:8000/
 ├── startup-state.js              # 初期起動先の決定と起動境界の制御
 ├── startup-shell.css             # 起動・読み込み・復旧表示
 ├── storage-adapter.js            # 永続ローカル保存とメモリ内保存の境界
-├── session-context.js            # Start / ワークスペース、タブ、表示状態の復元メタデータ
-├── workspace-startup-guard.js    # ワークスペース準備完了時の最終引き渡し
+├── src/app/workspace/session-context.js  # Start / ワークスペース、タブ、表示状態の復元メタデータ
+├── src/app/workspace/startup-guard.js    # ワークスペース準備完了時の最終引き渡し
 ├── app.js                        # 現在の旧式アプリケーションコア
 ├── state-storage.js              # 旧データ互換を含むタスク状態保存ブリッジ
 ├── schedule-model.js             # 予定データの正規化ヘルパー
