@@ -123,7 +123,7 @@
     loadCssOnce("tutorial", `./src/features/tutorial/styles.css?v=${version}`);
     loadCssOnce("tutorial-preview-fix", `./src/features/tutorial/preview-fix.css?v=${version}`);
     loadCssOnce("tabs", `./tab-manager.css?v=${version}`);
-    loadCssOnce("workspace-grid", `./workspace-grid-row-fix.css?v=${version}`);
+    loadCssOnce("workspace-grid", `./src/app/workspace/layout.css?v=${version}`);
     loadCssOnce("start-page-oss", `./src/features/start-page/styles.css?v=${version}`);
     loadCssOnce("start-page-focus", `./src/features/start-page/focus.css?v=${version}`);
     loadCssOnce("start-page-language", `./src/features/start-page/language.css?v=${version}`);
@@ -131,7 +131,7 @@
     loadCssOnce("start-page-footer-oss", `./src/features/start-page/footer-layout.css?v=${version}`);
     loadCssOnce("storage-data-controls", `./src/infrastructure/storage/data-controls.css?v=${version}`);
     loadCssOnce("mobile-list-filters", `./mobile-list-filter-collapse.css?v=${version}`);
-    loadCssOnce("workspace-tab-overflow", `./workspace-tab-overflow-fix.css?v=${version}`);
+    loadCssOnce("workspace-tab-overflow", `./src/features/workspace-tabs/overflow.css?v=${version}`);
     loadCssOnce("tab-add-button-inline", `./src/features/workspace-tabs/inline-add-button.css?v=${version}`);
     loadCssOnce("list-overlap", `./list-view-overlap-fix.css?v=${version}`);
     loadCssOnce("mobile-desktop-toolbar-fit", `./mobile-desktop-toolbar-fit.css?v=${version}`);
