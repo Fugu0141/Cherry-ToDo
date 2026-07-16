@@ -99,8 +99,8 @@ The current prototype still contains legacy scripts and focused compatibility la
 ├── startup-state.js              # chooses the initial startup route and controls the startup boundary
 ├── startup-shell.css             # startup/loading/recovery presentation
 ├── storage-adapter.js            # persistent-local and in-memory storage policy boundary
-├── session-context.js            # Start/workspace, active-tab, and active-view restoration metadata
-├── workspace-startup-guard.js    # final workspace readiness hand-off
+├── src/app/workspace/session-context.js  # Start/workspace, active-tab, and active-view restoration metadata
+├── src/app/workspace/startup-guard.js    # final workspace readiness hand-off
 ├── app.js                        # current legacy application core
 ├── state-storage.js              # legacy-compatible task-state persistence bridge
 ├── schedule-model.js             # schedule normalization helpers
