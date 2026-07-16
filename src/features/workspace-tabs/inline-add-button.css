@@ -1,0 +1,82 @@
+/* v0.2: keep the new-tab action after the tab group, then stick it to the right edge when reached. */
+.workspaceBar {
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+.workspaceTabList {
+  flex: 0 1 auto !important;
+  min-width: max-content !important;
+  max-width: none !important;
+  overflow: visible !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 3px 4px !important;
+}
+
+.workspaceTabItem,
+.workspaceAddTabInline {
+  flex: 0 0 auto !important;
+}
+
+.workspaceBar > .workspaceAddTab {
+  display: none !important;
+}
+
+.workspaceAddTabInline {
+  position: sticky !important;
+  right: 4px !important;
+  z-index: 4 !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  width: 38px !important;
+  min-width: 38px !important;
+  max-width: 38px !important;
+  height: 36px !important;
+  padding: 0 !important;
+  margin-left: 0 !important;
+  color: var(--ink) !important;
+  background: color-mix(in srgb, var(--surface) 94%, var(--bg)) !important;
+  border: 1px solid color-mix(in srgb, var(--ink) 14%, transparent) !important;
+  border-radius: 13px !important;
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--bg) 42%, transparent) !important;
+}
+
+.workspaceAddTabInline::before {
+  content: "";
+  position: absolute;
+  inset: -4px auto -4px -12px;
+  width: 12px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--surface) 86%, transparent));
+}
+
+.workspaceAddTabInline:hover {
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface)) !important;
+  border-color: color-mix(in srgb, var(--accent) 42%, transparent) !important;
+}
+
+@media (max-width: 760px) {
+  .workspaceBar {
+    scrollbar-width: none;
+  }
+
+  .workspaceBar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .workspaceTabList {
+    gap: 7px !important;
+    padding: 4px 3px !important;
+  }
+
+  .workspaceAddTabInline {
+    right: 3px !important;
+    width: 40px !important;
+    min-width: 40px !important;
+    max-width: 40px !important;
+    height: 36px !important;
+  }
+}
