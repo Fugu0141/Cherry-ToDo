@@ -1,0 +1,83 @@
+/*
+ * Stable first-paint scene.
+ * It is the only visible startup surface until the selected route is fully painted.
+ */
+html[data-cherry-startup-state="booting"] .startupShell {
+  z-index: 5000;
+}
+
+html[data-cherry-startup-state="booting"]:not([data-cherry-startup-releasing="true"]) .app {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+html[data-cherry-startup-state="booting"][data-cherry-startup-releasing="true"] .app {
+  visibility: visible !important;
+  pointer-events: none !important;
+}
+
+html[data-cherry-startup-state="booting"] .stage::before,
+html[data-cherry-startup-state="booting"] .stage::after {
+  content: none !important;
+  display: none !important;
+}
+
+html:not([data-cherry-startup-state="fatal-recovery"])[data-cherry-startup-state="booting"] .startupShell {
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--accent, #7357ff) 14%, transparent), transparent 26%),
+    linear-gradient(180deg, color-mix(in srgb, var(--surface, #fff) 96%, var(--accent, #7357ff) 4%), var(--bg, #f5f7fb));
+}
+
+html:not([data-cherry-startup-state="fatal-recovery"])[data-cherry-startup-state="booting"] .startupShell::before {
+  content: "C";
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  z-index: -1;
+  width: 76px;
+  height: 76px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: var(--accent, #7357ff);
+  border-radius: 24px;
+  box-shadow: 0 18px 52px color-mix(in srgb, var(--accent, #7357ff) 24%, transparent);
+  font-size: 32px;
+  font-weight: 950;
+  transform: translate(-50%, -50%);
+}
+
+html:not([data-cherry-startup-state="fatal-recovery"])[data-cherry-startup-state="booting"] .startupShell::after {
+  content: "Cherry";
+  position: absolute;
+  left: 50%;
+  top: calc(46% + 58px);
+  z-index: -1;
+  color: var(--ink, #202636);
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: -.02em;
+  transform: translateX(-50%);
+}
+
+@media (max-width: 780px) {
+  html:not([data-cherry-startup-state="fatal-recovery"])[data-cherry-startup-state="booting"] .startupShell::before {
+    top: 48%;
+    width: 66px;
+    height: 66px;
+    border-radius: 21px;
+    font-size: 28px;
+  }
+
+  html:not([data-cherry-startup-state="fatal-recovery"])[data-cherry-startup-state="booting"] .startupShell::after {
+    top: calc(48% + 52px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-cherry-startup-state="fatal-recovery"])[data-cherry-startup-state="booting"] .startupShell::before {
+    box-shadow: none;
+  }
+}
