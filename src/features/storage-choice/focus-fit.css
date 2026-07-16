@@ -1,0 +1,41 @@
+/* Issue #91: keep storage-choice option focus styling inside the card. */
+.storageChoiceDialog:focus {
+  outline: none;
+}
+
+.storageChoiceOptions {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: visible;
+}
+
+.storageChoiceOption {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.storageChoiceOption:hover,
+.storageChoiceOption:focus-visible {
+  transform: none !important;
+}
+
+.storageChoiceOption:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent, #6857f5) 74%, #fff) !important;
+  outline-offset: -6px !important;
+  box-shadow: none !important;
+}
+
+.storageChoicePrimary:focus-visible {
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent, #6857f5) 58%, transparent) !important;
+}
+
+@media (max-width: 640px) {
+  .storageChoiceOption:focus-visible {
+    outline-offset: -5px !important;
+  }
+}
