@@ -14,8 +14,8 @@
     ["storage-session-bridge", "src/infrastructure/storage/session-bridge.js"],
     ["tabs", "tab-manager.js"],
     ["workspace-transfer-extension-registration", "src/features/workspace-transfer/registration.js"],
-    ["tab-add-button-inline", "tab-add-button-inline.js"],
-    ["tab-rename", "tab-rename-shortcut.js"],
+    ["tab-add-button-inline", "src/features/workspace-tabs/inline-add-button.js"],
+    ["tab-rename", "src/features/workspace-tabs/rename-shortcut.js"],
     ["start-page-oss", "src/features/start-page/implementation.js"],
     ["storage-data-controls", "src/infrastructure/storage/data-controls.js"],
     ["start-page-focus", "src/features/start-page/focus.js"],
@@ -33,8 +33,8 @@
     ["storage-session-bridge", "src/infrastructure/storage/session-bridge.js"],
     ["tabs", "tab-manager.js"],
     ["workspace-transfer-extension-registration", "src/features/workspace-transfer/registration.js"],
-    ["tab-add-button-inline", "tab-add-button-inline.js"],
-    ["tab-rename", "tab-rename-shortcut.js"],
+    ["tab-add-button-inline", "src/features/workspace-tabs/inline-add-button.js"],
+    ["tab-rename", "src/features/workspace-tabs/rename-shortcut.js"],
     ["start-page-focus", "src/features/start-page/focus.js"],
     ["start-page-language", "src/features/start-page/language.js"],
     ["storage-data-controls", "src/infrastructure/storage/data-controls.js"],
@@ -118,7 +118,7 @@
     loadCssOnce("toolbar-command-menu", `./toolbar-command-menu.css?v=${version}`);
     loadCssOnce("dialog", `./cherry-dialog.css?v=${version}`);
     loadCssOnce("task-delete", `./src/features/task-delete/styles.css?v=${version}`);
-    loadCssOnce("tab-rename", `./tab-rename-shortcut.css?v=${version}`);
+    loadCssOnce("tab-rename", `./src/features/workspace-tabs/rename-shortcut.css?v=${version}`);
     loadCssOnce("flow-popovers", `./release-flow-popovers.css?v=${version}`);
     loadCssOnce("tutorial", `./src/features/tutorial/styles.css?v=${version}`);
     loadCssOnce("tutorial-preview-fix", `./src/features/tutorial/preview-fix.css?v=${version}`);
@@ -132,7 +132,7 @@
     loadCssOnce("storage-data-controls", `./src/infrastructure/storage/data-controls.css?v=${version}`);
     loadCssOnce("mobile-list-filters", `./mobile-list-filter-collapse.css?v=${version}`);
     loadCssOnce("workspace-tab-overflow", `./workspace-tab-overflow-fix.css?v=${version}`);
-    loadCssOnce("tab-add-button-inline", `./tab-add-button-inline.css?v=${version}`);
+    loadCssOnce("tab-add-button-inline", `./src/features/workspace-tabs/inline-add-button.css?v=${version}`);
     loadCssOnce("list-overlap", `./list-view-overlap-fix.css?v=${version}`);
     loadCssOnce("mobile-desktop-toolbar-fit", `./mobile-desktop-toolbar-fit.css?v=${version}`);
     loadCssOnce("v02-mobile-toolbar", `./v02-mobile-toolbar.css?v=${version}`);
