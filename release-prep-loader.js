@@ -23,8 +23,8 @@
     ["toolbar-command-menu", "toolbar-command-menu.js"],
     ["mobile-list-filters", "mobile-list-filter-collapse.js"],
     ["list-state-guard", "list-view-state-guard.js"],
-    ["session-context", "session-context.js"],
-    ["workspace-startup-guard", "workspace-startup-guard.js"]
+    ["session-context", "src/app/workspace/session-context.js"],
+    ["workspace-startup-guard", "src/app/workspace/startup-guard.js"]
   ];
 
   const startFirstScriptOrder = [
@@ -49,8 +49,8 @@
     ["toolbar-command-menu", "toolbar-command-menu.js"],
     ["mobile-list-filters", "mobile-list-filter-collapse.js"],
     ["list-state-guard", "list-view-state-guard.js"],
-    ["session-context", "session-context.js"],
-    ["workspace-startup-guard", "workspace-startup-guard.js"]
+    ["session-context", "src/app/workspace/session-context.js"],
+    ["workspace-startup-guard", "src/app/workspace/startup-guard.js"]
   ];
 
   function loadCssOnce(id, href) {
