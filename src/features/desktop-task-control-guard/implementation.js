@@ -53,6 +53,13 @@
     });
   }, true);
 
+  document.addEventListener("dblclick", event => {
+    if (!desktopQuery.matches) return;
+    if (!event.target.closest?.(".note .doneBtn, .note .deleteBtn, .note .handle")) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  }, true);
+
   document.addEventListener("pointerup", event => clearSession(event.pointerId), true);
   document.addEventListener("pointercancel", event => clearSession(event.pointerId), true);
   window.addEventListener("blur", () => clearSession());
