@@ -1,0 +1,563 @@
+/*
+ * Theme + visual hierarchy layer for Issue #64.
+ * Goal: keep Cherry readable without making the light theme feel flat, and add
+ * a dark theme that follows the user's system setting by default.
+ */
+:root {
+  color-scheme: light;
+
+  --bg: #eef2f7;
+  --surface: #fbfcff;
+  --ink: #1f2937;
+  --muted: #64748b;
+  --line: #c3cad5;
+  --accent: #6857f5;
+  --accent-soft: #ece9ff;
+  --danger: #e65a54;
+  --success: #0f9f8f;
+
+  --app-bg: #eef2f7;
+  --topbar-bg: rgba(255, 255, 255, .92);
+  --topbar-border: rgba(148, 163, 184, .30);
+  --board-bg: #f7f9fc;
+  --board-border: rgba(100, 116, 139, .28);
+  --board-shadow: 0 14px 34px rgba(15, 23, 42, .10);
+
+  --button-bg: #182033;
+  --button-fg: #ffffff;
+  --button-soft-bg: #e9eef7;
+  --button-soft-fg: #263144;
+  --button-shadow: 0 6px 14px rgba(15, 23, 42, .14);
+
+  --lane-bg: rgba(148, 163, 184, .050);
+  --lane-today-bg: rgba(115, 205, 216, .145);
+  --lane-highlight-bg: rgba(104, 87, 245, .08);
+  --lane-line: rgba(100, 116, 139, .30);
+  --lane-today-line: #70c7d1;
+  --lane-label-bg: rgba(255, 255, 255, .94);
+  --lane-label-border: rgba(148, 163, 184, .28);
+  --lane-label-shadow: 0 7px 18px rgba(15, 23, 42, .09);
+
+  --note: #fff5ca;
+  --note2: #ffefb0;
+  --note-ink: #1f2937;
+  --note-border: #dcc876;
+  --note-accent: rgba(112, 199, 209, .54);
+  --note-shadow: 0 1px 0 rgba(255, 255, 255, .72) inset, 0 8px 18px rgba(15, 23, 42, .15);
+  --note-selected-shadow: 0 0 0 4px rgba(104, 87, 245, .13), 0 14px 28px rgba(15, 23, 42, .20);
+
+  --link: rgba(100, 116, 139, .36);
+  --link-muted: rgba(100, 116, 139, .16);
+  --link-focused: rgba(104, 87, 245, .76);
+
+  --modal-bg: #ffffff;
+  --modal-input-bg: #f8fafc;
+  --modal-border: rgba(148, 163, 184, .34);
+  --map-bg: rgba(255, 255, 255, .88);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: #0c111c;
+  --surface: #111827;
+  --ink: #e8edf5;
+  --muted: #9aa6b8;
+  --line: #384253;
+  --accent: #8d7cff;
+  --accent-soft: rgba(141, 124, 255, .18);
+  --danger: #f06a63;
+  --success: #5ad5c6;
+
+  --app-bg: #0c111c;
+  --topbar-bg: rgba(15, 23, 42, .92);
+  --topbar-border: rgba(148, 163, 184, .18);
+  --board-bg: #121a27;
+  --board-border: rgba(148, 163, 184, .20);
+  --board-shadow: 0 18px 44px rgba(0, 0, 0, .34);
+
+  --button-bg: #222d41;
+  --button-fg: #f8fafc;
+  --button-soft-bg: #1b2638;
+  --button-soft-fg: #d8e0ef;
+  --button-shadow: 0 8px 18px rgba(0, 0, 0, .26);
+
+  --lane-bg: rgba(148, 163, 184, .045);
+  --lane-today-bg: rgba(77, 184, 197, .12);
+  --lane-highlight-bg: rgba(141, 124, 255, .12);
+  --lane-line: rgba(148, 163, 184, .26);
+  --lane-today-line: #4fb8c5;
+  --lane-label-bg: rgba(23, 31, 45, .94);
+  --lane-label-border: rgba(148, 163, 184, .20);
+  --lane-label-shadow: 0 9px 22px rgba(0, 0, 0, .22);
+
+  --note: #363121;
+  --note2: #453b22;
+  --note-ink: #f5edc9;
+  --note-border: #7a6d36;
+  --note-accent: rgba(88, 205, 190, .45);
+  --note-shadow: 0 1px 0 rgba(255, 255, 255, .08) inset, 0 12px 22px rgba(0, 0, 0, .30);
+  --note-selected-shadow: 0 0 0 4px rgba(141, 124, 255, .20), 0 16px 30px rgba(0, 0, 0, .38);
+
+  --link: rgba(170, 183, 202, .34);
+  --link-muted: rgba(170, 183, 202, .13);
+  --link-focused: rgba(141, 124, 255, .82);
+
+  --modal-bg: #151d2b;
+  --modal-input-bg: #101827;
+  --modal-border: rgba(148, 163, 184, .24);
+  --map-bg: rgba(19, 27, 40, .88);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --bg: #0c111c;
+    --surface: #111827;
+    --ink: #e8edf5;
+    --muted: #9aa6b8;
+    --line: #384253;
+    --accent: #8d7cff;
+    --accent-soft: rgba(141, 124, 255, .18);
+    --danger: #f06a63;
+    --success: #5ad5c6;
+
+    --app-bg: #0c111c;
+    --topbar-bg: rgba(15, 23, 42, .92);
+    --topbar-border: rgba(148, 163, 184, .18);
+    --board-bg: #121a27;
+    --board-border: rgba(148, 163, 184, .20);
+    --board-shadow: 0 18px 44px rgba(0, 0, 0, .34);
+
+    --button-bg: #222d41;
+    --button-fg: #f8fafc;
+    --button-soft-bg: #1b2638;
+    --button-soft-fg: #d8e0ef;
+    --button-shadow: 0 8px 18px rgba(0, 0, 0, .26);
+
+    --lane-bg: rgba(148, 163, 184, .045);
+    --lane-today-bg: rgba(77, 184, 197, .12);
+    --lane-highlight-bg: rgba(141, 124, 255, .12);
+    --lane-line: rgba(148, 163, 184, .26);
+    --lane-today-line: #4fb8c5;
+    --lane-label-bg: rgba(23, 31, 45, .94);
+    --lane-label-border: rgba(148, 163, 184, .20);
+    --lane-label-shadow: 0 9px 22px rgba(0, 0, 0, .22);
+
+    --note: #363121;
+    --note2: #453b22;
+    --note-ink: #f5edc9;
+    --note-border: #7a6d36;
+    --note-accent: rgba(88, 205, 190, .45);
+    --note-shadow: 0 1px 0 rgba(255, 255, 255, .08) inset, 0 12px 22px rgba(0, 0, 0, .30);
+    --note-selected-shadow: 0 0 0 4px rgba(141, 124, 255, .20), 0 16px 30px rgba(0, 0, 0, .38);
+
+    --link: rgba(170, 183, 202, .34);
+    --link-muted: rgba(170, 183, 202, .13);
+    --link-focused: rgba(141, 124, 255, .82);
+
+    --modal-bg: #151d2b;
+    --modal-input-bg: #101827;
+    --modal-border: rgba(148, 163, 184, .24);
+    --map-bg: rgba(19, 27, 40, .88);
+  }
+}
+
+body {
+  background: var(--app-bg);
+  color: var(--ink);
+}
+
+button {
+  background: var(--button-bg);
+  color: var(--button-fg);
+  box-shadow: var(--button-shadow);
+}
+
+button.danger {
+  background: var(--danger);
+}
+
+button.ghostBtn,
+#themeToggleBtn {
+  background: var(--button-soft-bg);
+  color: var(--button-soft-fg);
+}
+
+button:disabled {
+  opacity: .42;
+}
+
+.topbar {
+  background: var(--topbar-bg);
+  border-bottom-color: var(--topbar-border);
+  box-shadow: 0 1px 0 rgba(15, 23, 42, .04);
+  backdrop-filter: blur(12px);
+}
+
+.logo {
+  color: #182033;
+  background: linear-gradient(135deg, #fff4b8, #bcefd5);
+  box-shadow: inset 0 0 0 2px rgba(15, 23, 42, .10);
+}
+
+.brand p,
+.help,
+.laneMonth,
+.laneStatus,
+.modal label,
+.modalText {
+  color: var(--muted);
+}
+
+.board {
+  background: var(--board-bg);
+  box-shadow: var(--board-shadow);
+  outline-color: var(--board-border);
+}
+
+.laneBand {
+  background: var(--lane-bg);
+}
+
+.laneBand.todayBand,
+.laneBand.todayLane {
+  background: var(--lane-today-bg);
+}
+
+.laneBand.highlight {
+  background: var(--lane-highlight-bg);
+}
+
+.laneBand.todayBand.highlight,
+.laneBand.todayLane.highlight {
+  background: linear-gradient(0deg, var(--lane-highlight-bg), var(--lane-highlight-bg)), var(--lane-today-bg);
+}
+
+.laneLine {
+  background: var(--lane-line);
+}
+
+.laneLine.hot {
+  background: color-mix(in srgb, var(--accent) 58%, transparent);
+}
+
+.laneLine.todayLine,
+.laneLine.todayLane {
+  background: var(--lane-today-line);
+}
+
+.laneLine.pastLane,
+.laneLine.futureLane,
+.laneLine.collapsedDoneLane {
+  opacity: .52;
+}
+
+.laneLabel {
+  color: var(--ink);
+  background: var(--lane-label-bg);
+  box-shadow: var(--lane-label-shadow);
+  border: 1px solid var(--lane-label-border);
+  backdrop-filter: none;
+}
+
+.laneLabel.monthStart {
+  border-color: color-mix(in srgb, var(--lane-today-line) 44%, var(--lane-label-border));
+  border-left-color: var(--lane-today-line);
+  background: var(--lane-label-bg);
+  box-shadow: var(--lane-label-shadow);
+}
+
+.laneMonthTitle,
+.laneDay {
+  color: var(--ink);
+}
+
+.laneMonthMarker {
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+
+.laneLabel.todayLabel .laneDay {
+  color: color-mix(in srgb, var(--lane-today-line) 75%, var(--ink));
+}
+
+.note {
+  color: var(--note-ink);
+  background: linear-gradient(180deg, var(--note), var(--note2));
+  border: 1px solid var(--note-border);
+  box-shadow: var(--note-shadow);
+}
+
+.note:hover {
+  box-shadow: var(--note-shadow), 0 4px 12px rgba(15, 23, 42, .08);
+}
+
+.note::before {
+  width: 9px;
+  background: var(--note-accent);
+}
+
+.note.selected,
+.board.verticalMode .note.selected {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-color: color-mix(in srgb, var(--accent) 54%, var(--note-border));
+  box-shadow: var(--note-selected-shadow);
+}
+
+.note.todayTask {
+  box-shadow: var(--note-shadow), 0 0 0 4px color-mix(in srgb, var(--lane-today-line) 22%, transparent);
+}
+
+.note.todayTask::before {
+  background: var(--lane-today-line);
+}
+
+.note.overdueTask {
+  box-shadow: var(--note-shadow), 0 0 0 4px color-mix(in srgb, var(--danger) 18%, transparent);
+}
+
+.note.overdueTask::before {
+  background: var(--danger);
+}
+
+.note.futureTask {
+  opacity: .94;
+  filter: saturate(.96);
+}
+
+.note.doneTask {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 82%, var(--muted)), var(--surface));
+  border-color: color-mix(in srgb, var(--muted) 45%, transparent);
+  color: var(--muted);
+  opacity: .58;
+}
+
+.handle,
+.doneBtn,
+.deleteBtn {
+  border-color: color-mix(in srgb, var(--ink) 28%, transparent);
+  box-shadow: 0 4px 10px rgba(15, 23, 42, .14);
+}
+
+.handle,
+.doneBtn {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.deleteBtn {
+  border-color: color-mix(in srgb, var(--danger) 45%, transparent);
+  background: var(--danger);
+  color: #fff;
+}
+
+.done .doneBtn {
+  background: color-mix(in srgb, var(--success) 14%, var(--surface));
+  color: var(--success);
+}
+
+.ghost {
+  color: var(--muted);
+  background: color-mix(in srgb, var(--note) 70%, transparent);
+  border-color: color-mix(in srgb, var(--muted) 42%, transparent);
+}
+
+.linkPath.defaultLink,
+.linkPath.sameDayLink.defaultLink {
+  stroke: var(--link) !important;
+  stroke-width: 2.6 !important;
+}
+
+.linkPath.doneLink,
+.linkPath.mutedLink,
+.linkPath.collapsedLink,
+.linkPath.sameDayLink.doneLink,
+.linkPath.sameDayLink.mutedLink,
+.linkPath.sameDayLink.collapsedLink {
+  stroke: var(--link-muted) !important;
+  stroke-width: 2.3 !important;
+}
+
+.linkPath.focusedLink,
+.linkPath.sameDayLink.focusedLink {
+  stroke: var(--link-focused) !important;
+  stroke-width: 4 !important;
+}
+
+.modalBackdrop {
+  background: rgba(2, 6, 23, .46);
+}
+
+.modal {
+  color: var(--ink);
+  background: var(--modal-bg);
+  box-shadow: 0 22px 54px rgba(0, 0, 0, .28);
+}
+
+.modal input {
+  color: var(--ink);
+  background: var(--modal-input-bg);
+  border-color: var(--modal-border);
+}
+
+@media (max-width: 980px) {
+  .toolbar button {
+    background: var(--button-bg);
+    color: var(--button-fg);
+    box-shadow: 0 4px 10px rgba(15, 23, 42, .12);
+  }
+
+  .toolbar button.danger {
+    background: var(--danger);
+  }
+
+  .toolbar #themeToggleBtn {
+    background: var(--button-soft-bg);
+    color: var(--button-soft-fg);
+  }
+
+  .board {
+    background: var(--board-bg);
+    box-shadow: 0 8px 22px rgba(15, 23, 42, .11);
+    outline-color: var(--board-border);
+  }
+
+  .verticalMode .laneBand {
+    background: var(--lane-bg);
+  }
+
+  .verticalMode .laneBand.todayBand,
+  .verticalMode .laneBand.todayLane {
+    background: var(--lane-today-bg);
+  }
+
+  .verticalMode .laneLine {
+    height: 2px;
+    background: var(--lane-line);
+  }
+
+  .verticalMode .laneLine.hot {
+    height: 3px;
+    background: color-mix(in srgb, var(--accent) 58%, transparent);
+  }
+
+  .verticalMode .laneLine.todayLine,
+  .verticalMode .laneLine.todayLane {
+    background: var(--lane-today-line);
+  }
+
+  .verticalMode .laneLabel {
+    background: var(--lane-label-bg);
+    border-color: var(--lane-label-border);
+    box-shadow: var(--lane-label-shadow);
+  }
+
+  .note {
+    box-shadow: var(--note-shadow);
+  }
+
+  .note.selected,
+  .board.verticalMode .note.selected {
+    outline-width: 2px;
+    outline-offset: 3px;
+    box-shadow: var(--note-selected-shadow);
+  }
+
+  .note.todayTask {
+    box-shadow: var(--note-shadow), 0 0 0 3px color-mix(in srgb, var(--lane-today-line) 24%, transparent);
+  }
+
+  .linkPath.defaultLink,
+  .linkPath.sameDayLink.defaultLink {
+    stroke-width: 2.2 !important;
+  }
+
+  .linkPath.focusedLink,
+  .linkPath.sameDayLink.focusedLink {
+    stroke-width: 3.6 !important;
+  }
+
+  .mobileActionBar {
+    border-color: var(--lane-label-border);
+    background: color-mix(in srgb, var(--surface) 92%, transparent);
+    box-shadow: 0 14px 34px rgba(15, 23, 42, .20);
+  }
+
+  .mobileActionButton {
+    color: var(--ink);
+    background: color-mix(in srgb, var(--surface) 94%, transparent);
+    border: 1px solid var(--lane-label-border);
+    box-shadow: 0 2px 6px rgba(15, 23, 42, .08);
+  }
+
+  .mobileActionButton.add {
+    color: #fff;
+    background: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 36%, transparent);
+    box-shadow: 0 8px 18px color-mix(in srgb, var(--accent) 26%, transparent);
+  }
+
+  .mobileActionButton.done {
+    color: var(--success);
+  }
+
+  .mobileActionButton.delete {
+    color: var(--danger);
+  }
+
+  #flowMap {
+    border-color: var(--lane-label-border);
+    background: var(--map-bg);
+    box-shadow: 0 12px 28px rgba(15, 23, 42, .18);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  #flowMap.visible,
+  #flowMap.active,
+  #flowMap:focus-within {
+    box-shadow: 0 14px 32px rgba(15, 23, 42, .22);
+  }
+
+  .flowMapChrome {
+    color: var(--muted);
+  }
+
+  .flowMapDot {
+    background: color-mix(in srgb, var(--muted) 72%, transparent);
+  }
+
+  .flowMapLane {
+    stroke: color-mix(in srgb, var(--muted) 22%, transparent);
+  }
+
+  .flowMapLink {
+    stroke: color-mix(in srgb, var(--muted) 34%, transparent);
+  }
+
+  .flowMapLink.connected {
+    stroke: color-mix(in srgb, var(--accent) 52%, transparent);
+  }
+
+  .flowMapNode {
+    fill: color-mix(in srgb, var(--muted) 70%, transparent);
+    stroke: color-mix(in srgb, var(--surface) 92%, transparent);
+  }
+
+  .flowMapNode.done {
+    fill: color-mix(in srgb, var(--muted) 34%, transparent);
+  }
+
+  .flowMapNode.connected,
+  .flowMapNode.selected {
+    fill: var(--accent);
+  }
+
+  .flowMapCamera {
+    fill: color-mix(in srgb, var(--accent) 18%, transparent);
+    stroke: color-mix(in srgb, var(--accent) 64%, transparent);
+  }
+}
