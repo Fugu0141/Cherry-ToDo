@@ -14,10 +14,32 @@
       : null;
   }
 
+  function installScheduleCompatibility(core) {
+    const schedule = core?.schedule;
+    if (!schedule) return;
+
+    window.isValidISODate = schedule.isValidISODate;
+    window.isValidTime = schedule.isValidTime;
+    window.makeScheduleNone = schedule.makeScheduleNone;
+    window.makeScheduleDate = schedule.makeScheduleDate;
+    window.makeScheduleDateTime = schedule.makeScheduleDateTime;
+    window.scheduleFromLegacyTargetAt = schedule.scheduleFromLegacyTargetAt;
+    window.normalizeSchedule = schedule.normalizeSchedule;
+
+    if (window.cherrySchedule && typeof window.cherrySchedule === "object") {
+      window.cherrySchedule.makeScheduleNone = schedule.makeScheduleNone;
+      window.cherrySchedule.makeScheduleDate = schedule.makeScheduleDate;
+      window.cherrySchedule.makeScheduleDateTime = schedule.makeScheduleDateTime;
+    }
+  }
+
   function resolveIfReady() {
-    if (resolved) return currentCore();
     const core = currentCore();
     if (!core) return null;
+
+    installScheduleCompatibility(core);
+    if (resolved) return core;
+
     resolved = true;
     resolveReady(core);
     return core;
