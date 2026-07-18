@@ -158,9 +158,23 @@
     return rect;
   }
 
+  function centeredOffset() {
+    const modal = activeMobileModal();
+    if (!modal) return 0;
+
+    const rect = measureUnshiftedModalRect(modal);
+    const modalCenter = rect.top + rect.height / 2;
+    const viewportCenter = visualHeight() / 2;
+    const offset = modalCenter - viewportCenter;
+    const maxDownShift = Math.max(0, visualHeight() - rect.bottom - visibleGap);
+    const maxUpShift = Math.max(0, rect.top - visibleGap);
+
+    return Math.round(Math.min(maxUpShift, Math.max(-maxDownShift, offset)));
+  }
+
   function neededOffset(availableHeight) {
     const modal = activeMobileModal();
-    if (!isKeyboardOpen() || !modal) return 0;
+    if (!isKeyboardOpen() || !modal) return centeredOffset();
 
     const rect = measureUnshiftedModalRect(modal);
     const maxVisibleBottom = availableHeight - visibleGap;
@@ -171,7 +185,8 @@
   }
 
   function resetMobileViewportVars() {
-    rootStyle.setProperty("--mobile-ime-offset", "0px");
+    const offset = centeredOffset();
+    rootStyle.setProperty("--mobile-ime-offset", `${offset}px`);
     rootStyle.setProperty("--mobile-visible-height", `${closedViewportHeight || layoutHeight()}px`);
     document.body.classList.remove("mobileImeOpen", "mobileModalInputActive");
   }
