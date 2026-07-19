@@ -71,6 +71,22 @@ export function parseWorkspace(raw, options = {}) {
   }
 }
 
+export function loadWorkspace(read, key, options = {}) {
+  if (typeof read !== "function") {
+    return normalizeWorkspaceOrDefault(null, options);
+  }
+
+  try {
+    return parseWorkspace(read(key), options);
+  } catch (_) {
+    return normalizeWorkspaceOrDefault(null, options);
+  }
+}
+
+export function serializeWorkspace(candidate, options = {}) {
+  return JSON.stringify(normalizeWorkspaceOrDefault(candidate, options));
+}
+
 export const workspaceModel = Object.freeze({
   version: WORKSPACE_VERSION,
   makeEmptyTabState,
@@ -78,5 +94,7 @@ export const workspaceModel = Object.freeze({
   normalizeTab,
   normalizeWorkspace,
   normalizeWorkspaceOrDefault,
-  parseWorkspace
+  parseWorkspace,
+  loadWorkspace,
+  serializeWorkspace
 });
