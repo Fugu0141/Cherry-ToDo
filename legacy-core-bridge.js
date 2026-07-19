@@ -33,11 +33,19 @@
     }
   }
 
+  function installWorkspaceCompatibility(core) {
+    const workspace = core?.workspace;
+    if (!workspace) return;
+
+    window.CherryWorkspaceModel = workspace;
+  }
+
   function resolveIfReady() {
     const core = currentCore();
     if (!core) return null;
 
     installScheduleCompatibility(core);
+    installWorkspaceCompatibility(core);
     if (resolved) return core;
 
     resolved = true;
