@@ -38,6 +38,12 @@
     if (!workspace) return;
 
     window.CherryWorkspaceModel = workspace;
+    window.makeEmptyWorkspaceState = workspace.makeEmptyTabState;
+    window.makeDefaultWorkspace = workspace.makeDefaultWorkspace;
+    window.normalizeWorkspaceTab = workspace.normalizeTab;
+    window.normalizeWorkspace = workspace.normalizeWorkspace;
+    window.normalizeWorkspaceOrDefault = workspace.normalizeWorkspaceOrDefault;
+    window.parseWorkspace = workspace.parseWorkspace;
   }
 
   function resolveIfReady() {

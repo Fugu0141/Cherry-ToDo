@@ -56,10 +56,27 @@ export function normalizeWorkspace(candidate, options = {}) {
   };
 }
 
+export function normalizeWorkspaceOrDefault(candidate, options = {}) {
+  const now = options.now || (() => new Date().toISOString());
+  return normalizeWorkspace(candidate, options) || makeDefaultWorkspace(now);
+}
+
+export function parseWorkspace(raw, options = {}) {
+  if (!raw) return normalizeWorkspaceOrDefault(null, options);
+
+  try {
+    return normalizeWorkspaceOrDefault(JSON.parse(raw), options);
+  } catch (_) {
+    return normalizeWorkspaceOrDefault(null, options);
+  }
+}
+
 export const workspaceModel = Object.freeze({
   version: WORKSPACE_VERSION,
   makeEmptyTabState,
   makeDefaultWorkspace,
   normalizeTab,
-  normalizeWorkspace
+  normalizeWorkspace,
+  normalizeWorkspaceOrDefault,
+  parseWorkspace
 });
