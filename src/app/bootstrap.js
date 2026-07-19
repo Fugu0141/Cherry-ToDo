@@ -15,6 +15,7 @@ const extensions = existingCore.extensions || registryCore.createExtensionRegist
 const runtime = existingCore.runtime || Object.freeze({
   events: eventCore.createEventBus(),
   store: storeCore.createStore({ tasks: {}, showLanes: true, viewMode: "board" }),
+  workspaceStore: storeCore.createStore(workspaceModel.makeDefaultWorkspace()),
   commands: commandCore.createCommandDispatcher()
 });
 
