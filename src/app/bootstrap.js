@@ -13,7 +13,9 @@ const existingCore = window.CherryCore && typeof window.CherryCore === "object"
 
 const extensions = existingCore.extensions || registryCore.createExtensionRegistries();
 const runtime = existingCore.runtime || Object.freeze({
-  events: eventCore.createEventBus()
+  events: eventCore.createEventBus(),
+  store: storeCore.createStore({ tasks: {}, showLanes: true, viewMode: "board" }),
+  commands: commandCore.createCommandDispatcher()
 });
 
 window.CherryCore = Object.freeze({
