@@ -48,12 +48,21 @@
     window.serializeWorkspace = workspace.serializeWorkspace;
   }
 
+  function installStoreCompatibility(core) {
+    const store = core?.store;
+    if (!store) return;
+
+    window.CherryStoreCore = store;
+    window.CherryTaskSelectors = store.selectors;
+  }
+
   function resolveIfReady() {
     const core = currentCore();
     if (!core) return null;
 
     installScheduleCompatibility(core);
     installWorkspaceCompatibility(core);
+    installStoreCompatibility(core);
     if (resolved) return core;
 
     resolved = true;
