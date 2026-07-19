@@ -33,6 +33,7 @@
     }
 
     function publishState(nextState, metadata = {}) {
+      pendingLegacyState = null;
       applyingCoreState = true;
       try {
         state = clone(nextState);
@@ -86,6 +87,14 @@
       snapshot = function captureLegacySnapshot() {
         if (applyingCoreState || pendingLegacyState) return;
         pendingLegacyState = clone(safeState());
+
+        const activeDrag = typeof drag === "object" && drag ? drag : null;
+        const draggedTask = activeDrag?.id ? pendingLegacyState.tasks?.[activeDrag.id] : null;
+        if (draggedTask && activeDrag.original) {
+          draggedTask.x = activeDrag.original.x;
+          draggedTask.y = activeDrag.original.y;
+          draggedTask.targetAt = activeDrag.original.targetAt;
+        }
       };
     }
 
