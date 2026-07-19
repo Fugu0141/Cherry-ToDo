@@ -44,6 +44,8 @@
     window.normalizeWorkspace = workspace.normalizeWorkspace;
     window.normalizeWorkspaceOrDefault = workspace.normalizeWorkspaceOrDefault;
     window.parseWorkspace = workspace.parseWorkspace;
+    window.loadWorkspace = workspace.loadWorkspace;
+    window.serializeWorkspace = workspace.serializeWorkspace;
   }
 
   function resolveIfReady() {
