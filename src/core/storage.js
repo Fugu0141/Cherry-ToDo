@@ -20,11 +20,24 @@ function normalizeAdapterName(name) {
   return name.trim();
 }
 
+function normalizeStorageKey(key) {
+  if (typeof key !== "string" || !key) {
+    throw new TypeError("Storage key must be a non-empty string.");
+  }
+
+  return key;
+}
+
 export function createStorageOrchestrator(options = {}) {
   const adapters = new Map();
+  const eventBus = options.eventBus || null;
   const defaultAdapterName = options.defaultAdapterName == null
     ? null
     : normalizeAdapterName(options.defaultAdapterName);
+
+  function emit(type, detail) {
+    eventBus?.emit?.(type, detail, { source: "storage" });
+  }
 
   function registerAdapter(name, adapter) {
     const normalizedName = normalizeAdapterName(name);
@@ -32,10 +45,13 @@ export function createStorageOrchestrator(options = {}) {
       adapter: assertStorageAdapter(adapter)
     });
     adapters.set(normalizedName, entry);
+    emit("storage:adapter-registered", { adapter: normalizedName });
 
     return () => {
       if (adapters.get(normalizedName) !== entry) return false;
-      return adapters.delete(normalizedName);
+      const deleted = adapters.delete(normalizedName);
+      if (deleted) emit("storage:adapter-removed", { adapter: normalizedName });
+      return deleted;
     };
   }
 
@@ -60,19 +76,34 @@ export function createStorageOrchestrator(options = {}) {
     return { name: resolvedName, adapter: entry.adapter };
   }
 
+  function perform(operation, key, value, options = {}) {
+    const normalizedKey = key == null ? null : normalizeStorageKey(key);
+    const { name, adapter } = resolveAdapter(options.adapter);
+
+    try {
+      const result = normalizedKey == null
+        ? adapter[operation]()
+        : operation === "set"
+          ? adapter.set(normalizedKey, value)
+          : adapter[operation](normalizedKey);
+      emit(`storage:${operation}`, { adapter: name, key: normalizedKey, value, result });
+      return result;
+    } catch (error) {
+      emit("storage:error", { operation, adapter: name, key: normalizedKey, error });
+      throw error;
+    }
+  }
+
   function get(key, options = {}) {
-    const { adapter } = resolveAdapter(options.adapter);
-    return adapter.get(key);
+    return perform("get", key, undefined, options);
   }
 
   function set(key, value, options = {}) {
-    const { adapter } = resolveAdapter(options.adapter);
-    return adapter.set(key, value);
+    return perform("set", key, value, options);
   }
 
   function remove(key, options = {}) {
-    const { adapter } = resolveAdapter(options.adapter);
-    return adapter.remove(key);
+    return perform("remove", key, undefined, options);
   }
 
   function getJson(key, options = {}) {
@@ -96,7 +127,43 @@ export function createStorageOrchestrator(options = {}) {
     if (typeof adapter.clear !== "function") {
       throw new Error("Storage adapter does not implement clear().");
     }
-    return adapter.clear();
+    return perform("clear", null, undefined, options);
+  }
+
+  function createNamespace(prefix, namespaceOptions = {}) {
+    const normalizedPrefix = normalizeStorageKey(prefix);
+    const adapter = namespaceOptions.adapter;
+    const keyFor = key => `${normalizedPrefix}${normalizeStorageKey(key)}`;
+
+    return Object.freeze({
+      get: (key, options = {}) => get(keyFor(key), { ...options, adapter: options.adapter || adapter }),
+      set: (key, value, options = {}) => set(keyFor(key), value, { ...options, adapter: options.adapter || adapter }),
+      remove: (key, options = {}) => remove(keyFor(key), { ...options, adapter: options.adapter || adapter }),
+      getJson: (key, options = {}) => getJson(keyFor(key), { ...options, adapter: options.adapter || adapter }),
+      setJson: (key, value, options = {}) => setJson(keyFor(key), value, { ...options, adapter: options.adapter || adapter })
+    });
+  }
+
+  function apply(operations, options = {}) {
+    if (!Array.isArray(operations)) {
+      throw new TypeError("Storage operations must be an array.");
+    }
+
+    return operations.map((entry, index) => {
+      if (!entry || typeof entry !== "object") {
+        throw new TypeError(`Storage operation at index ${index} must be an object.`);
+      }
+
+      const operation = entry.operation || entry.type;
+      const operationOptions = { ...options, ...(entry.options || {}) };
+      if (operation === "get") return get(entry.key, operationOptions);
+      if (operation === "set") return set(entry.key, entry.value, operationOptions);
+      if (operation === "remove") return remove(entry.key, operationOptions);
+      if (operation === "getJson") return getJson(entry.key, operationOptions);
+      if (operation === "setJson") return setJson(entry.key, entry.value, operationOptions);
+      if (operation === "clear") return clear(operationOptions);
+      throw new Error(`Unknown storage operation at index ${index}: ${operation}`);
+    });
   }
 
   return Object.freeze({
@@ -108,7 +175,9 @@ export function createStorageOrchestrator(options = {}) {
     remove,
     getJson,
     setJson,
-    clear
+    clear,
+    createNamespace,
+    apply
   });
 }
 
