@@ -56,8 +56,53 @@ export function selectTaskList(state) {
   return Object.values(selectTasks(state));
 }
 
+export function selectTaskIds(state) {
+  return Object.keys(selectTasks(state));
+}
+
+export function selectTaskCount(state) {
+  return selectTaskIds(state).length;
+}
+
 export function selectTaskById(state, taskId) {
   return selectTasks(state)[taskId] || null;
+}
+
+export function selectRootTasks(state) {
+  return selectTaskList(state).filter(task => task?.parentId == null);
+}
+
+export function selectChildTasks(state) {
+  return selectTaskList(state).filter(task => task?.parentId != null);
+}
+
+export function selectChildrenByParentId(state, parentId) {
+  return selectTaskList(state).filter(task => task?.parentId === parentId);
+}
+
+export function selectTasksByStatus(state, status) {
+  return selectTaskList(state).filter(task => task?.status === status);
+}
+
+export function selectTaskTree(state) {
+  const tasks = selectTaskList(state);
+  const childrenByParentId = new Map();
+
+  for (const task of tasks) {
+    const parentId = task?.parentId ?? null;
+    const children = childrenByParentId.get(parentId) || [];
+    children.push(task);
+    childrenByParentId.set(parentId, children);
+  }
+
+  function build(task) {
+    return {
+      task,
+      children: (childrenByParentId.get(task.id) || []).map(build)
+    };
+  }
+
+  return (childrenByParentId.get(null) || []).map(build);
 }
 
 export function selectShowLanes(state) {
@@ -73,14 +118,23 @@ function structuredCloneSafe(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
+export const taskSelectors = Object.freeze({
+  tasks: selectTasks,
+  taskList: selectTaskList,
+  taskIds: selectTaskIds,
+  taskCount: selectTaskCount,
+  taskById: selectTaskById,
+  rootTasks: selectRootTasks,
+  childTasks: selectChildTasks,
+  childrenByParentId: selectChildrenByParentId,
+  tasksByStatus: selectTasksByStatus,
+  taskTree: selectTaskTree,
+  showLanes: selectShowLanes,
+  viewMode: selectViewMode
+});
+
 export const storeCore = Object.freeze({
   createStore,
   createSelector,
-  selectors: Object.freeze({
-    tasks: selectTasks,
-    taskList: selectTaskList,
-    taskById: selectTaskById,
-    showLanes: selectShowLanes,
-    viewMode: selectViewMode
-  })
+  selectors: taskSelectors
 });
