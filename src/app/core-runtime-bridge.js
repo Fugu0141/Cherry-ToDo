@@ -2,17 +2,10 @@
   if (window.CherryStateRuntime) return;
 
   const clone = value => JSON.parse(JSON.stringify(value));
+  const serialize = value => JSON.stringify(value);
 
   function safeState() {
     return typeof state === "object" && state ? state : { tasks: {}, showLanes: true, viewMode: "board" };
-  }
-
-  function refreshLegacyApp(nextState) {
-    state = clone(nextState);
-    if (typeof branchLayout === "function") branchLayout();
-    if (typeof requestRender === "function") requestRender();
-    if (typeof scheduleSave === "function") scheduleSave();
-    return state;
   }
 
   window.CherryLegacyCore?.withCore(core => {
@@ -22,11 +15,32 @@
     const events = runtime?.events;
     if (!store || !commands || !events) return;
 
+    const originalRequestRender = typeof requestRender === "function" ? requestRender : null;
+    let pendingLegacyState = null;
+    let applyingCoreState = false;
+
+    function renderLegacyApp() {
+      if (typeof branchLayout === "function") branchLayout();
+      originalRequestRender?.();
+      if (typeof scheduleSave === "function") scheduleSave();
+    }
+
+    function mirrorState(nextState, metadata = {}) {
+      const next = clone(nextState);
+      store.replaceState(next, metadata);
+      events.emit("state:changed", clone(next), metadata);
+      return next;
+    }
+
     function publishState(nextState, metadata = {}) {
-      const applied = refreshLegacyApp(nextState);
-      store.replaceState(applied, metadata);
-      events.emit("state:changed", clone(applied), metadata);
-      return applied;
+      applyingCoreState = true;
+      try {
+        state = clone(nextState);
+        renderLegacyApp();
+        return mirrorState(state, metadata);
+      } finally {
+        applyingCoreState = false;
+      }
     }
 
     function registerCommand(name, handler) {
@@ -57,6 +71,72 @@
       };
     });
 
+    registerCommand("state.capture-legacy", payload => {
+      const previous = clone(payload?.previous || safeState());
+      const next = clone(payload?.next || safeState());
+      mirrorState(next, { source: "legacy-ui", command: "state.capture-legacy" });
+      return {
+        undo: () => publishState(previous, { source: "undo", command: "state.capture-legacy" }),
+        redo: () => publishState(next, { source: "redo", command: "state.capture-legacy" }),
+        meta: payload?.meta || null
+      };
+    });
+
+    if (typeof snapshot === "function") {
+      snapshot = function captureLegacySnapshot() {
+        if (applyingCoreState || pendingLegacyState) return;
+        pendingLegacyState = clone(safeState());
+      };
+    }
+
+    if (originalRequestRender) {
+      requestRender = function coreAwareRequestRender() {
+        const previous = pendingLegacyState;
+        pendingLegacyState = null;
+        const result = originalRequestRender();
+
+        if (!applyingCoreState && previous) {
+          const next = clone(safeState());
+          if (serialize(previous) !== serialize(next)) {
+            void commands.dispatch("state.capture-legacy", {
+              previous,
+              next,
+              meta: { source: "legacy-ui" }
+            }).catch(error => console.error("[Cherry Core] Failed to capture legacy mutation.", error));
+          }
+        }
+
+        return result;
+      };
+    }
+
+    function runUndo(event) {
+      event?.preventDefault?.();
+      event?.stopImmediatePropagation?.();
+      void commands.undo();
+    }
+
+    function runRedo(event) {
+      event?.preventDefault?.();
+      event?.stopImmediatePropagation?.();
+      void commands.redo();
+    }
+
+    if (typeof undoBtn !== "undefined" && undoBtn) {
+      undoBtn.addEventListener("click", runUndo, true);
+    }
+
+    window.addEventListener("keydown", event => {
+      const tag = document.activeElement?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      if (!(event.ctrlKey || event.metaKey)) return;
+
+      const key = event.key.toLowerCase();
+      if (key === "z" && event.shiftKey) runRedo(event);
+      else if (key === "z") runUndo(event);
+      else if (key === "y") runRedo(event);
+    }, true);
+
     store.replaceState(safeState(), { source: "legacy-initial-state" });
 
     events.on("storage:set", event => {
@@ -83,6 +163,10 @@
       update: updater => commands.dispatch("state.update", updater),
       undo: () => commands.undo(),
       redo: () => commands.redo(),
+      canUndo: commands.canUndo,
+      canRedo: commands.canRedo,
+      getHistoryState: commands.getHistoryState,
+      subscribeHistory: commands.subscribeHistory,
       getState: store.getState,
       subscribe: store.subscribe
     });
