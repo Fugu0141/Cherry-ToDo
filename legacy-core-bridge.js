@@ -63,6 +63,11 @@
     window.CherryCommandCore = commands;
   }
 
+  function installInfrastructureCompatibility(core) {
+    if (core?.events) window.CherryEventCore = core.events;
+    if (core?.storage) window.CherryStorageCore = core.storage;
+  }
+
   function resolveIfReady() {
     const core = currentCore();
     if (!core) return null;
@@ -71,6 +76,7 @@
     installWorkspaceCompatibility(core);
     installStoreCompatibility(core);
     installCommandCompatibility(core);
+    installInfrastructureCompatibility(core);
     if (resolved) return core;
 
     resolved = true;
