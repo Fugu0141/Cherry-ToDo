@@ -56,6 +56,13 @@
     window.CherryTaskSelectors = store.selectors;
   }
 
+  function installCommandCompatibility(core) {
+    const commands = core?.commands;
+    if (!commands) return;
+
+    window.CherryCommandCore = commands;
+  }
+
   function resolveIfReady() {
     const core = currentCore();
     if (!core) return null;
@@ -63,6 +70,7 @@
     installScheduleCompatibility(core);
     installWorkspaceCompatibility(core);
     installStoreCompatibility(core);
+    installCommandCompatibility(core);
     if (resolved) return core;
 
     resolved = true;
