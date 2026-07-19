@@ -20,6 +20,8 @@
   });
 
   let storage = null;
+  let workspaceModel = null;
+  let eventBus = null;
 
   function get(key) {
     const normalizedKey = String(key);
@@ -40,9 +42,15 @@
   }
 
   function getJson(key, fallback = null) {
-    if (storage) return storage.getJson(String(key), { fallback });
+    const normalizedKey = String(key);
+    if (normalizedKey === keys.workspace && workspaceModel) {
+      const raw = get(normalizedKey);
+      return raw ? workspaceModel.parseWorkspace(raw) : fallback;
+    }
 
-    const raw = get(key);
+    if (storage) return storage.getJson(normalizedKey, { fallback });
+
+    const raw = get(normalizedKey);
     if (!raw) return fallback;
     try {
       return JSON.parse(raw);
@@ -52,9 +60,14 @@
   }
 
   function setJson(key, value) {
+    const normalizedKey = String(key);
+    if (normalizedKey === keys.workspace && workspaceModel) {
+      return set(normalizedKey, workspaceModel.serializeWorkspace(value));
+    }
+
     return storage
-      ? storage.setJson(String(key), value)
-      : set(key, JSON.stringify(value));
+      ? storage.setJson(normalizedKey, value)
+      : set(normalizedKey, JSON.stringify(value));
   }
 
   function getFirst(keysToTry) {
@@ -65,24 +78,45 @@
     return null;
   }
 
-  window.CherryWorkDataStorage = {
+  function loadWorkspace(options = {}) {
+    if (!workspaceModel) return getJson(keys.workspace, options.fallback ?? null);
+    return workspaceModel.loadWorkspace(get, keys.workspace, options);
+  }
+
+  function saveWorkspace(workspace, options = {}) {
+    if (!workspaceModel) return setJson(keys.workspace, workspace);
+    return set(keys.workspace, workspaceModel.serializeWorkspace(workspace, options));
+  }
+
+  window.CherryWorkDataStorage = Object.freeze({
     keys,
     get,
     set,
     remove,
     getJson,
     setJson,
-    getFirst
-  };
+    getFirst,
+    loadWorkspace,
+    saveWorkspace,
+    getEventBus: () => eventBus,
+    getOrchestrator: () => storage
+  });
 
   window.CherryLegacyCore?.withCore(core => {
     const createStorageOrchestrator = core.storage?.createStorageOrchestrator;
+    workspaceModel = core.workspace || null;
+    eventBus = core.runtime?.events || null;
     if (typeof createStorageOrchestrator !== "function") return;
 
     const orchestrator = createStorageOrchestrator({
-      defaultAdapterName: "work-data"
+      defaultAdapterName: "work-data",
+      eventBus
     });
     orchestrator.registerAdapter("work-data", adapter);
     storage = orchestrator;
+    eventBus?.emit("work-data:ready", {
+      adapter: "work-data",
+      keys
+    });
   });
 })();

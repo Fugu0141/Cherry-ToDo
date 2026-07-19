@@ -66,6 +66,7 @@
   function installInfrastructureCompatibility(core) {
     if (core?.events) window.CherryEventCore = core.events;
     if (core?.storage) window.CherryStorageCore = core.storage;
+    if (core?.runtime) window.CherryCoreRuntime = core.runtime;
   }
 
   function resolveIfReady() {
