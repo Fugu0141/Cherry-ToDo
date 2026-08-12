@@ -56,6 +56,10 @@
     window.CherryTaskSelectors = store.selectors;
   }
 
+  function installBoardSettingsCompatibility(core) {
+    if (core?.boardSettings) window.CherryBoardSettings = core.boardSettings;
+  }
+
   function installCommandCompatibility(core) {
     const commands = core?.commands;
     if (!commands) return;
@@ -76,6 +80,7 @@
     installScheduleCompatibility(core);
     installWorkspaceCompatibility(core);
     installStoreCompatibility(core);
+    installBoardSettingsCompatibility(core);
     installCommandCompatibility(core);
     installInfrastructureCompatibility(core);
     if (resolved) return core;
