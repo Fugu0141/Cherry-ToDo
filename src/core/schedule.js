@@ -46,6 +46,27 @@ export function normalizeSchedule(schedule, legacyTargetAt) {
   return scheduleFromLegacyTargetAt(legacyTargetAt);
 }
 
+function isRecord(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+export function normalizeTaskSchedule(task) {
+  if (!isRecord(task)) return task;
+
+  return {
+    ...task,
+    schedule: normalizeSchedule(task.schedule, task.targetAt)
+  };
+}
+
+export function normalizeTaskSchedules(tasks) {
+  if (!isRecord(tasks)) return tasks;
+
+  return Object.fromEntries(
+    Object.entries(tasks).map(([taskId, task]) => [taskId, normalizeTaskSchedule(task)])
+  );
+}
+
 export function scheduleDate(schedule) {
   return schedule && (schedule.type === "date" || schedule.type === "datetime")
     ? schedule.date
@@ -64,6 +85,8 @@ export const scheduleModel = Object.freeze({
   makeScheduleDateTime,
   scheduleFromLegacyTargetAt,
   normalizeSchedule,
+  normalizeTaskSchedule,
+  normalizeTaskSchedules,
   scheduleDate,
   sameSchedule
 });

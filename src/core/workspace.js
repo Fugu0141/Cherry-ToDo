@@ -1,6 +1,14 @@
-import { normalizeTabState } from "./board-settings.js";
+import { normalizeTabState as normalizeBoardTabState } from "./board-settings.js";
+import { normalizeTaskSchedules } from "./schedule.js";
 
 export const WORKSPACE_VERSION = 1;
+
+export function normalizeTabState(candidate) {
+  const state = normalizeBoardTabState(candidate);
+  const tasks = normalizeTaskSchedules(state.tasks);
+
+  return tasks === state.tasks ? state : { ...state, tasks };
+}
 
 export function makeEmptyTabState() {
   return normalizeTabState({ tasks: {}, showLanes: true, viewMode: "board" });
@@ -95,6 +103,7 @@ export function serializeWorkspace(candidate, options = {}) {
 
 export const workspaceModel = Object.freeze({
   version: WORKSPACE_VERSION,
+  normalizeTabState,
   makeEmptyTabState,
   makeDefaultWorkspace,
   normalizeTab,
