@@ -6,6 +6,7 @@ import {
   normalizeTaskSchedules
 } from "../src/core/schedule.js";
 import {
+  makeWorkspaceFromLegacyTabState,
   normalizeTabState,
   normalizeWorkspace,
   parseWorkspace,
@@ -265,4 +266,53 @@ test("representative pre-change quest-sticky-todo-v10 state normalizes additivel
   assert.equal(normalized.showLanes, false);
   assert.equal(normalized.board.settings.showDateLanes, false);
   assert.deepEqual(normalized.unknownStateData, { keep: true });
+});
+
+test("readable legacy task state becomes a normalized workspace tab", () => {
+  const legacyState = {
+    tasks: {
+      missing: {
+        id: "missing",
+        parentId: null,
+        x: 44,
+        y: 55,
+        unknownTaskData: { keep: "missing" }
+      },
+      invalid: {
+        id: "invalid",
+        parentId: "missing",
+        branchMode: "same",
+        x: 89,
+        y: 144,
+        targetAt: "tomorrow",
+        unknownTaskData: { keep: "invalid" }
+      }
+    },
+    links: [{ from: "missing", to: "invalid", kind: "legacy" }],
+    showLanes: false,
+    unknownStateData: { keep: true }
+  };
+  const options = {
+    now: () => "2026-08-12T00:00:00.000Z",
+    makeId: () => "tab-legacy-state"
+  };
+
+  const workspace = makeWorkspaceFromLegacyTabState(legacyState, options);
+  const normalizedAgain = normalizeWorkspace(workspace, options);
+  const state = workspace.tabs[0].state;
+
+  assert.equal(workspace.activeTabId, "tab-legacy-state");
+  assert.equal(workspace.tabs[0].systemNameKey, "workspace.defaultTabName");
+  assert.deepEqual(state.tasks.missing.schedule, NONE);
+  assert.deepEqual(state.tasks.invalid.schedule, NONE);
+  assert.equal(state.tasks.invalid.targetAt, "tomorrow");
+  assert.equal(state.tasks.invalid.parentId, "missing");
+  assert.equal(state.tasks.missing.x, 44);
+  assert.equal(state.tasks.missing.y, 55);
+  assert.equal(state.tasks.invalid.x, 89);
+  assert.equal(state.tasks.invalid.y, 144);
+  assert.deepEqual(state.links, legacyState.links);
+  assert.deepEqual(state.unknownStateData, legacyState.unknownStateData);
+  assert.deepEqual(normalizedAgain, workspace);
+  assert.equal(makeWorkspaceFromLegacyTabState(null, options), null);
 });

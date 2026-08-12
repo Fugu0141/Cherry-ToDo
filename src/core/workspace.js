@@ -23,6 +23,27 @@ export function makeDefaultWorkspace(now = () => new Date().toISOString()) {
   };
 }
 
+export function makeWorkspaceFromLegacyTabState(candidate, options = {}) {
+  if (!candidate || typeof candidate !== "object" || !candidate.tasks || typeof candidate.tasks !== "object") {
+    return null;
+  }
+
+  const now = options.now || (() => new Date().toISOString());
+  const tab = normalizeTab({
+    name: "",
+    systemNameKey: "workspace.defaultTabName",
+    state: candidate,
+    updatedAt: now()
+  }, 0, options);
+
+  return {
+    version: WORKSPACE_VERSION,
+    activeTabId: tab.id,
+    tabs: [tab],
+    updatedAt: tab.updatedAt
+  };
+}
+
 export function normalizeTab(tab, index = 0, options = {}) {
   const now = options.now || (() => new Date().toISOString());
   const makeId = options.makeId || (() => `tab-${Math.random().toString(36).slice(2, 9)}`);
@@ -106,6 +127,7 @@ export const workspaceModel = Object.freeze({
   normalizeTabState,
   makeEmptyTabState,
   makeDefaultWorkspace,
+  makeWorkspaceFromLegacyTabState,
   normalizeTab,
   normalizeWorkspace,
   normalizeWorkspaceOrDefault,

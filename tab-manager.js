@@ -151,9 +151,50 @@
     };
   }
 
+  function loadLegacyTaskState() {
+    const taskStateKey = workData?.keys?.taskState || "quest-sticky-todo-v10";
+    const legacyTaskStateKeys = workData?.keys?.legacyTaskStates || [];
+    const raw = workData?.getFirst?.([taskStateKey, ...legacyTaskStateKeys])
+      || [taskStateKey, ...legacyTaskStateKeys].map(key => workData?.get(key)).find(Boolean)
+      || null;
+    if (!raw) return null;
+
+    try {
+      const candidate = JSON.parse(raw);
+      return candidate && candidate.tasks && typeof candidate.tasks === "object"
+        ? candidate
+        : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function makeWorkspaceFromLegacyTaskState() {
+    const legacyState = loadLegacyTaskState();
+    if (!legacyState) return null;
+
+    const migrate = window.CherryWorkspaceModel?.makeWorkspaceFromLegacyTabState;
+    if (typeof migrate === "function") {
+      return migrate(legacyState, { now, makeId });
+    }
+
+    const tab = normalizeTab({
+      name: "",
+      systemNameKey: "workspace.defaultTabName",
+      state: legacyState,
+      updatedAt: now()
+    }, 0);
+    return {
+      version: 1,
+      activeTabId: tab.id,
+      tabs: [tab],
+      updatedAt: tab.updatedAt
+    };
+  }
+
   function loadWorkspace() {
     const raw = workData?.get(workspaceKey);
-    if (!raw) return makeDefaultWorkspace();
+    if (!raw) return makeWorkspaceFromLegacyTaskState() || makeDefaultWorkspace();
     try {
       return normalizeWorkspace(JSON.parse(raw)) || makeDefaultWorkspace();
     } catch (_) {
