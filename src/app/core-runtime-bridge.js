@@ -13,11 +13,18 @@
     const store = runtime?.store;
     const commands = runtime?.commands;
     const events = runtime?.events;
+    const normalizeTabState = core.boardSettings?.normalizeTabState;
     if (!store || !commands || !events) return;
 
     const originalRequestRender = typeof requestRender === "function" ? requestRender : null;
     let pendingLegacyState = null;
     let applyingCoreState = false;
+
+    function normalizeState(candidate) {
+      return typeof normalizeTabState === "function"
+        ? normalizeTabState(candidate)
+        : candidate;
+    }
 
     function renderLegacyApp() {
       if (typeof branchLayout === "function") branchLayout();
@@ -26,17 +33,18 @@
     }
 
     function mirrorState(nextState, metadata = {}) {
-      const next = clone(nextState);
+      const next = clone(normalizeState(nextState));
       store.replaceState(next, metadata);
       events.emit("state:changed", clone(next), metadata);
       return next;
     }
 
     function publishState(nextState, metadata = {}) {
+      const next = clone(normalizeState(nextState));
       pendingLegacyState = null;
       applyingCoreState = true;
       try {
-        state = clone(nextState);
+        state = next;
         renderLegacyApp();
         return mirrorState(state, metadata);
       } finally {
@@ -146,13 +154,13 @@
       else if (key === "y") runRedo(event);
     }, true);
 
-    store.replaceState(safeState(), { source: "legacy-initial-state" });
+    store.replaceState(normalizeState(safeState()), { source: "legacy-initial-state" });
 
     events.on("storage:set", event => {
       const taskStateKey = window.CherryWorkDataStorage?.keys?.taskState;
       if (event.detail?.key !== taskStateKey || typeof event.detail.value !== "string") return;
       try {
-        store.replaceState(JSON.parse(event.detail.value), { source: "storage:set" });
+        store.replaceState(normalizeState(JSON.parse(event.detail.value)), { source: "storage:set" });
       } catch (_) {
         // Storage owns malformed-data handling; the runtime mirror stays unchanged.
       }
@@ -161,7 +169,7 @@
     window.addEventListener("cherry-workspace-updated", event => {
       const workspace = event.detail;
       const active = workspace?.tabs?.find(tab => tab.id === workspace.activeTabId);
-      if (active?.state) store.replaceState(active.state, { source: "workspace" });
+      if (active?.state) store.replaceState(normalizeState(active.state), { source: "workspace" });
     });
 
     window.CherryStateRuntime = Object.freeze({

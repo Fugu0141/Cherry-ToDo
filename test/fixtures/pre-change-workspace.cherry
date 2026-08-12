@@ -1,0 +1,15 @@
+{
+  "format": "cherry-workspace-encrypted",
+  "version": 1,
+  "kdf": {
+    "name": "PBKDF2",
+    "hash": "SHA-256",
+    "iterations": 250000,
+    "salt": "AQIDBAUGBwgJCgsMDQ4PEA=="
+  },
+  "cipher": {
+    "name": "AES-GCM",
+    "iv": "ERITFBUWFxgZGhsc"
+  },
+  "data": "11RKodIWD+vzqXdn3WrhKVd6Vp0Im0w4YilEaQMBj5bD2LB212CRQN3I0izfbd4Hcjd+63QJnaErrisUTTBBuCChZrSkZhtNkFp+A1b359DFpDX6B98TEHEMaAnfRToy+R1tAtzDzEW6Hv1LXSQ75gm5EGf6KBu4PP8j9IK/Gk1IqDB7ZZXsbnOdvT9tXElobhr0/MUi4oQl0D2jGhIqkDj8WhQpRJjybgYsMsOZ4npLlv7q1nQNycR8+pKC9+oBngOoIGXoCbvieT8vRU6LDWSpK+VaoZa4lUvTXDZM2Bah/WHu2zUrzlIeZikZ49CCSoW0Sv7v2JkqEGYMBhGnFDocJ7E3eHLp+J94lasIY1vW5rBbS2FMTeJVvwsfQmwXeeIHXNbSydtKVkEYBZuzNPZyGh5rSZY8M1aCqdo15vHYb1SoPRqWkmoeTLT9iJJ/2IkpXAB7b1I5wOphsZtlRAyMS873SpJr+T4pNsA6Tulka5HcGOtrTKNLv14yHb4/Zg6Cxnly5MdiBWULYDxZ/e4ju9W6N/BDv8Z1PR5gC9/Ve0KD16CVo0ttXfoJgjMhW3ZUiUPKD/0tFDVNfIO0kBAW9YwL7Sy6bjmKcHEtxkUgxhrj8cRBxATP4fAEBfes2c5qqxdPv9bfVtfNmwKTdLxiAREwrAAhpTrHsqG+AsFfZZwym/9okkoJV7Io3RdMr4U63l5U1DafMzFTxsSq2t6R6sD5BI5KkSNVEwZNhwE6KCiblfsxMvp4+oZYY/lwWceTSOlRKoLPhoLQhKJCgp9kiaxPVWYrpsR1r+KpLPzQH9FjXlxNPwltL9kxe+lWwXQZpt7ltNVF5pzOKoANeXHfvLJ3/pQls6g+tor+yPZmcMBB/wEpuzrJLCR48K+YDjbCtkDBnE+eTIX/jKzO5NPcT8sunJM5QNcBunbhl6N3PRyv+qA72gl7cDoX9XbwO4zFydGu2Sa6tu/KZ8JhkDwS2y2f91ezKDCNqQwnmCDE7UzYqy0Td/RZc9p7P8OvPJvxujE5VVgaZHQzmXLjz4HD0tmCBH9Rorh7e/Ajx0BmsJ3NgPiGK+x/bgf2mI7g6zHAGBzAEZeBj+ati/he5TY+mRDH4gKIIVmzHsFdp7rH9WWtVtFNJ1Z7Rejle/Wf5KtxlBEXX63+v4IJoXeRlDptwq7iSMir8HyWo0JfMlvDoQ=="
+}

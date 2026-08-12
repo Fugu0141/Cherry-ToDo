@@ -6,6 +6,7 @@ import { commandCore } from "../core/commands.js";
 import { eventCore } from "../core/events.js";
 import { storageCore } from "../core/storage.js";
 import { registryCore } from "../core/registries.js";
+import { boardSettingsModel } from "../core/board-settings.js";
 
 const existingCore = window.CherryCore && typeof window.CherryCore === "object"
   ? window.CherryCore
@@ -14,7 +15,7 @@ const existingCore = window.CherryCore && typeof window.CherryCore === "object"
 const extensions = existingCore.extensions || registryCore.createExtensionRegistries();
 const runtime = existingCore.runtime || Object.freeze({
   events: eventCore.createEventBus(),
-  store: storeCore.createStore({ tasks: {}, showLanes: true, viewMode: "board" }),
+  store: storeCore.createStore(workspaceModel.makeEmptyTabState()),
   workspaceStore: storeCore.createStore(workspaceModel.makeDefaultWorkspace()),
   commands: commandCore.createCommandDispatcher()
 });
@@ -29,12 +30,13 @@ window.CherryCore = Object.freeze({
   events: eventCore,
   storage: storageCore,
   registries: registryCore,
+  boardSettings: boardSettingsModel,
   extensions,
   runtime
 });
 
 window.dispatchEvent(new CustomEvent("cherry-core-ready", {
   detail: {
-    modules: ["dateOnly", "schedule", "workspace", "store", "commands", "events", "storage", "registries", "extensions", "runtime"]
+    modules: ["dateOnly", "schedule", "workspace", "store", "commands", "events", "storage", "registries", "boardSettings", "extensions", "runtime"]
   }
 }));

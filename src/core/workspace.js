@@ -1,7 +1,9 @@
+import { normalizeTabState } from "./board-settings.js";
+
 export const WORKSPACE_VERSION = 1;
 
 export function makeEmptyTabState() {
-  return { tasks: {}, showLanes: true, viewMode: "board" };
+  return normalizeTabState({ tasks: {}, showLanes: true, viewMode: "board" });
 }
 
 export function makeDefaultWorkspace(now = () => new Date().toISOString()) {
@@ -21,6 +23,7 @@ export function normalizeTab(tab, index = 0, options = {}) {
   const isNewName = ["新しいタブ", "New tab"].includes(name);
 
   return {
+    ...(tab && typeof tab === "object" ? tab : {}),
     id: typeof tab?.id === "string" && tab.id ? tab.id : makeId(),
     name: isMainName || isNewName ? "" : name,
     systemNameKey: tab?.systemNameKey || (index === 0 && isMainName
@@ -28,7 +31,9 @@ export function normalizeTab(tab, index = 0, options = {}) {
       : isNewName
         ? "workspace.newTabName"
         : null),
-    state: tab?.state && typeof tab.state === "object" ? tab.state : makeEmptyTabState(),
+    state: normalizeTabState(
+      tab?.state && typeof tab.state === "object" ? tab.state : makeEmptyTabState()
+    ),
     updatedAt: typeof tab?.updatedAt === "string" && tab.updatedAt ? tab.updatedAt : now()
   };
 }
@@ -45,6 +50,7 @@ export function normalizeWorkspace(candidate, options = {}) {
     .map((tab, index) => normalizeTab(tab, index, options));
 
   return {
+    ...candidate,
     version: WORKSPACE_VERSION,
     activeTabId: tabs.some(tab => tab.id === candidate.activeTabId)
       ? candidate.activeTabId

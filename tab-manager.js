@@ -125,6 +125,23 @@
     };
   }
 
+  async function persistenceWorkspaceModel() {
+    const core = typeof window.CherryLegacyCore?.ready === "function"
+      ? await window.CherryLegacyCore.ready()
+      : null;
+    return core?.workspace || window.CherryWorkspaceModel || null;
+  }
+
+  async function normalizeTabForPersistence(tab, index = 0) {
+    const normalize = (await persistenceWorkspaceModel())?.normalizeTab;
+    return typeof normalize === "function" ? normalize(tab, index) : normalizeTab(tab, index);
+  }
+
+  async function normalizeWorkspaceForPersistence(candidate) {
+    const normalize = (await persistenceWorkspaceModel())?.normalizeWorkspace;
+    return typeof normalize === "function" ? normalize(candidate) : normalizeWorkspace(candidate);
+  }
+
   function makeDefaultWorkspace() {
     return {
       version: 1,
@@ -612,7 +629,9 @@
 
       const passphrase = await askPassphraseForExport();
       if (!passphrase) return;
-      const payload = { format: "cherry-workspace", version: 1, exportedAt: now(), workspace };
+      const normalizedWorkspace = await normalizeWorkspaceForPersistence(workspace);
+      if (!normalizedWorkspace) throw new Error("Invalid workspace");
+      const payload = { format: "cherry-workspace", version: 1, exportedAt: now(), workspace: normalizedWorkspace };
       const encrypted = await encryptPayload(payload, passphrase);
       downloadText(`cherry-workspace-${new Date().toISOString().slice(0, 10)}.cherry`, JSON.stringify(encrypted, null, 2), "application/json");
       setStartStatus(copy("exported"));
@@ -650,15 +669,19 @@
         const passphrase = await window.cherryDialog.passphrase({ title: copy("passTitle"), message: t("workspace.passphrasePrompt"), confirm: false });
         if (!passphrase) return;
         const payload = await decryptPayload(JSON.parse(text), passphrase);
-        incoming = normalizeWorkspace(payload.workspace);
+        incoming = await normalizeWorkspaceForPersistence(payload.workspace);
       }
 
       if (!incoming) throw new Error("Invalid workspace");
       if (mode === "replace") {
-        workspace = normalizeWorkspace(incoming) || makeDefaultWorkspace();
+        workspace = await normalizeWorkspaceForPersistence(incoming) || makeDefaultWorkspace();
       } else {
-        const current = normalizeWorkspace(workspace) || makeDefaultWorkspace();
-        const importedTabs = (incoming.tabs || []).map(tab => ({ ...normalizeTab(tab, 0), id: makeId(), name: tabDisplayName(tab) }));
+        const current = await normalizeWorkspaceForPersistence(workspace) || makeDefaultWorkspace();
+        const importedTabs = await Promise.all((incoming.tabs || []).map(async (tab, index) => ({
+          ...(await normalizeTabForPersistence(tab, index)),
+          id: makeId(),
+          name: tabDisplayName(tab)
+        })));
         workspace = { ...current, tabs: [...current.tabs, ...importedTabs], updatedAt: now() };
       }
 
