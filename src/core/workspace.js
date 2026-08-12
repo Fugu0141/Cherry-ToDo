@@ -23,6 +23,7 @@ export function normalizeTab(tab, index = 0, options = {}) {
   const isNewName = ["新しいタブ", "New tab"].includes(name);
 
   return {
+    ...(tab && typeof tab === "object" ? tab : {}),
     id: typeof tab?.id === "string" && tab.id ? tab.id : makeId(),
     name: isMainName || isNewName ? "" : name,
     systemNameKey: tab?.systemNameKey || (index === 0 && isMainName
@@ -49,6 +50,7 @@ export function normalizeWorkspace(candidate, options = {}) {
     .map((tab, index) => normalizeTab(tab, index, options));
 
   return {
+    ...candidate,
     version: WORKSPACE_VERSION,
     activeTabId: tabs.some(tab => tab.id === candidate.activeTabId)
       ? candidate.activeTabId

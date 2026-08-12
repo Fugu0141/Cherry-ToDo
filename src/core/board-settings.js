@@ -18,6 +18,7 @@ export function normalizeBoardSettings(candidate, legacyShowLanes) {
   const settings = isRecord(candidate) ? candidate : {};
 
   return {
+    ...settings,
     // The current UI still writes showLanes directly. Keep that value first
     // during migration so normalization cannot undo a user's latest toggle.
     showDateLanes: typeof legacyShowLanes === "boolean"
