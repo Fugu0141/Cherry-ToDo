@@ -256,7 +256,10 @@ test("workspace normalization and serialization migrate old tab state additively
     autoLayout: true,
     timeGuide: "auto"
   });
-  assert.deepEqual(state.tasks.task, oldWorkspace.tabs[0].state.tasks.task);
+  assert.deepEqual(state.tasks.task, {
+    ...oldWorkspace.tabs[0].state.tasks.task,
+    schedule: { type: "date", date: "2026-08-12", time: null }
+  });
   assert.equal(roundTrip.activeTabId, "tab-1");
 });
 
@@ -292,7 +295,12 @@ test("workspace normalization preserves unknown workspace, tab, board, and view 
 
   assert.deepEqual(normalized.unknownWorkspaceData, workspace.unknownWorkspaceData);
   assert.deepEqual(normalized.tabs[0].unknownTabData, workspace.tabs[0].unknownTabData);
-  assert.deepEqual(normalized.tabs[0].state.tasks, workspace.tabs[0].state.tasks);
+  assert.deepEqual(normalized.tabs[0].state.tasks, {
+    task: {
+      ...workspace.tabs[0].state.tasks.task,
+      schedule: { type: "none", date: null, time: null }
+    }
+  });
   assert.deepEqual(normalized.tabs[0].state.viewState, workspace.tabs[0].state.viewState);
   assert.deepEqual(normalized.tabs[0].state.board.positions, workspace.tabs[0].state.board.positions);
   assert.deepEqual(normalized.tabs[0].state.board.viewport, workspace.tabs[0].state.board.viewport);
@@ -374,7 +382,16 @@ test("pre-change encrypted Cherry workspace survives import-export normalization
   assert.equal(roundTripPayload.version, 1);
   assert.equal(roundTripWorkspace.tabs[0].state.showLanes, false);
   assert.equal(roundTripWorkspace.tabs[0].state.board.settings.showDateLanes, false);
-  assert.deepEqual(roundTripWorkspace.tabs[0].state.tasks, oldWorkspace.tabs[0].state.tasks);
+  assert.deepEqual(roundTripWorkspace.tabs[0].state.tasks, {
+    root: {
+      ...oldWorkspace.tabs[0].state.tasks.root,
+      schedule: { type: "date", date: "2026-06-30", time: null }
+    },
+    child: {
+      ...oldWorkspace.tabs[0].state.tasks.child,
+      schedule: { type: "date", date: "2026-07-01", time: null }
+    }
+  });
   assert.deepEqual(roundTripWorkspace.tabs[0].state.links, oldWorkspace.tabs[0].state.links);
   assert.deepEqual(roundTripWorkspace.tabs[0].state.listFilters, oldWorkspace.tabs[0].state.listFilters);
   assert.deepEqual(roundTripWorkspace.tabs[0].state.board.positions, oldWorkspace.tabs[0].state.board.positions);
@@ -382,6 +399,54 @@ test("pre-change encrypted Cherry workspace survives import-export normalization
   assert.deepEqual(roundTripWorkspace.unknownWorkspaceData, oldWorkspace.unknownWorkspaceData);
   assert.deepEqual(roundTripWorkspace.tabs[0].unknownTabData, oldWorkspace.tabs[0].unknownTabData);
   assert.deepEqual(roundTripWorkspace, normalizedWorkspace);
+});
+
+test("encrypted Cherry round-trip preserves canonical schedule variants", async () => {
+  const passphrase = "compatibility-test-passphrase";
+  const workspace = normalizeWorkspace({
+    version: 1,
+    activeTabId: "tab-schedules",
+    tabs: [{
+      id: "tab-schedules",
+      name: "Schedules",
+      state: {
+        tasks: {
+          none: {
+            id: "none",
+            targetAt: null,
+            schedule: { type: "none", date: null, time: null }
+          },
+          date: {
+            id: "date",
+            targetAt: "2026-08-20",
+            schedule: { type: "date", date: "2026-08-20", time: null }
+          },
+          datetime: {
+            id: "datetime",
+            targetAt: "2026-08-21",
+            schedule: { type: "datetime", date: "2026-08-21", time: "18:30" }
+          }
+        },
+        showLanes: true,
+        viewMode: "board"
+      },
+      updatedAt: "2026-08-12T00:00:00.000Z"
+    }],
+    updatedAt: "2026-08-12T00:00:00.000Z"
+  });
+  const payload = {
+    format: "cherry-workspace",
+    version: 1,
+    exportedAt: "2026-08-12T00:00:00.000Z",
+    workspace
+  };
+
+  const encrypted = await encryptCherryPayload(payload, passphrase);
+  const decrypted = await decryptCherryPayload(encrypted, passphrase);
+  const roundTrip = normalizeWorkspace(decrypted.workspace);
+
+  assert.deepEqual(roundTrip.tabs[0].state.tasks, workspace.tabs[0].state.tasks);
+  assert.deepEqual(roundTrip, workspace);
 });
 
 test("new empty tabs contain both canonical settings and the legacy mirror", () => {

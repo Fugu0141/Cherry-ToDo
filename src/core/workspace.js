@@ -1,6 +1,14 @@
-import { normalizeTabState } from "./board-settings.js";
+import { normalizeTabState as normalizeBoardTabState } from "./board-settings.js";
+import { normalizeTaskSchedules } from "./schedule.js";
 
 export const WORKSPACE_VERSION = 1;
+
+export function normalizeTabState(candidate) {
+  const state = normalizeBoardTabState(candidate);
+  const tasks = normalizeTaskSchedules(state.tasks);
+
+  return tasks === state.tasks ? state : { ...state, tasks };
+}
 
 export function makeEmptyTabState() {
   return normalizeTabState({ tasks: {}, showLanes: true, viewMode: "board" });
@@ -12,6 +20,27 @@ export function makeDefaultWorkspace(now = () => new Date().toISOString()) {
     activeTabId: null,
     tabs: [],
     updatedAt: now()
+  };
+}
+
+export function makeWorkspaceFromLegacyTabState(candidate, options = {}) {
+  if (!candidate || typeof candidate !== "object" || !candidate.tasks || typeof candidate.tasks !== "object") {
+    return null;
+  }
+
+  const now = options.now || (() => new Date().toISOString());
+  const tab = normalizeTab({
+    name: "",
+    systemNameKey: "workspace.defaultTabName",
+    state: candidate,
+    updatedAt: now()
+  }, 0, options);
+
+  return {
+    version: WORKSPACE_VERSION,
+    activeTabId: tab.id,
+    tabs: [tab],
+    updatedAt: tab.updatedAt
   };
 }
 
@@ -95,8 +124,10 @@ export function serializeWorkspace(candidate, options = {}) {
 
 export const workspaceModel = Object.freeze({
   version: WORKSPACE_VERSION,
+  normalizeTabState,
   makeEmptyTabState,
   makeDefaultWorkspace,
+  makeWorkspaceFromLegacyTabState,
   normalizeTab,
   normalizeWorkspace,
   normalizeWorkspaceOrDefault,

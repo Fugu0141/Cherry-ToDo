@@ -13,7 +13,7 @@
     const store = runtime?.store;
     const commands = runtime?.commands;
     const events = runtime?.events;
-    const normalizeTabState = core.boardSettings?.normalizeTabState;
+    const normalizeTabState = core.workspace?.normalizeTabState;
     if (!store || !commands || !events) return;
 
     const originalRequestRender = typeof requestRender === "function" ? requestRender : null;
