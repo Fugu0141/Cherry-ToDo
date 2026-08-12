@@ -14,6 +14,23 @@
       : null;
   }
 
+  function getTaskDate(task) {
+    const coreSchedule = currentCore()?.schedule;
+    if (typeof coreSchedule?.normalizeSchedule === "function" && typeof coreSchedule?.scheduleDate === "function") {
+      return coreSchedule.scheduleDate(coreSchedule.normalizeSchedule(task?.schedule, task?.targetAt));
+    }
+
+    // The module bootstrap is deferred. Preserve early legacy startup by using
+    // the existing pure normalizer until Core is synchronously available.
+    if (typeof window.normalizeSchedule !== "function") return null;
+    const normalized = window.normalizeSchedule(task?.schedule, task?.targetAt);
+    return normalized && (normalized.type === "date" || normalized.type === "datetime")
+      ? normalized.date
+      : null;
+  }
+
+  window.CherryScheduleBridge = Object.freeze({ getTaskDate });
+
   function installScheduleCompatibility(core) {
     const schedule = core?.schedule;
     if (!schedule) return;
