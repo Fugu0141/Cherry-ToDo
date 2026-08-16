@@ -3,9 +3,8 @@
   if (!baseMakeBranchPath) return;
 
   function taskDate(task) {
-    if (!task) return null;
-    if (typeof getTaskDate === "function") return getTaskDate(task);
-    return task.targetAt ? normalizeDate(task.targetAt) : null;
+    const getTaskDate = window.CherryScheduleBridge?.getTaskDate;
+    return typeof getTaskDate === "function" ? getTaskDate(task) : null;
   }
 
   function isSameDayLink(parent, child) {
