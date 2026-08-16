@@ -106,9 +106,8 @@
   });
 
   function scheduleDate(task) {
-    const raw = task?.schedule?.date || task?.targetAt || "";
-    const value = String(raw).slice(0, 10);
-    return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : null;
+    const getTaskDate = window.CherryScheduleBridge?.getTaskDate;
+    return typeof getTaskDate === "function" ? getTaskDate(task) : null;
   }
 
   function activeTabId() {
