@@ -217,12 +217,10 @@
   };
 
   refreshLaneDates = function refreshLaneDatesWithSchedule() {
-    const dates = new Set([todayISO()]);
-    for (const task of getTasks()) {
-      const date = getTaskDate(task);
-      if (date) dates.add(date);
-    }
-    cachedLaneDates = [...dates].sort((a, b) => a.localeCompare(b));
+    const collectLaneDates = window.CherryScheduleBridge?.collectLaneDates;
+    cachedLaneDates = typeof collectLaneDates === "function"
+      ? collectLaneDates(getTasks(), todayISO())
+      : [todayISO()];
   };
 
   taskX = function taskXWithSchedule(task) {

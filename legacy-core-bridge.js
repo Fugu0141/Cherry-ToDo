@@ -29,7 +29,18 @@
       : null;
   }
 
-  window.CherryScheduleBridge = Object.freeze({ getTaskDate });
+  function collectLaneDates(tasks, todayDate) {
+    const dates = new Set(todayDate ? [todayDate] : []);
+
+    for (const task of Array.isArray(tasks) ? tasks : []) {
+      const date = getTaskDate(task);
+      if (date) dates.add(date);
+    }
+
+    return [...dates].sort((a, b) => a.localeCompare(b));
+  }
+
+  window.CherryScheduleBridge = Object.freeze({ getTaskDate, collectLaneDates });
 
   function installScheduleCompatibility(core) {
     const schedule = core?.schedule;
