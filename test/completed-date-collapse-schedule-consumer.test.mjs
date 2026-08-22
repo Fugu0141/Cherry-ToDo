@@ -226,11 +226,13 @@ test("missing schedule bridge degrades conservatively without reading targetAt d
   assert.equal(legacyReads, 0);
 });
 
-test("the focused change migrates collapse membership but leaves task tone for a later PR", () => {
+test("completed-date collapse and task tone share the Core-aware task date reader", () => {
   const tasksOnDateStart = finalFixSource.indexOf("function tasksOnDate");
   const tasksOnDateEnd = finalFixSource.indexOf("function isDateComplete");
   const collapseStart = finalFixSource.indexOf("function isTaskCollapsed");
   const collapseEnd = finalFixSource.indexOf("function dateSpan");
+  const toneStart = finalFixSource.indexOf("function taskToneClass");
+  const toneEnd = finalFixSource.indexOf("function collectRelatedIds");
 
   assert.match(finalFixSource, /CherryScheduleBridge\?\.getTaskDate/);
   assert.match(finalFixSource.slice(tasksOnDateStart, tasksOnDateEnd), /taskDate\(task\) === normalized/);
@@ -239,7 +241,6 @@ test("the focused change migrates collapse membership but leaves task tone for a
   assert.doesNotMatch(finalFixSource, /isDateCollapsed\(task\.targetAt\)/);
   assert.match(finalFixSource, /const oldDate = taskDate\(task\)/);
   assert.match(finalFixSource, /window\.CherryCompletedDateCollapse = Object\.freeze/);
-
-  // Task tone remains an intentionally separate presentation consumer.
-  assert.match(finalFixSource, /const date = normalizeDate\(task\.targetAt\);/);
+  assert.match(finalFixSource.slice(toneStart, toneEnd), /const date = taskDate\(task\)/);
+  assert.doesNotMatch(finalFixSource.slice(toneStart, toneEnd), /targetAt|normalizeDate/);
 });
