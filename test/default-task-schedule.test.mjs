@@ -4,53 +4,16 @@ import test from "node:test";
 import vm from "node:vm";
 
 const scheduleModelSource = readFileSync(new URL("../schedule-model.js", import.meta.url), "utf8");
-
-function fakeButton() {
-  const capture = [];
-  const bubble = [];
-  return {
-    addEventListener(type, handler, options) {
-      if (type !== "click") return;
-      const isCapture = options === true || options?.capture === true;
-      (isCapture ? capture : bubble).push(handler);
-    },
-    removeEventListener(type, handler, options) {
-      if (type !== "click") return;
-      const isCapture = options === true || options?.capture === true;
-      const list = isCapture ? capture : bubble;
-      const index = list.indexOf(handler);
-      if (index >= 0) list.splice(index, 1);
-    },
-    click() {
-      let immediateStopped = false;
-      const event = {
-        type: "click",
-        preventDefault() {},
-        stopImmediatePropagation() { immediateStopped = true; }
-      };
-
-      for (const handler of [...capture]) {
-        handler(event);
-        if (immediateStopped) return;
-      }
-      for (const handler of [...bubble]) {
-        handler(event);
-        if (immediateStopped) return;
-      }
-    }
-  };
-}
+const appSource = readFileSync(new URL("../app.js", import.meta.url), "utf8");
 
 function loadScheduleModel() {
   const tasks = [];
-  const addRootBtn = fakeButton();
   const taskModalTitle = { textContent: "" };
   const taskNameInput = { value: "", focus() {}, select() {} };
   const taskDateInput = { value: "" };
   const taskModal = { classList: { add() {}, remove() {} } };
   const changeDateInput = { value: "", focus() {} };
   const dateModal = { classList: { add() {}, remove() {} } };
-  let legacyRootClicks = 0;
 
   const context = vm.createContext({
     window: {},
@@ -65,7 +28,6 @@ function loadScheduleModel() {
     getTasks() { return tasks; },
     todayISO() { return "2026-08-22"; },
     id() { return "generated"; },
-    addRootBtn,
     cachedLaneDates: [],
     isVerticalMode() { return false; },
     vTrackToX() { return 0; },
@@ -107,18 +69,8 @@ function loadScheduleModel() {
     saveDateModal() {}
   });
 
-  // This models app.js's existing anonymous root-add listener.
-  addRootBtn.addEventListener("click", () => {
-    legacyRootClicks += 1;
-    context.openCreateTaskModal({
-      parentId: null,
-      targetAt: context.todayISO(),
-      branchMode: "same"
-    });
-  });
-
   vm.runInContext(scheduleModelSource, context);
-  return { context, addRootBtn, taskDateInput, legacyRootClicks: () => legacyRootClicks };
+  return { context, taskDateInput };
 }
 
 test("context-free task creation defaults to schedule:none instead of today", () => {
@@ -185,17 +137,17 @@ test("explicit child schedule is authoritative over a recent spatial date hit", 
   assert.equal(taskDateInput.value, "2026-09-05");
 });
 
-test("toolbar root Add bypasses the legacy today-default listener and opens undated", () => {
-  const { context, addRootBtn, taskDateInput, legacyRootClicks } = loadScheduleModel();
+test("toolbar root Add owns canonical undated intent without a capture shim", () => {
+  const start = appSource.indexOf('addRootBtn.addEventListener("click"');
+  const end = appSource.indexOf('treeLayoutBtn.addEventListener("click"', start);
+  assert.notEqual(start, -1);
+  assert.notEqual(end, -1);
 
-  addRootBtn.click();
-
-  assert.equal(legacyRootClicks(), 0);
-  assert.equal(taskDateInput.value, "");
-  assert.deepEqual(
-    JSON.parse(JSON.stringify(context.taskModalContext.schedule)),
-    { type: "none", date: null, time: null }
-  );
+  const rootAddListener = appSource.slice(start, end);
+  assert.match(rootAddListener, /schedule:\s*\{\s*type:\s*"none",\s*date:\s*null,\s*time:\s*null\s*\}/);
+  assert.doesNotMatch(rootAddListener, /targetAt|todayISO/);
+  assert.doesNotMatch(scheduleModelSource, /addRootBtn\.addEventListener/);
+  assert.doesNotMatch(scheduleModelSource, /stopImmediatePropagation/);
 });
 
 test("an explicit root request for today remains dated", () => {
