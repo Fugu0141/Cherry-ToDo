@@ -46,6 +46,23 @@ test("same-day layout keeps the completed-date expand/collapse affordance after 
   assert.match(renderSource, /toggleCompletedDate\(date\)/);
 });
 
+test("collapsed labels only repeat the month at a real month boundary", () => {
+  const renderStart = sameDayLayoutSource.indexOf("renderLanes = function() {");
+  const renderEnd = sameDayLayoutSource.indexOf("resolveTrackCollisions = function() {");
+  const renderSource = sameDayLayoutSource.slice(renderStart, renderEnd);
+
+  assert.match(renderSource, /const isMonthStart = index === 0 \|\| !sameMonth\(prev, date\)/);
+  assert.match(renderSource, /label\.innerHTML = collapsed\s*\? isMonthStart/);
+  assert.match(
+    renderSource,
+    /\? `<div class="laneMonthTitle">\$\{parts\.monthName\}<\/div><div class="laneDay">\$\{parts\.day\}<\/div><div class="laneStatus">完了 \$\{count\}<\/div>`/
+  );
+  assert.match(
+    renderSource,
+    /: `<div class="laneDay">\$\{parts\.day\}<\/div><div class="laneStatus">完了 \$\{count\}<\/div>`/
+  );
+});
+
 test("collapsed completed dates use compact same-day lane metrics in both orientations", () => {
   assert.match(
     sameDayLayoutSource,
