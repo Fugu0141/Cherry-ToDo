@@ -3,98 +3,89 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import vm from "node:vm";
 
-const guardSource = readFileSync(
-  new URL("../src/features/date-modal-target-guard/implementation.js", import.meta.url),
-  "utf8"
-);
+const scheduleModelSource = readFileSync(new URL("../schedule-model.js", import.meta.url), "utf8");
+
+function extractInstallCurrentModalSaveHandlers() {
+  const start = scheduleModelSource.indexOf("  function installCurrentModalSaveHandlers() {");
+  const end = scheduleModelSource.indexOf("\n\n  window.isValidISODate", start);
+
+  assert.notEqual(start, -1, "modal save handoff helper must exist");
+  assert.notEqual(end, -1, "modal save handoff helper boundary must remain stable");
+  return scheduleModelSource.slice(start, end);
+}
 
 function fakeButton() {
-  const capture = [];
-  const bubble = [];
+  const listeners = [];
   return {
-    addEventListener(type, handler, options) {
+    addEventListener(type, handler) {
+      if (type === "click") listeners.push(handler);
+    },
+    removeEventListener(type, handler) {
       if (type !== "click") return;
-      const isCapture = options === true || options?.capture === true;
-      (isCapture ? capture : bubble).push(handler);
+      const index = listeners.indexOf(handler);
+      if (index >= 0) listeners.splice(index, 1);
     },
     click() {
-      for (const handler of capture) handler({ type: "click" });
-      for (const handler of bubble) handler({ type: "click" });
+      for (const handler of [...listeners]) handler({ type: "click" });
     }
   };
 }
 
-test("schedule-aware task save runs before the legacy captured save listener", () => {
+test("schedule model replaces stale direct modal save listeners with current handlers", () => {
   const taskSaveBtn = fakeButton();
   const dateSaveBtn = fakeButton();
-  let coreSaves = 0;
-  let legacyWrites = 0;
-  let laterListeners = 0;
+  let legacyTaskSaves = 0;
+  let legacyDateSaves = 0;
+  let currentTaskSaves = 0;
+  let currentDateSaves = 0;
+  let laterTaskListeners = 0;
+
+  const baseSaveTaskModal = () => {
+    legacyTaskSaves += 1;
+  };
+  const baseSaveDateModal = () => {
+    legacyDateSaves += 1;
+  };
+
+  taskSaveBtn.addEventListener("click", baseSaveTaskModal);
+  dateSaveBtn.addEventListener("click", baseSaveDateModal);
 
   const context = vm.createContext({
-    window: {},
     taskSaveBtn,
     dateSaveBtn,
-    taskModalMode: "create",
-    dateModalContext: null,
+    baseSaveTaskModal,
+    baseSaveDateModal,
     saveTaskModal() {
-      coreSaves += 1;
-      context.taskModalMode = null;
+      currentTaskSaves += 1;
     },
-    saveDateModal() {},
-    openChangeDateModal() {},
-    openCreateTaskModal() {},
-    normalizeDate(value) { return value || "2026-08-22"; }
+    saveDateModal() {
+      currentDateSaves += 1;
+    }
   });
 
-  // app.js registered this listener before schedule-model.js replaced saveTaskModal.
-  taskSaveBtn.addEventListener("click", () => {
-    if (context.taskModalMode === "create") legacyWrites += 1;
-  });
+  vm.runInContext(`${extractInstallCurrentModalSaveHandlers()}\ninstallCurrentModalSaveHandlers();`, context);
 
-  vm.runInContext(guardSource, context);
-
-  // Later features (for example the mobile action bar) must still receive the click.
+  // Later feature listeners must remain ordinary bubble listeners and still run.
   taskSaveBtn.addEventListener("click", () => {
-    laterListeners += 1;
+    laterTaskListeners += 1;
   });
 
   taskSaveBtn.click();
-
-  assert.equal(coreSaves, 1);
-  assert.equal(legacyWrites, 0);
-  assert.equal(laterListeners, 1);
-});
-
-test("schedule-aware date save also wins over the legacy captured listener", () => {
-  const taskSaveBtn = fakeButton();
-  const dateSaveBtn = fakeButton();
-  let coreSaves = 0;
-  let legacyWrites = 0;
-
-  const context = vm.createContext({
-    window: {},
-    taskSaveBtn,
-    dateSaveBtn,
-    taskModalMode: null,
-    dateModalContext: { taskId: "task" },
-    saveTaskModal() {},
-    saveDateModal() {
-      coreSaves += 1;
-      context.dateModalContext = null;
-    },
-    openChangeDateModal() {},
-    openCreateTaskModal() {},
-    normalizeDate(value) { return value || "2026-08-22"; }
-  });
-
-  dateSaveBtn.addEventListener("click", () => {
-    if (context.dateModalContext) legacyWrites += 1;
-  });
-
-  vm.runInContext(guardSource, context);
   dateSaveBtn.click();
 
-  assert.equal(coreSaves, 1);
-  assert.equal(legacyWrites, 0);
+  assert.equal(legacyTaskSaves, 0);
+  assert.equal(legacyDateSaves, 0);
+  assert.equal(currentTaskSaves, 1);
+  assert.equal(currentDateSaves, 1);
+  assert.equal(laterTaskListeners, 1);
+});
+
+test("modal save handoff uses removeEventListener instead of capture-order masking", () => {
+  const helper = extractInstallCurrentModalSaveHandlers();
+
+  assert.match(helper, /removeEventListener\("click", baseSaveTaskModal\)/);
+  assert.match(helper, /removeEventListener\("click", baseSaveDateModal\)/);
+  assert.match(helper, /addEventListener\("click", \(\) => saveTaskModal\(\)\)/);
+  assert.match(helper, /addEventListener\("click", \(\) => saveDateModal\(\)\)/);
+  assert.doesNotMatch(helper, /true\s*\)/);
 });
