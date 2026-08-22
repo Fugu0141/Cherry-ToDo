@@ -151,14 +151,14 @@ test("live ICS import reconciles legacy today fallback back to canonical schedul
   const imported = harness.model.tabs.find(tab => tab.id === "imported");
   const [undated, dated] = Object.values(imported.state.tasks);
 
-  assert.deepEqual(undated.schedule, {
+  assert.deepEqual(clone(undated.schedule), {
     type: "none",
     date: null,
     time: null
   });
   assert.equal(undated.targetAt, null);
 
-  assert.deepEqual(dated.schedule, {
+  assert.deepEqual(clone(dated.schedule), {
     type: "date",
     date: "2026-08-30",
     time: null
