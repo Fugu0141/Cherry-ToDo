@@ -55,8 +55,8 @@
   }
 
   function taskDateForChild(task) {
-    if (typeof getTaskDate === "function") return getTaskDate(task) || todayISO();
-    return task.targetAt || todayISO();
+    const getTaskDate = window.CherryScheduleBridge?.getTaskDate;
+    return typeof getTaskDate === "function" ? getTaskDate(task) : null;
   }
 
   function runDeleteAction() {
