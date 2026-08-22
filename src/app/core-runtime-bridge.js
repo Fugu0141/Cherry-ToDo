@@ -14,6 +14,7 @@
     const commands = runtime?.commands;
     const events = runtime?.events;
     const normalizeTabState = core.workspace?.normalizeTabState;
+    const schedule = core.schedule;
     if (!store || !commands || !events) return;
 
     const originalRequestRender = typeof requestRender === "function" ? requestRender : null;
@@ -24,6 +25,30 @@
       return typeof normalizeTabState === "function"
         ? normalizeTabState(candidate)
         : candidate;
+    }
+
+    function restoreDragSnapshotTask(task, original) {
+      if (!task || !original) return;
+
+      task.x = original.x;
+      task.y = original.y;
+
+      const originalTargetAt = original.targetAt ?? null;
+      const normalizeSchedule = schedule?.normalizeSchedule;
+      const scheduleDate = schedule?.scheduleDate;
+
+      if (typeof normalizeSchedule !== "function" || typeof scheduleDate !== "function") {
+        task.targetAt = originalTargetAt;
+        return;
+      }
+
+      const currentSchedule = normalizeSchedule(task.schedule, task.targetAt);
+      const originalSchedule = normalizeSchedule(undefined, originalTargetAt);
+      const currentDate = scheduleDate(currentSchedule);
+      const originalDate = scheduleDate(originalSchedule);
+
+      if (currentDate !== originalDate) task.schedule = originalSchedule;
+      task.targetAt = originalDate;
     }
 
     function renderLegacyApp() {
@@ -99,9 +124,7 @@
         const activeDrag = typeof drag === "object" && drag ? drag : null;
         const draggedTask = activeDrag?.id ? pendingLegacyState.tasks?.[activeDrag.id] : null;
         if (draggedTask && activeDrag.original) {
-          draggedTask.x = activeDrag.original.x;
-          draggedTask.y = activeDrag.original.y;
-          draggedTask.targetAt = activeDrag.original.targetAt;
+          restoreDragSnapshotTask(draggedTask, activeDrag.original);
         }
       };
     }
