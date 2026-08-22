@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { parseIcsTodos } from "../src/core/ics.js";
+import { makeIcs, parseIcsTodos } from "../src/core/ics.js";
 
 function calendar(...todos) {
   return [
@@ -75,4 +75,36 @@ test("missing SUMMARY keeps the existing numbered fallback", () => {
 
   assert.equal(tasks[0].title, "Task 1");
   assert.equal(tasks[1].title, "Task 2");
+});
+
+test("canonical unscheduled survives Cherry ICS export and Core import", () => {
+  const workspace = {
+    version: 1,
+    activeTabId: "tab-1",
+    tabs: [{
+      id: "tab-1",
+      name: "Main",
+      state: {
+        tasks: {
+          task1: {
+            id: "task1",
+            title: "Still undated",
+            schedule: { type: "none", date: null, time: null },
+            targetAt: "2026-08-25",
+            status: "todo"
+          }
+        }
+      }
+    }]
+  };
+
+  const exported = makeIcs(workspace, { getTabName: tab => tab.name });
+  const [imported] = parseIcsTodos(exported);
+
+  assert.doesNotMatch(exported, /DUE(?:;VALUE=DATE)?:/);
+  assert.deepEqual(imported.schedule, {
+    type: "none",
+    date: null,
+    time: null
+  });
 });
