@@ -11,7 +11,7 @@ const finalFixSource = readFileSync(new URL("../final-fix.js", import.meta.url),
 const exposureMarker = "  branchLayout();\n  render();\n})();";
 const instrumentedFinalFixSource = finalFixSource.replace(
   exposureMarker,
-  "  window.__collapseScheduleTest = Object.freeze({ taskDate, tasksOnDate, isDateComplete, isTaskCollapsed });\n"
+  "  window.__collapseScheduleTest = Object.freeze({ taskDate, tasksOnDate, isDateComplete, isTaskCollapsed, dateCollapseState, toggleDoneDate });\n"
     + exposureMarker
 );
 
@@ -25,6 +25,12 @@ function loadCollapseHelpers({ tasks, collapsedDates = [], schedule = scheduleMo
   const storage = new Map([
     ["quest-sticky-collapsed-done-dates-v2", JSON.stringify(collapsedDates)]
   ]);
+  const calls = {
+    snapshot: 0,
+    branchLayout: 0,
+    requestRender: 0,
+    render: 0
+  };
   const window = {
     CherryCore: { schedule },
     addEventListener() {}
@@ -50,6 +56,8 @@ function loadCollapseHelpers({ tasks, collapsedDates = [], schedule = scheduleMo
   const context = vm.createContext({
     window,
     document,
+    hDateGap: 280,
+    vDateGap: 180,
     localStorage: {
       getItem(key) {
         return storage.get(key) ?? null;
@@ -65,16 +73,32 @@ function loadCollapseHelpers({ tasks, collapsedDates = [], schedule = scheduleMo
     getTasks() {
       return tasks;
     },
-    branchLayout() {},
-    render() {}
+    snapshot() {
+      calls.snapshot += 1;
+    },
+    branchLayout() {
+      calls.branchLayout += 1;
+    },
+    requestRender() {
+      calls.requestRender += 1;
+    },
+    render() {
+      calls.render += 1;
+    }
   });
 
   if (withBridge) vm.runInContext(bridgeSource, context);
   vm.runInContext(instrumentedFinalFixSource, context);
 
+  // Ignore final-fix's startup layout/render calls when asserting an explicit toggle.
+  calls.branchLayout = 0;
+  calls.render = 0;
+
   return {
     helpers: window.__collapseScheduleTest,
-    storage
+    collapseBridge: window.CherryCompletedDateCollapse,
+    storage,
+    calls
   };
 }
 
@@ -136,6 +160,50 @@ test("an incomplete canonical date does not become complete because stale target
   assert.equal(helpers.isTaskCollapsed(tasks[1]), true);
 });
 
+test("collapse bridge toggles a completed dated lane and exposes compact presentation state", () => {
+  const tasks = [
+    {
+      id: "future-done",
+      status: "done",
+      schedule: { type: "date", date: "2026-08-23", time: null },
+      targetAt: "2026-08-19"
+    },
+    {
+      id: "today-done",
+      status: "done",
+      schedule: { type: "date", date: "2026-08-22", time: null },
+      targetAt: "2026-08-18"
+    }
+  ];
+  const { collapseBridge, storage, calls } = loadCollapseHelpers({
+    tasks,
+    collapsedDates: ["2026-08-22", "2026-08-23"]
+  });
+
+  const collapsed = collapseBridge.getState("2026-08-23");
+  assert.equal(collapsed.complete, true);
+  assert.equal(collapsed.collapsed, true);
+  assert.equal(collapsed.collapsible, true);
+  assert.equal(collapsed.count, 1);
+  assert.equal(collapsed.tone, "collapsedDoneLane");
+  assert.equal(collapsed.horizontalSpan, 132);
+  assert.equal(collapsed.verticalSpan, 92);
+
+  assert.equal(collapseBridge.toggleDate("2026-08-23"), true);
+  assert.equal(collapseBridge.getState("2026-08-23").collapsed, false);
+  assert.deepEqual(JSON.parse(storage.get("quest-sticky-collapsed-done-dates-v2")), ["2026-08-22"]);
+  assert.deepEqual(calls, { snapshot: 1, branchLayout: 1, requestRender: 1, render: 0 });
+
+  assert.equal(collapseBridge.toggleDate("2026-08-23"), true);
+  assert.equal(collapseBridge.getState("2026-08-23").collapsed, true);
+
+  const today = collapseBridge.getState("2026-08-22");
+  assert.equal(today.complete, true);
+  assert.equal(today.collapsed, false);
+  assert.equal(today.collapsible, false);
+  assert.equal(collapseBridge.toggleDate("2026-08-22"), false);
+});
+
 test("missing schedule bridge degrades conservatively without reading targetAt directly", () => {
   let legacyReads = 0;
   const task = { id: "legacy", status: "done" };
@@ -170,6 +238,7 @@ test("the focused change migrates collapse membership but leaves task tone for a
   assert.match(finalFixSource.slice(collapseStart, collapseEnd), /const date = taskDate\(task\)/);
   assert.doesNotMatch(finalFixSource, /isDateCollapsed\(task\.targetAt\)/);
   assert.match(finalFixSource, /const oldDate = taskDate\(task\)/);
+  assert.match(finalFixSource, /window\.CherryCompletedDateCollapse = Object\.freeze/);
 
   // Task tone remains an intentionally separate presentation consumer.
   assert.match(finalFixSource, /const date = normalizeDate\(task\.targetAt\);/);
