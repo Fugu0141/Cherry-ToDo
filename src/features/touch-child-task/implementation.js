@@ -1,27 +1,12 @@
 (() => {
   const isTouchLike = event => event.pointerType === "touch" || window.matchMedia("(pointer: coarse)").matches;
 
-  function localTodayFallback() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const day = String(now.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  }
-
-  function fallbackToday() {
-    try {
-      if (window.cherryDateOnly?.today) return window.cherryDateOnly.today();
-      if (typeof todayISO === "function") return todayISO();
-    } catch (_) {}
-    return localTodayFallback();
-  }
-
-  function dateFromPointer(event) {
-    try {
-      if (typeof getDateForPointer === "function") return getDateForPointer(event);
-    } catch (_) {}
-    return fallbackToday();
+  function taskScheduleForChild(task) {
+    const getTaskDate = window.CherryScheduleBridge?.getTaskDate;
+    const date = typeof getTaskDate === "function" ? getTaskDate(task) : null;
+    return date
+      ? { type: "date", date, time: null }
+      : { type: "none", date: null, time: null };
   }
 
   document.addEventListener("pointerdown", event => {
@@ -35,10 +20,11 @@
     event.stopPropagation();
     event.stopImmediatePropagation();
 
+    const parent = state.tasks?.[note.dataset.id] || null;
     if (typeof openCreateTaskModal === "function") {
       openCreateTaskModal({
         parentId: note.dataset.id,
-        targetAt: dateFromPointer(event),
+        schedule: taskScheduleForChild(parent),
         branchMode: "same"
       });
     }

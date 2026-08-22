@@ -46,6 +46,14 @@
     return state.tasks[taskId] || null;
   }
 
+  function taskScheduleForChild(parent) {
+    const getTaskDate = window.CherryScheduleBridge?.getTaskDate;
+    const date = typeof getTaskDate === "function" ? getTaskDate(parent) : null;
+    return date
+      ? { type: "date", date, time: null }
+      : { type: "none", date: null, time: null };
+  }
+
   function escapeId(taskId) {
     return window.CSS?.escape ? CSS.escape(taskId) : String(taskId).replace(/"/g, "\\\"");
   }
@@ -69,6 +77,7 @@
   }
 
   function targetDateFor(event) {
+    if (!state.showLanes) return null;
     if (typeof getDateForPointer === "function") return getDateForPointer(event);
     return typeof todayISO === "function" ? todayISO() : new Date().toISOString().slice(0, 10);
   }
@@ -172,11 +181,15 @@
 
   function openCreateFromContext(context) {
     closeChoice();
-    openCreateTaskModal({
+    const options = {
       parentId: context.sourceId,
-      targetAt: context.targetAt,
       branchMode: context.branchMode || "branch"
-    });
+    };
+
+    if (context.schedule) options.schedule = context.schedule;
+    else options.targetAt = context.targetAt;
+
+    openCreateTaskModal(options);
   }
 
   function connectTargetToSource(context) {
@@ -334,10 +347,13 @@
     event.stopPropagation();
     event.stopImmediatePropagation();
 
+    const source = task(handleDrag.sourceId);
+    const usesSpatialDate = handleDrag.moved && state.showLanes;
     const context = {
       sourceId: handleDrag.sourceId,
       targetId: handleDrag.targetId || taskAtPoint(event.clientX, event.clientY, handleDrag.sourceId),
-      targetAt: targetDateFor(event),
+      targetAt: usesSpatialDate ? targetDateFor(event) : null,
+      schedule: usesSpatialDate ? null : taskScheduleForChild(source),
       branchMode: handleDrag.branchMode,
       clientX: event.clientX,
       clientY: event.clientY,

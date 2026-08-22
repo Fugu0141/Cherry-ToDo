@@ -54,9 +54,12 @@
       && dateModal.classList.contains("hidden");
   }
 
-  function taskDateForChild(task) {
-    if (typeof getTaskDate === "function") return getTaskDate(task) || todayISO();
-    return task.targetAt || todayISO();
+  function taskScheduleForChild(task) {
+    const getTaskDate = window.CherryScheduleBridge?.getTaskDate;
+    const date = typeof getTaskDate === "function" ? getTaskDate(task) : null;
+    return date
+      ? { type: "date", date, time: null }
+      : { type: "none", date: null, time: null };
   }
 
   function runDeleteAction() {
@@ -166,7 +169,7 @@
     mobileAddParentContext = { parentId: task.id };
     openCreateTaskModal({
       parentId: task.id,
-      targetAt: taskDateForChild(task),
+      schedule: taskScheduleForChild(task),
       branchMode: "branch"
     });
     taskModalTitle.textContent = t("modal.addTask");
@@ -214,6 +217,14 @@
   [taskCancelBtn, taskSaveBtn, dateCancelBtn, dateSaveBtn].forEach(button => {
     button.addEventListener("click", () => requestAnimationFrame(updateMobileActionBar));
   });
+
+  if (toggleLanesBtn) {
+    toggleLanesBtn.addEventListener("click", () => {
+      if (!mobileActionQuery.matches || !state.showLanes) return;
+      if (typeof branchLayout === "function") branchLayout();
+      requestRender();
+    });
+  }
 
   board.addEventListener("scroll", updateMobileActionBar, { passive: true });
   mobileActionQuery.addEventListener("change", updateMobileActionBar);
