@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { makeIcs, parseIcsTodos } from "../src/core/ics.js";
+import { makeIcs, makeTabFromIcs, parseIcsTodos } from "../src/core/ics.js";
 
 function calendar(...todos) {
   return [
@@ -75,6 +75,60 @@ test("missing SUMMARY keeps the existing numbered fallback", () => {
 
   assert.equal(tasks[0].title, "Task 1");
   assert.equal(tasks[1].title, "Task 2");
+});
+
+test("Core builds the current one-tab ICS import shape with canonical schedules", () => {
+  const ids = ["task-undated", "task-dated", "tab-imported"];
+  const importedAt = "2026-08-23T01:10:00.000Z";
+  const tab = makeTabFromIcs(calendar(
+    todo("SUMMARY:No date", "STATUS:NEEDS-ACTION"),
+    todo("SUMMARY:Dated", "DUE;VALUE=DATE:20260830", "STATUS:COMPLETED")
+  ), "calendar.ics", {
+    makeId: () => ids.shift(),
+    now: () => importedAt
+  });
+
+  assert.equal(tab.id, "tab-imported");
+  assert.equal(tab.name, "calendar");
+  assert.equal(tab.systemNameKey, null);
+  assert.equal(tab.updatedAt, importedAt);
+  assert.equal(tab.state.showLanes, true);
+  assert.equal(tab.state.viewMode, "board");
+
+  assert.deepEqual(tab.state.tasks["task-undated"], {
+    id: "task-undated",
+    title: "No date",
+    parentId: null,
+    x: 0,
+    y: 0,
+    schedule: { type: "none", date: null, time: null },
+    targetAt: null,
+    status: "todo",
+    branchMode: null
+  });
+
+  assert.deepEqual(tab.state.tasks["task-dated"], {
+    id: "task-dated",
+    title: "Dated",
+    parentId: null,
+    x: 0,
+    y: 0,
+    schedule: { type: "date", date: "2026-08-30", time: null },
+    targetAt: "2026-08-30",
+    status: "done",
+    branchMode: null
+  });
+});
+
+test("Core ICS tab construction keeps the legacy filename fallback", () => {
+  const ids = ["tab-imported"];
+  const tab = makeTabFromIcs(calendar(), "", {
+    makeId: () => ids.shift(),
+    now: () => "2026-08-23T01:10:00.000Z"
+  });
+
+  assert.equal(tab.name, "iCalendar");
+  assert.deepEqual(tab.state.tasks, {});
 });
 
 test("canonical unscheduled survives Cherry ICS export and Core import", () => {
