@@ -254,7 +254,9 @@
       const label = document.createElement("div");
       label.className = `laneLabel ${tone} ${collapsible ? "completeDate" : ""} ${collapsed ? "collapsedDate" : ""} ${isTodayLine ? "todayLabel" : ""} ${isMonthStart ? "monthStart" : ""}`;
       label.innerHTML = collapsed
-        ? `<div class="laneMonthTitle">${parts.monthName}</div><div class="laneDay">${parts.day}</div><div class="laneStatus">完了 ${count}</div>`
+        ? isMonthStart
+          ? `<div class="laneMonthTitle">${parts.monthName}</div><div class="laneDay">${parts.day}</div><div class="laneStatus">完了 ${count}</div>`
+          : `<div class="laneDay">${parts.day}</div><div class="laneStatus">完了 ${count}</div>`
         : isMonthStart
           ? `<div class="laneMonthMarker">${parts.monthName}</div><div class="laneDay">${parts.day}</div>`
           : `<div class="laneDay">${parts.day}</div><div class="laneMonth">${parts.monthName}</div>`;
