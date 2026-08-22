@@ -19,15 +19,31 @@
     return noteH + 34;
   }
 
-  function dateMetricsKey() {
-    return getLaneDates().join("|");
+  function completedDateState(date) {
+    const getState = window.CherryCompletedDateCollapse?.getState;
+    return typeof getState === "function" ? getState(date) : null;
   }
 
-  function sameDayLaneWidth(maxColumn) {
+  function toggleCompletedDate(date) {
+    const toggleDate = window.CherryCompletedDateCollapse?.toggleDate;
+    return typeof toggleDate === "function" ? toggleDate(date) : false;
+  }
+
+  function dateMetricsKey() {
+    return getLaneDates()
+      .map(date => `${date}:${completedDateState(date)?.collapsed ? 1 : 0}`)
+      .join("|");
+  }
+
+  function sameDayLaneWidth(date, maxColumn) {
+    const state = completedDateState(date);
+    if (state?.collapsed) return state.horizontalSpan;
     return Math.max(hDateGap, 34 + noteW + maxColumn * sameDayStepX() + 62);
   }
 
-  function sameDayLaneHeight(maxColumn) {
+  function sameDayLaneHeight(date, maxColumn) {
+    const state = completedDateState(date);
+    if (state?.collapsed) return state.verticalSpan;
     return Math.max(vDateGap, vTaskTopOffset + noteH + maxColumn * sameDayStepY() + 54);
   }
 
@@ -88,7 +104,7 @@
     const hWidths = new Map();
     let hCursor = hAxisLeft;
     for (const date of lanes) {
-      const width = sameDayLaneWidth(maxColumns.get(date) ?? 0);
+      const width = sameDayLaneWidth(date, maxColumns.get(date) ?? 0);
       hStarts.set(date, hCursor);
       hWidths.set(date, width);
       hCursor += width;
@@ -98,7 +114,7 @@
     const vHeights = new Map();
     let vCursor = vAxisTop;
     for (const date of lanes) {
-      const height = sameDayLaneHeight(maxColumns.get(date) ?? 0);
+      const height = sameDayLaneHeight(date, maxColumns.get(date) ?? 0);
       vStarts.set(date, vCursor);
       vHeights.set(date, height);
       vCursor += height;
@@ -222,19 +238,36 @@
       const isMonthStart = index === 0 || !sameMonth(prev, date);
       const isTodayBand = date === activeDate;
       const isTodayLine = date === todayISO();
+      const completedState = completedDateState(date);
+      const collapsed = completedState?.collapsed === true;
+      const collapsible = completedState?.collapsible === true;
+      const tone = completedState?.tone || "";
+      const count = completedState?.count ?? 0;
       const parts = formatDateParts(date);
 
       const band = document.createElement("div");
-      band.className = `laneBand ${isTodayBand ? "todayBand" : ""} ${hotLaneDate === date ? "highlight" : ""}`;
+      band.className = `laneBand ${tone} ${collapsed ? "collapsedLane" : ""} ${isTodayBand ? "todayBand" : ""} ${hotLaneDate === date ? "highlight" : ""}`;
 
       const line = document.createElement("div");
-      line.className = `laneLine ${isTodayLine ? "todayLine" : ""} ${hotLineDate === date ? "hot" : ""}`;
+      line.className = `laneLine ${tone} ${collapsed ? "collapsedLane" : ""} ${isTodayLine ? "todayLine" : ""} ${hotLineDate === date ? "hot" : ""}`;
 
       const label = document.createElement("div");
-      label.className = `laneLabel ${isTodayLine ? "todayLabel" : ""} ${isMonthStart ? "monthStart" : ""}`;
-      label.innerHTML = isMonthStart
-        ? `<div class="laneMonthMarker">${parts.monthName}</div><div class="laneDay">${parts.day}</div>`
-        : `<div class="laneDay">${parts.day}</div><div class="laneMonth">${parts.monthName}</div>`;
+      label.className = `laneLabel ${tone} ${collapsible ? "completeDate" : ""} ${collapsed ? "collapsedDate" : ""} ${isTodayLine ? "todayLabel" : ""} ${isMonthStart ? "monthStart" : ""}`;
+      label.innerHTML = collapsed
+        ? isMonthStart
+          ? `<div class="laneMonthTitle">${parts.monthName}</div><div class="laneDay">${parts.day}</div><div class="laneStatus">完了 ${count}</div>`
+          : `<div class="laneDay">${parts.day}</div><div class="laneStatus">完了 ${count}</div>`
+        : isMonthStart
+          ? `<div class="laneMonthMarker">${parts.monthName}</div><div class="laneDay">${parts.day}</div>`
+          : `<div class="laneDay">${parts.day}</div>`;
+
+      if (collapsible) {
+        label.title = collapsed ? "クリックで完了タスクを展開" : "クリックで完了タスクを折り畳み";
+        label.addEventListener("click", event => {
+          event.stopPropagation();
+          toggleCompletedDate(date);
+        });
+      }
 
       if (isVerticalMode()) {
         const y = vDateLineY(date);
