@@ -1,10 +1,5 @@
 (() => {
   const recentHitKey = "questStickyRecentDateHit";
-  const originalOpenCreateTaskModal = typeof openCreateTaskModal === "function" ? openCreateTaskModal : null;
-  const originalOpenChangeDateModal = typeof openChangeDateModal === "function" ? openChangeDateModal : null;
-
-  let recentHit = null;
-  let recentHitAt = 0;
 
   function formatUTCDateKey(date) {
     const year = date.getUTCFullYear();
@@ -29,10 +24,9 @@
   }
 
   function remember(hit, anchor, boundaryIndex = null) {
-    recentHit = hit;
-    recentHitAt = Date.now();
+    const at = Date.now();
     try {
-      window[recentHitKey] = { ...hit, anchor, boundaryIndex, at: recentHitAt };
+      window[recentHitKey] = { ...hit, anchor, boundaryIndex, at };
     } catch (_) {}
 
     const hud = document.getElementById("dateDebugHud");
@@ -114,13 +108,6 @@
     return makeBlankHit(lanes);
   }
 
-  function isFreshAskHit(hit, at, defaultDate = null) {
-    if (!hit || !hit.targetDate || hit.mode !== "ask") return false;
-    if (Date.now() - at < 5000) return true;
-    if (!defaultDate || !hit.date) return false;
-    return normalizeDate(defaultDate) === normalizeDate(hit.date);
-  }
-
   hitTestDateArea = function(noteMainStart) {
     const size = isVerticalMode() ? noteH : noteW;
     const anchor = noteMainStart + size / 2;
@@ -171,23 +158,4 @@
     event.stopPropagation();
     event.stopImmediatePropagation();
   }, true);
-
-  if (originalOpenCreateTaskModal) {
-    openCreateTaskModal = function(options = {}) {
-      const next = { ...options };
-      const hit = recentHit || window[recentHitKey];
-      const at = recentHitAt || hit?.at || 0;
-      if (next.parentId && isFreshAskHit(hit, at)) next.targetAt = hit.targetDate;
-      return originalOpenCreateTaskModal(next);
-    };
-  }
-
-  if (originalOpenChangeDateModal) {
-    openChangeDateModal = function(taskId, defaultDate, original) {
-      const hit = recentHit || window[recentHitKey];
-      const at = recentHitAt || hit?.at || 0;
-      const fixedDate = isFreshAskHit(hit, at, defaultDate) ? hit.targetDate : defaultDate;
-      return originalOpenChangeDateModal(taskId, fixedDate, original);
-    };
-  }
 })();
