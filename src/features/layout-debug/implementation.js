@@ -6,17 +6,24 @@
     return Number.isFinite(value) ? Math.max(0, Math.round(value)) : 0;
   }
 
+  function taskDate(task) {
+    const getTaskDate = window.CherryScheduleBridge?.getTaskDate;
+    return typeof getTaskDate === "function" ? getTaskDate(task) : null;
+  }
+
   function readSlot(task) {
-    const date = normalizeDate(task.targetAt);
+    const date = taskDate(task);
     const vertical = isVerticalMode();
 
     const track = vertical
       ? roundSlot((task.x - vTrackLeft) / vTrackGap)
       : roundSlot((task.y - hTrackTop) / hTrackGap);
 
-    const dayColumn = vertical
-      ? roundSlot((task.y - vDateToY(date)) / sameDayStepY())
-      : roundSlot((task.x - hDateToX(date)) / sameDayStepX());
+    const dayColumn = date === null
+      ? 0
+      : vertical
+        ? roundSlot((task.y - vDateToY(date)) / sameDayStepY())
+        : roundSlot((task.x - hDateToX(date)) / sameDayStepX());
 
     return { date, track, dayColumn };
   }
@@ -43,7 +50,7 @@
     const rows = getTasks()
       .map(summarizeTask)
       .sort((a, b) => {
-        const dateDiff = a.date.localeCompare(b.date);
+        const dateDiff = (a.date || "9999-12-31").localeCompare(b.date || "9999-12-31");
         if (dateDiff !== 0) return dateDiff;
         if (a.dayColumn !== b.dayColumn) return a.dayColumn - b.dayColumn;
         if (a.track !== b.track) return a.track - b.track;
@@ -55,7 +62,8 @@
   function collisions() {
     const groups = new Map();
     for (const row of slots()) {
-      const key = `${row.date}:${row.dayColumn}:${row.track}`;
+      const dateKey = row.date || "none";
+      const key = `${dateKey}:${row.dayColumn}:${row.track}`;
       if (!groups.has(key)) groups.set(key, []);
       groups.get(key).push(row);
     }
@@ -68,7 +76,8 @@
   function gaps() {
     const groups = new Map();
     for (const row of slots()) {
-      const key = `${row.date}:${row.dayColumn}`;
+      const dateKey = row.date || "none";
+      const key = `${dateKey}:${row.dayColumn}`;
       if (!groups.has(key)) groups.set(key, []);
       groups.get(key).push(row.track);
     }
