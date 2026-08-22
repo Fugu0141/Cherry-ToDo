@@ -3,6 +3,12 @@
   const workspace = window.cherryWorkspace;
   if (!extensions || !workspace) return;
 
+  const emptyIcsShell = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "END:VCALENDAR"
+  ].join("\r\n");
+
   function hasEncryptedExportCrypto() {
     return typeof window.crypto?.getRandomValues === "function"
       && Boolean(window.crypto?.subtle);
@@ -28,6 +34,16 @@
     Object.assign(target, source);
   }
 
+  function makeLegacyIcsShellFile(file) {
+    return {
+      name: String(file?.name || "import.ics"),
+      type: file?.type || "text/calendar",
+      async text() {
+        return emptyIcsShell;
+      }
+    };
+  }
+
   async function importWorkspaceWithCoreIcs(file) {
     const nativeImport = workspace.importWorkspace;
     if (typeof nativeImport !== "function") return;
@@ -47,7 +63,10 @@
     const beforeWorkspace = workspace.getWorkspace?.();
     const beforeTabIds = new Set((beforeWorkspace?.tabs || []).map(tab => tab.id));
 
-    await nativeImport(file);
+    // Keep the legacy importer only for its import-mode/workspace shell. The real
+    // VTODO payload is parsed exclusively by Core, so the local parser no longer
+    // constructs temporary legacy tasks that are immediately discarded.
+    await nativeImport(makeLegacyIcsShellFile(file));
 
     const afterWorkspace = workspace.getWorkspace?.();
     const importedTabs = (afterWorkspace?.tabs || []).filter(tab => !beforeTabIds.has(tab.id));
@@ -56,9 +75,6 @@
       return;
     }
 
-    // Migration bridge: preserve the legacy import-mode/workspace shell while making
-    // Core the source of truth for the imported ICS task state. The local VTODO parser
-    // in tab-manager.js can be removed once that shell delegates directly to Core.
     workspace.updateTabState?.(importedTabs[0].id, tabState => {
       replaceTabState(tabState, coreTab.state);
     });
