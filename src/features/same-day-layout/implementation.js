@@ -259,7 +259,7 @@
           : `<div class="laneDay">${parts.day}</div><div class="laneStatus">完了 ${count}</div>`
         : isMonthStart
           ? `<div class="laneMonthMarker">${parts.monthName}</div><div class="laneDay">${parts.day}</div>`
-          : `<div class="laneDay">${parts.day}</div><div class="laneMonth">${parts.monthName}</div>`;
+          : `<div class="laneDay">${parts.day}</div>`;
 
       if (collapsible) {
         label.title = collapsed ? "クリックで完了タスクを展開" : "クリックで完了タスクを折り畳み";
