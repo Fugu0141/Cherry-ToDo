@@ -61,6 +61,12 @@
     return typeof getTaskDate === "function" ? getTaskDate(task) : null;
   }
 
+  function taskLayoutDate(task) {
+    const getTaskDate = window.CherryScheduleBridge?.getTaskDate;
+    if (typeof getTaskDate === "function") return getTaskDate(task) || todayISO();
+    return normalizeDate(task?.targetAt);
+  }
+
   function sameTaskDate(a, b) {
     const aDate = taskDate(a);
     const bDate = taskDate(b);
@@ -96,7 +102,8 @@
     const maxColumns = new Map(lanes.map(date => [date, 0]));
 
     for (const task of getTasks()) {
-      const date = normalizeDate(task.targetAt);
+      const date = taskDate(task);
+      if (!date) continue;
       maxColumns.set(date, Math.max(maxColumns.get(date) ?? 0, task._dayColumn ?? 0));
     }
 
@@ -177,13 +184,13 @@
     const sameDayColumn = task._dayColumn ?? 0;
     return isVerticalMode()
       ? vTrackToX(task._track ?? 0)
-      : hDateToX(task.targetAt) + sameDayColumn * sameDayStepX();
+      : hDateToX(taskLayoutDate(task)) + sameDayColumn * sameDayStepX();
   };
 
   taskY = function(task) {
     const sameDayColumn = task._dayColumn ?? 0;
     return isVerticalMode()
-      ? vDateToY(task.targetAt) + sameDayColumn * sameDayStepY()
+      ? vDateToY(taskLayoutDate(task)) + sameDayColumn * sameDayStepY()
       : hTrackToY(task._track ?? 0);
   };
 
@@ -305,7 +312,7 @@
     const tasks = getTasks()
       .slice()
       .sort((a, b) => {
-        const dateDiff = normalizeDate(a.targetAt).localeCompare(normalizeDate(b.targetAt));
+        const dateDiff = taskLayoutDate(a).localeCompare(taskLayoutDate(b));
         if (dateDiff !== 0) return dateDiff;
         const dayColumnDiff = (a._dayColumn ?? 0) - (b._dayColumn ?? 0);
         if (dayColumnDiff !== 0) return dayColumnDiff;
@@ -320,7 +327,7 @@
         if (!Number.isFinite(task._track)) task._track = 0;
 
         let track = task._track;
-        const date = normalizeDate(task.targetAt);
+        const date = taskLayoutDate(task);
         const dayColumn = task._dayColumn ?? 0;
         while (occupied.has(`${date}:${dayColumn}:${track}`)) track += 1;
 

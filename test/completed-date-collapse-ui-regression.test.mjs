@@ -96,14 +96,17 @@ test("collapsed completed-date labels keep their date readable in light and dark
   assert.match(collapsedStyles, /\.laneLabel\.collapsedDate \.laneStatus/);
 });
 
-test("collapse presentation reads the same Core-aware state as hidden notes and links", () => {
+test("collapse presentation and same-day layout share Core-aware date state", () => {
   assert.match(finalFixSource, /function dateCollapseState\(date\)/);
   assert.match(finalFixSource, /const tasks = tasksOnDate\(normalized\)/);
   assert.match(finalFixSource, /function isTaskCollapsed\(task\)/);
   assert.match(finalFixSource, /const date = taskDate\(task\)/);
   assert.match(sameDayLayoutSource, /CherryCompletedDateCollapse\?\.getState/);
 
-  // The coordinate/collision targetAt readers remain a separate migration concern.
-  assert.match(sameDayLayoutSource, /hDateToX\(task\.targetAt\)/);
-  assert.match(sameDayLayoutSource, /normalizeDate\(a\.targetAt\)/);
+  assert.match(sameDayLayoutSource, /function taskLayoutDate\(task\)/);
+  assert.match(sameDayLayoutSource, /CherryScheduleBridge\?\.getTaskDate/);
+  assert.match(sameDayLayoutSource, /hDateToX\(taskLayoutDate\(task\)\)/);
+  assert.match(sameDayLayoutSource, /taskLayoutDate\(a\)\.localeCompare\(taskLayoutDate\(b\)\)/);
+  assert.doesNotMatch(sameDayLayoutSource, /hDateToX\(task\.targetAt\)/);
+  assert.doesNotMatch(sameDayLayoutSource, /normalizeDate\(a\.targetAt\)/);
 });
