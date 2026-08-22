@@ -19,16 +19,25 @@
     return schedule && typeof schedule === "object" ? schedule : null;
   }
 
-  function getTaskDate(task) {
+  function getTaskSchedule(task) {
     const coreSchedule = getScheduleModel();
-    if (typeof coreSchedule?.normalizeSchedule === "function" && typeof coreSchedule?.scheduleDate === "function") {
-      return coreSchedule.scheduleDate(coreSchedule.normalizeSchedule(task?.schedule, task?.targetAt));
+    if (typeof coreSchedule?.normalizeSchedule === "function") {
+      return coreSchedule.normalizeSchedule(task?.schedule, task?.targetAt);
     }
 
     // The module bootstrap is deferred. Preserve early legacy startup by using
     // the existing pure normalizer until Core is synchronously available.
     if (typeof window.normalizeSchedule !== "function") return null;
-    const normalized = window.normalizeSchedule(task?.schedule, task?.targetAt);
+    return window.normalizeSchedule(task?.schedule, task?.targetAt);
+  }
+
+  function getTaskDate(task) {
+    const normalized = getTaskSchedule(task);
+    const coreSchedule = getScheduleModel();
+    if (typeof coreSchedule?.scheduleDate === "function") {
+      return coreSchedule.scheduleDate(normalized);
+    }
+
     return normalized && (normalized.type === "date" || normalized.type === "datetime")
       ? normalized.date
       : null;
@@ -45,7 +54,7 @@
     return [...dates].sort((a, b) => a.localeCompare(b));
   }
 
-  window.CherryScheduleBridge = Object.freeze({ getScheduleModel, getTaskDate, collectLaneDates });
+  window.CherryScheduleBridge = Object.freeze({ getScheduleModel, getTaskSchedule, getTaskDate, collectLaneDates });
 
   function installScheduleCompatibility(core) {
     const schedule = core?.schedule;
