@@ -21,7 +21,10 @@ function extractTaskScheduleForChild() {
 }
 
 function runTaskScheduleForChild(task, { withBridge = true } = {}) {
-  const window = { CherryCore: { schedule: scheduleModel } };
+  const window = {
+    CherryCore: { schedule: scheduleModel },
+    addEventListener() {}
+  };
   const context = vm.createContext({ window, task, result: undefined });
 
   if (withBridge) vm.runInContext(bridgeSource, context);
