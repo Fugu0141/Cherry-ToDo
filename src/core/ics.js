@@ -8,6 +8,14 @@ export function escapeIcs(value) {
     .replace(/\n/g, "\\n");
 }
 
+export function unescapeIcs(value) {
+  return String(value || "")
+    .replace(/\\n/g, "\n")
+    .replace(/\\,/g, ",")
+    .replace(/\\;/g, ";")
+    .replace(/\\\\/g, "\\");
+}
+
 export function makeIcs(sourceWorkspace, { getTabName = tab => tab?.name || "" } = {}) {
   const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Cherry//Cherry v0.1//EN"];
 
@@ -31,7 +39,31 @@ export function makeIcs(sourceWorkspace, { getTabName = tab => tab?.name || "" }
   return lines.join("\r\n");
 }
 
+function scheduleFromIcsDue(due) {
+  if (!due) return scheduleModel.makeScheduleNone();
+  const date = `${due.slice(0, 4)}-${due.slice(4, 6)}-${due.slice(6, 8)}`;
+  return scheduleModel.makeScheduleDate(date);
+}
+
+export function parseIcsTodos(text) {
+  const blocks = String(text || "").split(/BEGIN:VTODO/i).slice(1);
+
+  return blocks.map((block, index) => {
+    const content = block.split(/END:VTODO/i)[0] || "";
+    const summary = content.match(/^SUMMARY:(.*)$/mi)?.[1];
+    const due = content.match(/^DUE(?:;VALUE=DATE)?:(\d{8})/mi)?.[1] || null;
+
+    return {
+      title: unescapeIcs(summary || `Task ${index + 1}`),
+      schedule: scheduleFromIcsDue(due),
+      status: /STATUS:COMPLETED/i.test(content) ? "done" : "todo"
+    };
+  });
+}
+
 export const icsModel = Object.freeze({
   escapeIcs,
-  makeIcs
+  unescapeIcs,
+  makeIcs,
+  parseIcsTodos
 });
