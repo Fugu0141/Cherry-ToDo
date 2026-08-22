@@ -24,9 +24,12 @@ function loadLayout({ parent, child, schedule = scheduleModel, withBridge = true
   const warnings = [];
   const columns = new Map();
   const positions = new Map();
-  const laneDates = [...new Set(
-    tasks.flatMap(task => [legacyDate(task.targetAt), effectiveDate(task)]).filter(Boolean)
-  )].sort((a, b) => a.localeCompare(b));
+  const today = "2026-08-23";
+  const laneDates = [...new Set(tasks.map(effectiveDate).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b));
+  const expectedLayoutDate = task => withBridge
+    ? (effectiveDate(task) || today)
+    : legacyDate(task.targetAt);
 
   const window = {
     CherryCore: { schedule },
@@ -67,6 +70,9 @@ function loadLayout({ parent, child, schedule = scheduleModel, withBridge = true
       return 0;
     },
     normalizeDate: legacyDate,
+    todayISO() {
+      return today;
+    },
     refreshLaneDates() {},
     getLayoutMode() {
       return vertical ? "vertical" : "horizontal";
@@ -89,11 +95,13 @@ function loadLayout({ parent, child, schedule = scheduleModel, withBridge = true
         columns.set(task.id, task._dayColumn ?? 0);
         const x = context.taskX(task);
         const y = context.taskY(task);
+        const layoutDate = expectedLayoutDate(task);
         positions.set(task.id, {
           x,
           y,
-          baseX: context.hDateToX(task.targetAt),
-          baseY: context.vDateToY(task.targetAt)
+          layoutDate,
+          baseX: context.hDateToX(layoutDate),
+          baseY: context.vDateToY(layoutDate)
         });
         task.x = x;
         task.y = y;
@@ -114,7 +122,7 @@ function loadLayout({ parent, child, schedule = scheduleModel, withBridge = true
   if (withBridge) vm.runInContext(bridgeSource, context);
   vm.runInContext(featureSource, context);
 
-  return { columns, positions, warnings };
+  return { columns, positions, warnings, laneDates };
 }
 
 function cloneScheduleState(task) {
@@ -124,7 +132,7 @@ function cloneScheduleState(task) {
   };
 }
 
-test("same-day layout column assignment uses Core schedule precedence and preserves layout geometry formulas", () => {
+test("same-day layout readers use Core schedule precedence while preserving layout geometry formulas", () => {
   const calls = { normalize: 0, date: 0 };
   const coreSchedule = {
     ...scheduleModel,
@@ -154,12 +162,15 @@ test("same-day layout column assignment uses Core schedule precedence and preser
   const horizontal = loadLayout({ parent, child, schedule: coreSchedule });
 
   assert.deepEqual(horizontal.warnings, []);
+  assert.deepEqual(horizontal.laneDates, ["2026-08-24"]);
   assert.equal(horizontal.columns.get("parent"), 0);
   assert.equal(horizontal.columns.get("child"), 1);
+  assert.equal(horizontal.positions.get("child").layoutDate, "2026-08-24");
+  assert.equal(horizontal.positions.get("child").baseX, 94);
   assert.equal(horizontal.positions.get("child").x - horizontal.positions.get("child").baseX, 224);
   assert.equal(horizontal.positions.get("child").y, 280);
-  assert.equal(calls.normalize, 2);
-  assert.equal(calls.date, 2);
+  assert.ok(calls.normalize > 2);
+  assert.ok(calls.date > 2);
   assert.deepEqual(cloneScheduleState(parent), parentBefore);
   assert.deepEqual(cloneScheduleState(child), childBefore);
 
@@ -169,11 +180,12 @@ test("same-day layout column assignment uses Core schedule precedence and preser
 
   assert.deepEqual(vertical.warnings, []);
   assert.equal(vertical.columns.get("child"), 1);
+  assert.equal(vertical.positions.get("child").layoutDate, "2026-08-24");
   assert.equal(vertical.positions.get("child").x, 300);
   assert.equal(vertical.positions.get("child").y - vertical.positions.get("child").baseY, 124);
 });
 
-test("canonical none does not become same-day from a stale matching targetAt", () => {
+test("canonical none does not create a stale date lane and keeps the temporary today-coordinate fallback", () => {
   const parent = {
     id: "parent",
     schedule: { type: "none", date: null, time: null },
@@ -188,8 +200,11 @@ test("canonical none does not become same-day from a stale matching targetAt", (
   const result = loadLayout({ parent, child });
 
   assert.deepEqual(result.warnings, []);
+  assert.deepEqual(result.laneDates, ["2026-08-25"]);
   assert.equal(result.columns.get("parent"), 0);
   assert.equal(result.columns.get("child"), 0);
+  assert.equal(result.positions.get("parent").layoutDate, "2026-08-23");
+  assert.equal(result.positions.get("child").layoutDate, "2026-08-25");
   assert.equal(result.positions.get("child").x - result.positions.get("child").baseX, 0);
 });
 
@@ -200,11 +215,13 @@ test("legacy-only matching targetAt values retain same-day column behavior", () 
   const result = loadLayout({ parent, child });
 
   assert.deepEqual(result.warnings, []);
+  assert.deepEqual(result.laneDates, ["2026-08-26"]);
   assert.equal(result.columns.get("child"), 1);
+  assert.equal(result.positions.get("child").layoutDate, "2026-08-26");
   assert.equal(result.positions.get("child").x - result.positions.get("child").baseX, 224);
 });
 
-test("missing schedule bridge degrades to separate columns instead of legacy equality", () => {
+test("missing schedule bridge keeps legacy coordinate fallback while same-day equality stays conservative", () => {
   const parent = { id: "parent", targetAt: "2026-08-27" };
   const child = { id: "child", targetAt: "2026-08-27" };
 
@@ -212,18 +229,24 @@ test("missing schedule bridge degrades to separate columns instead of legacy equ
 
   assert.deepEqual(result.warnings, []);
   assert.equal(result.columns.get("child"), 0);
+  assert.equal(result.positions.get("parent").layoutDate, "2026-08-27");
+  assert.equal(result.positions.get("child").layoutDate, "2026-08-27");
 });
 
-test("only the same-day column equality reader is migrated in this focused change", () => {
+test("remaining same-day task-date reads route through the Core bridge", () => {
   const start = featureSource.indexOf("function assignSameDayColumns");
-  const end = featureSource.indexOf("function updateLaneMetrics");
-  const columnAssignmentSource = featureSource.slice(start, end);
+  const end = featureSource.indexOf("function ensureContentSize");
+  const scheduleAwareLayoutSource = featureSource.slice(start, end);
 
   assert.match(featureSource, /CherryScheduleBridge\?\.getTaskDate/);
-  assert.match(columnAssignmentSource, /sameTaskDate\(child, task\)/);
-  assert.doesNotMatch(columnAssignmentSource, /targetAt/);
-
-  // Other legacy layout readers intentionally remain for later focused PRs.
-  assert.match(featureSource, /normalizeDate\(task\.targetAt\)/);
-  assert.match(featureSource, /hDateToX\(task\.targetAt\)/);
+  assert.match(featureSource, /function taskLayoutDate\(task\)/);
+  assert.match(featureSource, /getTaskDate\(task\) \|\| todayISO\(\)/);
+  assert.match(scheduleAwareLayoutSource, /sameTaskDate\(child, task\)/);
+  assert.match(scheduleAwareLayoutSource, /const date = taskDate\(task\)/);
+  assert.match(scheduleAwareLayoutSource, /hDateToX\(taskLayoutDate\(task\)\)/);
+  assert.match(scheduleAwareLayoutSource, /vDateToY\(taskLayoutDate\(task\)\)/);
+  assert.doesNotMatch(featureSource, /normalizeDate\(task\.targetAt\)/);
+  assert.doesNotMatch(featureSource, /hDateToX\(task\.targetAt\)/);
+  assert.doesNotMatch(featureSource, /vDateToY\(task\.targetAt\)/);
+  assert.match(featureSource, /return normalizeDate\(task\?\.targetAt\);/);
 });
