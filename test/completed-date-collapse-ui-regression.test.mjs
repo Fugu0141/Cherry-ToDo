@@ -51,6 +51,8 @@ test("collapsed labels only repeat the month at a real month boundary", () => {
   const renderEnd = sameDayLayoutSource.indexOf("resolveTrackCollisions = function() {");
   const renderSource = sameDayLayoutSource.slice(renderStart, renderEnd);
 
+  // 8/22 -> collapsed 8/23 must keep Aug on 8/22 only.
+  // 8/31 -> collapsed 9/1 must show Sep because the month actually changed.
   assert.match(renderSource, /const isMonthStart = index === 0 \|\| !sameMonth\(prev, date\)/);
   assert.match(renderSource, /label\.innerHTML = collapsed\s*\? isMonthStart/);
   assert.match(
