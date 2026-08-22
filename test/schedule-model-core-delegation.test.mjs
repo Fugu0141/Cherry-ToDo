@@ -7,7 +7,7 @@ import { scheduleModel } from "../src/core/schedule.js";
 
 const source = readFileSync(new URL("../schedule-model.js", import.meta.url), "utf8");
 const helperStart = source.indexOf("  function coreScheduleModel()");
-const helperEnd = source.indexOf("\n\n  function getLegacyTargetAt", helperStart);
+const helperEnd = source.indexOf("\n\n  function installTargetAtAccessor", helperStart);
 
 assert.notEqual(helperStart, -1, "Core schedule accessor must exist");
 assert.notEqual(helperEnd, -1, "pure helper boundary must remain stable");
