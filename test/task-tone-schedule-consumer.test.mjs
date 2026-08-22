@@ -20,7 +20,10 @@ const taskDateSource = extractFunction("taskDate(task) {", "\n\n  function tasks
 const taskToneSource = extractFunction("taskToneClass(task) {", "\n\n  function collectRelatedIds");
 
 function tone(task, { withBridge = true } = {}) {
-  const window = { CherryCore: { schedule: scheduleModel } };
+  const window = {
+    CherryCore: { schedule: scheduleModel },
+    addEventListener() {}
+  };
   const context = vm.createContext({
     window,
     task,
