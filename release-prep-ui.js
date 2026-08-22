@@ -170,13 +170,6 @@
       openEditTaskModal = function localizedEditTaskModal(taskId) {
         baseOpenEdit(taskId);
 
-        const task = typeof state !== "undefined" ? state.tasks?.[taskId] : null;
-        const getTaskDate = window.CherryScheduleBridge?.getTaskDate;
-        const taskDateInput = document.getElementById("taskDateInput");
-        if (task && taskDateInput && typeof getTaskDate === "function") {
-          taskDateInput.value = getTaskDate(task) || "";
-        }
-
         const title = document.getElementById("taskModalTitle");
         if (title) {
           title.dataset.i18nDynamicKey = "modal.editTask";
