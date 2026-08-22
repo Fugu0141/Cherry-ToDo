@@ -2,7 +2,9 @@
   const baseMakeTask = makeTask;
   const baseMakeInitialState = makeInitialState;
   const baseSaveNow = saveNow;
-  let rootCreateUsesLegacyTodayDefault = false;
+  const baseSaveTaskModal = typeof saveTaskModal === "function" ? saveTaskModal : null;
+  const baseSaveDateModal = typeof saveDateModal === "function" ? saveDateModal : null;
+  let legacyRootAddClickPending = false;
 
   function isValidISODate(value) {
     if (typeof value !== "string") return false;
@@ -165,6 +167,18 @@
     return fresh ? targetDate : fallbackDate;
   }
 
+  function installCurrentModalSaveHandlers() {
+    if (baseSaveTaskModal && typeof taskSaveBtn !== "undefined" && taskSaveBtn) {
+      taskSaveBtn.removeEventListener("click", baseSaveTaskModal);
+      taskSaveBtn.addEventListener("click", () => saveTaskModal());
+    }
+
+    if (baseSaveDateModal && typeof dateSaveBtn !== "undefined" && dateSaveBtn) {
+      dateSaveBtn.removeEventListener("click", baseSaveDateModal);
+      dateSaveBtn.addEventListener("click", () => saveDateModal());
+    }
+  }
+
   window.isValidISODate = isValidISODate;
   window.isValidTime = isValidTime;
   window.makeScheduleNone = makeScheduleNone;
@@ -296,8 +310,8 @@
   };
 
   openCreateTaskModal = function openCreateTaskModalWithSchedule({ parentId = null, targetAt, schedule, branchMode = "same" } = {}) {
-    const useUndatedDefault = rootCreateUsesLegacyTodayDefault && parentId === null && schedule === undefined;
-    rootCreateUsesLegacyTodayDefault = false;
+    const useUndatedDefault = legacyRootAddClickPending && parentId === null && schedule === undefined;
+    legacyRootAddClickPending = false;
     const initialTargetAt = useUndatedDefault || (targetAt === undefined && schedule === undefined) ? null : targetAt;
     let nextSchedule = normalizeSchedule(schedule, initialTargetAt);
     const nextDate = getTaskDate({ schedule: nextSchedule, targetAt: scheduleDate(nextSchedule) });
@@ -315,9 +329,14 @@
     requestAnimationFrame(() => taskNameInput.focus({ preventScroll: true }));
   };
 
-  if (addRootBtn) {
+  if (typeof addRootBtn !== "undefined" && addRootBtn) {
+    // app.js still has an anonymous root-add listener that supplies todayISO().
+    // Mark only that click so the legacy default is distinguishable from an explicit request for today.
     addRootBtn.addEventListener("click", () => {
-      rootCreateUsesLegacyTodayDefault = true;
+      legacyRootAddClickPending = true;
+      queueMicrotask(() => {
+        legacyRootAddClickPending = false;
+      });
     }, true);
   }
 
@@ -394,6 +413,7 @@
     requestRender();
   };
 
+  installCurrentModalSaveHandlers();
   normalizeAllTasks();
   refreshLaneDates();
   branchLayout();
