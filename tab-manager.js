@@ -663,7 +663,7 @@
       const format = await askExportFormat();
       if (!format) return;
       if (format === "ics") {
-        downloadText(`cherry-tasks-${new Date().toISOString().slice(0, 10)}.ics`, makeIcs(workspace), "text/calendar");
+        downloadText(`cherry-tasks-${new Date().toISOString().slice(0, 10)}.ics`, await makeIcs(workspace), "text/calendar");
         setStartStatus(copy("exported"));
         return;
       }
@@ -744,30 +744,13 @@
     }
   }
 
-  function escapeIcs(value) {
-    return String(value || "")
-      .replace(/\\/g, "\\\\")
-      .replace(/;/g, "\\;")
-      .replace(/,/g, "\\,")
-      .replace(/\n/g, "\\n");
-  }
-
-  function makeIcs(sourceWorkspace) {
-    const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Cherry//Cherry v0.1//EN"];
-    sourceWorkspace.tabs.forEach(tab => {
-      Object.values(tab.state?.tasks || {}).forEach(task => {
-        const date = String(task.targetAt || "").slice(0, 10).replace(/-/g, "");
-        lines.push("BEGIN:VTODO");
-        lines.push(`UID:${task.id}@cherry`);
-        lines.push(`SUMMARY:${escapeIcs(task.title)}`);
-        lines.push(`CATEGORIES:${escapeIcs(tabDisplayName(tab))}`);
-        if (date) lines.push(`DUE;VALUE=DATE:${date}`);
-        lines.push(`STATUS:${task.status === "done" ? "COMPLETED" : "NEEDS-ACTION"}`);
-        lines.push("END:VTODO");
-      });
-    });
-    lines.push("END:VCALENDAR");
-    return lines.join("\r\n");
+  async function makeIcs(sourceWorkspace) {
+    const core = typeof window.CherryLegacyCore?.ready === "function"
+      ? await window.CherryLegacyCore.ready()
+      : window.CherryCore;
+    const exportIcs = core?.ics?.makeIcs || window.CherryCore?.ics?.makeIcs;
+    if (typeof exportIcs !== "function") throw new Error("Core ICS exporter unavailable");
+    return exportIcs(sourceWorkspace, { getTabName: tabDisplayName });
   }
 
   async function makeTabFromIcs(text, filename) {

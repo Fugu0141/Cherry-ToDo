@@ -13,7 +13,7 @@ function extract(startMarker, endMarker) {
 }
 
 test("tab manager delegates ICS tab construction to Core", () => {
-  const importSource = extract("async function importWorkspace(file)", "function escapeIcs");
+  const importSource = extract("async function importWorkspace(file)", "async function makeIcs(sourceWorkspace)");
   const factorySource = extract("async function makeTabFromIcs(text, filename)", "function updateTabState");
 
   assert.match(importSource, /tabs: \[await makeTabFromIcs\(text, file\.name\)\]/);
@@ -24,4 +24,19 @@ test("tab manager delegates ICS tab construction to Core", () => {
   assert.doesNotMatch(factorySource, /split\(\/BEGIN:VTODO/);
   assert.doesNotMatch(factorySource, /new Date\(\)\.toISOString\(\)\.slice\(0, 10\)/);
   assert.doesNotMatch(factorySource, /STATUS:COMPLETED/);
+});
+
+test("tab manager delegates live ICS export to Core", () => {
+  const exportSource = extract("async function exportWorkspace()", "async function askImportMode()");
+  const exporterSource = extract("async function makeIcs(sourceWorkspace)", "async function makeTabFromIcs(text, filename)");
+
+  assert.match(exportSource, /await makeIcs\(workspace\)/);
+  assert.match(exporterSource, /CherryLegacyCore\?\.ready/);
+  assert.match(exporterSource, /core\?\.ics\?\.makeIcs/);
+  assert.match(exporterSource, /exportIcs\(sourceWorkspace, \{ getTabName: tabDisplayName \}\)/);
+
+  assert.doesNotMatch(exporterSource, /task\.targetAt/);
+  assert.doesNotMatch(exporterSource, /BEGIN:VTODO/);
+  assert.doesNotMatch(exporterSource, /DUE;VALUE=DATE/);
+  assert.doesNotMatch(source, /function escapeIcs\(/);
 });
