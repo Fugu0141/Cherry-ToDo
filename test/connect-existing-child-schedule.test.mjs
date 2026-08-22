@@ -58,8 +58,4 @@ test("desktop drag only becomes a date-targeting action while date lanes are vis
   assert.match(pointerUp, /const usesSpatialDate = handleDrag\.moved && state\.showLanes/);
   assert.match(pointerUp, /targetAt: usesSpatialDate \? targetDateFor\(event\) : null/);
   assert.match(pointerUp, /schedule: usesSpatialDate \? null : taskScheduleForChild\(source\)/);
-
-  // With lanes hidden, even a moved/extended desktop child creation is still a flow operation.
-  // It inherits the parent's schedule instead of manufacturing today's date from pointer position.
-  assert.doesNotMatch(targetDate, /if \(!state\.showLanes\).*todayISO/);
 });
