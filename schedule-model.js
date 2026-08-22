@@ -4,7 +4,6 @@
   const baseSaveNow = saveNow;
   const baseSaveTaskModal = typeof saveTaskModal === "function" ? saveTaskModal : null;
   const baseSaveDateModal = typeof saveDateModal === "function" ? saveDateModal : null;
-  let legacyRootAddClickPending = false;
 
   function isValidISODate(value) {
     if (typeof value !== "string") return false;
@@ -311,9 +310,7 @@
 
   openCreateTaskModal = function openCreateTaskModalWithSchedule({ parentId = null, targetAt, schedule, branchMode = "same" } = {}) {
     const hasExplicitSchedule = schedule !== undefined;
-    const useUndatedDefault = legacyRootAddClickPending && parentId === null && !hasExplicitSchedule;
-    legacyRootAddClickPending = false;
-    const initialTargetAt = useUndatedDefault || (targetAt === undefined && !hasExplicitSchedule) ? null : targetAt;
+    const initialTargetAt = targetAt === undefined && !hasExplicitSchedule ? null : targetAt;
     let nextSchedule = normalizeSchedule(schedule, initialTargetAt);
     const nextDate = getTaskDate({ schedule: nextSchedule, targetAt: scheduleDate(nextSchedule) });
     const freshTarget = parentId && !hasExplicitSchedule ? recentAskTargetDate(nextDate) : nextDate;
@@ -331,12 +328,16 @@
   };
 
   if (typeof addRootBtn !== "undefined" && addRootBtn) {
-    // app.js still has an anonymous root-add listener that supplies todayISO().
-    // Mark only that click so the legacy default is distinguishable from an explicit request for today.
-    addRootBtn.addEventListener("click", () => {
-      legacyRootAddClickPending = true;
-      queueMicrotask(() => {
-        legacyRootAddClickPending = false;
+    // app.js still owns an anonymous root-add listener that always supplies todayISO().
+    // Intercept the toolbar action at the compatibility boundary and invoke the current
+    // modal handler with an explicit canonical unscheduled value instead.
+    addRootBtn.addEventListener("click", event => {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      openCreateTaskModal({
+        parentId: null,
+        schedule: makeScheduleNone(),
+        branchMode: "same"
       });
     }, true);
   }
