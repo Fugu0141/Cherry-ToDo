@@ -38,6 +38,11 @@ test("desktop simple-handle child creation inherits effective parent schedule", 
     schedule: { type: "date", date: "2026-08-25", time: null },
     targetAt: "2026-08-22"
   }), { type: "date", date: "2026-08-25", time: null });
+
+  assert.deepEqual(runTaskScheduleForChild({
+    schedule: { type: "datetime", date: "2026-08-26", time: "18:30" },
+    targetAt: "2026-08-22"
+  }), { type: "date", date: "2026-08-26", time: null });
 });
 
 test("implicit desktop create prefers inherited canonical schedule while drag keeps spatial date", () => {
