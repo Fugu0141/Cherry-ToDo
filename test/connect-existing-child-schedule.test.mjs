@@ -28,7 +28,7 @@ function runTaskScheduleForChild(task) {
   return JSON.parse(JSON.stringify(context.result));
 }
 
-test("desktop simple-handle child creation inherits effective parent schedule", () => {
+test("desktop child creation inherits effective parent schedule", () => {
   assert.deepEqual(runTaskScheduleForChild({
     schedule: { type: "none", date: null, time: null },
     targetAt: "2026-08-22"
@@ -45,14 +45,17 @@ test("desktop simple-handle child creation inherits effective parent schedule", 
   }), { type: "date", date: "2026-08-26", time: null });
 });
 
-test("implicit desktop create prefers inherited canonical schedule while drag keeps spatial date", () => {
+test("desktop drag only becomes a date-targeting action while date lanes are visible", () => {
   const openCreate = extractHelper("openCreateFromContext(context) {", "\n\n  function connectTargetToSource");
+  const targetDate = extractHelper("targetDateFor(event) {", "\n\n  function isAncestor");
   const pointerUpStart = source.indexOf('  window.addEventListener("pointerup"');
   const pointerUpEnd = source.indexOf('\n\n  window.addEventListener("pointercancel"', pointerUpStart);
   const pointerUp = source.slice(pointerUpStart, pointerUpEnd);
 
   assert.match(openCreate, /if \(context\.schedule\) options\.schedule = context\.schedule/);
   assert.match(openCreate, /else options\.targetAt = context\.targetAt/);
-  assert.match(pointerUp, /schedule: handleDrag\.moved \? null : taskScheduleForChild\(source\)/);
-  assert.match(pointerUp, /targetAt: targetDateFor\(event\)/);
+  assert.match(targetDate, /if \(!state\.showLanes\) return null/);
+  assert.match(pointerUp, /const usesSpatialDate = handleDrag\.moved && state\.showLanes/);
+  assert.match(pointerUp, /targetAt: usesSpatialDate \? targetDateFor\(event\) : null/);
+  assert.match(pointerUp, /schedule: usesSpatialDate \? null : taskScheduleForChild\(source\)/);
 });
