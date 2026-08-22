@@ -46,20 +46,25 @@ test("same-day layout keeps the completed-date expand/collapse affordance after 
   assert.match(renderSource, /toggleCompletedDate\(date\)/);
 });
 
-test("collapsed labels only repeat the month at a real month boundary", () => {
+test("lane labels only show the month at a real month boundary whether collapsed or expanded", () => {
   const renderStart = sameDayLayoutSource.indexOf("renderLanes = function() {");
   const renderEnd = sameDayLayoutSource.indexOf("resolveTrackCollisions = function() {");
   const renderSource = sameDayLayoutSource.slice(renderStart, renderEnd);
-  const collapsedLabelStart = renderSource.indexOf("label.innerHTML = collapsed");
-  const collapsedLabelEnd = renderSource.indexOf("if (collapsible)");
-  const collapsedLabelSource = renderSource.slice(collapsedLabelStart, collapsedLabelEnd);
+  const labelStart = renderSource.indexOf("label.innerHTML = collapsed");
+  const labelEnd = renderSource.indexOf("if (collapsible)");
+  const labelSource = renderSource.slice(labelStart, labelEnd);
 
-  // 8/22 -> collapsed 8/23 must keep Aug on 8/22 only.
-  // 8/31 -> collapsed 9/1 must show Sep because the month actually changed.
+  // 8/22 -> 8/23 must keep Aug on 8/22 only in both expanded and collapsed states.
+  // 8/31 -> 9/1 must show Sep because the month actually changed.
   assert.match(renderSource, /const isMonthStart = index === 0 \|\| !sameMonth\(prev, date\)/);
-  assert.match(collapsedLabelSource, /label\.innerHTML = collapsed\s*\? isMonthStart/);
-  assert.match(collapsedLabelSource, /laneMonthTitle/);
-  assert.match(collapsedLabelSource, /: `<div class="laneDay">\$\{parts\.day\}<\/div><div class="laneStatus">完了 \$\{count\}<\/div>`/);
+  assert.match(labelSource, /label\.innerHTML = collapsed\s*\? isMonthStart/);
+  assert.match(labelSource, /laneMonthTitle/);
+  assert.match(labelSource, /: `<div class="laneDay">\$\{parts\.day\}<\/div><div class="laneStatus">完了 \$\{count\}<\/div>`/);
+  assert.match(
+    labelSource,
+    /: isMonthStart\s*\? `<div class="laneMonthMarker">\$\{parts\.monthName\}<\/div><div class="laneDay">\$\{parts\.day\}<\/div>`\s*: `<div class="laneDay">\$\{parts\.day\}<\/div>`;/
+  );
+  assert.doesNotMatch(labelSource, /<div class="laneMonth">\$\{parts\.monthName\}<\/div>/);
 });
 
 test("collapsed completed dates use compact same-day lane metrics in both orientations", () => {
