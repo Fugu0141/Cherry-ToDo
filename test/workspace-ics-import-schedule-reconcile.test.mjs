@@ -3,8 +3,6 @@ import assert from "node:assert/strict";
 import vm from "node:vm";
 import { readFile } from "node:fs/promises";
 
-import { makeTabFromIcs } from "../src/core/ics.js";
-
 const source = await readFile(
   new URL("../src/features/workspace-transfer/registration.js", import.meta.url),
   "utf8"
@@ -19,42 +17,18 @@ function makeRegistry() {
   };
 }
 
-function clone(value) {
-  return JSON.parse(JSON.stringify(value));
-}
-
 function makeHarness({ nativeImport } = {}) {
   const exporters = makeRegistry();
   const importers = makeRegistry();
   const listeners = new Map();
-  const warnings = [];
-  const nativeFiles = [];
-  let nativeImportCalls = 0;
-  let updateCalls = 0;
-
-  const model = {
-    version: 1,
-    activeTabId: "existing",
-    tabs: [{
-      id: "existing",
-      name: "Existing",
-      state: { tasks: {} }
-    }]
-  };
+  const nativeArgs = [];
 
   const workspace = {
-    async importWorkspace(file) {
-      nativeImportCalls += 1;
-      nativeFiles.push(file);
-      if (nativeImport) return nativeImport({ file, model });
+    async importWorkspace(...args) {
+      nativeArgs.push(args);
+      return nativeImport ? nativeImport(...args) : "native-import-result";
     },
-    exportWorkspace() {},
-    getWorkspace() { return clone(model); },
-    updateTabState(tabId, updater) {
-      updateCalls += 1;
-      const tab = model.tabs.find(item => item.id === tabId);
-      if (tab) updater(tab.state);
-    }
+    exportWorkspace() {}
   };
 
   const window = {
@@ -64,8 +38,7 @@ function makeHarness({ nativeImport } = {}) {
     },
     CherryI18n: { getLanguage: () => "ja" },
     CherryCore: {
-      extensions: { exporters, importers },
-      ics: { makeTabFromIcs }
+      extensions: { exporters, importers }
     },
     cherryWorkspace: workspace
   };
@@ -78,143 +51,47 @@ function makeHarness({ nativeImport } = {}) {
   vm.runInNewContext(source, {
     window,
     document,
-    console: {
-      warn: message => warnings.push(message),
-      error() {}
-    },
+    console: { warn() {}, error() {} },
     Promise,
-    Set,
-    Object,
     String
   });
 
   return {
-    model,
     importers,
     listeners,
-    warnings,
-    nativeFiles,
-    getNativeImportCalls: () => nativeImportCalls,
-    getUpdateCalls: () => updateCalls
+    nativeArgs
   };
 }
 
-function sampleIcs() {
-  return [
-    "BEGIN:VCALENDAR",
-    "VERSION:2.0",
-    "BEGIN:VTODO",
-    "UID:no-date@cherry",
-    "SUMMARY:No date",
-    "STATUS:NEEDS-ACTION",
-    "END:VTODO",
-    "BEGIN:VTODO",
-    "UID:dated@cherry",
-    "SUMMARY:Dated",
-    "DUE;VALUE=DATE:20260830",
-    "STATUS:COMPLETED",
-    "END:VTODO",
-    "END:VCALENDAR"
-  ].join("\r\n");
-}
-
-function addLegacyShellTab(model, id = "imported") {
-  model.tabs.push({
-    id,
-    name: "calendar",
-    state: {
-      tasks: {},
-      showLanes: true,
-      viewMode: "board"
-    }
-  });
-}
-
-async function assertTaskFreeLegacyShell(file) {
-  const text = await file.text();
-  assert.match(text, /BEGIN:VCALENDAR/i);
-  assert.match(text, /END:VCALENDAR/i);
-  assert.doesNotMatch(text, /BEGIN:VTODO/i);
-  assert.doesNotMatch(text, /SUMMARY:/i);
-  assert.doesNotMatch(text, /DUE(?:;VALUE=DATE)?:/i);
-}
-
-function assertImportedStateComesFromCore(harness) {
-  const imported = harness.model.tabs.find(tab => tab.id === "imported");
-  const tasks = Object.values(imported.state.tasks);
-
-  assert.equal(tasks.length, 2);
-  assert.equal(imported.state.showLanes, true);
-  assert.equal(imported.state.viewMode, "board");
-
-  const undated = tasks.find(task => task.title === "No date");
-  const dated = tasks.find(task => task.title === "Dated");
-
-  assert.ok(undated);
-  assert.deepEqual(clone(undated.schedule), {
-    type: "none",
-    date: null,
-    time: null
-  });
-  assert.equal(undated.targetAt, null);
-  assert.equal(undated.parentId, null);
-  assert.equal(undated.x, 0);
-  assert.equal(undated.y, 0);
-  assert.equal(undated.status, "todo");
-  assert.equal(undated.branchMode, null);
-
-  assert.ok(dated);
-  assert.deepEqual(clone(dated.schedule), {
-    type: "date",
-    date: "2026-08-30",
-    time: null
-  });
-  assert.equal(dated.targetAt, "2026-08-30");
-  assert.equal(dated.parentId, null);
-  assert.equal(dated.x, 0);
-  assert.equal(dated.y, 0);
-  assert.equal(dated.status, "done");
-  assert.equal(dated.branchMode, null);
-}
-
-test("live ICS import keeps the legacy shell task-free and installs Core-built state", async () => {
-  let sourceTextCalls = 0;
-  const harness = makeHarness({
-    async nativeImport({ file, model }) {
-      await assertTaskFreeLegacyShell(file);
-      addLegacyShellTab(model);
-    }
-  });
-
+test("workspace importer registry delegates directly to the native Core-aware importer", async () => {
+  const harness = makeHarness();
+  let textCalls = 0;
   const file = {
     name: "calendar.ics",
     async text() {
-      sourceTextCalls += 1;
-      return sampleIcs();
+      textCalls += 1;
+      throw new Error("registration must not pre-read ICS files");
     }
   };
 
-  await harness.importers.get("workspace.cherry").run(file);
+  const result = await harness.importers.get("workspace.cherry").run(file, "extra-arg");
 
-  assertImportedStateComesFromCore(harness);
-  assert.equal(sourceTextCalls, 1);
-  assert.equal(harness.getNativeImportCalls(), 1);
-  assert.notEqual(harness.nativeFiles[0], file);
-  assert.equal(harness.getUpdateCalls(), 1);
-  assert.deepEqual(harness.warnings, []);
+  assert.equal(result, "native-import-result");
+  assert.equal(harness.nativeArgs.length, 1);
+  assert.equal(harness.nativeArgs[0][0], file);
+  assert.equal(harness.nativeArgs[0][1], "extra-arg");
+  assert.equal(textCalls, 0);
 });
 
-test("actual file input change routes ICS through Core without exposing VTODOs to the legacy shell", async () => {
-  const harness = makeHarness({
-    async nativeImport({ file, model }) {
-      await assertTaskFreeLegacyShell(file);
-      addLegacyShellTab(model);
-    }
-  });
-
+test("actual file input change passes the original ICS file straight through", async () => {
+  const harness = makeHarness();
+  let textCalls = 0;
   const file = {
     name: "calendar.ics",
-    async text() { return sampleIcs(); }
+    async text() {
+      textCalls += 1;
+      throw new Error("registration must leave ICS parsing to tab-manager/Core");
+    }
   };
   const input = {
     type: "file",
@@ -233,47 +110,37 @@ test("actual file input change routes ICS through Core without exposing VTODOs t
 
   assert.equal(stopped, true);
   assert.equal(input.value, "");
-  assertImportedStateComesFromCore(harness);
-  assert.equal(harness.getNativeImportCalls(), 1);
-  assert.equal(harness.getUpdateCalls(), 1);
-  assert.deepEqual(harness.warnings, []);
+  assert.equal(harness.nativeArgs.length, 1);
+  assert.equal(harness.nativeArgs[0][0], file);
+  assert.equal(textCalls, 0);
 });
 
-test("native Cherry imports bypass Core ICS shell routing", async () => {
+test("encrypted Cherry files use the same direct native import boundary", async () => {
   const harness = makeHarness();
   let textCalls = 0;
   const file = {
     name: "backup.cherry",
     async text() {
       textCalls += 1;
-      throw new Error("registration should not read native Cherry files");
+      throw new Error("registration must not read encrypted Cherry files");
     }
   };
 
   await harness.importers.get("workspace.cherry").run(file);
 
-  assert.equal(harness.getNativeImportCalls(), 1);
-  assert.equal(harness.nativeFiles[0], file);
-  assert.equal(harness.getUpdateCalls(), 0);
+  assert.equal(harness.nativeArgs.length, 1);
+  assert.equal(harness.nativeArgs[0][0], file);
   assert.equal(textCalls, 0);
 });
 
-test("Core state routing still refuses ambiguous imported-tab identification", async () => {
-  const harness = makeHarness({
-    async nativeImport({ file, model }) {
-      await assertTaskFreeLegacyShell(file);
-      addLegacyShellTab(model);
-      addLegacyShellTab(model, "unexpected-second-import");
-    }
-  });
-
-  await harness.importers.get("workspace.cherry").run({
-    name: "calendar.ics",
-    async text() { return sampleIcs(); }
-  });
-
-  const imported = harness.model.tabs.find(tab => tab.id === "imported");
-  assert.deepEqual(imported.state.tasks, {});
-  assert.equal(harness.getUpdateCalls(), 0);
-  assert.equal(harness.warnings.length, 1);
+test("workspace transfer registration no longer owns ICS parsing or reconciliation", () => {
+  assert.doesNotMatch(source, /emptyIcsShell/);
+  assert.doesNotMatch(source, /makeLegacyIcsShellFile/);
+  assert.doesNotMatch(source, /importWorkspaceWithCoreIcs/);
+  assert.doesNotMatch(source, /replaceTabState/);
+  assert.doesNotMatch(source, /makeTabFromIcs/);
+  assert.doesNotMatch(source, /getWorkspace\?\./);
+  assert.doesNotMatch(source, /updateTabState\?\./);
+  assert.doesNotMatch(source, /BEGIN:VCALENDAR/);
+  assert.match(source, /run: \(\.\.\.args\) => workspace\.importWorkspace\?\.\(\.\.\.args\)/);
 });
