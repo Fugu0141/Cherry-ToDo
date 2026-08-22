@@ -28,6 +28,7 @@ function makeHarness({ nativeImport } = {}) {
   const importers = makeRegistry();
   const listeners = new Map();
   const warnings = [];
+  const nativeFiles = [];
   let nativeImportCalls = 0;
   let updateCalls = 0;
 
@@ -44,6 +45,7 @@ function makeHarness({ nativeImport } = {}) {
   const workspace = {
     async importWorkspace(file) {
       nativeImportCalls += 1;
+      nativeFiles.push(file);
       if (nativeImport) return nativeImport({ file, model });
     },
     exportWorkspace() {},
@@ -91,6 +93,7 @@ function makeHarness({ nativeImport } = {}) {
     importers,
     listeners,
     warnings,
+    nativeFiles,
     getNativeImportCalls: () => nativeImportCalls,
     getUpdateCalls: () => updateCalls
   };
@@ -115,42 +118,25 @@ function sampleIcs() {
   ].join("\r\n");
 }
 
-function addLegacyImportedTab(model, { oneTaskOnly = false } = {}) {
+function addLegacyShellTab(model, id = "imported") {
   model.tabs.push({
-    id: "imported",
+    id,
     name: "calendar",
     state: {
-      tasks: {
-        legacyFirst: {
-          id: "legacyFirst",
-          title: "Legacy wrong title",
-          parentId: "legacy-parent",
-          x: 321,
-          y: 654,
-          targetAt: "2026-08-23",
-          schedule: { type: "date", date: "2026-08-23", time: null },
-          status: "done",
-          branchMode: "same"
-        },
-        ...(oneTaskOnly ? {} : {
-          legacySecond: {
-            id: "legacySecond",
-            title: "Legacy second",
-            parentId: null,
-            x: 50,
-            y: 60,
-            targetAt: "2026-08-30",
-            schedule: { type: "date", date: "2026-08-30", time: null },
-            status: "todo",
-            branchMode: null
-          }
-        })
-      },
-      showLanes: false,
-      viewMode: "list",
-      legacyOnly: true
+      tasks: {},
+      showLanes: true,
+      viewMode: "board"
     }
   });
+}
+
+async function assertTaskFreeLegacyShell(file) {
+  const text = await file.text();
+  assert.match(text, /BEGIN:VCALENDAR/i);
+  assert.match(text, /END:VCALENDAR/i);
+  assert.doesNotMatch(text, /BEGIN:VTODO/i);
+  assert.doesNotMatch(text, /SUMMARY:/i);
+  assert.doesNotMatch(text, /DUE(?:;VALUE=DATE)?:/i);
 }
 
 function assertImportedStateComesFromCore(harness) {
@@ -160,7 +146,6 @@ function assertImportedStateComesFromCore(harness) {
   assert.equal(tasks.length, 2);
   assert.equal(imported.state.showLanes, true);
   assert.equal(imported.state.viewMode, "board");
-  assert.equal(imported.state.legacyOnly, undefined);
 
   const undated = tasks.find(task => task.title === "No date");
   const dated = tasks.find(task => task.title === "Dated");
@@ -192,30 +177,38 @@ function assertImportedStateComesFromCore(harness) {
   assert.equal(dated.branchMode, null);
 }
 
-test("live ICS import replaces legacy parsed task state with Core-built state", async () => {
+test("live ICS import keeps the legacy shell task-free and installs Core-built state", async () => {
+  let sourceTextCalls = 0;
   const harness = makeHarness({
-    nativeImport({ model }) {
-      addLegacyImportedTab(model);
+    async nativeImport({ file, model }) {
+      await assertTaskFreeLegacyShell(file);
+      addLegacyShellTab(model);
     }
   });
 
   const file = {
     name: "calendar.ics",
-    async text() { return sampleIcs(); }
+    async text() {
+      sourceTextCalls += 1;
+      return sampleIcs();
+    }
   };
 
   await harness.importers.get("workspace.cherry").run(file);
 
   assertImportedStateComesFromCore(harness);
+  assert.equal(sourceTextCalls, 1);
   assert.equal(harness.getNativeImportCalls(), 1);
+  assert.notEqual(harness.nativeFiles[0], file);
   assert.equal(harness.getUpdateCalls(), 1);
   assert.deepEqual(harness.warnings, []);
 });
 
-test("actual file input change event routes ICS task state through Core", async () => {
+test("actual file input change routes ICS through Core without exposing VTODOs to the legacy shell", async () => {
   const harness = makeHarness({
-    nativeImport({ model }) {
-      addLegacyImportedTab(model);
+    async nativeImport({ file, model }) {
+      await assertTaskFreeLegacyShell(file);
+      addLegacyShellTab(model);
     }
   });
 
@@ -246,24 +239,7 @@ test("actual file input change event routes ICS task state through Core", async 
   assert.deepEqual(harness.warnings, []);
 });
 
-test("Core state routing does not depend on the legacy importer task count", async () => {
-  const harness = makeHarness({
-    nativeImport({ model }) {
-      addLegacyImportedTab(model, { oneTaskOnly: true });
-    }
-  });
-
-  await harness.importers.get("workspace.cherry").run({
-    name: "calendar.ics",
-    async text() { return sampleIcs(); }
-  });
-
-  assertImportedStateComesFromCore(harness);
-  assert.equal(harness.getUpdateCalls(), 1);
-  assert.deepEqual(harness.warnings, []);
-});
-
-test("native Cherry imports bypass Core ICS state routing", async () => {
+test("native Cherry imports bypass Core ICS shell routing", async () => {
   const harness = makeHarness();
   let textCalls = 0;
   const file = {
@@ -277,19 +253,17 @@ test("native Cherry imports bypass Core ICS state routing", async () => {
   await harness.importers.get("workspace.cherry").run(file);
 
   assert.equal(harness.getNativeImportCalls(), 1);
+  assert.equal(harness.nativeFiles[0], file);
   assert.equal(harness.getUpdateCalls(), 0);
   assert.equal(textCalls, 0);
 });
 
-test("Core state routing refuses ambiguous imported-tab identification", async () => {
+test("Core state routing still refuses ambiguous imported-tab identification", async () => {
   const harness = makeHarness({
-    nativeImport({ model }) {
-      addLegacyImportedTab(model);
-      model.tabs.push({
-        id: "unexpected-second-import",
-        name: "Other",
-        state: { tasks: {} }
-      });
+    async nativeImport({ file, model }) {
+      await assertTaskFreeLegacyShell(file);
+      addLegacyShellTab(model);
+      addLegacyShellTab(model, "unexpected-second-import");
     }
   });
 
@@ -299,7 +273,7 @@ test("Core state routing refuses ambiguous imported-tab identification", async (
   });
 
   const imported = harness.model.tabs.find(tab => tab.id === "imported");
-  assert.equal(imported.state.legacyOnly, true);
+  assert.deepEqual(imported.state.tasks, {});
   assert.equal(harness.getUpdateCalls(), 0);
   assert.equal(harness.warnings.length, 1);
 });
