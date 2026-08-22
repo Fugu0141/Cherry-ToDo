@@ -55,8 +55,8 @@
   }
 
   function taskDateForChild(task) {
-    if (typeof getTaskDate === "function") return getTaskDate(task) || todayISO();
-    return task.targetAt || todayISO();
+    const getTaskDate = window.CherryScheduleBridge?.getTaskDate;
+    return typeof getTaskDate === "function" ? getTaskDate(task) : null;
   }
 
   function runDeleteAction() {
@@ -214,6 +214,14 @@
   [taskCancelBtn, taskSaveBtn, dateCancelBtn, dateSaveBtn].forEach(button => {
     button.addEventListener("click", () => requestAnimationFrame(updateMobileActionBar));
   });
+
+  if (toggleLanesBtn) {
+    toggleLanesBtn.addEventListener("click", () => {
+      if (!mobileActionQuery.matches || !state.showLanes) return;
+      if (typeof branchLayout === "function") branchLayout();
+      requestRender();
+    });
+  }
 
   board.addEventListener("scroll", updateMobileActionBar, { passive: true });
   mobileActionQuery.addEventListener("change", updateMobileActionBar);
