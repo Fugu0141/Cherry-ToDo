@@ -4,6 +4,7 @@ import test from "node:test";
 import vm from "node:vm";
 
 const scheduleModelSource = readFileSync(new URL("../schedule-model.js", import.meta.url), "utf8");
+const appSource = readFileSync(new URL("../app.js", import.meta.url), "utf8");
 
 function extractInstallCurrentModalSaveHandlers() {
   const start = scheduleModelSource.indexOf("  function installCurrentModalSaveHandlers() {");
@@ -88,4 +89,11 @@ test("modal save handoff uses removeEventListener instead of capture-order maski
   assert.match(helper, /addEventListener\("click", \(\) => saveTaskModal\(\)\)/);
   assert.match(helper, /addEventListener\("click", \(\) => saveDateModal\(\)\)/);
   assert.doesNotMatch(helper, /true\s*\)/);
+});
+
+test("legacy app keeps modal save functions stable until schedule-model replaces them", () => {
+  assert.match(appSource, /taskSaveBtn\.addEventListener\("click", saveTaskModal\)/);
+  assert.match(appSource, /dateSaveBtn\.addEventListener\("click", saveDateModal\)/);
+  assert.doesNotMatch(appSource, /saveTaskModal\s*=\s*function/);
+  assert.doesNotMatch(appSource, /saveDateModal\s*=\s*function/);
 });
