@@ -48,17 +48,24 @@ test("desktop child creation inherits effective parent schedule", () => {
   }), { type: "date", date: "2026-08-26", time: null });
 });
 
-test("desktop drag only becomes a date-targeting action while date lanes are visible", () => {
+test("desktop drag passes canonical schedule context whether or not it targets a date lane", () => {
   const openCreate = extractHelper("openCreateFromContext(context) {", "\n\n  function connectTargetToSource");
-  const targetDate = extractHelper("targetDateFor(event) {", "\n\n  function isAncestor");
+  const targetDate = extractHelper("targetDateFor(event) {", "\n\n  function scheduleForSpatialDate");
+  const spatialSchedule = extractHelper("scheduleForSpatialDate(event) {", "\n\n  function isAncestor");
   const pointerUpStart = source.indexOf('  window.addEventListener("pointerup"');
   const pointerUpEnd = source.indexOf('\n\n  window.addEventListener("pointercancel"', pointerUpStart);
   const pointerUp = source.slice(pointerUpStart, pointerUpEnd);
 
-  assert.match(openCreate, /if \(context\.schedule\) options\.schedule = context\.schedule/);
-  assert.match(openCreate, /else options\.targetAt = context\.targetAt/);
+  assert.match(openCreate, /schedule: context\.schedule \|\| \{ type: "none", date: null, time: null \}/);
+  assert.doesNotMatch(openCreate, /targetAt/);
   assert.match(targetDate, /if \(!state\.showLanes\) return null/);
+  assert.match(spatialSchedule, /\? \{ type: "date", date, time: null \}/);
+  assert.match(spatialSchedule, /: \{ type: "none", date: null, time: null \}/);
   assert.match(pointerUp, /const usesSpatialDate = handleDrag\.moved && state\.showLanes/);
-  assert.match(pointerUp, /targetAt: usesSpatialDate \? targetDateFor\(event\) : null/);
-  assert.match(pointerUp, /schedule: usesSpatialDate \? null : taskScheduleForChild\(source\)/);
+  assert.match(pointerUp, /schedule: usesSpatialDate \? scheduleForSpatialDate\(event\) : taskScheduleForChild\(source\)/);
+  assert.doesNotMatch(pointerUp, /targetAt/);
+});
+
+test("connect-existing live creation no longer owns legacy targetAt context", () => {
+  assert.doesNotMatch(source, /targetAt/);
 });
