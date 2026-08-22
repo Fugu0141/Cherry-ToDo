@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import vm from "node:vm";
 import { readFile } from "node:fs/promises";
 
-import { parseIcsTodos } from "../src/core/ics.js";
+import { makeTabFromIcs } from "../src/core/ics.js";
 
 const source = await readFile(
   new URL("../src/features/workspace-transfer/registration.js", import.meta.url),
@@ -63,7 +63,7 @@ function makeHarness({ nativeImport } = {}) {
     CherryI18n: { getLanguage: () => "ja" },
     CherryCore: {
       extensions: { exporters, importers },
-      ics: { parseIcsTodos }
+      ics: { makeTabFromIcs }
     },
     cherryWorkspace: workspace
   };
@@ -115,55 +115,86 @@ function sampleIcs() {
   ].join("\r\n");
 }
 
-function addLegacyImportedTab(model) {
+function addLegacyImportedTab(model, { oneTaskOnly = false } = {}) {
   model.tabs.push({
     id: "imported",
     name: "calendar",
     state: {
       tasks: {
-        first: {
-          id: "first",
-          title: "No date",
+        legacyFirst: {
+          id: "legacyFirst",
+          title: "Legacy wrong title",
+          parentId: "legacy-parent",
+          x: 321,
+          y: 654,
           targetAt: "2026-08-23",
           schedule: { type: "date", date: "2026-08-23", time: null },
-          status: "todo"
+          status: "done",
+          branchMode: "same"
         },
-        second: {
-          id: "second",
-          title: "Dated",
-          targetAt: "2026-08-30",
-          schedule: { type: "date", date: "2026-08-30", time: null },
-          status: "done"
-        }
-      }
+        ...(oneTaskOnly ? {} : {
+          legacySecond: {
+            id: "legacySecond",
+            title: "Legacy second",
+            parentId: null,
+            x: 50,
+            y: 60,
+            targetAt: "2026-08-30",
+            schedule: { type: "date", date: "2026-08-30", time: null },
+            status: "todo",
+            branchMode: null
+          }
+        })
+      },
+      showLanes: false,
+      viewMode: "list",
+      legacyOnly: true
     }
   });
 }
 
-function assertImportedSchedulesWereReconciled(harness) {
+function assertImportedStateComesFromCore(harness) {
   const imported = harness.model.tabs.find(tab => tab.id === "imported");
-  const [undated, dated] = Object.values(imported.state.tasks);
+  const tasks = Object.values(imported.state.tasks);
 
+  assert.equal(tasks.length, 2);
+  assert.equal(imported.state.showLanes, true);
+  assert.equal(imported.state.viewMode, "board");
+  assert.equal(imported.state.legacyOnly, undefined);
+
+  const undated = tasks.find(task => task.title === "No date");
+  const dated = tasks.find(task => task.title === "Dated");
+
+  assert.ok(undated);
   assert.deepEqual(clone(undated.schedule), {
     type: "none",
     date: null,
     time: null
   });
   assert.equal(undated.targetAt, null);
+  assert.equal(undated.parentId, null);
+  assert.equal(undated.x, 0);
+  assert.equal(undated.y, 0);
+  assert.equal(undated.status, "todo");
+  assert.equal(undated.branchMode, null);
 
+  assert.ok(dated);
   assert.deepEqual(clone(dated.schedule), {
     type: "date",
     date: "2026-08-30",
     time: null
   });
   assert.equal(dated.targetAt, "2026-08-30");
+  assert.equal(dated.parentId, null);
+  assert.equal(dated.x, 0);
+  assert.equal(dated.y, 0);
+  assert.equal(dated.status, "done");
+  assert.equal(dated.branchMode, null);
 }
 
-test("live ICS import reconciles legacy today fallback back to canonical schedules", async () => {
+test("live ICS import replaces legacy parsed task state with Core-built state", async () => {
   const harness = makeHarness({
     nativeImport({ model }) {
-      // Reproduce the current legacy tab-manager importer: VTODO without DUE
-      // receives today's date before workspace normalization.
       addLegacyImportedTab(model);
     }
   });
@@ -175,13 +206,13 @@ test("live ICS import reconciles legacy today fallback back to canonical schedul
 
   await harness.importers.get("workspace.cherry").run(file);
 
-  assertImportedSchedulesWereReconciled(harness);
+  assertImportedStateComesFromCore(harness);
   assert.equal(harness.getNativeImportCalls(), 1);
   assert.equal(harness.getUpdateCalls(), 1);
   assert.deepEqual(harness.warnings, []);
 });
 
-test("actual file input change event routes ICS through canonical reconciliation", async () => {
+test("actual file input change event routes ICS task state through Core", async () => {
   const harness = makeHarness({
     nativeImport({ model }) {
       addLegacyImportedTab(model);
@@ -209,13 +240,30 @@ test("actual file input change event routes ICS through canonical reconciliation
 
   assert.equal(stopped, true);
   assert.equal(input.value, "");
-  assertImportedSchedulesWereReconciled(harness);
+  assertImportedStateComesFromCore(harness);
   assert.equal(harness.getNativeImportCalls(), 1);
   assert.equal(harness.getUpdateCalls(), 1);
   assert.deepEqual(harness.warnings, []);
 });
 
-test("native Cherry imports bypass ICS schedule reconciliation", async () => {
+test("Core state routing does not depend on the legacy importer task count", async () => {
+  const harness = makeHarness({
+    nativeImport({ model }) {
+      addLegacyImportedTab(model, { oneTaskOnly: true });
+    }
+  });
+
+  await harness.importers.get("workspace.cherry").run({
+    name: "calendar.ics",
+    async text() { return sampleIcs(); }
+  });
+
+  assertImportedStateComesFromCore(harness);
+  assert.equal(harness.getUpdateCalls(), 1);
+  assert.deepEqual(harness.warnings, []);
+});
+
+test("native Cherry imports bypass Core ICS state routing", async () => {
   const harness = makeHarness();
   let textCalls = 0;
   const file = {
@@ -233,23 +281,14 @@ test("native Cherry imports bypass ICS schedule reconciliation", async () => {
   assert.equal(textCalls, 0);
 });
 
-test("ICS reconciliation refuses partial remapping when task counts do not match", async () => {
+test("Core state routing refuses ambiguous imported-tab identification", async () => {
   const harness = makeHarness({
     nativeImport({ model }) {
+      addLegacyImportedTab(model);
       model.tabs.push({
-        id: "imported",
-        name: "calendar",
-        state: {
-          tasks: {
-            only: {
-              id: "only",
-              title: "No date",
-              targetAt: "2026-08-23",
-              schedule: { type: "date", date: "2026-08-23", time: null },
-              status: "todo"
-            }
-          }
-        }
+        id: "unexpected-second-import",
+        name: "Other",
+        state: { tasks: {} }
       });
     }
   });
@@ -260,12 +299,7 @@ test("ICS reconciliation refuses partial remapping when task counts do not match
   });
 
   const imported = harness.model.tabs.find(tab => tab.id === "imported");
-  assert.equal(imported.state.tasks.only.targetAt, "2026-08-23");
-  assert.deepEqual(clone(imported.state.tasks.only.schedule), {
-    type: "date",
-    date: "2026-08-23",
-    time: null
-  });
+  assert.equal(imported.state.legacyOnly, true);
   assert.equal(harness.getUpdateCalls(), 0);
   assert.equal(harness.warnings.length, 1);
 });
