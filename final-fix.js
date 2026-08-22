@@ -289,7 +289,7 @@
     let nearestLineIndex = 0;
     let nearestLineDistance = Infinity;
     lanes.forEach((date, index) => {
-      const dist = Math.abs(anchor - hDateLineY?.(date));
+      const dist = Math.abs(anchor - hDateLineX(date));
       if (dist < nearestLineDistance) {
         nearestLineDistance = dist;
         nearestLineIndex = index;
