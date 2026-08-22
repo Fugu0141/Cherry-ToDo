@@ -52,15 +52,28 @@
   display: block;
   margin-top: 4px;
   font-size: 10px;
-  color: #8a95a8;
+  color: var(--muted, #8a95a8);
   white-space: nowrap;
 }
 
 .laneLabel.collapsedDate {
   width: 84px;
   opacity: .82;
-  border-left-color: #94a3b8;
-  background: rgba(248, 250, 252, .94);
+  border-left-color: var(--lane-line, #94a3b8);
+  background: var(--lane-label-bg, rgba(248, 250, 252, .94));
+  color: var(--ink, #111827);
+}
+
+.laneLabel.collapsedDate .laneMonthTitle {
+  color: var(--muted, #64748b);
+}
+
+.laneLabel.collapsedDate .laneDay {
+  color: var(--ink, #111827);
+}
+
+.laneLabel.collapsedDate .laneStatus {
+  color: var(--muted, #64748b);
 }
 
 .laneLine.pastLane {
