@@ -17,20 +17,6 @@
     return fallbackDate;
   }
 
-  function installScheduleAwareSaveBridge() {
-    if (typeof taskSaveBtn !== "undefined" && taskSaveBtn) {
-      taskSaveBtn.addEventListener("click", () => {
-        if (taskModalMode === "create" || taskModalMode === "edit") saveTaskModal();
-      }, true);
-    }
-
-    if (typeof dateSaveBtn !== "undefined" && dateSaveBtn) {
-      dateSaveBtn.addEventListener("click", () => {
-        if (dateModalContext) saveDateModal();
-      }, true);
-    }
-  }
-
   if (baseOpenChangeDateModal) {
     openChangeDateModal = function(taskId, defaultDate, original) {
       return baseOpenChangeDateModal(taskId, freshTargetDate(defaultDate), original);
@@ -44,6 +30,4 @@
       return baseOpenCreateTaskModal(next);
     };
   }
-
-  installScheduleAwareSaveBridge();
 })();
