@@ -1,5 +1,6 @@
 import { dateOnly } from "../core/date-only.js";
 import { scheduleModel } from "../core/schedule.js";
+import { icsModel } from "../core/ics.js";
 import { workspaceModel } from "../core/workspace.js";
 import { storeCore } from "../core/store.js";
 import { commandCore } from "../core/commands.js";
@@ -24,6 +25,7 @@ window.CherryCore = Object.freeze({
   ...existingCore,
   dateOnly,
   schedule: scheduleModel,
+  ics: icsModel,
   workspace: workspaceModel,
   store: storeCore,
   commands: commandCore,
@@ -37,6 +39,6 @@ window.CherryCore = Object.freeze({
 
 window.dispatchEvent(new CustomEvent("cherry-core-ready", {
   detail: {
-    modules: ["dateOnly", "schedule", "workspace", "store", "commands", "events", "storage", "registries", "boardSettings", "extensions", "runtime"]
+    modules: ["dateOnly", "schedule", "ics", "workspace", "store", "commands", "events", "storage", "registries", "boardSettings", "extensions", "runtime"]
   }
 }));
