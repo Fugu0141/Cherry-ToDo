@@ -9,16 +9,14 @@ const source = readFileSync(
 );
 
 function makeHarness(hit) {
-  const calls = { create: [], change: [] };
+  const calls = { change: [] };
+  const originalCreate = options => options;
   const window = { questStickyRecentDateHit: hit };
   const context = vm.createContext({
     window,
     calls,
     normalizeDate: value => value,
-    openCreateTaskModal(options) {
-      calls.create.push(JSON.parse(JSON.stringify(options)));
-      return options;
-    },
+    openCreateTaskModal: originalCreate,
     openChangeDateModal(...args) {
       calls.change.push(JSON.parse(JSON.stringify(args)));
       return args;
@@ -26,7 +24,7 @@ function makeHarness(hit) {
   });
 
   vm.runInContext(source, context);
-  return { context, calls };
+  return { context, calls, originalCreate };
 }
 
 function freshHit() {
@@ -38,62 +36,35 @@ function freshHit() {
   };
 }
 
-test("explicit canonical none is not overridden by a recent date hit", () => {
-  const { context, calls } = makeHarness(freshHit());
-  context.openCreateTaskModal({
-    parentId: "parent",
-    targetAt: null,
-    schedule: { type: "none", date: null, time: null },
-    branchMode: "same"
-  });
+test("date-target guard no longer wraps task creation", () => {
+  const { context, originalCreate } = makeHarness(freshHit());
 
-  assert.deepEqual(calls.create[0], {
-    parentId: "parent",
-    targetAt: null,
-    schedule: { type: "none", date: null, time: null },
-    branchMode: "same"
-  });
+  assert.equal(context.openCreateTaskModal, originalCreate);
+  assert.doesNotMatch(source, /targetAt/);
+  assert.doesNotMatch(source, /baseOpenCreateTaskModal/);
 });
 
-test("explicit canonical date is not rewritten by a recent date hit", () => {
+test("fresh ask target is applied to the date-change modal", () => {
   const { context, calls } = makeHarness(freshHit());
-  context.openCreateTaskModal({
-    parentId: "parent",
-    targetAt: "2026-08-22",
-    schedule: { type: "date", date: "2026-08-25", time: null },
-    branchMode: "branch"
-  });
-
-  assert.equal(calls.create[0].targetAt, "2026-08-22");
-  assert.deepEqual(calls.create[0].schedule, {
-    type: "date",
-    date: "2026-08-25",
-    time: null
-  });
-});
-
-test("legacy parent creation without schedule still accepts the recent date target", () => {
-  const { context, calls } = makeHarness(freshHit());
-  context.openCreateTaskModal({
-    parentId: "parent",
-    targetAt: "2026-08-22",
-    branchMode: "same"
-  });
-
-  assert.equal(calls.create[0].targetAt, "2026-08-30");
-  assert.equal("schedule" in calls.create[0], false);
-});
-
-test("root creation is not retargeted and date-change guard behavior is preserved", () => {
-  const { context, calls } = makeHarness(freshHit());
-
-  context.openCreateTaskModal({ parentId: null, targetAt: "2026-08-22" });
-  assert.equal(calls.create[0].targetAt, "2026-08-22");
 
   context.openChangeDateModal("task", "2026-08-22", { x: 10, y: 20 });
   assert.equal(calls.change[0][1], "2026-08-30");
 });
 
-test("create guard explicitly gates legacy targetAt retargeting on missing schedule", () => {
-  assert.match(source, /next\.parentId && next\.schedule === undefined/);
+test("matching boundary fallback keeps the target date after the freshness window", () => {
+  const hit = freshHit();
+  hit.at = 0;
+  const { context, calls } = makeHarness(hit);
+
+  context.openChangeDateModal("task", "2026-08-22", { x: 10, y: 20 });
+  assert.equal(calls.change[0][1], "2026-08-30");
+});
+
+test("unrelated stale boundary hit leaves the requested date unchanged", () => {
+  const hit = freshHit();
+  hit.at = 0;
+  const { context, calls } = makeHarness(hit);
+
+  context.openChangeDateModal("task", "2026-08-24", { x: 10, y: 20 });
+  assert.equal(calls.change[0][1], "2026-08-24");
 });
