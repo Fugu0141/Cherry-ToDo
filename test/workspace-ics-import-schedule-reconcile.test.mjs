@@ -115,43 +115,32 @@ function sampleIcs() {
   ].join("\r\n");
 }
 
-test("live ICS import reconciles legacy today fallback back to canonical schedules", async () => {
-  const harness = makeHarness({
-    nativeImport({ model }) {
-      // Reproduce the current legacy tab-manager importer: VTODO without DUE
-      // receives today's date before workspace normalization.
-      model.tabs.push({
-        id: "imported",
-        name: "calendar",
-        state: {
-          tasks: {
-            first: {
-              id: "first",
-              title: "No date",
-              targetAt: "2026-08-23",
-              schedule: { type: "date", date: "2026-08-23", time: null },
-              status: "todo"
-            },
-            second: {
-              id: "second",
-              title: "Dated",
-              targetAt: "2026-08-30",
-              schedule: { type: "date", date: "2026-08-30", time: null },
-              status: "done"
-            }
-          }
+function addLegacyImportedTab(model) {
+  model.tabs.push({
+    id: "imported",
+    name: "calendar",
+    state: {
+      tasks: {
+        first: {
+          id: "first",
+          title: "No date",
+          targetAt: "2026-08-23",
+          schedule: { type: "date", date: "2026-08-23", time: null },
+          status: "todo"
+        },
+        second: {
+          id: "second",
+          title: "Dated",
+          targetAt: "2026-08-30",
+          schedule: { type: "date", date: "2026-08-30", time: null },
+          status: "done"
         }
-      });
+      }
     }
   });
+}
 
-  const file = {
-    name: "calendar.ics",
-    async text() { return sampleIcs(); }
-  };
-
-  await harness.importers.get("workspace.cherry").run(file);
-
+function assertImportedSchedulesWereReconciled(harness) {
   const imported = harness.model.tabs.find(tab => tab.id === "imported");
   const [undated, dated] = Object.values(imported.state.tasks);
 
@@ -168,7 +157,59 @@ test("live ICS import reconciles legacy today fallback back to canonical schedul
     time: null
   });
   assert.equal(dated.targetAt, "2026-08-30");
+}
 
+test("live ICS import reconciles legacy today fallback back to canonical schedules", async () => {
+  const harness = makeHarness({
+    nativeImport({ model }) {
+      // Reproduce the current legacy tab-manager importer: VTODO without DUE
+      // receives today's date before workspace normalization.
+      addLegacyImportedTab(model);
+    }
+  });
+
+  const file = {
+    name: "calendar.ics",
+    async text() { return sampleIcs(); }
+  };
+
+  await harness.importers.get("workspace.cherry").run(file);
+
+  assertImportedSchedulesWereReconciled(harness);
+  assert.equal(harness.getNativeImportCalls(), 1);
+  assert.equal(harness.getUpdateCalls(), 1);
+  assert.deepEqual(harness.warnings, []);
+});
+
+test("actual file input change event routes ICS through canonical reconciliation", async () => {
+  const harness = makeHarness({
+    nativeImport({ model }) {
+      addLegacyImportedTab(model);
+    }
+  });
+
+  const file = {
+    name: "calendar.ics",
+    async text() { return sampleIcs(); }
+  };
+  const input = {
+    type: "file",
+    accept: ".cherry,.ics,text/calendar,application/json",
+    files: [file],
+    value: "calendar.ics"
+  };
+  let stopped = false;
+
+  harness.listeners.get("change")({
+    target: input,
+    stopPropagation() { stopped = true; }
+  });
+
+  await new Promise(resolve => setImmediate(resolve));
+
+  assert.equal(stopped, true);
+  assert.equal(input.value, "");
+  assertImportedSchedulesWereReconciled(harness);
   assert.equal(harness.getNativeImportCalls(), 1);
   assert.equal(harness.getUpdateCalls(), 1);
   assert.deepEqual(harness.warnings, []);
