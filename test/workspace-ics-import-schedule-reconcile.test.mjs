@@ -118,6 +118,8 @@ function sampleIcs() {
 test("live ICS import reconciles legacy today fallback back to canonical schedules", async () => {
   const harness = makeHarness({
     nativeImport({ model }) {
+      // Reproduce the current legacy tab-manager importer: VTODO without DUE
+      // receives today's date before workspace normalization.
       model.tabs.push({
         id: "imported",
         name: "calendar",
@@ -127,12 +129,14 @@ test("live ICS import reconciles legacy today fallback back to canonical schedul
               id: "first",
               title: "No date",
               targetAt: "2026-08-23",
+              schedule: { type: "date", date: "2026-08-23", time: null },
               status: "todo"
             },
             second: {
               id: "second",
               title: "Dated",
               targetAt: "2026-08-30",
+              schedule: { type: "date", date: "2026-08-30", time: null },
               status: "done"
             }
           }
@@ -200,6 +204,7 @@ test("ICS reconciliation refuses partial remapping when task counts do not match
               id: "only",
               title: "No date",
               targetAt: "2026-08-23",
+              schedule: { type: "date", date: "2026-08-23", time: null },
               status: "todo"
             }
           }
@@ -215,7 +220,11 @@ test("ICS reconciliation refuses partial remapping when task counts do not match
 
   const imported = harness.model.tabs.find(tab => tab.id === "imported");
   assert.equal(imported.state.tasks.only.targetAt, "2026-08-23");
-  assert.equal(imported.state.tasks.only.schedule, undefined);
+  assert.deepEqual(clone(imported.state.tasks.only.schedule), {
+    type: "date",
+    date: "2026-08-23",
+    time: null
+  });
   assert.equal(harness.getUpdateCalls(), 0);
   assert.equal(harness.warnings.length, 1);
 });
