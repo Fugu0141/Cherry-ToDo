@@ -26,7 +26,9 @@
   if (baseOpenCreateTaskModal) {
     openCreateTaskModal = function(options = {}) {
       const next = { ...options };
-      if (next.parentId) next.targetAt = freshTargetDate(next.targetAt);
+      if (next.parentId && next.schedule === undefined) {
+        next.targetAt = freshTargetDate(next.targetAt);
+      }
       return baseOpenCreateTaskModal(next);
     };
   }
