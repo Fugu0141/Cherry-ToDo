@@ -14,8 +14,13 @@
       : null;
   }
 
+  function getScheduleModel() {
+    const schedule = currentCore()?.schedule;
+    return schedule && typeof schedule === "object" ? schedule : null;
+  }
+
   function getTaskDate(task) {
-    const coreSchedule = currentCore()?.schedule;
+    const coreSchedule = getScheduleModel();
     if (typeof coreSchedule?.normalizeSchedule === "function" && typeof coreSchedule?.scheduleDate === "function") {
       return coreSchedule.scheduleDate(coreSchedule.normalizeSchedule(task?.schedule, task?.targetAt));
     }
@@ -40,7 +45,7 @@
     return [...dates].sort((a, b) => a.localeCompare(b));
   }
 
-  window.CherryScheduleBridge = Object.freeze({ getTaskDate, collectLaneDates });
+  window.CherryScheduleBridge = Object.freeze({ getScheduleModel, getTaskDate, collectLaneDates });
 
   function installScheduleCompatibility(core) {
     const schedule = core?.schedule;
