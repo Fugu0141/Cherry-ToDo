@@ -22,10 +22,58 @@
     console.warn(message);
   }
 
+  function canonicalScheduleCopy(schedule) {
+    if (!schedule || typeof schedule !== "object") return null;
+    return {
+      type: schedule.type,
+      date: schedule.date ?? null,
+      time: schedule.time ?? null
+    };
+  }
+
+  async function importWorkspaceWithCanonicalIcs(file) {
+    const nativeImport = workspace.importWorkspace;
+    if (typeof nativeImport !== "function") return;
+
+    const isIcs = String(file?.name || "").toLowerCase().endsWith(".ics");
+    const parseIcsTodos = window.CherryCore?.ics?.parseIcsTodos;
+    if (!isIcs || typeof parseIcsTodos !== "function" || typeof file?.text !== "function") {
+      return nativeImport(file);
+    }
+
+    const text = await file.text();
+    const importedTodos = parseIcsTodos(text);
+    const beforeWorkspace = workspace.getWorkspace?.();
+    const beforeTabIds = new Set((beforeWorkspace?.tabs || []).map(tab => tab.id));
+
+    await nativeImport(file);
+
+    const afterWorkspace = workspace.getWorkspace?.();
+    const importedTabs = (afterWorkspace?.tabs || []).filter(tab => !beforeTabIds.has(tab.id));
+    if (importedTabs.length !== 1) return;
+
+    const importedTab = importedTabs[0];
+    const importedTasks = Object.values(importedTab.state?.tasks || {});
+    if (importedTasks.length !== importedTodos.length) {
+      console.warn("Skipped ICS schedule reconciliation because imported task counts did not match.");
+      return;
+    }
+
+    workspace.updateTabState?.(importedTab.id, tabState => {
+      const tasks = Object.values(tabState?.tasks || {});
+      tasks.forEach((task, index) => {
+        const schedule = canonicalScheduleCopy(importedTodos[index]?.schedule);
+        if (!schedule) return;
+        task.schedule = schedule;
+        task.targetAt = schedule.type === "none" ? null : schedule.date;
+      });
+    });
+  }
+
   if (!extensions.importers.has("workspace.cherry")) {
     extensions.importers.register("workspace.cherry", {
       id: "workspace.cherry",
-      run: (...args) => workspace.importWorkspace?.(...args)
+      run: (...args) => importWorkspaceWithCanonicalIcs(...args)
     });
   }
 
