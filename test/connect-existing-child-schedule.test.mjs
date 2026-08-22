@@ -21,7 +21,10 @@ function extractHelper(name, nextMarker) {
 
 function runTaskScheduleForChild(task) {
   const helper = extractHelper("taskScheduleForChild(parent) {", "\n\n  function escapeId");
-  const window = { CherryCore: { schedule: scheduleModel } };
+  const window = {
+    CherryCore: { schedule: scheduleModel },
+    addEventListener() {}
+  };
   const context = vm.createContext({ window, parent: task, result: undefined });
   vm.runInContext(bridgeSource, context);
   vm.runInContext(`${helper}\nresult = taskScheduleForChild(parent);`, context);
