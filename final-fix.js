@@ -100,6 +100,43 @@
     else setDateCollapsed(normalized, false);
   }
 
+  function dateCollapseState(date) {
+    const normalized = normalizeDate(date);
+    const tasks = tasksOnDate(normalized);
+    const complete = tasks.length > 0 && tasks.every(task => task.status === "done");
+    const isToday = normalized === todayISO();
+    const collapsed = !isToday && complete && readCollapsedDates().has(normalized);
+    const tone = collapsed
+      ? "collapsedDoneLane"
+      : isToday
+        ? "todayLane"
+        : normalized < todayISO()
+          ? "pastLane"
+          : "futureLane";
+
+    return {
+      date: normalized,
+      complete,
+      collapsed,
+      collapsible: complete && !isToday,
+      count: tasks.length,
+      tone,
+      horizontalSpan: collapsed ? compactHGap : hDateGap,
+      verticalSpan: collapsed ? compactVGap : vDateGap
+    };
+  }
+
+  function toggleDoneDate(date) {
+    const state = dateCollapseState(date);
+    if (!state.collapsible) return false;
+
+    setDateCollapsed(state.date, !state.collapsed);
+    snapshot();
+    branchLayout();
+    requestRender();
+    return true;
+  }
+
   function isTaskCollapsed(task) {
     const date = taskDate(task);
     return date !== null && isDateCollapsed(date);
@@ -418,6 +455,12 @@
       renderLinks();
     };
   }
+
+  window.CherryCompletedDateCollapse = Object.freeze({
+    getState: dateCollapseState,
+    isTaskCollapsed,
+    toggleDate: toggleDoneDate
+  });
 
   branchLayout();
   render();
