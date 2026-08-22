@@ -7,6 +7,7 @@ const scheduleModelSource = readFileSync(new URL("../schedule-model.js", import.
 
 function loadScheduleModel() {
   const rootClickCaptureHandlers = [];
+  const queuedMicrotasks = [];
   const tasks = [];
   const taskModalTitle = { textContent: "" };
   const taskNameInput = { value: "", focus() {}, select() {} };
@@ -28,6 +29,7 @@ function loadScheduleModel() {
     getTasks() { return tasks; },
     todayISO() { return "2026-08-22"; },
     id() { return "generated"; },
+    queueMicrotask(callback) { queuedMicrotasks.push(callback); },
     addRootBtn: {
       addEventListener(type, handler, capture) {
         if (type === "click" && capture === true) rootClickCaptureHandlers.push(handler);
@@ -75,7 +77,7 @@ function loadScheduleModel() {
   });
 
   vm.runInContext(scheduleModelSource, context);
-  return { context, rootClickCaptureHandlers, taskDateInput };
+  return { context, rootClickCaptureHandlers, queuedMicrotasks, taskDateInput };
 }
 
 test("context-free task creation defaults to schedule:none instead of today", () => {
@@ -112,7 +114,7 @@ test("explicit date context is still preserved", () => {
 });
 
 test("legacy root Add button no longer forces today's date", () => {
-  const { context, rootClickCaptureHandlers, taskDateInput } = loadScheduleModel();
+  const { context, rootClickCaptureHandlers, queuedMicrotasks, taskDateInput } = loadScheduleModel();
 
   assert.equal(rootClickCaptureHandlers.length, 1);
   rootClickCaptureHandlers[0]();
@@ -125,7 +127,23 @@ test("legacy root Add button no longer forces today's date", () => {
   });
   assert.equal(taskDateInput.value, "");
 
+  while (queuedMicrotasks.length) queuedMicrotasks.shift()();
+
   // An explicit date request made outside that legacy button click stays dated.
+  context.openCreateTaskModal({
+    parentId: null,
+    targetAt: context.todayISO(),
+    branchMode: "same"
+  });
+  assert.equal(taskDateInput.value, "2026-08-22");
+});
+
+test("legacy root Add marker expires even if its old bubble listener does not run", () => {
+  const { context, rootClickCaptureHandlers, queuedMicrotasks, taskDateInput } = loadScheduleModel();
+
+  rootClickCaptureHandlers[0]();
+  while (queuedMicrotasks.length) queuedMicrotasks.shift()();
+
   context.openCreateTaskModal({
     parentId: null,
     targetAt: context.todayISO(),
