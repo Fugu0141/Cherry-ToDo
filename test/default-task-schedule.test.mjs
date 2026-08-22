@@ -113,6 +113,37 @@ test("explicit date context is still preserved", () => {
   assert.equal(task.schedule.type, "date");
 });
 
+test("explicit child schedule is authoritative over a recent spatial date hit", () => {
+  const { context, taskDateInput } = loadScheduleModel();
+  context.window.questStickyRecentDateHit = {
+    mode: "ask",
+    targetDate: "2026-09-05",
+    at: Date.now()
+  };
+
+  context.openCreateTaskModal({
+    parentId: "parent",
+    schedule: { type: "none", date: null, time: null },
+    branchMode: "branch"
+  });
+  assert.equal(taskDateInput.value, "");
+
+  context.openCreateTaskModal({
+    parentId: "parent",
+    schedule: { type: "date", date: "2026-08-30", time: null },
+    branchMode: "branch"
+  });
+  assert.equal(taskDateInput.value, "2026-08-30");
+
+  // Spatial/date-target creation still uses the recent hit when no canonical schedule is supplied.
+  context.openCreateTaskModal({
+    parentId: "parent",
+    targetAt: "2026-08-30",
+    branchMode: "branch"
+  });
+  assert.equal(taskDateInput.value, "2026-09-05");
+});
+
 test("legacy root Add button no longer forces today's date", () => {
   const { context, rootClickCaptureHandlers, queuedMicrotasks, taskDateInput } = loadScheduleModel();
 
