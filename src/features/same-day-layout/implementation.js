@@ -40,8 +40,15 @@
     });
   }
 
-  function sameDate(a, b) {
-    return normalizeDate(a) === normalizeDate(b);
+  function taskDate(task) {
+    const getTaskDate = window.CherryScheduleBridge?.getTaskDate;
+    return typeof getTaskDate === "function" ? getTaskDate(task) : null;
+  }
+
+  function sameTaskDate(a, b) {
+    const aDate = taskDate(a);
+    const bDate = taskDate(b);
+    return aDate !== null && bDate !== null && aDate === bDate;
   }
 
   function resetSameDayColumns() {
@@ -57,7 +64,7 @@
       seen.add(task.id);
 
       for (const child of orderChildrenForLayout(task.id)) {
-        const nextColumn = sameDate(child.targetAt, task.targetAt)
+        const nextColumn = sameTaskDate(child, task)
           ? (task._dayColumn ?? 0) + 1
           : 0;
         defineTemp(child, "_dayColumn", nextColumn);
