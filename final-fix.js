@@ -150,7 +150,8 @@
 
   function taskToneClass(task) {
     if (task.status === "done") return "doneTask";
-    const date = normalizeDate(task.targetAt);
+    const date = taskDate(task);
+    if (date === null) return "";
     if (date < todayISO()) return "overdueTask";
     if (date === todayISO()) return "todayTask";
     return "futureTask";
@@ -288,7 +289,7 @@
     let nearestLineIndex = 0;
     let nearestLineDistance = Infinity;
     lanes.forEach((date, index) => {
-      const dist = Math.abs(anchor - hDateLineX(date));
+      const dist = Math.abs(anchor - hDateLineY?.(date));
       if (dist < nearestLineDistance) {
         nearestLineDistance = dist;
         nearestLineIndex = index;
