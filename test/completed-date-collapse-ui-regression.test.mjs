@@ -8,6 +8,10 @@ const sameDayLayoutSource = readFileSync(
   new URL("../src/features/same-day-layout/implementation.js", import.meta.url),
   "utf8"
 );
+const uxPolishSource = readFileSync(
+  new URL("../src/features/ux-polish/styles.css", import.meta.url),
+  "utf8"
+);
 
 test("completed-date collapse state is exported before same-day layout overrides lane rendering", () => {
   const finalFixIndex = indexSource.indexOf("./final-fix.js");
@@ -32,6 +36,8 @@ test("same-day layout keeps the completed-date expand/collapse affordance after 
   assert.match(renderSource, /const completedState = completedDateState\(date\)/);
   assert.match(renderSource, /completeDate/);
   assert.match(renderSource, /collapsedDate/);
+  assert.match(renderSource, /laneMonthTitle/);
+  assert.match(renderSource, /laneDay/);
   assert.match(renderSource, /laneStatus/);
   assert.match(renderSource, /完了 \$\{count\}/);
   assert.match(renderSource, /クリックで完了タスクを展開/);
@@ -53,6 +59,20 @@ test("collapsed completed dates use compact same-day lane metrics in both orient
     sameDayLayoutSource,
     /map\(date => `\$\{date\}:\$\{completedDateState\(date\)\?\.collapsed \? 1 : 0\}`\)/
   );
+});
+
+test("collapsed completed-date labels keep their date readable in light and dark themes", () => {
+  const collapsedStart = uxPolishSource.indexOf(".laneLabel.collapsedDate {");
+  const collapsedEnd = uxPolishSource.indexOf(".laneLine.pastLane");
+  const collapsedStyles = uxPolishSource.slice(collapsedStart, collapsedEnd);
+
+  assert.notEqual(collapsedStart, -1);
+  assert.notEqual(collapsedEnd, -1);
+  assert.match(collapsedStyles, /background: var\(--lane-label-bg,/);
+  assert.match(collapsedStyles, /color: var\(--ink,/);
+  assert.match(collapsedStyles, /\.laneLabel\.collapsedDate \.laneMonthTitle/);
+  assert.match(collapsedStyles, /\.laneLabel\.collapsedDate \.laneDay/);
+  assert.match(collapsedStyles, /\.laneLabel\.collapsedDate \.laneStatus/);
 });
 
 test("collapse presentation reads the same Core-aware state as hidden notes and links", () => {
