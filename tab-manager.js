@@ -705,7 +705,7 @@
       let incoming = null;
 
       if (file.name.toLowerCase().endsWith(".ics") || text.includes("BEGIN:VCALENDAR")) {
-        incoming = { version: 1, activeTabId: null, tabs: [makeTabFromIcs(text, file.name)], updatedAt: now() };
+        incoming = { version: 1, activeTabId: null, tabs: [await makeTabFromIcs(text, file.name)], updatedAt: now() };
       } else {
         const passphrase = await window.cherryDialog.passphrase({ title: copy("passTitle"), message: t("workspace.passphrasePrompt"), confirm: false });
         if (!passphrase) return;
@@ -770,26 +770,13 @@
     return lines.join("\r\n");
   }
 
-  function makeTabFromIcs(text, filename) {
-    const tasks = {};
-    const blocks = text.split(/BEGIN:VTODO/i).slice(1);
-    blocks.forEach((block, index) => {
-      const content = block.split(/END:VTODO/i)[0] || "";
-      const summary = (content.match(/^SUMMARY:(.*)$/mi)?.[1] || `Task ${index + 1}`).replace(/\\n/g, "\n").replace(/\\,/g, ",").replace(/\\;/g, ";").replace(/\\\\/g, "\\");
-      const due = content.match(/^DUE(?:;VALUE=DATE)?:(\d{8})/mi)?.[1];
-      const id = makeId();
-      tasks[id] = {
-        id,
-        title: summary,
-        parentId: null,
-        x: 0,
-        y: 0,
-        targetAt: due ? `${due.slice(0, 4)}-${due.slice(4, 6)}-${due.slice(6, 8)}` : new Date().toISOString().slice(0, 10),
-        status: /STATUS:COMPLETED/i.test(content) ? "done" : "todo",
-        branchMode: null
-      };
-    });
-    return { id: makeId(), name: filename.replace(/\.[^.]+$/, "") || "iCalendar", systemNameKey: null, state: { tasks, showLanes: true, viewMode: "board" }, updatedAt: now() };
+  async function makeTabFromIcs(text, filename) {
+    const core = typeof window.CherryLegacyCore?.ready === "function"
+      ? await window.CherryLegacyCore.ready()
+      : window.CherryCore;
+    const makeTab = core?.ics?.makeTabFromIcs || window.CherryCore?.ics?.makeTabFromIcs;
+    if (typeof makeTab !== "function") throw new Error("Core ICS importer unavailable");
+    return makeTab(text, filename, { makeId, now });
   }
 
   function updateTabState(tabId, updater) {
