@@ -77,6 +77,7 @@
   }
 
   function targetDateFor(event) {
+    if (!state.showLanes) return null;
     if (typeof getDateForPointer === "function") return getDateForPointer(event);
     return typeof todayISO === "function" ? todayISO() : new Date().toISOString().slice(0, 10);
   }
@@ -347,11 +348,12 @@
     event.stopImmediatePropagation();
 
     const source = task(handleDrag.sourceId);
+    const usesSpatialDate = handleDrag.moved && state.showLanes;
     const context = {
       sourceId: handleDrag.sourceId,
       targetId: handleDrag.targetId || taskAtPoint(event.clientX, event.clientY, handleDrag.sourceId),
-      targetAt: targetDateFor(event),
-      schedule: handleDrag.moved ? null : taskScheduleForChild(source),
+      targetAt: usesSpatialDate ? targetDateFor(event) : null,
+      schedule: usesSpatialDate ? null : taskScheduleForChild(source),
       branchMode: handleDrag.branchMode,
       clientX: event.clientX,
       clientY: event.clientY,
