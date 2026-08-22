@@ -169,6 +169,14 @@
       const baseOpenEdit = openEditTaskModal;
       openEditTaskModal = function localizedEditTaskModal(taskId) {
         baseOpenEdit(taskId);
+
+        const task = typeof state !== "undefined" ? state.tasks?.[taskId] : null;
+        const getTaskDate = window.CherryScheduleBridge?.getTaskDate;
+        const taskDateInput = document.getElementById("taskDateInput");
+        if (task && taskDateInput && typeof getTaskDate === "function") {
+          taskDateInput.value = getTaskDate(task) || "";
+        }
+
         const title = document.getElementById("taskModalTitle");
         if (title) {
           title.dataset.i18nDynamicKey = "modal.editTask";
@@ -181,7 +189,7 @@
   function patchResetConfirm() {
     const resetButton = document.getElementById("resetBtn");
     if (!resetButton || resetButton.dataset.releasePrepResetBound) return;
-    resetButton.dataset.releasePrepResetBound = "1";
+    resetButton.dataset.releasePrepBound = "1";
 
     resetButton.addEventListener("click", async event => {
       event.preventDefault();
