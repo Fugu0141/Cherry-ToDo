@@ -82,6 +82,13 @@
     return typeof todayISO === "function" ? todayISO() : new Date().toISOString().slice(0, 10);
   }
 
+  function scheduleForSpatialDate(event) {
+    const date = targetDateFor(event);
+    return date
+      ? { type: "date", date, time: null }
+      : { type: "none", date: null, time: null };
+  }
+
   function isAncestor(possibleAncestorId, taskId) {
     let current = task(taskId);
     const seen = new Set();
@@ -183,11 +190,9 @@
     closeChoice();
     const options = {
       parentId: context.sourceId,
-      branchMode: context.branchMode || "branch"
+      branchMode: context.branchMode || "branch",
+      schedule: context.schedule || { type: "none", date: null, time: null }
     };
-
-    if (context.schedule) options.schedule = context.schedule;
-    else options.targetAt = context.targetAt;
 
     openCreateTaskModal(options);
   }
@@ -301,7 +306,6 @@
       pointerId: event.pointerId,
       size,
       branchMode: "same",
-      targetAt: targetDateFor(event),
       moved: false,
       startX: event.clientX,
       startY: event.clientY
@@ -332,7 +336,6 @@
 
     const targetId = taskAtPoint(event.clientX, event.clientY, handleDrag.sourceId);
     handleDrag.branchMode = typeof inferBranchMode === "function" ? inferBranchMode(source, point) : "branch";
-    handleDrag.targetAt = targetDateFor(event);
     handleDrag.targetId = targetId;
 
     setObjectPos(ghost, Math.max(40, point.x - handleDrag.size.width / 2), Math.max(30, point.y - handleDrag.size.height / 2));
@@ -352,8 +355,7 @@
     const context = {
       sourceId: handleDrag.sourceId,
       targetId: handleDrag.targetId || taskAtPoint(event.clientX, event.clientY, handleDrag.sourceId),
-      targetAt: usesSpatialDate ? targetDateFor(event) : null,
-      schedule: usesSpatialDate ? null : taskScheduleForChild(source),
+      schedule: usesSpatialDate ? scheduleForSpatialDate(event) : taskScheduleForChild(source),
       branchMode: handleDrag.branchMode,
       clientX: event.clientX,
       clientY: event.clientY,
