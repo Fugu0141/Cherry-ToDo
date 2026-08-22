@@ -310,12 +310,13 @@
   };
 
   openCreateTaskModal = function openCreateTaskModalWithSchedule({ parentId = null, targetAt, schedule, branchMode = "same" } = {}) {
-    const useUndatedDefault = legacyRootAddClickPending && parentId === null && schedule === undefined;
+    const hasExplicitSchedule = schedule !== undefined;
+    const useUndatedDefault = legacyRootAddClickPending && parentId === null && !hasExplicitSchedule;
     legacyRootAddClickPending = false;
-    const initialTargetAt = useUndatedDefault || (targetAt === undefined && schedule === undefined) ? null : targetAt;
+    const initialTargetAt = useUndatedDefault || (targetAt === undefined && !hasExplicitSchedule) ? null : targetAt;
     let nextSchedule = normalizeSchedule(schedule, initialTargetAt);
     const nextDate = getTaskDate({ schedule: nextSchedule, targetAt: scheduleDate(nextSchedule) });
-    const freshTarget = parentId ? recentAskTargetDate(nextDate) : nextDate;
+    const freshTarget = parentId && !hasExplicitSchedule ? recentAskTargetDate(nextDate) : nextDate;
     if (freshTarget && freshTarget !== nextDate) nextSchedule = makeScheduleDate(freshTarget);
 
     taskModalMode = "create";
