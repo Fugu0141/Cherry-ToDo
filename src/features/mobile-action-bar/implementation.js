@@ -54,9 +54,12 @@
       && dateModal.classList.contains("hidden");
   }
 
-  function taskDateForChild(task) {
+  function taskScheduleForChild(task) {
     const getTaskDate = window.CherryScheduleBridge?.getTaskDate;
-    return typeof getTaskDate === "function" ? getTaskDate(task) : null;
+    const date = typeof getTaskDate === "function" ? getTaskDate(task) : null;
+    return date
+      ? { type: "date", date, time: null }
+      : { type: "none", date: null, time: null };
   }
 
   function runDeleteAction() {
@@ -166,7 +169,7 @@
     mobileAddParentContext = { parentId: task.id };
     openCreateTaskModal({
       parentId: task.id,
-      targetAt: taskDateForChild(task),
+      schedule: taskScheduleForChild(task),
       branchMode: "branch"
     });
     taskModalTitle.textContent = t("modal.addTask");
