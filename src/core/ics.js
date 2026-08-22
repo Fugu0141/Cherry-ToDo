@@ -61,9 +61,44 @@ export function parseIcsTodos(text) {
   });
 }
 
+function defaultMakeId() {
+  return `tab-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+export function makeTabFromIcs(text, filename, options = {}) {
+  const makeId = typeof options.makeId === "function" ? options.makeId : defaultMakeId;
+  const now = typeof options.now === "function" ? options.now : () => new Date().toISOString();
+  const tasks = {};
+
+  parseIcsTodos(text).forEach(todo => {
+    const id = makeId();
+    const schedule = scheduleModel.normalizeSchedule(todo.schedule, null);
+    tasks[id] = {
+      id,
+      title: todo.title,
+      parentId: null,
+      x: 0,
+      y: 0,
+      schedule,
+      targetAt: scheduleModel.scheduleDate(schedule),
+      status: todo.status,
+      branchMode: null
+    };
+  });
+
+  return {
+    id: makeId(),
+    name: String(filename || "").replace(/\.[^.]+$/, "") || "iCalendar",
+    systemNameKey: null,
+    state: { tasks, showLanes: true, viewMode: "board" },
+    updatedAt: now()
+  };
+}
+
 export const icsModel = Object.freeze({
   escapeIcs,
   unescapeIcs,
   makeIcs,
-  parseIcsTodos
+  parseIcsTodos,
+  makeTabFromIcs
 });
