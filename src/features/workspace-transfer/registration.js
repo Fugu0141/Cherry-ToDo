@@ -59,6 +59,9 @@
       return;
     }
 
+    // Migration bridge: the legacy tab-manager importer currently assigns today's
+    // date to VTODOs without DUE. Reapply the Core parser's canonical schedules
+    // after that import until the legacy parser is removed from tab-manager.js.
     workspace.updateTabState?.(importedTab.id, tabState => {
       const tasks = Object.values(tabState?.tasks || {});
       tasks.forEach((task, index) => {
