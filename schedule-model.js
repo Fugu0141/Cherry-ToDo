@@ -5,7 +5,15 @@
   const baseSaveTaskModal = typeof saveTaskModal === "function" ? saveTaskModal : null;
   const baseSaveDateModal = typeof saveDateModal === "function" ? saveDateModal : null;
 
+  function coreScheduleModel() {
+    const getScheduleModel = window.CherryScheduleBridge?.getScheduleModel;
+    return typeof getScheduleModel === "function" ? getScheduleModel() : null;
+  }
+
   function isValidISODate(value) {
+    const core = coreScheduleModel();
+    if (typeof core?.isValidISODate === "function") return core.isValidISODate(value);
+
     if (typeof value !== "string") return false;
     const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
     if (!match) return false;
@@ -21,6 +29,9 @@
   }
 
   function isValidTime(value) {
+    const core = coreScheduleModel();
+    if (typeof core?.isValidTime === "function") return core.isValidTime(value);
+
     if (typeof value !== "string") return false;
     const match = /^(\d{2}):(\d{2})$/.exec(value);
     if (!match) return false;
@@ -31,26 +42,37 @@
   }
 
   function makeScheduleNone() {
+    const core = coreScheduleModel();
+    if (typeof core?.makeScheduleNone === "function") return core.makeScheduleNone();
     return { type: "none", date: null, time: null };
   }
 
   function makeScheduleDate(date) {
+    const core = coreScheduleModel();
+    if (typeof core?.makeScheduleDate === "function") return core.makeScheduleDate(date);
     return isValidISODate(date)
       ? { type: "date", date, time: null }
       : makeScheduleNone();
   }
 
   function makeScheduleDateTime(date, time) {
+    const core = coreScheduleModel();
+    if (typeof core?.makeScheduleDateTime === "function") return core.makeScheduleDateTime(date, time);
     return isValidISODate(date) && isValidTime(time)
       ? { type: "datetime", date, time }
       : makeScheduleNone();
   }
 
   function scheduleFromLegacyTargetAt(targetAt) {
+    const core = coreScheduleModel();
+    if (typeof core?.scheduleFromLegacyTargetAt === "function") return core.scheduleFromLegacyTargetAt(targetAt);
     return isValidISODate(targetAt) ? makeScheduleDate(targetAt) : makeScheduleNone();
   }
 
   function normalizeSchedule(schedule, legacyTargetAt) {
+    const core = coreScheduleModel();
+    if (typeof core?.normalizeSchedule === "function") return core.normalizeSchedule(schedule, legacyTargetAt);
+
     if (schedule && typeof schedule === "object") {
       if (schedule.type === "none") return makeScheduleNone();
       if (schedule.type === "date" && isValidISODate(schedule.date)) return makeScheduleDate(schedule.date);
@@ -63,6 +85,8 @@
   }
 
   function scheduleDate(schedule) {
+    const core = coreScheduleModel();
+    if (typeof core?.scheduleDate === "function") return core.scheduleDate(schedule);
     return schedule && (schedule.type === "date" || schedule.type === "datetime")
       ? schedule.date
       : null;
@@ -78,6 +102,8 @@
   }
 
   function sameSchedule(a, b) {
+    const core = coreScheduleModel();
+    if (typeof core?.sameSchedule === "function") return core.sameSchedule(a, b);
     return a?.type === b?.type && a?.date === b?.date && a?.time === b?.time;
   }
 
