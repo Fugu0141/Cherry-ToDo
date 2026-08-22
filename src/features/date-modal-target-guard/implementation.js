@@ -1,7 +1,6 @@
 (() => {
   const recentHitKey = "questStickyRecentDateHit";
   const baseOpenChangeDateModal = typeof openChangeDateModal === "function" ? openChangeDateModal : null;
-  const baseOpenCreateTaskModal = typeof openCreateTaskModal === "function" ? openCreateTaskModal : null;
 
   function freshTargetDate(fallbackDate) {
     const hit = window[recentHitKey];
@@ -20,16 +19,6 @@
   if (baseOpenChangeDateModal) {
     openChangeDateModal = function(taskId, defaultDate, original) {
       return baseOpenChangeDateModal(taskId, freshTargetDate(defaultDate), original);
-    };
-  }
-
-  if (baseOpenCreateTaskModal) {
-    openCreateTaskModal = function(options = {}) {
-      const next = { ...options };
-      if (next.parentId && next.schedule === undefined) {
-        next.targetAt = freshTargetDate(next.targetAt);
-      }
-      return baseOpenCreateTaskModal(next);
     };
   }
 })();

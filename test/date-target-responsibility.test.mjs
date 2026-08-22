@@ -7,6 +7,10 @@ const source = readFileSync(
   new URL("../src/features/date-target/implementation.js", import.meta.url),
   "utf8"
 );
+const guardSource = readFileSync(
+  new URL("../src/features/date-modal-target-guard/implementation.js", import.meta.url),
+  "utf8"
+);
 const indexSource = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 
 function makeHarness() {
@@ -81,7 +85,7 @@ test("date-target keeps the pointermove hit-testing hook", () => {
   assert.equal(typeof listeners.get("pointermove"), "function");
 });
 
-test("schedule-model and the late guard own modal schedule behavior after date-target", () => {
+test("schedule-model owns create scheduling while the late guard only corrects date changes", () => {
   const dateTarget = indexSource.indexOf("src/features/date-target/implementation.js");
   const scheduleModel = indexSource.indexOf("schedule-model.js");
   const lateGuard = indexSource.indexOf("src/features/date-modal-target-guard/implementation.js");
@@ -89,4 +93,6 @@ test("schedule-model and the late guard own modal schedule behavior after date-t
   assert.ok(dateTarget >= 0);
   assert.ok(scheduleModel > dateTarget);
   assert.ok(lateGuard > scheduleModel);
+  assert.doesNotMatch(guardSource, /openCreateTaskModal|targetAt/);
+  assert.match(guardSource, /openChangeDateModal/);
 });
