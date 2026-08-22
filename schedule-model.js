@@ -2,6 +2,7 @@
   const baseMakeTask = makeTask;
   const baseMakeInitialState = makeInitialState;
   const baseSaveNow = saveNow;
+  let rootCreateUsesLegacyTodayDefault = false;
 
   function isValidISODate(value) {
     if (typeof value !== "string") return false;
@@ -194,7 +195,7 @@
     status = "todo",
     branchMode = "same"
   } = {}) {
-    const legacyTargetAt = targetAt === undefined && schedule === undefined ? todayISO() : targetAt;
+    const legacyTargetAt = targetAt === undefined && schedule === undefined ? null : targetAt;
     const normalizedSchedule = normalizeSchedule(schedule, legacyTargetAt);
     const task = {
       id: id(),
@@ -295,7 +296,9 @@
   };
 
   openCreateTaskModal = function openCreateTaskModalWithSchedule({ parentId = null, targetAt, schedule, branchMode = "same" } = {}) {
-    const initialTargetAt = targetAt === undefined && schedule === undefined ? todayISO() : targetAt;
+    const useUndatedDefault = rootCreateUsesLegacyTodayDefault && parentId === null && schedule === undefined;
+    rootCreateUsesLegacyTodayDefault = false;
+    const initialTargetAt = useUndatedDefault || (targetAt === undefined && schedule === undefined) ? null : targetAt;
     let nextSchedule = normalizeSchedule(schedule, initialTargetAt);
     const nextDate = getTaskDate({ schedule: nextSchedule, targetAt: scheduleDate(nextSchedule) });
     const freshTarget = parentId ? recentAskTargetDate(nextDate) : nextDate;
@@ -311,6 +314,12 @@
     taskModal.classList.remove("hidden");
     requestAnimationFrame(() => taskNameInput.focus({ preventScroll: true }));
   };
+
+  if (addRootBtn) {
+    addRootBtn.addEventListener("click", () => {
+      rootCreateUsesLegacyTodayDefault = true;
+    }, true);
+  }
 
   openEditTaskModal = function openEditTaskModalWithSchedule(taskId) {
     const task = state.tasks[taskId];
