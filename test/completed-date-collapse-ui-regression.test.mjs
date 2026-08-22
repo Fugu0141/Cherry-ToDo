@@ -26,6 +26,12 @@ test("completed-date collapse state is exported before same-day layout overrides
   assert.match(finalFixSource, /toggleDate: toggleDoneDate/);
 });
 
+test("final-fix no longer owns create-modal schedule correction", () => {
+  assert.doesNotMatch(finalFixSource, /originalOpenCreateTaskModal/);
+  assert.doesNotMatch(finalFixSource, /openCreateTaskModal\s*=/);
+  assert.doesNotMatch(finalFixSource, /\btargetAt\b/);
+});
+
 test("same-day layout keeps the completed-date expand/collapse affordance after overriding renderLanes", () => {
   const renderStart = sameDayLayoutSource.indexOf("renderLanes = function() {");
   const renderEnd = sameDayLayoutSource.indexOf("resolveTrackCollisions = function() {");

@@ -3,7 +3,6 @@
   const compactHGap = 132;
   const compactVGap = 92;
   const originalSetSelected = typeof setSelected === "function" ? setSelected : null;
-  const originalOpenCreateTaskModal = typeof openCreateTaskModal === "function" ? openCreateTaskModal : null;
 
   let lastDropHit = null;
   let lastDropHitAt = 0;
@@ -334,22 +333,6 @@
     return hit.date || todayISO();
   };
 
-  if (originalOpenCreateTaskModal) {
-    openCreateTaskModal = function(options = {}) {
-      const next = { ...options };
-      const recentBoundaryHit = lastDropHit
-        && lastDropHit.mode === "ask"
-        && lastDropHit.date
-        && Date.now() - lastDropHitAt < 1200;
-
-      if (next.parentId && recentBoundaryHit && normalizeDate(next.targetAt) === todayISO()) {
-        next.targetAt = lastDropHit.date;
-      }
-
-      return originalOpenCreateTaskModal(next);
-    };
-  }
-
   window.addEventListener("pointerup", hideDebugSoon, true);
   window.addEventListener("pointercancel", hideDebugSoon, true);
 
@@ -387,7 +370,6 @@
 
       fragment.appendChild(path);
     }
-
     links.appendChild(fragment);
   };
 
