@@ -150,7 +150,8 @@
 
   function taskToneClass(task) {
     if (task.status === "done") return "doneTask";
-    const date = normalizeDate(task.targetAt);
+    const date = taskDate(task);
+    if (date === null) return "";
     if (date < todayISO()) return "overdueTask";
     if (date === todayISO()) return "todayTask";
     return "futureTask";
