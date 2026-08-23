@@ -358,7 +358,6 @@
     const task = state.tasks[taskId];
     if (!task) return;
 
-    normalizeTaskSchedule(task);
     taskModalMode = "edit";
     taskModalContext = { taskId };
     taskModalTitle.textContent = "タスクを編集";
@@ -405,7 +404,6 @@
     const task = state.tasks[taskId];
     if (!task) return;
 
-    normalizeTaskSchedule(task);
     const date = isValidISODate(defaultDate) ? defaultDate : getTaskDate(task);
     dateModalContext = { taskId, original };
     changeDateInput.value = date || "";
