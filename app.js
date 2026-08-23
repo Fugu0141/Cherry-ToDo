@@ -1145,9 +1145,9 @@ if (deleteBtn) {
 }
 
 taskCancelBtn.addEventListener("click", closeTaskModal);
-taskSaveBtn.addEventListener("click", saveTaskModal);
+taskSaveBtn.addEventListener("click", () => saveTaskModal());
 dateCancelBtn.addEventListener("click", () => closeDateModal({ restore: true }));
-dateSaveBtn.addEventListener("click", saveDateModal);
+dateSaveBtn.addEventListener("click", () => saveDateModal());
 
 taskNameInput.addEventListener("keydown", event => {
   if (event.key === "Enter") saveTaskModal();
