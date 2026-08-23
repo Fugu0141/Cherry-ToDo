@@ -51,7 +51,7 @@ test("legacy plain task drag promotes a targetAt-only date write into canonical 
     }
   };
 
-  reconcile(previous, next);
+  assert.equal(reconcile(previous, next), true);
 
   assert.equal(next.tasks.old.targetAt, "2026-08-30");
   assert.deepEqual(plain(next.tasks.old.schedule), {
@@ -66,7 +66,7 @@ test("pre-Core targetAt-only task drag gains a canonical schedule", () => {
   const previous = { tasks: { old: { targetAt: "2026-08-22" } } };
   const next = { tasks: { old: { targetAt: "2026-08-30" } } };
 
-  reconcile(previous, next);
+  assert.equal(reconcile(previous, next), true);
 
   assert.equal(next.tasks.old.targetAt, "2026-08-30");
   assert.deepEqual(plain(next.tasks.old.schedule), {
@@ -95,7 +95,7 @@ test("canonical writers remain authoritative when they update schedule themselve
     }
   };
 
-  reconcile(previous, next);
+  assert.equal(reconcile(previous, next), false);
 
   assert.deepEqual(plain(next.tasks.task.schedule), {
     type: "datetime",
@@ -123,7 +123,7 @@ test("legacy reconciliation stays disabled when Core schedule helpers are unavai
     }
   };
 
-  reconcile(previous, next);
+  assert.equal(reconcile(previous, next), false);
 
   assert.equal(next.tasks.old.targetAt, "2026-08-30");
   assert.deepEqual(plain(next.tasks.old.schedule), {
@@ -133,7 +133,7 @@ test("legacy reconciliation stays disabled when Core schedule helpers are unavai
   });
 });
 
-test("legacy mutation capture reconciles the live state before cloning it for Core history", () => {
+test("legacy mutation capture reconciles and relayouts before the render that records history", () => {
   const requestStart = source.indexOf("requestRender = function coreAwareRequestRender");
   const requestEnd = source.indexOf("\n      };", requestStart);
   assert.notEqual(requestStart, -1);
@@ -141,6 +141,13 @@ test("legacy mutation capture reconciles the live state before cloning it for Co
 
   const requestSource = source.slice(requestStart, requestEnd);
   assert.match(requestSource, /const current = safeState\(\);/);
-  assert.match(requestSource, /reconcileLegacyTargetAtWrites\(previous, current\);/);
+  assert.match(requestSource, /const reconciledLegacyDate = reconcileLegacyTargetAtWrites\(previous, current\);/);
+  assert.match(requestSource, /if \(reconciledLegacyDate && typeof branchLayout === "function"\) branchLayout\(\);/);
   assert.match(requestSource, /const next = clone\(current\);/);
+
+  const reconcileIndex = requestSource.indexOf("reconcileLegacyTargetAtWrites(previous, current)");
+  const layoutIndex = requestSource.indexOf("branchLayout()");
+  const renderIndex = requestSource.indexOf("originalRequestRender()");
+  assert.ok(reconcileIndex < layoutIndex, "canonical date reconciliation must happen before relayout");
+  assert.ok(layoutIndex < renderIndex, "relayout must happen before the first rendered frame");
 });
