@@ -110,3 +110,25 @@ test("legacy snapshot capture only repairs moved geometry before recording histo
   assert.doesNotMatch(snapshotSource, /targetAt/);
   assert.doesNotMatch(snapshotSource, /\.schedule\b/);
 });
+
+test("Core history replay preserves recorded task positions instead of auto-layouting them", () => {
+  const renderStart = source.indexOf("    function renderLegacyApp()");
+  const renderEnd = source.indexOf("\n\n    function mirrorState", renderStart);
+  assert.notEqual(renderStart, -1);
+  assert.notEqual(renderEnd, -1);
+
+  const renderSource = source.slice(renderStart, renderEnd);
+  assert.match(renderSource, /originalRequestRender\?\.\(\)/);
+  assert.match(renderSource, /scheduleSave/);
+  assert.doesNotMatch(renderSource, /branchLayout\s*\(/);
+
+  const publishStart = source.indexOf("    function publishState(");
+  const publishEnd = source.indexOf("\n\n    function registerCommand", publishStart);
+  assert.notEqual(publishStart, -1);
+  assert.notEqual(publishEnd, -1);
+
+  const publishSource = source.slice(publishStart, publishEnd);
+  assert.match(publishSource, /state = next;/);
+  assert.match(publishSource, /renderLegacyApp\(\)/);
+  assert.doesNotMatch(publishSource, /branchLayout\s*\(/);
+});
