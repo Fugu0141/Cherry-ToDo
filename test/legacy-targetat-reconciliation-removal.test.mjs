@@ -38,7 +38,7 @@ test("live date-changing paths use the canonical schedule boundary", () => {
   const saveTaskStart = scheduleSource.indexOf("saveTaskModal = function saveTaskModalWithSchedule");
   const saveTaskEnd = scheduleSource.indexOf("\n\n  openChangeDateModal = function", saveTaskStart);
   const saveDateStart = scheduleSource.indexOf("saveDateModal = function saveDateModalWithSchedule");
-  const saveDateEnd = scheduleSource.indexOf("\n\n  installCurrentModalSaveHandlers", saveDateStart);
+  const saveDateEnd = scheduleSource.indexOf("\n\n  normalizeAllTasks();", saveDateStart);
 
   assert.ok(saveTaskStart >= 0 && saveTaskEnd > saveTaskStart);
   assert.ok(saveDateStart >= 0 && saveDateEnd > saveDateStart);
@@ -49,14 +49,12 @@ test("live date-changing paths use the canonical schedule boundary", () => {
   assert.match(saveDateSource, /setTaskDateFromInput\(task, changeDateInput\.value\)/);
 });
 
-test("legacy modal save listeners are detached before current schedule handlers are installed", () => {
-  const installStart = scheduleSource.indexOf("function installCurrentModalSaveHandlers");
-  const installEnd = scheduleSource.indexOf("\n\n  window.isValidISODate", installStart);
-  assert.ok(installStart >= 0 && installEnd > installStart);
+test("schedule-model no longer rewires modal save listeners", () => {
+  assert.doesNotMatch(scheduleSource, /baseSaveTaskModal/);
+  assert.doesNotMatch(scheduleSource, /baseSaveDateModal/);
+  assert.doesNotMatch(scheduleSource, /installCurrentModalSaveHandlers/);
+  assert.doesNotMatch(scheduleSource, /removeEventListener\("click"/);
 
-  const installSource = scheduleSource.slice(installStart, installEnd);
-  assert.match(installSource, /taskSaveBtn\.removeEventListener\("click", baseSaveTaskModal\)/);
-  assert.match(installSource, /dateSaveBtn\.removeEventListener\("click", baseSaveDateModal\)/);
-  assert.match(installSource, /taskSaveBtn\.addEventListener\("click", \(\) => saveTaskModal\(\)\)/);
-  assert.match(installSource, /dateSaveBtn\.addEventListener\("click", \(\) => saveDateModal\(\)\)/);
+  assert.match(appSource, /taskSaveBtn\.addEventListener\("click", \(\) => saveTaskModal\(\)\)/);
+  assert.match(appSource, /dateSaveBtn\.addEventListener\("click", \(\) => saveDateModal\(\)\)/);
 });
