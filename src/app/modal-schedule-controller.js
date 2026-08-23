@@ -35,11 +35,67 @@
     return fresh ? targetDate : fallbackDate;
   }
 
+  function normalizedFreePosition(position) {
+    if (!position || !Number.isFinite(position.x) || !Number.isFinite(position.y)) return null;
+    return {
+      x: Math.max(40, position.x),
+      y: Math.max(30, position.y)
+    };
+  }
+
+  function freePlacementFor(parentId, branchMode, requestedPosition) {
+    const requested = normalizedFreePosition(requestedPosition);
+    if (requested) return requested;
+
+    const parent = parentId ? state.tasks[parentId] : null;
+    if (!parent) {
+      const scrollLeft = typeof board !== "undefined" && Number.isFinite(board?.scrollLeft) ? board.scrollLeft : 0;
+      const scrollTop = typeof board !== "undefined" && Number.isFinite(board?.scrollTop) ? board.scrollTop : 0;
+      return { x: scrollLeft + 80, y: scrollTop + 80 };
+    }
+
+    const width = typeof noteW !== "undefined" && Number.isFinite(noteW) ? noteW : 180;
+    const height = typeof noteH !== "undefined" && Number.isFinite(noteH) ? noteH : 90;
+    const siblings = typeof getChildren === "function" ? getChildren(parent.id) : [];
+    const vertical = typeof isVerticalMode === "function" && isVerticalMode();
+
+    if (vertical) {
+      if (branchMode === "same") {
+        const sameCount = siblings.filter(child => child.branchMode === "same").length;
+        return {
+          x: Math.max(40, parent.x),
+          y: Math.max(30, parent.y + (sameCount + 1) * (height + 72))
+        };
+      }
+
+      const branchCount = siblings.filter(child => child.branchMode !== "same").length;
+      return {
+        x: Math.max(40, parent.x + (branchCount + 1) * (width + 48)),
+        y: Math.max(30, parent.y + height + 72)
+      };
+    }
+
+    if (branchMode === "same") {
+      const sameCount = siblings.filter(child => child.branchMode === "same").length;
+      return {
+        x: Math.max(40, parent.x + (sameCount + 1) * (width + 72)),
+        y: Math.max(30, parent.y)
+      };
+    }
+
+    const branchCount = siblings.filter(child => child.branchMode !== "same").length;
+    return {
+      x: Math.max(40, parent.x + width + 72),
+      y: Math.max(30, parent.y + (branchCount + 1) * (height + 44))
+    };
+  }
+
   openCreateTaskModal = function canonicalCreateTaskModal({
     parentId = null,
     targetAt,
     schedule,
-    branchMode = "same"
+    branchMode = "same",
+    position = null
   } = {}) {
     const hasExplicitSchedule = schedule !== undefined;
     let nextSchedule = normalizeCreationSchedule(schedule, targetAt);
@@ -57,7 +113,8 @@
       parentId,
       schedule: nextSchedule,
       targetAt: scheduleDate(nextSchedule),
-      branchMode
+      branchMode,
+      position: normalizedFreePosition(position)
     };
     taskModalTitle.textContent = parentId
       ? branchMode === "same" ? "同じブランチに追加" : "分岐タスクを作成"
@@ -118,6 +175,11 @@
         : taskModalContext.parentId;
 
       const task = makeTask({ title, parentId, schedule: nextSchedule, branchMode });
+      if (!state.showLanes) {
+        const position = freePlacementFor(parentId, branchMode, taskModalContext.position);
+        task.x = position.x;
+        task.y = position.y;
+      }
       state.tasks[task.id] = task;
       selectedId = task.id;
     }
@@ -133,7 +195,7 @@
 
     closeTaskModal();
     refreshLaneDates();
-    branchLayout();
+    if (state.showLanes) branchLayout();
     requestRender();
   };
 
