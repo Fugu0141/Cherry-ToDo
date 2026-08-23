@@ -133,7 +133,7 @@ test("legacy reconciliation stays disabled when Core schedule helpers are unavai
   });
 });
 
-test("legacy mutation capture reconciles and relayouts before the render that records history", () => {
+test("first legacy drag reconciles and relayouts before the rendered frame", () => {
   const requestStart = source.indexOf("requestRender = function coreAwareRequestRender");
   const requestEnd = source.indexOf("\n      };", requestStart);
   assert.notEqual(requestStart, -1);
