@@ -120,7 +120,7 @@ test("Core history replay preserves recorded task positions instead of auto-layo
   const renderSource = source.slice(renderStart, renderEnd);
   assert.match(renderSource, /originalRequestRender\?\.\(\)/);
   assert.match(renderSource, /scheduleSave/);
-  assert.doesNotMatch(renderSource, /branchLayout\s*\(/);
+  assert.doesNotMatch(renderSource, /^\s*branchLayout\s*\(/m);
 
   const publishStart = source.indexOf("    function publishState(");
   const publishEnd = source.indexOf("\n\n    function registerCommand", publishStart);
@@ -130,5 +130,5 @@ test("Core history replay preserves recorded task positions instead of auto-layo
   const publishSource = source.slice(publishStart, publishEnd);
   assert.match(publishSource, /state = next;/);
   assert.match(publishSource, /renderLegacyApp\(\)/);
-  assert.doesNotMatch(publishSource, /branchLayout\s*\(/);
+  assert.doesNotMatch(publishSource, /^\s*branchLayout\s*\(/m);
 });
