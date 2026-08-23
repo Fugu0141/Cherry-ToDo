@@ -7,6 +7,67 @@
     return typeof window.isValidISODate === "function" && window.isValidISODate(value);
   }
 
+  function scheduleDate(schedule) {
+    return schedule && (schedule.type === "date" || schedule.type === "datetime")
+      ? schedule.date
+      : null;
+  }
+
+  function normalizeCreationSchedule(schedule, targetAt) {
+    const hasExplicitSchedule = schedule !== undefined;
+    const initialTargetAt = targetAt === undefined && !hasExplicitSchedule ? null : targetAt;
+
+    if (typeof window.normalizeSchedule === "function") {
+      return window.normalizeSchedule(schedule, initialTargetAt);
+    }
+
+    if (schedule && typeof schedule === "object") return schedule;
+    return validISODate(initialTargetAt)
+      ? { type: "date", date: initialTargetAt, time: null }
+      : { type: "none", date: null, time: null };
+  }
+
+  function recentAskTargetDate(fallbackDate) {
+    const hit = window.questStickyRecentDateHit;
+    const at = hit?.at || 0;
+    const targetDate = hit?.targetDate || hit?.date;
+    const fresh = hit && targetDate && hit.mode === "ask" && Date.now() - at < 1500;
+    return fresh ? targetDate : fallbackDate;
+  }
+
+  openCreateTaskModal = function canonicalCreateTaskModal({
+    parentId = null,
+    targetAt,
+    schedule,
+    branchMode = "same"
+  } = {}) {
+    const hasExplicitSchedule = schedule !== undefined;
+    let nextSchedule = normalizeCreationSchedule(schedule, targetAt);
+    const nextDate = scheduleDate(nextSchedule);
+    const freshTarget = parentId && !hasExplicitSchedule ? recentAskTargetDate(nextDate) : nextDate;
+
+    if (freshTarget && freshTarget !== nextDate) {
+      nextSchedule = typeof window.makeScheduleDate === "function"
+        ? window.makeScheduleDate(freshTarget)
+        : { type: "date", date: freshTarget, time: null };
+    }
+
+    taskModalMode = "create";
+    taskModalContext = {
+      parentId,
+      schedule: nextSchedule,
+      targetAt: scheduleDate(nextSchedule),
+      branchMode
+    };
+    taskModalTitle.textContent = parentId
+      ? branchMode === "same" ? "同じブランチに追加" : "分岐タスクを作成"
+      : "ルートタスクを作成";
+    taskNameInput.value = "";
+    taskDateInput.value = scheduleDate(nextSchedule) || "";
+    taskModal.classList.remove("hidden");
+    requestAnimationFrame(() => taskNameInput.focus({ preventScroll: true }));
+  };
+
   openEditTaskModal = function canonicalEditTaskModal(taskId) {
     const task = state.tasks[taskId];
     if (!task) return;
@@ -46,9 +107,7 @@
   saveTaskModal = function canonicalSaveTaskModal() {
     const title = taskNameInput.value.trim() || "新しいタスク";
     const nextSchedule = window.setTaskDateFromInput({}, taskDateInput.value);
-    const targetDate = nextSchedule?.type === "date" || nextSchedule?.type === "datetime"
-      ? nextSchedule.date
-      : null;
+    const targetDate = scheduleDate(nextSchedule);
 
     snapshot();
 
