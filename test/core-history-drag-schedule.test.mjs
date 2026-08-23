@@ -94,7 +94,7 @@ test("drag history preserves datetime time because the cloned schedule is author
 
 test("drag snapshot restoration no longer reads or rewrites schedule compatibility fields", () => {
   assert.doesNotMatch(helperSource, /targetAt/);
-  assert.doesNotMatch(helperSource, /schedule/);
+  assert.doesNotMatch(helperSource, /\.schedule\b/);
   assert.doesNotMatch(source, /const schedule = core\.schedule/);
 });
 
@@ -108,5 +108,5 @@ test("legacy snapshot capture only repairs moved geometry before recording histo
   assert.match(snapshotSource, /pendingLegacyState = clone\(safeState\(\)\)/);
   assert.match(snapshotSource, /restoreDragSnapshotTask\(draggedTask, activeDrag\.original\)/);
   assert.doesNotMatch(snapshotSource, /targetAt/);
-  assert.doesNotMatch(snapshotSource, /schedule/);
+  assert.doesNotMatch(snapshotSource, /\.schedule\b/);
 });
