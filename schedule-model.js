@@ -2,8 +2,6 @@
   const baseMakeTask = makeTask;
   const baseMakeInitialState = makeInitialState;
   const baseSaveNow = saveNow;
-  const baseSaveTaskModal = typeof saveTaskModal === "function" ? saveTaskModal : null;
-  const baseSaveDateModal = typeof saveDateModal === "function" ? saveDateModal : null;
 
   function coreScheduleModel() {
     const getScheduleModel = window.CherryScheduleBridge?.getScheduleModel;
@@ -191,18 +189,6 @@
     const targetDate = hit?.targetDate || hit?.date;
     const fresh = hit && targetDate && hit.mode === "ask" && Date.now() - at < 1500;
     return fresh ? targetDate : fallbackDate;
-  }
-
-  function installCurrentModalSaveHandlers() {
-    if (baseSaveTaskModal && typeof taskSaveBtn !== "undefined" && taskSaveBtn) {
-      taskSaveBtn.removeEventListener("click", baseSaveTaskModal);
-      taskSaveBtn.addEventListener("click", () => saveTaskModal());
-    }
-
-    if (baseSaveDateModal && typeof dateSaveBtn !== "undefined" && dateSaveBtn) {
-      dateSaveBtn.removeEventListener("click", baseSaveDateModal);
-      dateSaveBtn.addEventListener("click", () => saveDateModal());
-    }
   }
 
   window.isValidISODate = isValidISODate;
@@ -425,7 +411,6 @@
     requestRender();
   };
 
-  installCurrentModalSaveHandlers();
   normalizeAllTasks();
   refreshLaneDates();
   branchLayout();
