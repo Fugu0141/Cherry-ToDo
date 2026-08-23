@@ -173,10 +173,6 @@
     return setTaskSchedule(task, date ? makeScheduleDate(date) : makeScheduleNone());
   }
 
-  function taskLayoutDate(task) {
-    return getTaskDate(task) || todayISO();
-  }
-
   function taskSortDate(task) {
     return getTaskDate(task) || "9999-12-31";
   }
@@ -202,67 +198,7 @@
     baseSaveNow();
   };
 
-  refreshLaneDates = function refreshLaneDatesWithSchedule() {
-    const collectLaneDates = window.CherryScheduleBridge?.collectLaneDates;
-    cachedLaneDates = typeof collectLaneDates === "function"
-      ? collectLaneDates(getTasks(), todayISO())
-      : [todayISO()];
-  };
-
-  taskX = function taskXWithSchedule(task) {
-    return isVerticalMode() ? vTrackToX(task._track ?? 0) : hDateToX(taskLayoutDate(task));
-  };
-
-  taskY = function taskYWithSchedule(task) {
-    return isVerticalMode() ? vDateToY(taskLayoutDate(task)) : hTrackToY(task._track ?? 0);
-  };
-
-  sortByDateThenTitle = function sortByDateThenTitleWithSchedule(a, b) {
-    const dateDiff = taskSortDate(a).localeCompare(taskSortDate(b));
-    if (dateDiff !== 0) return dateDiff;
-    return String(a.title).localeCompare(String(b.title), "ja");
-  };
-
-  resolveTrackCollisions = function resolveTrackCollisionsWithSchedule() {
-    const tasks = getTasks()
-      .slice()
-      .sort((a, b) => {
-        const dateDiff = taskSortDate(a).localeCompare(taskSortDate(b));
-        if (dateDiff !== 0) return dateDiff;
-        const columnDiff = (a._dayColumn ?? 0) - (b._dayColumn ?? 0);
-        if (columnDiff !== 0) return columnDiff;
-        return getTaskDepth(a.id) - getTaskDepth(b.id);
-      });
-
-    for (let pass = 0; pass < 8; pass++) {
-      let changed = false;
-      const occupied = new Set();
-
-      for (const task of tasks) {
-        if (!Number.isFinite(task._track)) task._track = 0;
-
-        let track = task._track;
-        const dateKey = getTaskDate(task) || `none:${task.id}`;
-        const dayColumn = task._dayColumn ?? 0;
-        while (occupied.has(`${dateKey}:${dayColumn}:${track}`)) track += 1;
-
-        if (track !== task._track) {
-          shiftSubtreeTracks(task.id, track - task._track);
-          changed = true;
-        }
-
-        occupied.add(`${dateKey}:${dayColumn}:${task._track}`);
-        maxTrack = Math.max(maxTrack, task._track);
-      }
-
-      if (!changed) break;
-    }
-  };
-
   normalizeAllTasks();
-  refreshLaneDates();
-  branchLayout();
-  requestRender();
 
   window.cherrySchedule = {
     normalizeAllTasks,
