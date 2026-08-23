@@ -6,12 +6,12 @@ const releaseSource = await readFile(
   new URL("../release-prep-ui.js", import.meta.url),
   "utf8"
 );
-const scheduleSource = await readFile(
-  new URL("../schedule-model.js", import.meta.url),
+const controllerSource = await readFile(
+  new URL("../src/app/modal-schedule-controller.js", import.meta.url),
   "utf8"
 );
 
-test("release edit wrapper only localizes while schedule-model owns the effective date", () => {
+test("release edit wrapper only localizes while app modal controller owns the effective date", () => {
   const releaseStart = releaseSource.indexOf("openEditTaskModal = function localizedEditTaskModal");
   const releaseEnd = releaseSource.indexOf("function patchResetConfirm", releaseStart);
   const editWrapper = releaseSource.slice(releaseStart, releaseEnd);
@@ -24,11 +24,12 @@ test("release edit wrapper only localizes while schedule-model owns the effectiv
   assert.doesNotMatch(editWrapper, /taskDateInput/);
   assert.doesNotMatch(editWrapper, /targetAt/);
 
-  const scheduleStart = scheduleSource.indexOf("openEditTaskModal = function openEditTaskModalWithSchedule");
-  const scheduleEnd = scheduleSource.indexOf("saveTaskModal = function", scheduleStart);
-  const scheduleEdit = scheduleSource.slice(scheduleStart, scheduleEnd);
+  const controllerStart = controllerSource.indexOf("openEditTaskModal = function canonicalEditTaskModal");
+  const controllerEnd = controllerSource.indexOf("getSameBranchTail = function", controllerStart);
+  const controllerEdit = controllerSource.slice(controllerStart, controllerEnd);
 
-  assert.notEqual(scheduleStart, -1);
-  assert.doesNotMatch(scheduleEdit, /normalizeTaskSchedule\(task\)/);
-  assert.match(scheduleEdit, /taskDateInput\.value = getTaskDate\(task\) \|\| ""/);
+  assert.notEqual(controllerStart, -1);
+  assert.doesNotMatch(controllerEdit, /normalizeTaskSchedule\(task\)/);
+  assert.match(controllerEdit, /taskDateInput\.value = currentTaskDate\(task\) \|\| ""/);
+  assert.match(controllerSource, /window\.getTaskDate\(task\)/);
 });
