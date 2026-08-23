@@ -4,9 +4,11 @@ import test from "node:test";
 import vm from "node:vm";
 
 const scheduleModelSource = readFileSync(new URL("../schedule-model.js", import.meta.url), "utf8");
+const taskFactorySource = readFileSync(new URL("../src/app/task-schedule-factory.js", import.meta.url), "utf8");
+const modalControllerSource = readFileSync(new URL("../src/app/modal-schedule-controller.js", import.meta.url), "utf8");
 const appSource = readFileSync(new URL("../app.js", import.meta.url), "utf8");
 
-function loadScheduleModel() {
+function loadScheduleStack() {
   const tasks = [];
   const taskModalTitle = { textContent: "" };
   const taskNameInput = { value: "", focus() {}, select() {} };
@@ -21,9 +23,25 @@ function loadScheduleModel() {
     Object,
     String,
     Math,
+    Set,
     console,
     makeTask() {},
-    makeInitialState() { return { tasks: {} }; },
+    makeInitialState() {
+      return {
+        tasks: {
+          legacy: {
+            id: "legacy",
+            title: "Legacy",
+            parentId: null,
+            x: 0,
+            y: 0,
+            targetAt: "2026-08-29",
+            status: "todo",
+            branchMode: null
+          }
+        }
+      };
+    },
     saveNow() {},
     getTasks() { return tasks; },
     todayISO() { return "2026-08-22"; },
@@ -66,15 +84,20 @@ function loadScheduleModel() {
     openEditTaskModal() {},
     saveTaskModal() {},
     openChangeDateModal() {},
+    closeDateModal() {},
     saveDateModal() {}
   });
 
+  // Match browser ownership order: app factories/controllers install first;
+  // schedule-model then publishes the canonical helpers they call at interaction time.
+  vm.runInContext(taskFactorySource, context);
+  vm.runInContext(modalControllerSource, context);
   vm.runInContext(scheduleModelSource, context);
   return { context, taskDateInput };
 }
 
 test("context-free task creation defaults to schedule:none instead of today", () => {
-  const { context } = loadScheduleModel();
+  const { context } = loadScheduleStack();
   const task = context.makeTask({ title: "Undated" });
 
   assert.equal(task.targetAt, null);
@@ -85,7 +108,7 @@ test("context-free task creation defaults to schedule:none instead of today", ()
 });
 
 test("context-free create modal starts with a blank date", () => {
-  const { context, taskDateInput } = loadScheduleModel();
+  const { context, taskDateInput } = loadScheduleStack();
 
   context.openCreateTaskModal();
   assert.equal(taskDateInput.value, "");
@@ -96,7 +119,7 @@ test("context-free create modal starts with a blank date", () => {
 });
 
 test("explicit date context is still preserved", () => {
-  const { context, taskDateInput } = loadScheduleModel();
+  const { context, taskDateInput } = loadScheduleStack();
 
   context.openCreateTaskModal({ targetAt: "2026-08-30" });
   assert.equal(taskDateInput.value, "2026-08-30");
@@ -107,7 +130,7 @@ test("explicit date context is still preserved", () => {
 });
 
 test("explicit child schedule is authoritative over a recent spatial date hit", () => {
-  const { context, taskDateInput } = loadScheduleModel();
+  const { context, taskDateInput } = loadScheduleStack();
   context.window.questStickyRecentDateHit = {
     mode: "ask",
     targetDate: "2026-09-05",
@@ -128,13 +151,24 @@ test("explicit child schedule is authoritative over a recent spatial date hit", 
   });
   assert.equal(taskDateInput.value, "2026-08-30");
 
-  // Spatial/date-target creation still uses the recent hit when no canonical schedule is supplied.
   context.openCreateTaskModal({
     parentId: "parent",
     targetAt: "2026-08-30",
     branchMode: "branch"
   });
   assert.equal(taskDateInput.value, "2026-09-05");
+});
+
+test("reset/default state factory normalizes legacy dates through the canonical schedule writer", () => {
+  const { context } = loadScheduleStack();
+  const next = context.makeInitialState();
+  const task = next.tasks.legacy;
+
+  assert.equal(task.targetAt, "2026-08-29");
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(task.schedule)),
+    { type: "date", date: "2026-08-29", time: null }
+  );
 });
 
 test("toolbar root Add owns canonical undated intent without a capture shim", () => {
@@ -150,8 +184,18 @@ test("toolbar root Add owns canonical undated intent without a capture shim", ()
   assert.doesNotMatch(scheduleModelSource, /stopImmediatePropagation/);
 });
 
+test("creation ownership no longer lives in schedule-model", () => {
+  assert.doesNotMatch(scheduleModelSource, /baseMakeTask|makeTaskWithSchedule/);
+  assert.doesNotMatch(scheduleModelSource, /baseMakeInitialState|makeInitialStateWithSchedule/);
+  assert.doesNotMatch(scheduleModelSource, /openCreateTaskModalWithSchedule|recentAskTargetDate/);
+
+  assert.match(taskFactorySource, /makeTask = function canonicalMakeTask/);
+  assert.match(taskFactorySource, /makeInitialState = function canonicalMakeInitialState/);
+  assert.match(modalControllerSource, /openCreateTaskModal = function canonicalCreateTaskModal/);
+});
+
 test("an explicit root request for today remains dated", () => {
-  const { context, taskDateInput } = loadScheduleModel();
+  const { context, taskDateInput } = loadScheduleStack();
 
   context.openCreateTaskModal({
     parentId: null,
