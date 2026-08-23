@@ -353,21 +353,6 @@
     requestAnimationFrame(() => taskNameInput.focus({ preventScroll: true }));
   };
 
-  if (typeof addRootBtn !== "undefined" && addRootBtn) {
-    // app.js still owns an anonymous root-add listener that always supplies todayISO().
-    // Intercept the toolbar action at the compatibility boundary and invoke the current
-    // modal handler with an explicit canonical unscheduled value instead.
-    addRootBtn.addEventListener("click", event => {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      openCreateTaskModal({
-        parentId: null,
-        schedule: makeScheduleNone(),
-        branchMode: "same"
-      });
-    }, true);
-  }
-
   openEditTaskModal = function openEditTaskModalWithSchedule(taskId) {
     const task = state.tasks[taskId];
     if (!task) return;

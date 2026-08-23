@@ -1095,7 +1095,11 @@ function autoLayoutTree() {
 }
 
 addRootBtn.addEventListener("click", () => {
-  openCreateTaskModal({ parentId: null, targetAt: todayISO(), branchMode: "same" });
+  openCreateTaskModal({
+    parentId: null,
+    schedule: { type: "none", date: null, time: null },
+    branchMode: "same"
+  });
 });
 
 treeLayoutBtn.addEventListener("click", () => {
