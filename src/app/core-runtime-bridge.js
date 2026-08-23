@@ -51,36 +51,6 @@
       task.targetAt = originalDate;
     }
 
-    function reconcileLegacyTargetAtWrites(previousState, nextState) {
-      const normalizeSchedule = schedule?.normalizeSchedule;
-      const scheduleDate = schedule?.scheduleDate;
-      if (typeof normalizeSchedule !== "function" || typeof scheduleDate !== "function") return false;
-
-      const previousTasks = previousState?.tasks || {};
-      const nextTasks = nextState?.tasks || {};
-      let changed = false;
-
-      for (const [taskId, nextTask] of Object.entries(nextTasks)) {
-        const previousTask = previousTasks[taskId];
-        if (!previousTask || !nextTask) continue;
-
-        const previousTargetAt = previousTask.targetAt ?? null;
-        const nextTargetAt = nextTask.targetAt ?? null;
-        if (previousTargetAt === nextTargetAt) continue;
-
-        // A canonical writer updates schedule itself. Only reconcile the legacy
-        // targetAt-only mutation left by older task objects without an accessor.
-        if (serialize(previousTask.schedule) !== serialize(nextTask.schedule)) continue;
-
-        const nextSchedule = normalizeSchedule(undefined, nextTargetAt);
-        nextTask.schedule = nextSchedule;
-        nextTask.targetAt = scheduleDate(nextSchedule);
-        changed = true;
-      }
-
-      return changed;
-    }
-
     function renderLegacyApp() {
       if (typeof branchLayout === "function") branchLayout();
       originalRequestRender?.();
@@ -163,14 +133,10 @@
       requestRender = function coreAwareRequestRender() {
         const previous = pendingLegacyState;
         pendingLegacyState = null;
+        const result = originalRequestRender();
 
         if (!applyingCoreState && previous) {
-          const current = safeState();
-          const reconciledLegacyDate = reconcileLegacyTargetAtWrites(previous, current);
-          if (reconciledLegacyDate && typeof branchLayout === "function") branchLayout();
-
-          const next = clone(current);
-          const result = originalRequestRender();
+          const next = clone(safeState());
           if (serialize(previous) !== serialize(next)) {
             void commands.dispatch("state.capture-legacy", {
               previous,
@@ -178,10 +144,9 @@
               meta: { source: "legacy-ui" }
             }).catch(error => console.error("[Cherry Core] Failed to capture legacy mutation.", error));
           }
-          return result;
         }
 
-        return originalRequestRender();
+        return result;
       };
     }
 
