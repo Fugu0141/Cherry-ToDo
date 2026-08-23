@@ -152,7 +152,8 @@
   }
 
   function getTaskSchedule(task) {
-    return normalizeTaskSchedule(task);
+    if (!task) return makeScheduleNone();
+    return normalizeSchedule(task.schedule, getLegacyTargetAt(task));
   }
 
   function getTaskDate(task) {
