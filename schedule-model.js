@@ -264,27 +264,6 @@
     return String(a.title).localeCompare(String(b.title), "ja");
   };
 
-  getSameBranchTail = function getSameBranchTailWithSchedule(startId, targetAt) {
-    let current = state.tasks[startId];
-    if (!current || !isValidISODate(targetAt)) return startId;
-
-    const target = targetAt;
-    const seen = new Set();
-
-    while (current && !seen.has(current.id)) {
-      seen.add(current.id);
-      const next = getChildren(current.id)
-        .filter(child => child.branchMode === "same" && hasTaskDate(child) && getTaskDate(child) <= target)
-        .sort(sortByDateThenTitle)
-        .at(-1);
-
-      if (!next) break;
-      current = next;
-    }
-
-    return current ? current.id : startId;
-  };
-
   resolveTrackCollisions = function resolveTrackCollisionsWithSchedule() {
     const tasks = getTasks()
       .slice()
@@ -338,77 +317,6 @@
     taskDateInput.value = scheduleDate(nextSchedule) || "";
     taskModal.classList.remove("hidden");
     requestAnimationFrame(() => taskNameInput.focus({ preventScroll: true }));
-  };
-
-  openEditTaskModal = function openEditTaskModalWithSchedule(taskId) {
-    const task = state.tasks[taskId];
-    if (!task) return;
-
-    taskModalMode = "edit";
-    taskModalContext = { taskId };
-    taskModalTitle.textContent = "タスクを編集";
-    taskNameInput.value = task.title;
-    taskDateInput.value = getTaskDate(task) || "";
-    taskModal.classList.remove("hidden");
-    requestAnimationFrame(() => taskNameInput.select());
-  };
-
-  saveTaskModal = function saveTaskModalWithSchedule() {
-    const title = taskNameInput.value.trim() || "新しいタスク";
-    const nextSchedule = setTaskDateFromInput({}, taskDateInput.value);
-    const targetDate = scheduleDate(nextSchedule);
-
-    snapshot();
-
-    if (taskModalMode === "create") {
-      const branchMode = taskModalContext.branchMode || "same";
-      const parentId = branchMode === "same" && taskModalContext.parentId && targetDate
-        ? getSameBranchTail(taskModalContext.parentId, targetDate)
-        : taskModalContext.parentId;
-
-      const task = makeTask({ title, parentId, schedule: nextSchedule, branchMode });
-      state.tasks[task.id] = task;
-      selectedId = task.id;
-    }
-
-    if (taskModalMode === "edit") {
-      const task = state.tasks[taskModalContext.taskId];
-      if (task) {
-        task.title = title;
-        setTaskSchedule(task, nextSchedule);
-        selectedId = task.id;
-      }
-    }
-
-    closeTaskModal();
-    refreshLaneDates();
-    branchLayout();
-    requestRender();
-  };
-
-  openChangeDateModal = function openChangeDateModalWithSchedule(taskId, defaultDate, original) {
-    const task = state.tasks[taskId];
-    if (!task) return;
-
-    const date = isValidISODate(defaultDate) ? defaultDate : getTaskDate(task);
-    dateModalContext = { taskId, original };
-    changeDateInput.value = date || "";
-    dateModal.classList.remove("hidden");
-    requestAnimationFrame(() => changeDateInput.focus({ preventScroll: true }));
-  };
-
-  saveDateModal = function saveDateModalWithSchedule() {
-    if (!dateModalContext) return;
-
-    const task = state.tasks[dateModalContext.taskId];
-    if (task) setTaskDateFromInput(task, changeDateInput.value);
-
-    dateModal.classList.add("hidden");
-    dateModalContext = null;
-    hotLaneDate = null;
-    hotLineDate = null;
-    branchLayout();
-    requestRender();
   };
 
   normalizeAllTasks();
