@@ -9,15 +9,15 @@ const controllerSource = readFileSync(
 );
 const indexSource = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 
-function loadController(task) {
-  const state = { tasks: { [task.id]: task } };
+function loadController(task, { showLanes = false } = {}) {
+  const state = { tasks: { [task.id]: task }, showLanes };
   const taskModalTitle = { textContent: "" };
   const taskNameInput = { value: "", select() {}, focus() {} };
   const taskDateInput = { value: "" };
   const taskModal = { classList: { add() {}, remove() {} } };
   const changeDateInput = { value: "", focus() {} };
   const dateModal = { classList: { add() {}, remove() {} } };
-  const calls = { setTaskSchedule: 0, setTaskDateFromInput: 0, renders: 0 };
+  const calls = { setTaskSchedule: 0, setTaskDateFromInput: 0, renders: 0, layouts: 0 };
 
   const window = {
     getTaskDate(candidate) {
@@ -68,11 +68,13 @@ function loadController(task) {
     taskDateInput,
     taskModal,
     requestAnimationFrame(callback) { callback(); },
-    getChildren() { return []; },
+    getChildren(parentId) {
+      return Object.values(state.tasks).filter(candidate => candidate.parentId === parentId);
+    },
     sortByDateThenTitle() { return 0; },
     snapshot() {},
     makeTask({ title, parentId, schedule, branchMode }) {
-      return { id: "created", title, parentId, schedule, branchMode };
+      return { id: "created", title, parentId, x: 0, y: 0, schedule, branchMode };
     },
     selectedId: null,
     closeTaskModal() {
@@ -80,7 +82,7 @@ function loadController(task) {
       context.taskModalContext = null;
     },
     refreshLaneDates() {},
-    branchLayout() {},
+    branchLayout() { calls.layouts += 1; },
     requestRender() { calls.renders += 1; },
     dateModalContext: null,
     changeDateInput,
@@ -116,7 +118,88 @@ test("create modal preserves explicit canonical schedule intent", () => {
   );
 });
 
-test("edit save reads and writes through canonical schedule helpers", () => {
+test("free-layout child creation keeps existing task positions and places only the new child", () => {
+  const parent = {
+    id: "parent",
+    title: "Parent",
+    x: 320,
+    y: 210,
+    schedule: { type: "none", date: null, time: null }
+  };
+  const { context, calls, taskNameInput } = loadController(parent, { showLanes: false });
+  context.state.tasks.other = {
+    id: "other",
+    title: "Other",
+    x: 880,
+    y: 640,
+    schedule: { type: "none", date: null, time: null }
+  };
+
+  context.openCreateTaskModal({
+    parentId: parent.id,
+    schedule: { type: "none", date: null, time: null },
+    branchMode: "branch"
+  });
+  taskNameInput.value = "Child";
+  context.saveTaskModal();
+
+  const created = context.state.tasks.created;
+  assert.equal(calls.layouts, 0);
+  assert.equal(parent.x, 320);
+  assert.equal(parent.y, 210);
+  assert.equal(context.state.tasks.other.x, 880);
+  assert.equal(context.state.tasks.other.y, 640);
+  assert.equal(created.parentId, parent.id);
+  assert.ok(created.x > parent.x);
+  assert.ok(created.y > parent.y);
+});
+
+test("free-layout creation respects an explicit drag position", () => {
+  const parent = {
+    id: "parent",
+    title: "Parent",
+    x: 100,
+    y: 100,
+    schedule: { type: "none", date: null, time: null }
+  };
+  const { context, calls, taskNameInput } = loadController(parent, { showLanes: false });
+
+  context.openCreateTaskModal({
+    parentId: parent.id,
+    schedule: { type: "none", date: null, time: null },
+    branchMode: "branch",
+    position: { x: 610, y: 430 }
+  });
+  taskNameInput.value = "Placed child";
+  context.saveTaskModal();
+
+  assert.equal(calls.layouts, 0);
+  assert.equal(context.state.tasks.created.x, 610);
+  assert.equal(context.state.tasks.created.y, 430);
+});
+
+test("dated-lane task creation keeps the existing layout behavior", () => {
+  const parent = {
+    id: "parent",
+    title: "Parent",
+    x: 320,
+    y: 210,
+    schedule: { type: "date", date: "2026-08-23", time: null }
+  };
+  const { context, calls, taskNameInput } = loadController(parent, { showLanes: true });
+
+  context.openCreateTaskModal({
+    parentId: parent.id,
+    schedule: { type: "date", date: "2026-08-23", time: null },
+    branchMode: "branch"
+  });
+  taskNameInput.value = "Child";
+  context.saveTaskModal();
+
+  assert.equal(calls.layouts, 1);
+});
+
+test("edit save reads and writes through canonical schedule helpers without rearranging free layout", () => {
   const task = {
     id: "task",
     title: "Before",
@@ -124,7 +207,7 @@ test("edit save reads and writes through canonical schedule helpers", () => {
     y: 20,
     schedule: { type: "datetime", date: "2026-08-23", time: "09:30" }
   };
-  const { context, calls, taskNameInput, taskDateInput } = loadController(task);
+  const { context, calls, taskNameInput, taskDateInput } = loadController(task, { showLanes: false });
 
   context.openEditTaskModal(task.id);
   assert.equal(taskDateInput.value, "2026-08-23");
@@ -135,6 +218,9 @@ test("edit save reads and writes through canonical schedule helpers", () => {
 
   assert.equal(task.title, "After");
   assert.deepEqual(task.schedule, { type: "date", date: "2026-08-25", time: null });
+  assert.equal(task.x, 10);
+  assert.equal(task.y, 20);
+  assert.equal(calls.layouts, 0);
   assert.equal(calls.setTaskSchedule, 1);
   assert.equal(calls.setTaskDateFromInput, 1);
 });

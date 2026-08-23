@@ -14,7 +14,6 @@
     const commands = runtime?.commands;
     const events = runtime?.events;
     const normalizeTabState = core.workspace?.normalizeTabState;
-    const schedule = core.schedule;
     if (!store || !commands || !events) return;
 
     const originalRequestRender = typeof requestRender === "function" ? requestRender : null;
@@ -30,29 +29,17 @@
     function restoreDragSnapshotTask(task, original) {
       if (!task || !original) return;
 
+      // snapshot() runs after pointer movement but before any date write. The cloned
+      // task already carries the canonical pre-drag schedule, so history only needs
+      // the original geometry restored here.
       task.x = original.x;
       task.y = original.y;
-
-      const originalTargetAt = original.targetAt ?? null;
-      const normalizeSchedule = schedule?.normalizeSchedule;
-      const scheduleDate = schedule?.scheduleDate;
-
-      if (typeof normalizeSchedule !== "function" || typeof scheduleDate !== "function") {
-        task.targetAt = originalTargetAt;
-        return;
-      }
-
-      const currentSchedule = normalizeSchedule(task.schedule, task.targetAt);
-      const originalSchedule = normalizeSchedule(undefined, originalTargetAt);
-      const currentDate = scheduleDate(currentSchedule);
-      const originalDate = scheduleDate(originalSchedule);
-
-      if (currentDate !== originalDate) task.schedule = originalSchedule;
-      task.targetAt = originalDate;
     }
 
     function renderLegacyApp() {
-      if (typeof branchLayout === "function") branchLayout();
+      // Core history/state replay restores a complete state, including task geometry.
+      // Do not run branchLayout() here: doing so would replace restored x/y values
+      // with a fresh auto-layout and make Undo/Redo change more than the recorded edit.
       originalRequestRender?.();
       if (typeof scheduleSave === "function") scheduleSave();
     }
