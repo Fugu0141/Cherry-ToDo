@@ -779,7 +779,7 @@ window.addEventListener("pointerup", () => {
       snapshot();
 
       if (state.showLanes && hit.kind === "lane") {
-        task.targetAt = hit.date;
+        window.setTaskDate(task, hit.date);
         if (isVerticalMode()) task.y = vDateToY(hit.date);
         else task.x = hDateToX(hit.date);
         drag = null;
