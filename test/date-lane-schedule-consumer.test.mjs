@@ -6,6 +6,10 @@ import vm from "node:vm";
 import { scheduleModel } from "../src/core/schedule.js";
 
 const bridgeSource = readFileSync(new URL("../legacy-core-bridge.js", import.meta.url), "utf8");
+const layoutControllerSource = readFileSync(
+  new URL("../src/app/schedule-layout-controller.js", import.meta.url),
+  "utf8"
+);
 const scheduleRuntimeSource = readFileSync(new URL("../schedule-model.js", import.meta.url), "utf8");
 
 function loadBridge(schedule) {
@@ -88,14 +92,15 @@ test("date-lane collection preserves the intentional today lane with no dated ta
   assert.deepEqual([...bridge.collectLaneDates([], "2026-08-17")], ["2026-08-17"]);
 });
 
-test("the effective date-lane reader delegates only to the explicit schedule bridge", () => {
-  const start = scheduleRuntimeSource.indexOf("refreshLaneDates = function refreshLaneDatesWithSchedule");
-  const end = scheduleRuntimeSource.indexOf("\n  taskX =", start);
+test("the effective date-lane reader belongs to the layout controller and delegates only to the explicit schedule bridge", () => {
+  const start = layoutControllerSource.indexOf("refreshLaneDates = function canonicalRefreshLaneDates");
+  const end = layoutControllerSource.indexOf("\n\n  taskX =", start);
   assert.notEqual(start, -1);
   assert.notEqual(end, -1);
 
-  const laneReader = scheduleRuntimeSource.slice(start, end);
+  const laneReader = layoutControllerSource.slice(start, end);
   assert.match(laneReader, /CherryScheduleBridge\?\.collectLaneDates/);
   assert.doesNotMatch(laneReader, /getTaskDate\(task\)/);
   assert.doesNotMatch(laneReader, /targetAt/);
+  assert.doesNotMatch(scheduleRuntimeSource, /refreshLaneDates\s*=\s*function/);
 });
