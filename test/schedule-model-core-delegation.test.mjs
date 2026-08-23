@@ -6,6 +6,10 @@ import vm from "node:vm";
 import { scheduleModel } from "../src/core/schedule.js";
 
 const source = readFileSync(new URL("../schedule-model.js", import.meta.url), "utf8");
+const layoutSource = readFileSync(
+  new URL("../src/app/schedule-layout-controller.js", import.meta.url),
+  "utf8"
+);
 const helperStart = source.indexOf("  function coreScheduleModel()");
 const helperEnd = source.indexOf("\n\n  function installTargetAtAccessor", helperStart);
 const taskReadStart = source.indexOf("  function getTaskSchedule(task) {");
@@ -95,7 +99,6 @@ test("pure helpers delegate to the live Core schedule model after it arrives", (
 
   const context = loadHelpers(() => liveModel);
 
-  // The same already-loaded helper set starts on fallback...
   assert.deepEqual(plain(context.makeScheduleDate("2026-08-22")), {
     type: "date",
     date: "2026-08-22",
@@ -103,7 +106,6 @@ test("pure helpers delegate to the live Core schedule model after it arrives", (
   });
   assert.equal(calls.size, 0);
 
-  // ...and switches to Core without reloading schedule-model.js.
   liveModel = core;
 
   assert.equal(context.isValidISODate("2026-08-22"), true);
@@ -188,8 +190,20 @@ test("task schedule reads normalize semantically without mutating task objects",
   assert.doesNotMatch(taskReadSource, /normalizeTaskSchedule|installTargetAtAccessor|Object\.defineProperty/);
 });
 
-test("delegation stays inside pure schedule helpers and leaves layout fallback unchanged", () => {
+test("delegation stays inside pure schedule helpers while layout ownership is isolated", () => {
   assert.match(helperSource, /CherryScheduleBridge\?\.getScheduleModel/);
-  assert.match(source, /function taskLayoutDate\(task\) \{\n    return getTaskDate\(task\) \|\| todayISO\(\);/);
   assert.doesNotMatch(helperSource, /task\.x|task\.y|branchLayout|requestRender|saveNow/);
+
+  assert.doesNotMatch(source, /refreshLaneDates\s*=\s*function/);
+  assert.doesNotMatch(source, /taskX\s*=\s*function/);
+  assert.doesNotMatch(source, /taskY\s*=\s*function/);
+  assert.doesNotMatch(source, /sortByDateThenTitle\s*=\s*function/);
+  assert.doesNotMatch(source, /resolveTrackCollisions\s*=\s*function/);
+
+  assert.match(layoutSource, /function taskLayoutDate\(task\)/);
+  assert.match(layoutSource, /refreshLaneDates = function canonicalRefreshLaneDates/);
+  assert.match(layoutSource, /taskX = function canonicalTaskX/);
+  assert.match(layoutSource, /taskY = function canonicalTaskY/);
+  assert.match(layoutSource, /sortByDateThenTitle = function canonicalSortByDateThenTitle/);
+  assert.match(layoutSource, /resolveTrackCollisions = function canonicalResolveTrackCollisions/);
 });
