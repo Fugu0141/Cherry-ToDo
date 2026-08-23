@@ -8,11 +8,16 @@ import { scheduleModel } from "../src/core/schedule.js";
 const source = readFileSync(new URL("../schedule-model.js", import.meta.url), "utf8");
 const helperStart = source.indexOf("  function coreScheduleModel()");
 const helperEnd = source.indexOf("\n\n  function installTargetAtAccessor", helperStart);
+const taskReadStart = source.indexOf("  function getTaskSchedule(task) {");
+const taskReadEnd = source.indexOf("\n\n  function getTaskDate", taskReadStart);
 
 assert.notEqual(helperStart, -1, "Core schedule accessor must exist");
 assert.notEqual(helperEnd, -1, "pure helper boundary must remain stable");
+assert.notEqual(taskReadStart, -1, "task schedule reader must exist");
+assert.notEqual(taskReadEnd, -1, "task schedule reader boundary must remain stable");
 
 const helperSource = source.slice(helperStart, helperEnd);
+const taskReadSource = source.slice(taskReadStart, taskReadEnd);
 
 function loadHelpers(getScheduleModel) {
   const context = vm.createContext({
@@ -24,6 +29,16 @@ function loadHelpers(getScheduleModel) {
     Object
   });
   vm.runInContext(helperSource, context);
+  return context;
+}
+
+function loadTaskReadHelper() {
+  const context = vm.createContext({
+    makeScheduleNone: () => scheduleModel.makeScheduleNone(),
+    normalizeSchedule: (schedule, legacyTargetAt) => scheduleModel.normalizeSchedule(schedule, legacyTargetAt),
+    getLegacyTargetAt: task => task?.targetAt ?? null
+  });
+  vm.runInContext(taskReadSource, context);
   return context;
 }
 
@@ -147,6 +162,30 @@ test("schedule-model does not cache a stale Core schedule model", () => {
 
   assert.equal(firstCalls, 1);
   assert.equal(secondCalls, 1);
+});
+
+test("task schedule reads normalize semantically without mutating task objects", () => {
+  const context = loadTaskReadHelper();
+  const canonicalNone = Object.freeze({
+    schedule: Object.freeze({ type: "none", date: null, time: null }),
+    targetAt: "2026-08-30"
+  });
+  const legacyOnly = Object.freeze({ targetAt: "2026-08-31" });
+
+  assert.deepEqual(plain(context.getTaskSchedule(canonicalNone)), {
+    type: "none",
+    date: null,
+    time: null
+  });
+  assert.deepEqual(plain(context.getTaskSchedule(legacyOnly)), {
+    type: "date",
+    date: "2026-08-31",
+    time: null
+  });
+  assert.equal(canonicalNone.targetAt, "2026-08-30");
+  assert.equal(Object.getOwnPropertyDescriptor(canonicalNone, "targetAt")?.get, undefined);
+  assert.equal(legacyOnly.schedule, undefined);
+  assert.doesNotMatch(taskReadSource, /normalizeTaskSchedule|installTargetAtAccessor|Object\.defineProperty/);
 });
 
 test("delegation stays inside pure schedule helpers and leaves layout fallback unchanged", () => {
