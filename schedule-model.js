@@ -1,6 +1,4 @@
 (() => {
-  const baseMakeTask = makeTask;
-  const baseMakeInitialState = makeInitialState;
   const baseSaveNow = saveNow;
 
   function coreScheduleModel() {
@@ -183,14 +181,6 @@
     return getTaskDate(task) || "9999-12-31";
   }
 
-  function recentAskTargetDate(fallbackDate) {
-    const hit = window.questStickyRecentDateHit;
-    const at = hit?.at || 0;
-    const targetDate = hit?.targetDate || hit?.date;
-    const fresh = hit && targetDate && hit.mode === "ask" && Date.now() - at < 1500;
-    return fresh ? targetDate : fallbackDate;
-  }
-
   window.isValidISODate = isValidISODate;
   window.isValidTime = isValidTime;
   window.makeScheduleNone = makeScheduleNone;
@@ -206,37 +196,6 @@
   window.setTaskDate = setTaskDate;
   window.setTaskDateFromInput = setTaskDateFromInput;
   window.taskSortDate = taskSortDate;
-
-  makeInitialState = function makeInitialStateWithSchedule() {
-    const next = baseMakeInitialState();
-    for (const task of Object.values(next.tasks || {})) normalizeTaskSchedule(task);
-    return next;
-  };
-
-  makeTask = function makeTaskWithSchedule({
-    title,
-    parentId = null,
-    targetAt,
-    schedule,
-    status = "todo",
-    branchMode = "same"
-  } = {}) {
-    const legacyTargetAt = targetAt === undefined && schedule === undefined ? null : targetAt;
-    const normalizedSchedule = normalizeSchedule(schedule, legacyTargetAt);
-    const task = {
-      id: id(),
-      title: title || "新しいタスク",
-      parentId,
-      x: 0,
-      y: 0,
-      schedule: normalizedSchedule,
-      status,
-      branchMode: parentId ? branchMode : null
-    };
-
-    installTargetAtAccessor(task, normalizedSchedule);
-    return task;
-  };
 
   saveNow = function saveNowWithSchedule() {
     normalizeAllTasks();
@@ -298,25 +257,6 @@
 
       if (!changed) break;
     }
-  };
-
-  openCreateTaskModal = function openCreateTaskModalWithSchedule({ parentId = null, targetAt, schedule, branchMode = "same" } = {}) {
-    const hasExplicitSchedule = schedule !== undefined;
-    const initialTargetAt = targetAt === undefined && !hasExplicitSchedule ? null : targetAt;
-    let nextSchedule = normalizeSchedule(schedule, initialTargetAt);
-    const nextDate = getTaskDate({ schedule: nextSchedule, targetAt: scheduleDate(nextSchedule) });
-    const freshTarget = parentId && !hasExplicitSchedule ? recentAskTargetDate(nextDate) : nextDate;
-    if (freshTarget && freshTarget !== nextDate) nextSchedule = makeScheduleDate(freshTarget);
-
-    taskModalMode = "create";
-    taskModalContext = { parentId, schedule: nextSchedule, targetAt: scheduleDate(nextSchedule), branchMode };
-    taskModalTitle.textContent = parentId
-      ? branchMode === "same" ? "同じブランチに追加" : "分岐タスクを作成"
-      : "ルートタスクを作成";
-    taskNameInput.value = "";
-    taskDateInput.value = scheduleDate(nextSchedule) || "";
-    taskModal.classList.remove("hidden");
-    requestAnimationFrame(() => taskNameInput.focus({ preventScroll: true }));
   };
 
   normalizeAllTasks();
