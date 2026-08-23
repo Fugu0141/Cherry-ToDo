@@ -29,6 +29,6 @@ test("release edit wrapper only localizes while schedule-model owns the effectiv
   const scheduleEdit = scheduleSource.slice(scheduleStart, scheduleEnd);
 
   assert.notEqual(scheduleStart, -1);
-  assert.match(scheduleEdit, /normalizeTaskSchedule\(task\)/);
+  assert.doesNotMatch(scheduleEdit, /normalizeTaskSchedule\(task\)/);
   assert.match(scheduleEdit, /taskDateInput\.value = getTaskDate\(task\) \|\| ""/);
 });
