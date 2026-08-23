@@ -7,6 +7,7 @@ const layoutSource = readFileSync(
   "utf8"
 );
 const scheduleSource = readFileSync(new URL("../schedule-model.js", import.meta.url), "utf8");
+const storageSource = readFileSync(new URL("../state-storage.js", import.meta.url), "utf8");
 const indexSource = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 
 test("schedule layout controller loads after schedule semantics and before later layout/date wrappers", () => {
@@ -31,9 +32,10 @@ test("base schedule layout reads canonical dates and keeps undated collision buc
   assert.doesNotMatch(layoutSource, /normalizeDate\(task\.targetAt\)/);
 });
 
-test("schedule model retains persistence normalization but no longer owns layout replacement", () => {
-  assert.match(scheduleSource, /saveNow = function saveNowWithSchedule\(\)/);
-  assert.match(scheduleSource, /normalizeAllTasks\(\);\n    baseSaveNow\(\);/);
+test("schedule model no longer owns persistence or layout replacement", () => {
+  assert.doesNotMatch(scheduleSource, /baseSaveNow/);
+  assert.doesNotMatch(scheduleSource, /saveNow\s*=\s*function/);
+  assert.match(storageSource, /window\.cherrySchedule\?\.normalizeAllTasks/);
 
   for (const name of [
     "refreshLaneDates",

@@ -29,7 +29,13 @@
     }
   }
 
+  function normalizeBeforeSave() {
+    const normalizeAllTasks = window.cherrySchedule?.normalizeAllTasks;
+    if (typeof normalizeAllTasks === "function") normalizeAllTasks();
+  }
+
   function saveNowFromState() {
+    normalizeBeforeSave();
     writeItem(currentStorageKey, JSON.stringify(state));
   }
 

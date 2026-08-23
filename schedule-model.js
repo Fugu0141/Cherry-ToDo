@@ -1,6 +1,4 @@
 (() => {
-  const baseSaveNow = saveNow;
-
   function coreScheduleModel() {
     const getScheduleModel = window.CherryScheduleBridge?.getScheduleModel;
     return typeof getScheduleModel === "function" ? getScheduleModel() : null;
@@ -192,11 +190,6 @@
   window.setTaskDate = setTaskDate;
   window.setTaskDateFromInput = setTaskDateFromInput;
   window.taskSortDate = taskSortDate;
-
-  saveNow = function saveNowWithSchedule() {
-    normalizeAllTasks();
-    baseSaveNow();
-  };
 
   normalizeAllTasks();
 
