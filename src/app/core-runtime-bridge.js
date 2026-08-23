@@ -51,6 +51,34 @@
       task.targetAt = originalDate;
     }
 
+    function reconcileLegacyTargetAtWrites(previousState, nextState) {
+      const normalizeSchedule = schedule?.normalizeSchedule;
+      const scheduleDate = schedule?.scheduleDate;
+      if (typeof normalizeSchedule !== "function" || typeof scheduleDate !== "function") return nextState;
+
+      const previousTasks = previousState?.tasks || {};
+      const nextTasks = nextState?.tasks || {};
+
+      for (const [taskId, nextTask] of Object.entries(nextTasks)) {
+        const previousTask = previousTasks[taskId];
+        if (!previousTask || !nextTask) continue;
+
+        const previousTargetAt = previousTask.targetAt ?? null;
+        const nextTargetAt = nextTask.targetAt ?? null;
+        if (previousTargetAt === nextTargetAt) continue;
+
+        // A canonical writer updates schedule itself. Only reconcile the legacy
+        // targetAt-only mutation left by older task objects without an accessor.
+        if (serialize(previousTask.schedule) !== serialize(nextTask.schedule)) continue;
+
+        const nextSchedule = normalizeSchedule(undefined, nextTargetAt);
+        nextTask.schedule = nextSchedule;
+        nextTask.targetAt = scheduleDate(nextSchedule);
+      }
+
+      return nextState;
+    }
+
     function renderLegacyApp() {
       if (typeof branchLayout === "function") branchLayout();
       originalRequestRender?.();
@@ -136,7 +164,9 @@
         const result = originalRequestRender();
 
         if (!applyingCoreState && previous) {
-          const next = clone(safeState());
+          const current = safeState();
+          reconcileLegacyTargetAtWrites(previous, current);
+          const next = clone(current);
           if (serialize(previous) !== serialize(next)) {
             void commands.dispatch("state.capture-legacy", {
               previous,
