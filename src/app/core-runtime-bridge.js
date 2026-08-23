@@ -37,7 +37,9 @@
     }
 
     function renderLegacyApp() {
-      if (typeof branchLayout === "function") branchLayout();
+      // Core history/state replay restores a complete state, including task geometry.
+      // Do not run branchLayout() here: doing so would replace restored x/y values
+      // with a fresh auto-layout and make Undo/Redo change more than the recorded edit.
       originalRequestRender?.();
       if (typeof scheduleSave === "function") scheduleSave();
     }
