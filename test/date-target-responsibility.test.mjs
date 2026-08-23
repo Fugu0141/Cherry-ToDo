@@ -11,6 +11,10 @@ const guardSource = readFileSync(
   new URL("../src/features/date-modal-target-guard/implementation.js", import.meta.url),
   "utf8"
 );
+const controllerSource = readFileSync(
+  new URL("../src/app/modal-schedule-controller.js", import.meta.url),
+  "utf8"
+);
 const appSource = readFileSync(new URL("../app.js", import.meta.url), "utf8");
 const indexSource = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 
@@ -98,14 +102,19 @@ test("board lane drag writes dates through the canonical schedule writer", () =>
   assert.doesNotMatch(pointerUpSource, /task\.targetAt\s*=\s*hit\.date/);
 });
 
-test("schedule-model owns create scheduling while the late guard only corrects date changes", () => {
+test("app modal controller owns create scheduling while the late guard only corrects date changes", () => {
+  const app = indexSource.indexOf("./app.js");
+  const controller = indexSource.indexOf("src/app/modal-schedule-controller.js");
   const dateTarget = indexSource.indexOf("src/features/date-target/implementation.js");
   const scheduleModel = indexSource.indexOf("schedule-model.js");
   const lateGuard = indexSource.indexOf("src/features/date-modal-target-guard/implementation.js");
 
-  assert.ok(dateTarget >= 0);
+  assert.ok(app >= 0);
+  assert.ok(controller > app);
+  assert.ok(dateTarget > controller);
   assert.ok(scheduleModel > dateTarget);
   assert.ok(lateGuard > scheduleModel);
+  assert.match(controllerSource, /openCreateTaskModal = function canonicalCreateTaskModal/);
   assert.doesNotMatch(guardSource, /openCreateTaskModal|targetAt/);
   assert.match(guardSource, /openChangeDateModal/);
 });
