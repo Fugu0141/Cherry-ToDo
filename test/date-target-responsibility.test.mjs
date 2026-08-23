@@ -11,6 +11,7 @@ const guardSource = readFileSync(
   new URL("../src/features/date-modal-target-guard/implementation.js", import.meta.url),
   "utf8"
 );
+const appSource = readFileSync(new URL("../app.js", import.meta.url), "utf8");
 const indexSource = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 
 function makeHarness() {
@@ -83,6 +84,18 @@ test("date-target still publishes recent boundary hits for the later guard", () 
 test("date-target keeps the pointermove hit-testing hook", () => {
   const { listeners } = makeHarness();
   assert.equal(typeof listeners.get("pointermove"), "function");
+});
+
+test("board lane drag writes dates through the canonical schedule writer", () => {
+  const pointerUpStart = appSource.indexOf('window.addEventListener("pointerup"');
+  const pointerUpEnd = appSource.indexOf("\nfunction finishDragUI", pointerUpStart);
+
+  assert.ok(pointerUpStart >= 0);
+  assert.ok(pointerUpEnd > pointerUpStart);
+
+  const pointerUpSource = appSource.slice(pointerUpStart, pointerUpEnd);
+  assert.match(pointerUpSource, /window\.setTaskDate\(task, hit\.date\)/);
+  assert.doesNotMatch(pointerUpSource, /task\.targetAt\s*=\s*hit\.date/);
 });
 
 test("schedule-model owns create scheduling while the late guard only corrects date changes", () => {
