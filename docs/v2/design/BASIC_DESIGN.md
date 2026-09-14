@@ -5,13 +5,15 @@ Requirements: `../requirements/REQUIREMENTS.md`
 
 ## 1. Design objective
 
-Cherry V2.0 is built as a set of small, independently testable parts that are assembled at one composition boundary.
+Cherry V2.0 is built as a set of small, independently testable parts that are assembled at explicit composition boundaries.
 
-The architecture must make this statement true:
+The architecture must make these statements true:
 
 > A feature is added by composing or extending explicit contracts, not by patching unrelated runtime functions.
 
-V2 uses a **modular hexagonal / ports-and-adapters architecture** with feature-oriented modules.
+> The standard Cherry UI is a replaceable client of Cherry Core/Application, not the place where business rules live.
+
+V2 uses a **modular hexagonal / ports-and-adapters architecture** with feature-oriented modules and a formal **UI package contract**.
 
 The design is intentionally headless at its center: Domain and Application code know nothing about DOM APIs, browser storage, concrete file formats, or the chosen UI rendering library.
 
@@ -20,19 +22,21 @@ The design is intentionally headless at its center: Domain and Application code 
 Allowed dependency direction:
 
 ```text
-Presentation ───────────────┐
-                           │
-                           v
-                     Application
-                           │
-                           v
-                        Domain
-                           ^
-                           │ ports/contracts
-                           │
-Infrastructure/Adapters ───┘
+UI package / Presentation ─────┐
+                              │ intents / read models
+                              v
+                         UI Contract
+                              │
+                              v
+                         Application
+                              │
+                              v
+                           Domain
+                              ^
+                              │ ports/contracts
+Infrastructure / Adapters ────┘
 
-Composition Root depends on all concrete modules and wires them together.
+Composition Root depends on all concrete implementations and wires them together.
 ```
 
 Rules:
@@ -40,10 +44,12 @@ Rules:
 1. Domain imports no outer layer.
 2. Application imports Domain and port types only.
 3. Infrastructure implements ports; Domain/Application never import concrete adapters.
-4. Presentation invokes Application use cases and reads query models/selectors.
-5. Presentation never calls persistence directly.
+4. UI packages invoke Application use cases through the UI/application-facing contract and read query models/selectors.
+5. UI packages never call persistence directly.
 6. Cross-module imports use each module's public entry point only.
-7. `composition/` is the only place allowed to know concrete implementations of multiple layers at once.
+7. `composition/` is the only place allowed to know multiple concrete implementations at once.
+8. UI framework types MUST NOT appear in Domain/Application public contracts.
+9. The default UI MUST be replaceable without rewriting Task, Flow, Schedule, storage, migration, or History logic.
 
 ## 3. Recommended source layout
 
@@ -52,6 +58,7 @@ src/
   composition/
     create-application.ts
     create-browser-application.ts
+    create-ui.ts
 
   modules/
     workspace/
@@ -90,6 +97,27 @@ src/
       application/
       index.ts
 
+  ui-contract/
+    read-models/
+    intents/
+    capabilities/
+    semantic-tokens/
+    index.ts
+
+  ui/
+    default/
+      app-shell/
+      start/
+      board/
+        layers/
+        interaction/
+      list/
+      task-editor/
+      mobile/
+      desktop/
+      shared/
+      index.ts
+
   adapters/
     persistence/
       memory/
@@ -105,18 +133,6 @@ src/
       browser-id-generator.ts
       browser-files.ts
 
-  presentation/
-    app-shell/
-    start/
-    board/
-      layers/
-      interaction/
-    list/
-    task-editor/
-    mobile/
-    desktop/
-    shared/
-
   shared/
     result/
     ids/
@@ -126,12 +142,13 @@ test/
   domain/
   application/
   contracts/
+  interaction/
   integration/
   regression/
   e2e/
 ```
 
-A module may omit folders it does not need. Internal paths are private; consumers import from `modules/<name>/index.ts`.
+The initial repository MAY keep these as directories rather than publishing separate npm packages. The boundary is still treated as a package/API boundary so extraction later does not require redesigning Core.
 
 ## 4. Module catalog and ownership
 
@@ -139,15 +156,16 @@ A module may omit folders it does not need. Internal paths are private; consumer
 | --- | --- | --- |
 | Workspace | workspace/tab identity, document aggregate, tab lifecycle | DOM, concrete persistence, task rendering |
 | Task | Task entity and task-level invariants | Flow topology, board coordinates |
-| Flow | directed structural/reference edges, graph invariants, reorder/connect/disconnect | connector SVG/Canvas rendering |
+| Flow | structural/reference edges, DAG invariants, merge/branch/reorder/connect/disconnect | connector rendering |
 | Schedule | schedule value object and schedule-changing rules | date-lane geometry |
-| Board | settings, positions, layout inputs/outputs, drop-intent semantics | Task meaning or storage |
+| Board | settings, positions, layout inputs/outputs, drop-intent semantics | Task meaning or persistence |
 | History | reversible command transactions | pointer events or persistence format |
 | Annotation | text/stroke annotation data and operations | Task/list semantics |
 | Interoperability | import/export orchestration and normalized transfer models | concrete ICS/CSV parser implementation |
 | Startup | app startup/session state machine | Board rendering |
 | Persistence adapters | storage engine implementation | business rules |
-| Presentation | rendering, input collection, accessibility, responsive presentation | domain mutation and persistence |
+| UI contract | application-facing read models, intents, capabilities, semantic hooks | concrete DOM/framework implementation |
+| UI package | rendering, input collection, accessibility, responsive presentation | domain mutation and persistence |
 
 ## 5. Canonical data model
 
@@ -170,7 +188,7 @@ interface RevisionMeta {
 }
 ```
 
-`activeTabId`, current modal, active drag, keyboard state, and selected Task are session state, not semantic workspace data.
+`activeTabId`, current modal, active drag, keyboard state, selected Task, and transient UI-package state are session state, not semantic workspace data.
 
 ### 5.2 Tab document
 
@@ -188,7 +206,7 @@ interface TabDocument {
 
 Tabs are isolation boundaries for normal planning operations. Cross-tab movement is an application use case that validates and transfers all required entities transactionally.
 
-### 5.3 Task
+### 5.3 Task and derived goals
 
 ```ts
 interface Task {
@@ -204,11 +222,48 @@ interface Task {
 }
 ```
 
-A top-level goal is derived from structural Flow ownership: a Task with no incoming structural edge is a top-level Task. V2 does not duplicate this fact with a second `parentId` source of truth.
+V2 does **not** add a separate persisted `goal` type merely to distinguish goals from tasks.
 
-Importance is stored semantically; actual colors are theme tokens in Presentation.
+Goal meaning is derived from structural Flow:
 
-### 5.4 Schedule
+```text
+outgoing structural edge count 0 or 1 → ordinary Task
+outgoing structural edge count 2+     → derived branching goal
+```
+
+Therefore:
+
+- a standalone goal is simply one Task,
+- a root Task is not automatically a goal,
+- a nested Task may become a goal if it branches,
+- changing Flow topology can change whether a Task is currently treated as a goal.
+
+Importance is stored semantically; actual colors are theme tokens in the UI package. The importance value may remain stored even if later topology means the Task is no longer displayed as a goal.
+
+### 5.4 Goal completion evaluator
+
+Derived goal completion is application/domain behavior, not UI behavior.
+
+For a derived branching goal `G`, define its structural completion set as Tasks reachable from `G` through outgoing structural edges. Reference edges do not participate.
+
+Initial rule:
+
+```text
+all Tasks in structural completion set are done
+→ G becomes done automatically
+```
+
+The evaluator MUST:
+
+- handle nested goals,
+- handle shared descendants after structural merges,
+- never recurse through reference cycles,
+- be deterministic under topological traversal,
+- emit one logical completion change per affected goal rather than UI-side cascading mutations.
+
+**Open before design freeze:** if a downstream Task is later reopened, decide whether an auto-completed goal automatically reopens, and how to distinguish an automatic completion from an explicit manual completion.
+
+### 5.5 Schedule
 
 ```ts
 type Schedule =
@@ -226,7 +281,7 @@ type Schedule =
 
 A time zone is optional so normal local planning can remain simple while imported calendar events can preserve zone intent when required.
 
-### 5.5 Flow edges
+### 5.6 Flow edges: structural DAG + reference graph
 
 ```ts
 type FlowEdge = StructuralFlowEdge | ReferenceFlowEdge;
@@ -249,26 +304,37 @@ interface ReferenceFlowEdge {
 }
 ```
 
-Structural graph invariants for the first stable V2 implementation:
+Structural graph invariants:
 
-- a Task has at most one incoming structural edge,
-- structural edges are acyclic,
+- structural edges form a directed acyclic graph (DAG),
+- a Task MAY have multiple incoming structural edges so flows can merge,
 - a Task has at most one outgoing `continuation` edge,
 - zero or more outgoing `branch` edges are allowed and explicitly ordered,
 - duplicate `(kind, from, to)` edges are rejected,
-- self edges are rejected.
+- self edges are rejected,
+- adding a structural edge that would create a cycle is rejected.
+
+A structural root is a Task with zero incoming structural edges. A root is not automatically a goal.
+
+Example supported merge:
+
+```text
+      ┌→ B ─┐
+A ────┤     ├→ D
+      └→ C ─┘
+```
 
 Reference edges:
 
 - may form cycles,
 - may create `A → B → C → A`,
 - are directional,
-- never participate in recursive structural ownership/auto-layout unless a future explicit algorithm says otherwise,
+- never participate in structural goal completion, DAG ordering, or automatic structural layout unless a future explicit algorithm says otherwise,
 - are removed transactionally when an endpoint Task is deleted.
 
-This split resolves #80 and #82 without forcing cycle-safe behavior into every tree/forest algorithm.
+The separation keeps cyclic/freehand relationships available while allowing structural algorithms to operate on an acyclic DAG.
 
-### 5.6 Board document state
+### 5.7 Board document state
 
 ```ts
 interface BoardDocumentState {
@@ -286,7 +352,7 @@ Positions are presentation data. Layout output does not modify Task/Flow/Schedul
 
 A viewport (`scroll`, `zoom`) may be stored as local session/view preference, but it is not required to be part of the portable semantic document.
 
-### 5.7 Annotation
+### 5.8 Annotation
 
 ```ts
 type Annotation = TextAnnotation | StrokeAnnotation;
@@ -323,18 +389,20 @@ workspace.create
 workspace.rename
 workspace.createTab
 workspace.removeTab
-workspace.moveSubflowToTab
+workspace.moveFlowToTab
 
 task.create
 task.update
 task.setStatus
-task.delete
+task.deleteOnly
+task.deleteDownstreamFlow
 
 flow.connectContinuation
 flow.connectBranch
 flow.connectReference
 flow.disconnect
 flow.reorder
+flow.merge
 
 schedule.set
 schedule.clear
@@ -364,24 +432,27 @@ A command transaction performs:
 1. input validation,
 2. domain invariant validation,
 3. state change,
-4. history inverse/patch creation when reversible,
-5. event publication,
-6. persistence scheduling.
+4. dependent derived-goal evaluation when Flow/completion changes require it,
+5. history inverse/patch creation when reversible,
+6. event publication,
+7. persistence scheduling when persistence is allowed.
 
-The UI receives the result; it does not perform steps 2–6 itself.
+The UI receives the result; it does not perform steps 2–7 itself.
 
 ## 7. Query/read model
 
-Presentation reads through selectors/query services, not by knowing every internal collection.
+UI packages read through selectors/query services, not by knowing every internal collection.
 
 Examples:
 
 ```text
 workspace.getActiveTab
 flow.getRoots
-flow.getStructuralChildren
+flow.getStructuralSuccessors
+flow.getStructuralPredecessors
+flow.getTopologicalOrder
+flow.isDerivedGoal
 flow.getOutgoingReferences
-flow.getOrderedSubflow
 schedule.getTasksForDate
 schedule.getUndatedTasks
 board.getResolvedPositions
@@ -390,14 +461,17 @@ list.getExecutionItems
 
 Board and List may build different read models from the same semantic document.
 
+Because structural Flow is a DAG, read models MUST NOT assume exclusive single-parent ownership. A merged Task is one canonical Task even if more than one upstream path reaches it.
+
 ## 8. History design
 
 History is application-level and records logical user operations.
 
 - A drag creates at most one history entry on successful drop, not one per pointer movement.
 - A stroke creates one entry when the stroke is committed, not one per sampled point.
-- Reordering a flow stores the edge changes required to reverse it.
+- Reordering or merging Flow stores the edge changes required to reverse it.
 - Delete stores enough removed entities/edges to restore safely.
+- Automatic goal completion caused by one user command belongs to the same logical transaction where practical.
 
 The initial implementation uses inverse changes/patches, not full event sourcing. Event sourcing is not required to satisfy V2 requirements.
 
@@ -422,7 +496,20 @@ Only the active state owns pointer/touch movement and release events.
 
 Desktop and mobile controllers translate platform gestures into the same interaction intents, but do not have to use the same gesture.
 
-### 9.2 Drag state is ephemeral
+### 9.2 Mobile existing-task connection is intentionally not frozen
+
+V2 requires the **capability** to connect existing Tasks on mobile, but the exact interaction is deferred until the Core/Application path is stable enough to prototype multiple approaches.
+
+Possible experiments include selection + target tap, an action sheet + target picker, a dedicated temporary connection mode, or another touch-specific interaction.
+
+No candidate is normative yet. The chosen design must:
+
+- call the same Flow application commands as desktop,
+- not fight task drag, board pan/scroll, or edge auto-scroll,
+- use one gesture owner,
+- remain replaceable inside the UI package without Core changes.
+
+### 9.3 Drag state is ephemeral
 
 While dragging a Task:
 
@@ -452,7 +539,7 @@ If the operation is cancelled or invalid, the drag session disappears and canoni
 
 This is the structural fix for the class of bug represented by #222.
 
-### 9.3 Drop target resolver
+### 9.4 Drop target resolver
 
 `DropTargetResolver` consumes Board geometry, not arbitrary DOM side effects.
 
@@ -466,9 +553,9 @@ FreeBoardTarget(point)
 NoTarget
 ```
 
-Date lane hit detection uses lane geometry/overlap and explicit z/priority rules. Collapsed lanes are still first-class targets with their own actual geometry; a 220px card center is never assumed to represent a narrower target.
+Date lane hit detection uses lane geometry/overlap and explicit z/priority rules. Collapsed lanes are still first-class targets with their own actual geometry; a normal card center is never assumed to represent a narrower target.
 
-### 9.4 Edge auto-scroll
+### 9.5 Edge auto-scroll
 
 `EdgeAutoScrollService` is called only by an active drag/reorder interaction. It calculates scroll delta and updated preview position in the same animation frame. It never registers a second competing pointer handler.
 
@@ -489,10 +576,11 @@ Validation includes:
 - source/target exist,
 - source != target,
 - duplicate rejection,
-- incoming structural ownership,
-- continuation uniqueness,
+- outgoing continuation uniqueness,
 - structural cycle prevention,
 - reference-cycle allowance policy.
+
+Multiple incoming structural edges are valid and are the mechanism for a structural merge.
 
 ### 10.2 Reorder structural flow
 
@@ -512,15 +600,44 @@ A → C → B
 
 is one transaction that rewrites the affected structural edges and then emits `flow.changed`. Schedule remains untouched. Auto-layout MAY react after the semantic commit.
 
-### 10.3 Delete behavior
+### 10.3 Merge structural flow
 
-Default safe behavior:
+Creating a merge is an ordinary structural connect operation whose target already has another structural predecessor, provided the resulting graph stays acyclic.
 
-- deleting one Task removes its incident edges,
-- structural children are preserved and become top-level Tasks unless the user explicitly selected a separate “delete this subflow” operation,
-- annotations are unaffected unless explicitly attached by a future feature.
+Example:
 
-This avoids silent destructive cascade and gives subtree deletion its own explicit command if later required.
+```text
+A → C
+B → C
+```
+
+The target remains one canonical Task `C`. Board/List/Layout code must not clone `C` just to satisfy a tree-based renderer.
+
+### 10.4 Delete behavior
+
+When a Task participates in structural Flow, Presentation asks for deletion scope before dispatching a destructive command.
+
+#### Delete this Task only
+
+The application removes the selected Task and attempts to preserve the surrounding structural paths by reconnecting predecessors to successors when that reconnection is valid.
+
+Examples:
+
+```text
+A → B → C
+Delete B only
+→ A → C
+```
+
+Root deletion leaves successors as roots where no predecessor remains. Leaf deletion removes the incoming relationship and preserves upstream Tasks. Merge/branch cases are validated transactionally and duplicate edges are not created.
+
+#### Delete this Task and downstream Flow
+
+A second explicit command removes the selected Task plus a downstream structural scope after confirmation.
+
+**Open before design freeze:** if a downstream Task is shared by another incoming path outside the selected deletion scope, decide whether it is retained automatically or can be explicitly included in the destructive operation.
+
+Both deletion paths participate in History where practical.
 
 ## 11. Schedule and Board composition
 
@@ -550,6 +667,16 @@ The four Board combinations are produced by composing two independent settings.
 
 Toggling a setting does not call a Schedule command.
 
+### 11.1 DAG-aware layout
+
+Auto-layout consumes a structural DAG, not a tree. It must:
+
+- accept multiple predecessors for a merged Task,
+- assign one resolved position to one canonical Task,
+- avoid recursive duplication of merged descendants,
+- use a cycle check before layout,
+- keep Reference edges out of structural rank/order calculations unless a future explicit algorithm opts in.
+
 ## 12. Startup/session architecture
 
 `StartupController` owns an explicit state machine:
@@ -564,15 +691,16 @@ Booting
 Startup sequence:
 
 1. Render minimal application shell.
-2. Resolve storage policy/availability needed for restoration.
-3. Load the last session reference if allowed/available.
-4. Validate referenced workspace/tab.
-5. Transition to `Workspace` or `Start`.
-6. Lazy-initialize Board-only components only after `Workspace` is selected.
+2. Resolve storage consent/policy before any persistent workspace read/write that requires permission.
+3. Use Memory repository until permission exists.
+4. If persistence is allowed, initialize the persistent browser repository and resolve restorable context.
+5. Validate referenced workspace/tab.
+6. Transition to `Workspace` or `Start`.
+7. Lazy-initialize Board-only components only after `Workspace` is selected.
 
 Start is a route/state, not a modal over Board.
 
-`SessionRepository` stores only restorable context such as last workspace/tab and optional view mode. It is separate from the portable workspace document.
+`SessionRepository` stores restorable context only when persistent storage has been allowed. Before consent, session context remains ephemeral.
 
 ## 13. Persistence design
 
@@ -590,21 +718,32 @@ interface WorkspaceRepository {
 Initial implementations:
 
 - `MemoryWorkspaceRepository` — always available, ephemeral.
-- `BrowserWorkspaceRepository` — persistent adapter enabled only by storage policy.
+- `BrowserWorkspaceRepository` — persistent adapter enabled only after explicit user permission.
 
-The application chooses the repository through composition/policy; modules do not branch on `localStorage` themselves.
+The application chooses the repository through composition/policy; modules do not branch on `localStorage` or IndexedDB themselves.
 
-### 13.1 Storage consent flow
+The concrete browser storage engine can be selected behind `BrowserWorkspaceRepository` without changing Application. IndexedDB is allowed and may be preferable as workspace/annotation payloads grow; the consent requirement applies regardless of engine.
+
+### 13.1 Mandatory storage consent flow
 
 ```text
-No persistence decision
-→ Memory repository
+No persistence consent
+→ Memory repository only
 → explain persistent local storage
-→ Allow: initialize browser repository and optionally save/migrate
-→ Not now: continue memory-only for this session
+→ Allow
+   → initialize browser repository
+   → persistence may begin
+→ Not now
+   → remain memory-only for this session
 ```
 
-Disabling persistence clears/forgets browser-persisted Cherry data only after an explicit user action and confirmation appropriate to destructive data removal.
+Rules:
+
+- no workspace/task persistence before **Allow**,
+- **Not now** is not consent,
+- the app remains usable after **Not now**,
+- consent may be persisted only after consent has been granted,
+- disabling persistence or clearing data is explicit and destructive-confirmed.
 
 ## 14. Schema migration and V1 compatibility
 
@@ -624,12 +763,15 @@ raw input
 
 The old V1 runtime is never executed to migrate data.
 
-Compatibility adapters may understand:
+V2 compatibility policy:
 
-- supported V1 `.cherry` workspace envelopes,
-- explicitly supported legacy browser-storage snapshots.
+- supported native V1 `.cherry` files are an official migration target,
+- supported encrypted V1 `.cherry` envelopes are an official migration target,
+- legacy browser-storage recovery is best-effort,
+- migration is non-destructive,
+- failed legacy recovery never blocks a clean V2 session.
 
-Migration tests use frozen fixtures from V1. A failed migration cannot overwrite the source or the current V2 workspace.
+Migration tests use frozen V1 fixtures. A failed migration cannot overwrite the source or the current V2 workspace.
 
 ## 15. Native `.cherry` format boundary
 
@@ -677,9 +819,64 @@ File UI
 
 ICS and CSV adapters cannot mutate current workspace while parsing.
 
-## 17. Presentation composition
+## 17. Formal UI package architecture
 
-Board rendering is layered deliberately:
+V2.0 treats the UI as a formal replaceable implementation boundary.
+
+Conceptually:
+
+```text
+Cherry Domain/Application
+          │
+          v
+     UI Contract
+          │
+    ┌─────┴───────────────┐
+    v                     v
+Default Cherry UI     Future UI package
+(Sashimi/current)     Minimal/Touch/etc.
+```
+
+The initial implementation ships one production UI package. Multiple production UIs are not required for V2.0, but the contract that makes replacement possible **is** required.
+
+### 17.1 UI contract contents
+
+The contract may expose:
+
+```text
+Read models / selectors
+Application intents / command facades
+Interaction capabilities
+Localized string keys/messages
+Semantic component/state tokens
+Navigation/startup state
+Typed error presentation data
+```
+
+The contract does not expose:
+
+```text
+Domain collection internals
+Concrete repository instances
+localStorage / IndexedDB handles
+Framework component types
+Raw theme colors as semantic data
+Global mutable functions
+```
+
+A UI package factory can be conceptually represented as:
+
+```ts
+interface CherryUIPackage {
+  mount(context: CherryUIContext): CherryUIHandle;
+}
+```
+
+`CherryUIContext` contains only the application-facing contract needed by the UI package.
+
+### 17.2 Standard Board rendering
+
+The default UI Board is layered deliberately:
 
 ```text
 BoardViewport
@@ -692,32 +889,23 @@ BoardViewport
 
 Each layer receives a read model and emits intents. No layer owns Workspace persistence.
 
-### 17.1 Adaptive Task editor
+### 17.3 Adaptive Task editor
 
 One `TaskEditorModel` exposes fields and submit/cancel actions.
 
-Presentation strategy:
+Default presentation strategy:
 
 - desktop: anchored popover/side editor when geometry permits,
-- mobile: bottom sheet/panel,
+- mobile: bottom sheet/panel candidate,
 - constrained desktop: centered dialog fallback.
 
 All strategies call the same Task/Schedule application use cases.
 
-### 17.2 Mobile action model
+### 17.4 Semantic styling hooks
 
-Selecting a Task exposes a contextual action model such as:
+The default UI SHOULD expose stable semantic states/tokens such as task-card, selected, completed, derived-goal, importance, connection kind, and danger action so large visual redesigns can happen without modifying business logic.
 
-```text
-Edit
-Add next
-Add branch
-Connect existing
-Complete / reopen
-More…
-```
-
-Delete and low-frequency actions live under `More` unless a later UX decision deliberately changes this.
+This is a styling/extensibility boundary, not permission for arbitrary untrusted plugin execution.
 
 ## 18. Error model
 
@@ -736,7 +924,7 @@ ImportError
 Permission/CapabilityError
 ```
 
-Presentation maps errors to localized messages. Infrastructure retains technical cause information for diagnostics without exposing sensitive contents unnecessarily.
+UI packages map errors to localized messages. Infrastructure retains technical cause information for diagnostics without exposing sensitive contents unnecessarily.
 
 ## 19. Events
 
@@ -753,13 +941,14 @@ task.created
 task.updated
 task.deleted
 flow.changed
+goal.autoCompleted
 schedule.changed
 board.changed
 annotation.changed
 storage.statusChanged
 ```
 
-Event handlers cannot mutate the store behind command validation. If a follow-up mutation is needed, it dispatches another explicit command.
+Event handlers cannot mutate the store behind command validation. If a follow-up mutation is needed, it dispatches another explicit command/use case through the normal transaction boundary.
 
 ## 20. Technology boundary
 
@@ -767,7 +956,7 @@ The architecture assumes **TypeScript in strict mode with ES modules** for V2 so
 
 Recommended build/test baseline is **Vite + Vitest** because it can still emit a static GitHub Pages site while providing deterministic module builds and fast tests.
 
-The Domain/Application design intentionally does **not** require a specific UI framework. A UI framework decision, if any, is presentation-only and must not leak framework types into module public contracts.
+The Domain/Application/UI-contract design intentionally does **not** require a specific UI framework. A UI framework decision, if any, is internal to a UI package and must not leak framework types into public contracts.
 
 ## 21. Implementation dependency order
 
@@ -776,32 +965,48 @@ Implementation should follow this order after design freeze:
 1. Toolchain, lint/type/test baseline, import-boundary rules.
 2. Shared IDs/Result/schema utilities.
 3. Task + Schedule value model.
-4. Flow model and invariant tests.
-5. Workspace aggregate/document validation.
-6. Application store, command transactions, History.
-7. Memory repository + schema codec/migrators.
-8. Startup/session state machine.
-9. Browser persistence + storage policy.
-10. Minimal Start/Board/List shell.
-11. Task editor + Task/Flow/Schedule interactions.
-12. Board settings/layout/drop resolver + #222 regression.
-13. Mobile InteractionCoordinator/edge scroll.
-14. Goal appearance.
-15. Freehand/reference edges/annotations.
-16. `.cherry` V1 import + native V2 export/import.
-17. ICS/CSV adapters.
-18. Broader E2E, accessibility, performance and release hardening.
+4. Structural DAG/reference Flow model, merge support, and invariant tests.
+5. Derived-goal detection/completion evaluator.
+6. Workspace aggregate/document validation.
+7. Application store, command transactions, History, and deletion commands.
+8. Memory repository + schema codec/migrators.
+9. Startup state machine + mandatory storage-consent policy.
+10. Browser persistence adapter.
+11. UI contract and contract tests.
+12. Minimal default Start/Board/List shell wired only through the UI contract.
+13. Task editor + desktop Task/Flow/Schedule interactions.
+14. Board DAG layout/drop resolver + #222 regression.
+15. Mobile InteractionCoordinator/edge scroll; prototype connection UX without freezing it prematurely.
+16. Goal appearance + automatic goal-completion presentation.
+17. Freehand/reference edges/annotations.
+18. `.cherry` V1 import, including supported encrypted V1 files, + native V2 export/import.
+19. Best-effort legacy browser-storage recovery.
+20. ICS/CSV adapters.
+21. Broader E2E, accessibility, performance, UI-package swap proof, and release hardening.
 
 The order is dependency-driven: a UI feature is not implemented before the semantic component it needs exists.
 
-## 22. Basic-design freeze criteria
+## 22. Remaining design-freeze questions
+
+The following decisions are intentionally still open after the 2026-09-14 review:
+
+1. **Auto-completed goal reopening:** if a downstream Task is reopened, should a goal that Cherry auto-completed automatically reopen? How should this interact with a user manually marking the goal complete?
+2. **Cascade deletion with merges:** when “delete this Task and downstream Flow” reaches a Task that is also reachable from an upstream path outside the deletion scope, should the shared Task always be retained, or can the confirmation include it?
+3. **Merged Task presentation:** in List view and auto-layout, should a merged Task appear once with multiple incoming indicators, or may some views repeat a visual representation while still pointing to one canonical Task? This is presentation policy, but the read-model contract should be explicit before UI implementation.
+4. **Mobile existing-task connection UX:** capability is required, exact touch interaction remains intentionally deferred until prototype testing.
+
+## 23. Basic-design freeze criteria
 
 Basic design is ready to freeze when:
 
 - every MUST requirement has one owning module,
-- Flow structural/reference edge semantics are accepted,
+- structural DAG/reference edge semantics are accepted,
+- branch/merge and derived-goal semantics are accepted,
+- goal reopen behavior is resolved,
+- destructive downstream-delete behavior for shared merged Tasks is resolved,
 - persisted data model is accepted,
-- storage/migration boundary is accepted,
+- explicit persistence consent and V1 migration boundaries are accepted,
+- UI package contract is accepted,
 - interaction state ownership is accepted,
 - startup state machine is accepted,
 - test strategy can verify the contracts,
