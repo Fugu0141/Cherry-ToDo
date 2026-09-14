@@ -21,11 +21,13 @@ function intents(): CherryUIIntents {
       open: ok,
       goToStart: ok,
       setView: ok,
+      setBoardSettings: ok,
     },
     task: {
       create: ok,
       update: ok,
       setCompleted: ok,
+      setSchedule: ok,
     },
     flow: { connect: ok },
     history: { undo: ok, redo: ok },
@@ -75,6 +77,8 @@ describe('formal UI contract', () => {
 
     expect(ja.t('storage.notNow')).toBe('今はしない');
     expect(en.t('storage.notNow')).toBe('Not now');
+    expect(ja.t('board.dateLanes')).toBe('日付レーン');
+    expect(en.t('task.scheduleDateTime')).toBe('Date and time');
     expect(CHERRY_SEMANTIC_TOKENS.states).toContain('derived-goal');
   });
 });
