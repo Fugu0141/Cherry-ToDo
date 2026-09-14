@@ -58,10 +58,9 @@ async function expectNoSeriousAccessibilityViolations(page: Page): Promise<void>
   ).toEqual([]);
 }
 
-test('ephemeral planning journey works and key surfaces pass accessibility audit', async (
-  { page },
-  testInfo,
-) => {
+test('ephemeral planning journey works and key surfaces pass accessibility audit', async ({
+  page,
+}, testInfo) => {
   await page.goto('/');
   await expectNoSeriousAccessibilityViolations(page);
 
