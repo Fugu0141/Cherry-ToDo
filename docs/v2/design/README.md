@@ -4,6 +4,7 @@
 - [`BASIC_DESIGN.md`](BASIC_DESIGN.md) — architecture and module/data/interaction design baseline.
 - [`FLOW_EXECUTION_RULES.md`](FLOW_EXECUTION_RULES.md) — derived-goal completion, merge execution gates, blocking/invalidation, and deletion semantics, subject to the freeze corrections.
 - [`MOBILE_INTERACTION.md`](MOBILE_INTERACTION.md) — **accepted default-UI mobile interaction mapping**, including the validated existing-Task connection UX.
+- [`FREEHAND_AND_ANNOTATIONS.md`](FREEHAND_AND_ANNOTATIONS.md) — **Phase 8 freehand composition, cyclic/reference Flow, drawing ownership, Annotation History, and persistence contract**.
 - [`TEST_STRATEGY.md`](TEST_STRATEGY.md) — test pyramid, regression strategy, traceability, and Definition of Done.
 
 Related architecture decisions:
