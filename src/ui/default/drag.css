@@ -1,0 +1,32 @@
+.cherry-date-lane {
+  pointer-events: auto;
+  transition: height 140ms ease, border-color 120ms ease, background 120ms ease;
+}
+
+.cherry-date-lane[data-drop-active="true"] {
+  border-color: #d83352;
+  background: rgba(216, 51, 82, 0.08);
+  box-shadow: inset 0 0 0 2px rgba(216, 51, 82, 0.08);
+}
+
+.cherry-date-lane[data-collapsed="true"] {
+  background: rgba(255, 255, 255, 0.82);
+  overflow: hidden;
+}
+
+.cherry-date-lane-label {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.cherry-board-task {
+  cursor: grab;
+}
+
+.cherry-board-task:active {
+  cursor: grabbing;
+}
+
+.cherry-board-task.dragging {
+  opacity: 0.38;
+}
