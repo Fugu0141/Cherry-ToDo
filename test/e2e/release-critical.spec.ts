@@ -121,7 +121,9 @@ test('persistent data clearing requires explicit destructive confirmation', asyn
   await addTask(page, '一時保存タスク');
 
   const storageActions = page.locator('.cherry-storage-actions');
-  await expect(storageActions.getByRole('button', { name: '保存データを削除して停止' })).toBeVisible();
+  await expect(
+    storageActions.getByRole('button', { name: '保存データを削除して停止' }),
+  ).toBeVisible();
 
   page.once('dialog', async (dialog) => {
     expect(dialog.type()).toBe('confirm');
