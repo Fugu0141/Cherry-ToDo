@@ -1,0 +1,41 @@
+import type { TaskId } from '../../../shared/ids/index.ts';
+import type { Result } from '../../../shared/result/index.ts';
+
+export interface Point {
+  readonly x: number;
+  readonly y: number;
+}
+
+export type TimeGuideMode = 'auto' | 'shown' | 'hidden';
+
+export interface BoardSettings {
+  readonly showDateLanes: boolean;
+  readonly autoLayout: boolean;
+  readonly timeGuide: TimeGuideMode;
+}
+
+export interface BoardDocumentState {
+  readonly settings: BoardSettings;
+  readonly positions: Readonly<Record<string, Point>>;
+  readonly annotationViewportPolicy?: 'board';
+}
+
+export interface BoardValidationError {
+  readonly code: 'invalid-point' | 'unknown-position-task';
+  readonly taskId: string;
+}
+
+export const DEFAULT_BOARD_SETTINGS: BoardSettings = {
+  showDateLanes: true,
+  autoLayout: true,
+  timeGuide: 'auto',
+};
+
+export function createEmptyBoardDocumentState(): BoardDocumentState {
+  return { settings: DEFAULT_BOARD_SETTINGS, positions: {} };
+}
+
+export declare function validateBoardDocumentState(
+  taskIds: readonly TaskId[],
+  state: BoardDocumentState,
+): Result<BoardDocumentState, readonly BoardValidationError[]>;
