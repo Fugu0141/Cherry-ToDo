@@ -116,3 +116,17 @@ button { cursor: pointer; }
 .cherry-task[data-cherry-state~="flow-connect-source"] { outline: 3px solid rgba(216,51,82,.55); outline-offset: 3px; }
 .cherry-task[data-cherry-state~="flow-connect-target"] { outline: 2px dashed rgba(216,51,82,.34); outline-offset: 3px; }
 .cherry-task.dragging { opacity: .44; }
+
+
+/* Phase 6D: desktop maintenance and accessibility */
+.cherry-history-actions { margin-left: auto; display: flex; gap: 6px; }
+.cherry-icon-button:disabled { opacity: .35; cursor: not-allowed; }
+.cherry-connection { display: inline-flex; align-items: center; gap: 7px; }
+.cherry-connection-remove { border: 0; background: transparent; color: currentColor; width: 20px; height: 20px; border-radius: 999px; padding: 0; line-height: 1; }
+.cherry-connection-remove:hover, .cherry-connection-remove:focus-visible { background: rgba(0,0,0,.08); outline: 2px solid rgba(216,51,82,.22); }
+.cherry-flow-reorder { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; border-left: 1px solid #e2e5e9; padding-left: 12px; }
+.cherry-flow-reorder-row { display: inline-flex; align-items: center; gap: 4px; padding: 3px 5px 3px 9px; border: 1px solid #e1e4e8; border-radius: 999px; background: #fff; font-size: 12px; }
+.cherry-editor-danger { margin-top: 4px; padding-top: 14px; border-top: 1px solid #eadfe1; display: grid; gap: 8px; }
+.cherry-button.danger { background: #b72842; border-color: #b72842; color: #fff; }
+.cherry-button.danger.ghost { background: #fff; color: #a3263d; }
+.cherry-button:focus-visible, .cherry-icon-button:focus-visible, .cherry-segment-button:focus-visible, .cherry-workspace-card:focus-visible { outline: 3px solid rgba(216,51,82,.25); outline-offset: 2px; }
