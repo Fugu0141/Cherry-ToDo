@@ -14,6 +14,7 @@ import {
   parseTaskId,
   parseWorkspaceId,
   type TabId,
+  type TaskId,
 } from '../shared/ids/index';
 import {
   CHERRY_SEMANTIC_TOKENS,
@@ -22,7 +23,6 @@ import {
   type CherryLocale,
   type CherryMessageKey,
   type CherryScreenModel,
-  type CherryTaskImportance,
   type CherryUIContext,
   type CherryUIIntents,
   type CherryView,
@@ -307,11 +307,7 @@ export class CherryUIRuntime implements CherryUIContext {
 
   async #withTaskId(
     rawId: string,
-    action: (
-      taskId: ReturnType<
-        typeof unwrapId<ReturnType<typeof parseTaskId> extends { value: infer T } ? T : never>
-      >,
-    ) => Promise<UIActionResult>,
+    action: (taskId: TaskId) => Promise<UIActionResult>,
   ): Promise<UIActionResult> {
     const parsed = parseTaskId(rawId);
     if (!parsed.ok) return this.#error('validation', 'error.validation');
@@ -379,12 +375,16 @@ export class CherryUIRuntime implements CherryUIContext {
     return OK;
   }
 
-  async #cancel(planId: string): Promise<UIActionResult> {
-    if (this.#store === null) return this.#error('not-found', 'error.notFound');
+  #cancel(planId: string): Promise<UIActionResult> {
+    if (this.#store === null) {
+      return Promise.resolve(this.#error('not-found', 'error.notFound'));
+    }
     const result = this.#store.cancelMutation(planId);
-    if (!result.ok) return { kind: 'error', error: presentationError(result.error) };
+    if (!result.ok) {
+      return Promise.resolve({ kind: 'error', error: presentationError(result.error) });
+    }
     this.#refreshWorkspace();
-    return OK;
+    return Promise.resolve(OK);
   }
 
   async #rememberSession(): Promise<void> {
@@ -428,7 +428,7 @@ export class CherryUIRuntime implements CherryUIContext {
           title: task.title,
           notes: task.notes,
           status: task.status,
-          importance: task.appearance.importance as CherryTaskImportance,
+          importance: task.appearance.importance,
           scheduleLabel: scheduleLabel(task.schedule),
           isDerivedGoal: state?.isDerivedBranchingGoal ?? false,
           canManuallyComplete: manual?.kind === 'available',
