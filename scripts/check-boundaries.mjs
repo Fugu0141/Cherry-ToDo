@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -24,8 +24,19 @@ function resolveSourceImport(sourceFile, specifier) {
   }
 
   const base = path.resolve(path.dirname(sourceFile), specifier);
-  const candidates = [base, `${base}.ts`, path.join(base, 'index.ts')];
-  return candidates.find((candidate) => candidate.startsWith(sourceRoot)) ?? null;
+  const candidates = [
+    `${base}.ts`,
+    `${base}.tsx`,
+    path.join(base, 'index.ts'),
+    path.join(base, 'index.tsx'),
+  ];
+
+  return (
+    candidates.find(
+      (candidate) =>
+        candidate.startsWith(sourceRoot) && existsSync(candidate) && statSync(candidate).isFile(),
+    ) ?? null
+  );
 }
 
 function moduleName(relativePath) {
@@ -34,7 +45,7 @@ function moduleName(relativePath) {
 }
 
 function isPublicModuleEntry(relativePath) {
-  return /^modules\/[^/]+\/index\.ts$/.test(relativePath);
+  return /^modules\/[^/]+\/index\.tsx?$/.test(relativePath);
 }
 
 function violationsForImport(sourceRelative, targetRelative) {
@@ -96,16 +107,55 @@ function violationsForImport(sourceRelative, targetRelative) {
     }
   }
 
-  if (!sourceRelative.startsWith('composition/')) {
-    if (targetRelative.startsWith('adapters/')) {
-      violations.push('only composition may import concrete adapters');
-    }
+  if (!sourceRelative.startsWith('composition/') && targetRelative.startsWith('adapters/')) {
+    violations.push('only composition may import concrete adapters');
   }
 
   return violations;
 }
 
-const files = walk(sourceRoot).filter((file) => file.endsWith('.ts'));
+function assertBoundaryRuleSelfTests() {
+  const fixtures = [
+    {
+      source: 'ui/default/app.ts',
+      target: 'modules/task/index.ts',
+      mustFail: true,
+    },
+    {
+      source: 'composition/bootstrap.ts',
+      target: 'adapters/persistence/browser/index.ts',
+      mustFail: false,
+    },
+    {
+      source: 'modules/task/application/create-task.ts',
+      target: 'modules/flow/domain/edge.ts',
+      mustFail: true,
+    },
+    {
+      source: 'modules/task/application/create-task.ts',
+      target: 'modules/flow/index.ts',
+      mustFail: false,
+    },
+    {
+      source: 'modules/task/domain/task.ts',
+      target: 'adapters/persistence/browser/index.ts',
+      mustFail: true,
+    },
+  ];
+
+  for (const fixture of fixtures) {
+    const failed = violationsForImport(fixture.source, fixture.target).length > 0;
+    if (failed !== fixture.mustFail) {
+      throw new Error(
+        `Boundary rule self-test failed for ${fixture.source} -> ${fixture.target}. Expected mustFail=${fixture.mustFail}.`,
+      );
+    }
+  }
+}
+
+assertBoundaryRuleSelfTests();
+
+const files = walk(sourceRoot).filter((file) => file.endsWith('.ts') || file.endsWith('.tsx'));
 const failures = [];
 
 for (const sourceFile of files) {

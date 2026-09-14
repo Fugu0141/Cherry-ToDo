@@ -5,7 +5,7 @@ Status: Phase 1 engineering baseline
 ## Prerequisites
 
 - Node.js 24 LTS is the CI reference runtime.
-- Node.js 22.12 or newer is supported by the package engine range.
+- Node.js 22.13 or newer is supported by the package engine range.
 - npm is the repository package manager for V2.
 
 ## Install
@@ -40,7 +40,7 @@ The V2 source layout follows `design/BASIC_DESIGN.md`.
 - `src/composition/` is the wiring boundary and is the only layer allowed to know multiple concrete implementations at once.
 - `src/shared/` contains low-level framework-independent utilities.
 
-`npm run boundaries` rejects important dependency-direction violations before they can become runtime coupling. The checker is intentionally small and repository-owned so its rules can evolve with accepted ADRs.
+`npm run boundaries` rejects important dependency-direction violations before they can become runtime coupling. The checker includes representative allowed/forbidden rule self-tests and is repository-owned so its rules can evolve with accepted ADRs.
 
 ## Phase discipline
 
