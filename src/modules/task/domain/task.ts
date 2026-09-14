@@ -32,6 +32,8 @@ export interface Task {
 export type TaskValidationError =
   | { readonly code: 'invalid-task-title'; readonly value: string }
   | { readonly code: 'invalid-task-notes'; readonly value: string }
+  | { readonly code: 'invalid-task-status'; readonly value: string }
+  | { readonly code: 'invalid-task-importance'; readonly value: string }
   | {
       readonly code: 'invalid-task-schedule';
       readonly cause: ScheduleValidationError;
@@ -50,6 +52,15 @@ export interface CreateTaskInput {
   readonly importance?: TaskImportance;
   readonly meta: RevisionMeta;
 }
+
+const TASK_STATUSES: readonly TaskStatus[] = ['todo', 'done'];
+const TASK_IMPORTANCE_VALUES: readonly TaskImportance[] = [
+  'none',
+  'low',
+  'medium',
+  'high',
+  'urgent',
+];
 
 export function createTask(input: CreateTaskInput): Result<Task, TaskValidationError> {
   const task: Task = {
@@ -72,6 +83,17 @@ export function validateTask(task: Task): Result<Task, TaskValidationError> {
 
   if (typeof task.notes !== 'string') {
     return err({ code: 'invalid-task-notes', value: String(task.notes) });
+  }
+
+  if (!TASK_STATUSES.includes(task.status)) {
+    return err({ code: 'invalid-task-status', value: String(task.status) });
+  }
+
+  if (!TASK_IMPORTANCE_VALUES.includes(task.appearance.importance)) {
+    return err({
+      code: 'invalid-task-importance',
+      value: String(task.appearance.importance),
+    });
   }
 
   const schedule = validateSchedule(task.schedule);
