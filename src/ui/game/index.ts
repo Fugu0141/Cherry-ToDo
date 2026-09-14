@@ -1,7 +1,6 @@
 import type {
   CherryFlowKind,
   CherryScheduleModel,
-  CherryTaskImportance,
   CherryTimeGuideMode,
   CherryUIContext,
   CherryUIHandle,
