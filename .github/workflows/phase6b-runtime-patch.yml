@@ -1,0 +1,60 @@
+name: Phase 6B runtime patch
+
+on:
+  push:
+    branches:
+      - feat/v2-phase6b-drop-intents
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/v2-phase6b-drop-intents
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Patch UI runtime
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('src/composition/cherry-ui-runtime.ts')
+          s = p.read_text()
+          old = "import { createEmptyBoardDocumentState, layoutBoard } from '../modules/board/index';"
+          new = """import {\n  createEmptyBoardDocumentState,\n  layoutBoard,\n  resolveDropIntent,\n} from '../modules/board/index';"""
+          if old not in s: raise SystemExit('board import not found')
+          s = s.replace(old, new, 1)
+
+          marker = """  type CherryView,\n  type PresentationError,"""
+          replacement = """  type CherryView,\n  type DropTaskOnBoardIntent,\n  type PresentationError,"""
+          if marker not in s: raise SystemExit('UI import marker not found')
+          s = s.replace(marker, replacement, 1)
+
+          marker = """      flow: {\n        connect: (input) => this.#connect(input.fromTaskId, input.toTaskId, input.kind),\n      },"""
+          replacement = """      board: {\n        dropTask: (input) => this.#dropTask(input),\n      },\n      flow: {\n        connect: (input) => this.#connect(input.fromTaskId, input.toTaskId, input.kind),\n      },"""
+          if marker not in s: raise SystemExit('flow intents marker not found')
+          s = s.replace(marker, replacement, 1)
+
+          marker = """  async #connect(fromRaw: string, toRaw: string, kind: CherryFlowKind): Promise<UIActionResult> {"""
+          method = """  async #dropTask(input: DropTaskOnBoardIntent): Promise<UIActionResult> {\n    if (this.#store === null || this.#tabId === null) {\n      return this.#error('not-found', 'error.notFound');\n    }\n    const taskId = parseTaskId(input.taskId);\n    if (!taskId.ok) return this.#error('validation', 'error.validation');\n    const tab = this.#store.workspace.tabs[this.#tabId];\n    if (tab === undefined) return this.#error('not-found', 'error.notFound');\n\n    const intent = resolveDropIntent({\n      taskId: taskId.value,\n      settings: tab.board.settings,\n      target: input.target,\n    });\n    if (intent.kind === 'connect-task' || intent.kind === 'reorder-flow') {\n      return this.#error('validation', 'error.validation');\n    }\n\n    return this.#runMutation((store, tabId) =>\n      store.applyBoardDrop(tabId, taskId.value, intent),\n    );\n  }\n\n"""
+          if marker not in s: raise SystemExit('connect method marker not found')
+          s = s.replace(marker, method + marker, 1)
+          p.write_text(s)
+          PY
+      - run: npx prettier --write src/composition/cherry-ui-runtime.ts
+      - name: Commit patch
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/composition/cherry-ui-runtime.ts
+          git commit -m "feat: route Board drops through typed intents"
+          git push
