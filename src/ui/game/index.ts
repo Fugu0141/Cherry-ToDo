@@ -11,6 +11,7 @@ import type {
 } from '../../ui-contract/index';
 import { InteractionCoordinator } from '../default/interaction/interaction-coordinator';
 import { installDesktopHandleConnection } from './interaction/desktop-handle-connection';
+import { installMobileFlowMap } from './interaction/mobile-flow-map';
 import { installMobileBoardInteraction } from '../default/interaction/mobile-board-interaction';
 
 function el<K extends keyof HTMLElementTagNameMap>(
@@ -420,7 +421,14 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
           );
         },
       });
+      const flowMapCleanup = installMobileFlowMap({
+        scroll,
+        canvas,
+        workspace,
+        selectedTaskId: () => selectedTaskId,
+      });
       boardCleanup = () => {
+        flowMapCleanup();
         handleCleanup();
         mobileCleanup();
       };

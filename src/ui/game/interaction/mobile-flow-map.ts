@@ -83,8 +83,14 @@ export function installMobileFlowMap(options: MobileFlowMapOptions): () => void 
       const to = toMap(toWorld.x, toWorld.y);
       const line = svg('path');
       const mid = (from.y + to.y) / 2;
-      line.setAttribute('d', `M ${from.x} ${from.y} L ${from.x} ${mid} L ${to.x} ${mid} L ${to.x} ${to.y}`);
-      line.setAttribute('class', edge.kind === 'branch' ? 'cg-flow-map-edge branch' : 'cg-flow-map-edge');
+      line.setAttribute(
+        'd',
+        `M ${from.x} ${from.y} L ${from.x} ${mid} L ${to.x} ${mid} L ${to.x} ${to.y}`,
+      );
+      line.setAttribute(
+        'class',
+        edge.kind === 'branch' ? 'cg-flow-map-edge branch' : 'cg-flow-map-edge',
+      );
       graphic.append(line);
     }
 
