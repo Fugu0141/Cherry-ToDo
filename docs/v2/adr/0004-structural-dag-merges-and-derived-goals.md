@@ -26,43 +26,31 @@ Structural Flow is a directed acyclic graph (DAG), not a single-parent tree.
 - A Task with two or more outgoing structural edges is treated as a derived branching goal.
 - A standalone item remains one ordinary Task; root/top-level status alone does not make it a goal.
 - When all Tasks required by the structural branches below a derived goal are complete, Cherry automatically completes that goal.
-- Reference edges do not participate in this automatic completion rule.
+- If Cherry auto-completed a goal and a required downstream structural Task becomes incomplete, the goal automatically reopens.
+- Explicit manual goal completion is not silently undone merely by the derived-goal evaluator.
+- Reference edges do not participate in automatic goal completion/reopening.
 
-### Automatic goal reopening
+### Merge execution semantics
 
-Cherry distinguishes completion caused automatically by the derived-goal evaluator from an explicit manual completion.
+A Task with two or more incoming structural edges is a structural merge target and an execution gate.
 
-- If Cherry automatically completed a derived branching goal and a required downstream structural Task later becomes incomplete again, the automatically completed goal MUST reopen automatically.
-- An explicit manual completion is user intent and is not silently rewritten by the automatic goal-completion evaluator merely because a downstream Task changes.
-- Automatic completion/reopening is performed by Domain/Application behavior, not UI-side cascading mutations.
+A merge target MUST NOT be newly marked complete while any direct structural predecessor is incomplete.
 
-### Merge completion gate
-
-A Task with two or more incoming structural edges is a structural merge target.
-
-A merge target MUST NOT be newly marked complete while any of its direct incoming structural predecessor Tasks are incomplete.
+A closed merge gate also blocks completion of its downstream structural region until the gate opens.
 
 Example:
 
 ```text
-A done ─┐
-        ├→ C locked
-B todo ─┘
+A ✓ ─┐
+     ├→ C 🔒 → D 🔒
+B □ ─┘
 ```
 
-After all direct predecessors are complete, the merge target becomes completable:
+When `B` becomes complete, `C` and `D` become available for normal completion. Neither is auto-completed by the gate opening.
 
-```text
-A done ─┐
-        ├→ C todo / available
-B done ─┘
-```
+Ordinary one-line Flow remains non-blocking unless it lies behind a closed merge gate.
 
-This rule is a Domain/Application invariant. UI packages may visualize the locked state differently, but no UI package may bypass the completion gate.
-
-Completing all predecessors unlocks the merge target; it does **not** automatically complete the merge target itself.
-
-The behavior for an already-completed merge target when a predecessor is later reopened, or when a new incomplete predecessor is connected afterward, remains a design-freeze question.
+Detailed invalidation/confirmation semantics are defined in ADR-0006.
 
 ### Chain-limited downstream deletion
 
@@ -85,19 +73,28 @@ X ──────────┘
 
 Deleting `B` with downstream scope may remove `B` and `C`, but traversal stops before shared merge Task `D`.
 
-This avoids deleting Tasks that belong to another path and removes the need to guess ownership in a DAG.
-
 ## Consequences
 
 - Auto-layout, List/read models, traversal, import/export, and History must be DAG-aware.
 - A merged Task is one canonical Task even when several upstream paths reach it.
 - Tree-only ownership assumptions are invalid for shared downstream Tasks.
 - Goal-completion logic must de-duplicate shared descendants.
-- Automatic goal completion must record whether the completion was automatic or explicit enough for the evaluator/history layer to preserve user intent.
+- Automatic goal completion/reopening must preserve enough intent/history information to distinguish automatic from manual completion.
 - Merge targets expose a derived completion-availability state to read models/UI packages.
+- A closed merge gate may create a derived blocked state in later Tasks without persisting a mutable `locked` flag.
 - Downstream deletion is a chain operation, not a recursive graph-subtree delete.
 - Branch and merge junctions are safety boundaries for destructive traversal.
 
-## Remaining design-freeze question
+## Resolved follow-up decisions
 
-If a merge target was validly completed and one of its predecessor Tasks later becomes incomplete (or a new incomplete predecessor is connected), should Cherry automatically reopen that merge target, or preserve the historical completion and only block future completion transitions?
+The original follow-up questions for this ADR are resolved:
+
+1. **Auto-completed goal reopening:** yes; auto-completed goals reopen when a required structural descendant becomes incomplete. Manual completion remains distinguishable.
+2. **Shared downstream deletion:** downstream deletion stops before branch/merge junctions and never automatically crosses shared graph structure.
+3. **Completed merge invalidation:** if a user action would make completed Tasks invalid under the merge-gate rules, Application first computes an impact plan and Presentation requires confirmation before those Tasks are reopened. See ADR-0006.
+4. **Merged Task identity:** merged Tasks remain one canonical semantic Task. Presentation may choose suitable indicators but may not clone the semantic entity to fake a tree.
+
+See also:
+
+- `0006-merge-gates-and-invalidation.md`
+- `../design/FLOW_EXECUTION_RULES.md`
