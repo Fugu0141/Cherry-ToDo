@@ -20,7 +20,7 @@ import type { WorkspaceRepository } from '../modules/workspace/index';
 
 export interface BrowserApplicationEnvironment {
   readonly storage: StorageLike;
-  readonly indexedDb: IDBFactory;
+  readonly indexedDb?: IDBFactory;
 }
 
 export interface BrowserApplicationComposition {
@@ -63,11 +63,15 @@ export function createBrowserApplicationComposition(
 
   const createPersistentWorkspaceRepository =
     options.createPersistentWorkspaceRepository ??
-    (() =>
-      new BrowserWorkspaceRepository(
+    (() => {
+      if (environment.indexedDb === undefined) {
+        throw new Error('IndexedDB is unavailable in this browser environment.');
+      }
+      return new BrowserWorkspaceRepository(
         new IndexedDbBinaryStore(environment.indexedDb),
         codec,
-      ));
+      );
+    });
 
   const persistence = new PersistenceCoordinator(
     memoryWorkspaceRepository,
