@@ -2,7 +2,7 @@ import type { CherryFlowKind, ConnectTasksIntent } from '../../../ui-contract/in
 import type { InteractionCoordinator } from './interaction-coordinator';
 
 export interface MobileConnectionDraft {
-  readonly sourceTaskId: string;
+  readonly fromTaskId: string;
   readonly kind: CherryFlowKind;
 }
 
@@ -12,7 +12,7 @@ export function beginMobileConnection(
   kind: CherryFlowKind,
 ): MobileConnectionDraft | null {
   if (!coordinator.beginConnection(sourceTaskId, kind)) return null;
-  return { sourceTaskId, kind };
+  return { fromTaskId: sourceTaskId, kind };
 }
 
 export function completeMobileConnection(
