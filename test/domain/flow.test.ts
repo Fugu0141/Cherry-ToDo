@@ -109,6 +109,46 @@ describe('structural Flow DAG', () => {
     }
   });
 
+  it('enforces continuation and branch-order invariants', () => {
+    const a = taskId('A');
+    const b = taskId('B');
+    const c = taskId('C');
+
+    const continuations = validateFlowGraph([a, b, c], {
+      ab: continuation('ab', a, b),
+      ac: continuation('ac', a, c),
+    });
+    expect(continuations.ok).toBe(false);
+    if (!continuations.ok) {
+      expect(continuations.error.some((error) => error.code === 'continuation-conflict')).toBe(
+        true,
+      );
+    }
+
+    const branchOrder = validateFlowGraph([a, b, c], {
+      ab: branch('ab', a, b, 0),
+      ac: branch('ac', a, c, 0),
+    });
+    expect(branchOrder.ok).toBe(false);
+    if (!branchOrder.ok) {
+      expect(branchOrder.error.some((error) => error.code === 'branch-order-conflict')).toBe(
+        true,
+      );
+    }
+  });
+
+  it('rejects edges whose endpoints are outside the current Tab', () => {
+    const a = taskId('A');
+    const b = taskId('B');
+
+    const result = validateFlowGraph([a], { ab: continuation('ab', a, b) });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error.some((error) => error.code === 'missing-endpoint')).toBe(true);
+    }
+  });
+
   it('allows reference cycles without feeding them into structural DAG validation', () => {
     const a = taskId('A');
     const b = taskId('B');
