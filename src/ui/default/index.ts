@@ -1,5 +1,7 @@
 import type {
   CherryFlowKind,
+  CherryScheduleModel,
+  CherryTimeGuideMode,
   CherryUIContext,
   CherryUIHandle,
   CherryUIPackage,
@@ -40,6 +42,30 @@ function labeledInput(
   return { wrap, input };
 }
 
+function labeledSelect(label: string, className = 'cherry-select'): {
+  wrap: HTMLLabelElement;
+  select: HTMLSelectElement;
+} {
+  const wrap = element('label', 'cherry-field');
+  const text = element('span', 'cherry-label');
+  text.textContent = label;
+  const select = element('select', className);
+  wrap.append(text, select);
+  return { wrap, select };
+}
+
+function checkControl(label: string, checked: boolean, onChange: (checked: boolean) => void) {
+  const wrap = element('label', 'cherry-toggle');
+  const input = element('input');
+  input.type = 'checkbox';
+  input.checked = checked;
+  const text = element('span');
+  text.textContent = label;
+  input.addEventListener('change', () => onChange(input.checked));
+  wrap.append(input, text);
+  return wrap;
+}
+
 async function perform(context: CherryUIContext, promise: Promise<UIActionResult>): Promise<void> {
   let result = await promise;
   if (result.kind === 'confirmation-required') {
@@ -67,12 +93,16 @@ function renderTask(
   if (task.blocked) states.push('task-blocked');
   if (task.isDerivedGoal) states.push('derived-goal');
   card.setAttribute(context.semanticTokens.stateAttribute, states.join(' '));
+  card.dataset.taskId = task.id;
 
   const top = element('div', 'cherry-task-top');
   if (task.canManuallyComplete) {
     const checkbox = element('input', 'cherry-check');
     checkbox.type = 'checkbox';
     checkbox.checked = task.status === 'done';
+    checkbox.setAttribute('aria-label',
+      context.i18n.t(task.status === 'done' ? 'task.reopen' : 'task.complete'),
+    );
     checkbox.addEventListener('change', () => {
       void perform(context, context.intents.task.setCompleted(task.id, checkbox.checked));
     });
@@ -99,7 +129,7 @@ function renderTask(
   }
   if (task.blockedReasonKey !== null) {
     const blocked = element('small', 'cherry-task-blocked');
-    blocked.textContent = context.i18n.t(task.blockedReasonKey);
+    blocked.textContent = `🔒 ${context.i18n.t(task.blockedReasonKey)}`;
     card.append(blocked);
   }
   return card;
@@ -108,6 +138,93 @@ function renderTask(
 function connectionLabel(workspace: WorkspaceScreenModel, fromId: string, toId: string): string {
   const byId = new Map(workspace.tasks.map((task) => [task.id, task.title]));
   return `${byId.get(fromId) ?? fromId} → ${byId.get(toId) ?? toId}`;
+}
+
+function renderConnectionSummary(
+  context: CherryUIContext,
+  workspace: WorkspaceScreenModel,
+): HTMLElement | null {
+  if (workspace.connections.length === 0) return null;
+  const connections = element('aside', 'cherry-connections');
+  for (const edge of workspace.connections) {
+    const pill = element('span', 'cherry-connection');
+    pill.setAttribute(
+      context.semanticTokens.stateAttribute,
+      edge.kind === 'branch'
+        ? 'flow-branch'
+        : edge.kind === 'reference'
+          ? 'flow-reference'
+          : 'flow-continuation',
+    );
+    pill.textContent = connectionLabel(workspace, edge.fromTaskId, edge.toTaskId);
+    connections.append(pill);
+  }
+  return connections;
+}
+
+function renderBoard(
+  context: CherryUIContext,
+  workspace: WorkspaceScreenModel,
+  onEdit: (taskId: string) => void,
+): HTMLElement {
+  const scroll = element('main', 'cherry-board-scroll');
+  const canvas = element('section', 'cherry-board-canvas');
+  canvas.style.minWidth = `${Math.max(workspace.board.width, 760)}px`;
+  canvas.style.minHeight = `${Math.max(workspace.board.height, 520)}px`;
+  canvas.dataset.timeGuide = workspace.board.settings.timeGuide;
+
+  if (workspace.board.settings.showDateLanes) {
+    for (const lane of workspace.board.lanes) {
+      const laneNode = element('section', 'cherry-date-lane');
+      laneNode.dataset.laneId = lane.id;
+      laneNode.style.top = `${lane.startY}px`;
+      laneNode.style.height = `${lane.height}px`;
+      const label = element('div', 'cherry-date-lane-label');
+      label.textContent =
+        lane.kind === 'date' && lane.date !== null
+          ? lane.date
+          : context.i18n.t('board.undated');
+      laneNode.append(label);
+      canvas.append(laneNode);
+    }
+  }
+
+  for (const task of workspace.tasks) {
+    const card = renderTask(context, task, onEdit);
+    card.classList.add('cherry-board-task');
+    if (task.position !== null) {
+      card.style.left = `${task.position.x}px`;
+      card.style.top = `${task.position.y}px`;
+    }
+    canvas.append(card);
+  }
+
+  scroll.append(canvas);
+  return scroll;
+}
+
+function renderList(
+  context: CherryUIContext,
+  workspace: WorkspaceScreenModel,
+  onEdit: (taskId: string) => void,
+): HTMLElement {
+  const list = element('main', 'cherry-list');
+  for (const task of workspace.tasks) list.append(renderTask(context, task, onEdit));
+  const connections = renderConnectionSummary(context, workspace);
+  if (connections !== null) list.append(connections);
+  return list;
+}
+
+function scheduleFromEditor(
+  kind: HTMLSelectElement,
+  date: HTMLInputElement,
+  time: HTMLInputElement,
+): CherryScheduleModel | null {
+  if (kind.value === 'none') return { kind: 'none' };
+  if (date.value.length === 0) return null;
+  if (kind.value === 'date') return { kind: 'date', date: date.value };
+  if (time.value.length === 0) return null;
+  return { kind: 'datetime', date: date.value, time: time.value };
 }
 
 function renderWorkspace(
@@ -207,33 +324,62 @@ function renderWorkspace(
     toolbar.append(flowForm);
   }
 
-  const content = element(
-    'main',
-    workspace.activeView === 'board' ? 'cherry-board' : 'cherry-list',
-  );
-  for (const task of workspace.tasks) {
-    content.append(renderTask(context, task, (id) => selectTask(id)));
+  if (workspace.activeView === 'board') {
+    const settings = element('div', 'cherry-board-settings');
+    const applySettings = (next: Partial<typeof workspace.board.settings>) => {
+      void perform(
+        context,
+        context.intents.workspace.setBoardSettings({ ...workspace.board.settings, ...next }),
+      );
+    };
+    settings.append(
+      checkControl(
+        context.i18n.t('board.dateLanes'),
+        workspace.board.settings.showDateLanes,
+        (checked) => applySettings({ showDateLanes: checked }),
+      ),
+      checkControl(
+        context.i18n.t('board.autoLayout'),
+        workspace.board.settings.autoLayout,
+        (checked) => applySettings({ autoLayout: checked }),
+      ),
+    );
+    const timeGuide = labeledSelect(context.i18n.t('board.timeGuide'));
+    const timeGuideOptions: readonly CherryTimeGuideMode[] = ['auto', 'shown', 'hidden'];
+    const timeGuideLabels: Record<CherryTimeGuideMode, string> = {
+      auto: context.i18n.t('board.timeGuideAuto'),
+      shown: context.i18n.t('board.timeGuideShown'),
+      hidden: context.i18n.t('board.timeGuideHidden'),
+    };
+    for (const value of timeGuideOptions) {
+      const option = element('option');
+      option.value = value;
+      option.textContent = timeGuideLabels[value];
+      timeGuide.select.append(option);
+    }
+    timeGuide.select.value = workspace.board.settings.timeGuide;
+    timeGuide.select.addEventListener('change', () => {
+      applySettings({ timeGuide: timeGuide.select.value as CherryTimeGuideMode });
+    });
+    settings.append(timeGuide.wrap);
+    toolbar.append(settings);
   }
 
-  if (workspace.connections.length > 0) {
-    const connections = element('aside', 'cherry-connections');
-    for (const edge of workspace.connections) {
-      const pill = element('span', 'cherry-connection');
-      pill.setAttribute(
-        context.semanticTokens.stateAttribute,
-        edge.kind === 'branch'
-          ? 'flow-branch'
-          : edge.kind === 'reference'
-            ? 'flow-reference'
-            : 'flow-continuation',
-      );
-      pill.textContent = connectionLabel(workspace, edge.fromTaskId, edge.toTaskId);
-      connections.append(pill);
-    }
-    content.append(connections);
-  }
+  const content =
+    workspace.activeView === 'board'
+      ? renderBoard(context, workspace, (id) => selectTask(id))
+      : renderList(context, workspace, (id) => selectTask(id));
 
   root.replaceChildren(header, toolbar, content);
+
+  if (workspace.activeView === 'board') {
+    const connections = renderConnectionSummary(context, workspace);
+    if (connections !== null) {
+      const flowSummary = element('section', 'cherry-board-flow-summary');
+      flowSummary.append(connections);
+      root.append(flowSummary);
+    }
+  }
 
   if (selectedTaskId !== null) {
     const task = workspace.tasks.find((candidate) => candidate.id === selectedTaskId);
@@ -249,23 +395,77 @@ function renderWorkspace(
       const notes = element('textarea', 'cherry-textarea');
       notes.value = task.notes;
       notesLabel.append(notesText, notes);
+
+      const scheduleKind = labeledSelect(context.i18n.t('task.schedule'));
+      const scheduleKinds = [
+        ['none', context.i18n.t('task.scheduleNone')],
+        ['date', context.i18n.t('task.scheduleDate')],
+        ['datetime', context.i18n.t('task.scheduleDateTime')],
+      ] as const;
+      for (const [value, label] of scheduleKinds) {
+        const option = element('option');
+        option.value = value;
+        option.textContent = label;
+        scheduleKind.select.append(option);
+      }
+      scheduleKind.select.value = task.schedule.kind;
+
+      const dateField = labeledInput(
+        context.i18n.t('task.date'),
+        'date',
+        task.schedule.kind === 'none' ? '' : task.schedule.date,
+      );
+      dateField.input.type = 'date';
+      const timeField = labeledInput(
+        context.i18n.t('task.time'),
+        'time',
+        task.schedule.kind === 'datetime' ? task.schedule.time : '',
+      );
+      timeField.input.type = 'time';
+      const scheduleFields = element('div', 'cherry-schedule-fields');
+      scheduleFields.append(dateField.wrap, timeField.wrap);
+      const syncScheduleFields = () => {
+        const noDate = scheduleKind.select.value === 'none';
+        const dateTime = scheduleKind.select.value === 'datetime';
+        dateField.input.disabled = noDate;
+        timeField.input.disabled = !dateTime;
+      };
+      scheduleKind.select.addEventListener('change', syncScheduleFields);
+      syncScheduleFields();
+
       const actions = element('div', 'cherry-editor-actions');
       const cancel = button(context.i18n.t('common.cancel'), () => selectTask(null));
       const save = element('button', 'cherry-button primary');
       save.type = 'submit';
       save.textContent = context.i18n.t('common.save');
       actions.append(cancel, save);
-      panel.append(heading, titleField.wrap, notesLabel, actions);
+      panel.append(
+        heading,
+        titleField.wrap,
+        notesLabel,
+        scheduleKind.wrap,
+        scheduleFields,
+        actions,
+      );
       panel.addEventListener('submit', (event) => {
         event.preventDefault();
-        void perform(
-          context,
-          context.intents.task.update({
-            taskId: task.id,
-            title: titleField.input.value,
-            notes: notes.value,
-          }),
-        ).then(() => selectTask(null));
+        const schedule = scheduleFromEditor(scheduleKind.select, dateField.input, timeField.input);
+        if (schedule === null) {
+          window.alert(context.i18n.t('error.validation'));
+          return;
+        }
+        void (async () => {
+          await perform(
+            context,
+            context.intents.task.update({
+              taskId: task.id,
+              title: titleField.input.value,
+              notes: notes.value,
+            }),
+          );
+          await perform(context, context.intents.task.setSchedule(task.id, schedule));
+          selectTask(null);
+        })();
       });
       overlay.append(panel);
       root.append(overlay);
