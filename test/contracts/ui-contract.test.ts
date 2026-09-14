@@ -15,7 +15,7 @@ const ok = (): Promise<UIActionResult> => Promise.resolve({ kind: 'ok' });
 
 function intents(): CherryUIIntents {
   return {
-    storage: { allow: ok, notNow: ok },
+    storage: { allow: ok, notNow: ok, disable: ok },
     workspace: {
       create: ok,
       open: ok,
@@ -65,6 +65,7 @@ describe('formal UI contract', () => {
       intents: intents(),
       capabilities: {
         persistentStorageAvailable: true,
+        persistentStorageEnabled: false,
         boardView: true,
         listView: true,
         taskEditing: true,

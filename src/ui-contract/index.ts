@@ -207,6 +207,7 @@ export interface CherryUIIntents {
   readonly storage: {
     allow(): Promise<UIActionResult>;
     notNow(): Promise<UIActionResult>;
+    disable(clearPersistentData: boolean): Promise<UIActionResult>;
   };
   readonly workspace: {
     create(input: CreateWorkspaceIntent): Promise<UIActionResult>;
@@ -250,6 +251,7 @@ export interface CherryUIIntents {
 
 export interface CherryUICapabilities {
   readonly persistentStorageAvailable: boolean;
+  readonly persistentStorageEnabled: boolean;
   readonly boardView: boolean;
   readonly listView: boolean;
   readonly taskEditing: boolean;
@@ -295,6 +297,10 @@ export type CherryMessageKey =
   | 'storage.description'
   | 'storage.allow'
   | 'storage.notNow'
+  | 'storage.settings'
+  | 'storage.disable'
+  | 'storage.disableAndClear'
+  | 'storage.clearConfirm'
   | 'start.title'
   | 'start.createWorkspace'
   | 'start.workspaceName'
@@ -325,6 +331,12 @@ export type CherryMessageKey =
   | 'task.edit'
   | 'task.title'
   | 'task.notes'
+  | 'task.importance'
+  | 'task.importanceNone'
+  | 'task.importanceLow'
+  | 'task.importanceMedium'
+  | 'task.importanceHigh'
+  | 'task.importanceUrgent'
   | 'task.schedule'
   | 'task.scheduleNone'
   | 'task.scheduleDate'
