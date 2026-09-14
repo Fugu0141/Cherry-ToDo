@@ -6,11 +6,7 @@ import {
   CHERRY_V2_SCHEMA_VERSION,
   type WorkspaceDocument,
 } from '../../src/modules/workspace/index';
-import {
-  parseAnnotationId,
-  parseTabId,
-  parseWorkspaceId,
-} from '../../src/shared/ids/index';
+import { parseAnnotationId, parseTabId, parseWorkspaceId } from '../../src/shared/ids/index';
 import type { RevisionMeta } from '../../src/shared/revision/index';
 
 const meta: RevisionMeta = {

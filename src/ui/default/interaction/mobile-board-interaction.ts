@@ -13,8 +13,9 @@ export type MobileInteractionStart = 'none' | 'panning' | 'dragging-task';
 export function resolveMobileInteractionStart(input: {
   readonly overTask: boolean;
   readonly overInteractiveControl: boolean;
+  readonly overAnnotation?: boolean;
 }): MobileInteractionStart {
-  if (input.overInteractiveControl) return 'none';
+  if (input.overInteractiveControl || input.overAnnotation === true) return 'none';
   return input.overTask ? 'dragging-task' : 'panning';
 }
 
@@ -243,9 +244,12 @@ export function installMobileBoardInteraction(options: MobileBoardInteractionOpt
     if (!isTouchLike(event)) return;
     const target = event.target;
     const overTask = target instanceof Element && target.closest('.cherry-board-task') !== null;
+    const overAnnotation =
+      target instanceof Element && target.closest('.cherry-annotation') !== null;
     const owner = resolveMobileInteractionStart({
       overTask,
       overInteractiveControl: isInteractiveControl(target),
+      overAnnotation,
     });
     if (owner !== 'panning') return;
     if (
