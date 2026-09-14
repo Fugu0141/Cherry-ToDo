@@ -88,7 +88,9 @@ function fixture(tasks: readonly Task[], edges: readonly FlowEdge[]) {
   return { workspace, tabId };
 }
 
-function ok<T, E>(result: { readonly ok: true; readonly value: T } | { readonly ok: false; readonly error: E }): T {
+function ok<T, E>(
+  result: { readonly ok: true; readonly value: T } | { readonly ok: false; readonly error: E },
+): T {
   expect(result.ok).toBe(true);
   if (!result.ok) throw new Error(`Expected ok result, got ${JSON.stringify(result.error)}`);
   return result.value;
@@ -143,7 +145,9 @@ describe('Phase 3 exact semantic History', () => {
     ok(store.undo());
     expect(store.workspace).toBe(before);
     expect(store.workspace.tabs[built.tabId]?.tasks.B).toEqual(before.tabs[built.tabId]?.tasks.B);
-    expect(store.workspace.tabs[built.tabId]?.flowEdges).toEqual(before.tabs[built.tabId]?.flowEdges);
+    expect(store.workspace.tabs[built.tabId]?.flowEdges).toEqual(
+      before.tabs[built.tabId]?.flowEdges,
+    );
   });
 
   it('records a confirmed invalidation as one atomic History entry', () => {
@@ -179,11 +183,21 @@ describe('Phase 3 exact semantic History', () => {
     const before = store.workspace;
 
     const planId = confirmation(ok(store.setTaskStatus(built.tabId, taskId('B'), 'todo')));
-    expect(store.historyState).toEqual({ canUndo: false, canRedo: false, undoDepth: 0, redoDepth: 0 });
+    expect(store.historyState).toEqual({
+      canUndo: false,
+      canRedo: false,
+      undoDepth: 0,
+      redoDepth: 0,
+    });
     expect(store.workspace).toBe(before);
 
     ok(store.cancelMutation(planId));
-    expect(store.historyState).toEqual({ canUndo: false, canRedo: false, undoDepth: 0, redoDepth: 0 });
+    expect(store.historyState).toEqual({
+      canUndo: false,
+      canRedo: false,
+      undoDepth: 0,
+      redoDepth: 0,
+    });
     const undo = store.undo();
     expect(undo.ok).toBe(false);
     if (!undo.ok) expect(undo.error.code).toBe('nothing-to-undo');
