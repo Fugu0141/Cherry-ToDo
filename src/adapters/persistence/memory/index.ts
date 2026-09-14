@@ -25,38 +25,41 @@ export class MemoryWorkspaceRepository implements WorkspaceRepository {
     }
   }
 
-  async list(): Promise<readonly WorkspaceSummary[]> {
-    return [...this.#documents.values()]
-      .map((document) => workspaceSummary(document))
-      .sort(
-        (left, right) => left.name.localeCompare(right.name) || left.id.localeCompare(right.id),
-      );
+  list(): Promise<readonly WorkspaceSummary[]> {
+    return Promise.resolve(
+      [...this.#documents.values()]
+        .map((document) => workspaceSummary(document))
+        .sort(
+          (left, right) => left.name.localeCompare(right.name) || left.id.localeCompare(right.id),
+        ),
+    );
   }
 
-  async load(id: WorkspaceId): Promise<WorkspaceDocument | null> {
+  load(id: WorkspaceId): Promise<WorkspaceDocument | null> {
     const document = this.#documents.get(id);
-    return document === undefined ? null : cloneWorkspace(document);
+    return Promise.resolve(document === undefined ? null : cloneWorkspace(document));
   }
 
-  async save(document: WorkspaceDocument, expectedRevision?: number): Promise<WorkspaceSaveResult> {
+  save(document: WorkspaceDocument, expectedRevision?: number): Promise<WorkspaceSaveResult> {
     const validated = validateWorkspaceDocument(document);
     if (!validated.ok) {
-      return { kind: 'invalid-document', errors: validated.error };
+      return Promise.resolve({ kind: 'invalid-document', errors: validated.error });
     }
 
     const existing = this.#documents.get(document.id);
     if (expectedRevision !== undefined) {
       const actualRevision = existing?.meta.revision ?? null;
       if (actualRevision !== expectedRevision) {
-        return { kind: 'revision-conflict', expectedRevision, actualRevision };
+        return Promise.resolve({ kind: 'revision-conflict', expectedRevision, actualRevision });
       }
     }
 
     this.#documents.set(document.id, cloneWorkspace(validated.value));
-    return { kind: 'saved', revision: document.meta.revision };
+    return Promise.resolve({ kind: 'saved', revision: document.meta.revision });
   }
 
-  async delete(id: WorkspaceId): Promise<void> {
+  delete(id: WorkspaceId): Promise<void> {
     this.#documents.delete(id);
+    return Promise.resolve();
   }
 }
