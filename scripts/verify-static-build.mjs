@@ -30,4 +30,6 @@ for (const ref of localRefs) {
   }
 }
 
-console.log(`Static deployment verification passed for ${localRefs.length} relative asset reference(s).`);
+console.log(
+  `Static deployment verification passed for ${localRefs.length} relative asset reference(s).`,
+);
