@@ -85,16 +85,28 @@ async function perform(context: CherryUIContext, promise: Promise<UIActionResult
   }
 }
 
+interface FlowConnectionDraft {
+  readonly fromTaskId: string;
+  readonly kind: CherryFlowKind;
+}
+
 function renderTask(
   context: CherryUIContext,
   task: TaskCardModel,
   onEdit: (taskId: string) => void,
+  connectionDraft: FlowConnectionDraft | null,
+  startConnection: (taskId: string, kind: CherryFlowKind) => void,
+  connectTarget: (taskId: string) => void,
+  cancelConnection: () => void,
 ): HTMLElement {
   const card = element('article', 'cherry-task');
   const states = ['task-card'];
   if (task.status === 'done') states.push('task-completed');
   if (task.blocked) states.push('task-blocked');
   if (task.isDerivedGoal) states.push('derived-goal');
+  if (task.isMergeTarget) states.push('merge-target');
+  if (connectionDraft?.fromTaskId === task.id) states.push('flow-connect-source');
+  else if (connectionDraft !== null) states.push('flow-connect-target');
   card.setAttribute(context.semanticTokens.stateAttribute, states.join(' '));
   card.dataset.taskId = task.id;
 
@@ -121,6 +133,21 @@ function renderTask(
   top.append(edit);
   card.append(top);
 
+  if (task.isDerivedGoal || task.isMergeTarget) {
+    const badges = element('div', 'cherry-task-badges');
+    if (task.isDerivedGoal) {
+      const goal = element('span', 'cherry-task-badge goal');
+      goal.textContent = context.i18n.t('task.goal');
+      badges.append(goal);
+    }
+    if (task.isMergeTarget) {
+      const merge = element('span', 'cherry-task-badge merge');
+      merge.textContent = context.i18n.t('task.merge');
+      badges.append(merge);
+    }
+    card.append(badges);
+  }
+
   if (task.notes.length > 0) {
     const notes = element('p', 'cherry-task-notes');
     notes.textContent = task.notes;
@@ -136,6 +163,35 @@ function renderTask(
     blocked.textContent = `🔒 ${context.i18n.t(task.blockedReasonKey)}`;
     card.append(blocked);
   }
+
+  const connectors = element('div', 'cherry-task-connectors');
+  if (connectionDraft === null) {
+    const options = [
+      ['continuation', '→', 'flow.connectContinuation'],
+      ['branch', '↗', 'flow.connectBranch'],
+      ['reference', '↝', 'flow.connectReference'],
+    ] as const;
+    for (const [kind, symbol, labelKey] of options) {
+      const handle = button(symbol, () => startConnection(task.id, kind), 'cherry-flow-handle');
+      handle.title = context.i18n.t(labelKey);
+      handle.setAttribute('aria-label', context.i18n.t(labelKey));
+      connectors.append(handle);
+    }
+  } else if (connectionDraft.fromTaskId === task.id) {
+    const cancel = button('×', cancelConnection, 'cherry-flow-handle active');
+    cancel.title = context.i18n.t('flow.cancelConnect');
+    cancel.setAttribute('aria-label', context.i18n.t('flow.cancelConnect'));
+    connectors.append(cancel);
+  } else {
+    connectors.append(
+      button(
+        context.i18n.t('flow.chooseTarget'),
+        () => connectTarget(task.id),
+        'cherry-flow-target-button',
+      ),
+    );
+  }
+  card.append(connectors);
   return card;
 }
 
@@ -172,6 +228,10 @@ function renderBoard(
   onEdit: (taskId: string) => void,
   collapsedLaneIds: ReadonlySet<string>,
   toggleLane: (laneId: string) => void,
+  connectionDraft: FlowConnectionDraft | null,
+  startConnection: (taskId: string, kind: CherryFlowKind) => void,
+  connectTarget: (taskId: string) => void,
+  cancelConnection: () => void,
 ): HTMLElement {
   const scroll = element('main', 'cherry-board-scroll');
   const canvas = element('section', 'cherry-board-canvas');
@@ -179,6 +239,72 @@ function renderBoard(
   canvas.style.minHeight = `${Math.max(workspace.board.height, 520)}px`;
   canvas.dataset.timeGuide = workspace.board.settings.timeGuide;
   const dragMime = 'application/x-cherry-task-id';
+
+  const laneByTaskId = new Map<string, string>();
+  for (const lane of workspace.board.lanes) {
+    for (const taskId of lane.taskIds) laneByTaskId.set(taskId, lane.id);
+  }
+  const hiddenTaskIds = new Set(
+    workspace.tasks
+      .filter((task) => {
+        const laneId = laneByTaskId.get(task.id);
+        return laneId !== undefined && collapsedLaneIds.has(laneId);
+      })
+      .map((task) => task.id),
+  );
+
+  const flowLayer = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  flowLayer.setAttribute('class', 'cherry-flow-layer');
+  flowLayer.setAttribute(
+    'viewBox',
+    `0 0 ${Math.max(workspace.board.width, 760)} ${Math.max(workspace.board.height, 520)}`,
+  );
+  flowLayer.setAttribute('aria-hidden', 'true');
+  const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+  const markerColors: Readonly<Record<CherryFlowKind, string>> = {
+    continuation: '#68717d',
+    branch: '#d83352',
+    reference: '#89919c',
+  };
+  for (const kind of ['continuation', 'branch', 'reference'] as const) {
+    const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+    marker.id = `cherry-arrow-${kind}`;
+    marker.setAttribute('viewBox', '0 0 10 10');
+    marker.setAttribute('refX', '9');
+    marker.setAttribute('refY', '5');
+    marker.setAttribute('markerWidth', '7');
+    marker.setAttribute('markerHeight', '7');
+    marker.setAttribute('orient', 'auto-start-reverse');
+    const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    arrow.setAttribute('d', 'M 0 0 L 10 5 L 0 10 z');
+    arrow.setAttribute('fill', markerColors[kind]);
+    marker.append(arrow);
+    defs.append(marker);
+  }
+  flowLayer.append(defs);
+  for (const edge of workspace.connections) {
+    if (
+      edge.path === null ||
+      hiddenTaskIds.has(edge.fromTaskId) ||
+      hiddenTaskIds.has(edge.toTaskId)
+    ) {
+      continue;
+    }
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', edge.path);
+    path.setAttribute('class', 'cherry-flow-line');
+    path.setAttribute(
+      context.semanticTokens.stateAttribute,
+      edge.kind === 'branch'
+        ? 'flow-branch'
+        : edge.kind === 'reference'
+          ? 'flow-reference'
+          : 'flow-continuation',
+    );
+    path.setAttribute('marker-end', `url(#cherry-arrow-${edge.kind})`);
+    flowLayer.append(path);
+  }
+  canvas.append(flowLayer);
 
   const droppedTaskId = (event: DragEvent): string | null => {
     const value =
@@ -257,13 +383,16 @@ function renderBoard(
     }
   }
 
-  const laneByTaskId = new Map<string, string>();
-  for (const lane of workspace.board.lanes) {
-    for (const taskId of lane.taskIds) laneByTaskId.set(taskId, lane.id);
-  }
-
   for (const task of workspace.tasks) {
-    const card = renderTask(context, task, onEdit);
+    const card = renderTask(
+      context,
+      task,
+      onEdit,
+      connectionDraft,
+      startConnection,
+      connectTarget,
+      cancelConnection,
+    );
     card.classList.add('cherry-board-task');
     card.draggable = true;
     card.addEventListener('dragstart', (event) => {
@@ -274,8 +403,7 @@ function renderBoard(
       card.classList.add('dragging');
     });
     card.addEventListener('dragend', () => card.classList.remove('dragging'));
-    const laneId = laneByTaskId.get(task.id);
-    if (laneId !== undefined && collapsedLaneIds.has(laneId)) card.hidden = true;
+    if (hiddenTaskIds.has(task.id)) card.hidden = true;
     if (task.position !== null) {
       card.style.left = `${task.position.x}px`;
       card.style.top = `${task.position.y}px`;
@@ -291,9 +419,25 @@ function renderList(
   context: CherryUIContext,
   workspace: WorkspaceScreenModel,
   onEdit: (taskId: string) => void,
+  connectionDraft: FlowConnectionDraft | null,
+  startConnection: (taskId: string, kind: CherryFlowKind) => void,
+  connectTarget: (taskId: string) => void,
+  cancelConnection: () => void,
 ): HTMLElement {
   const list = element('main', 'cherry-list');
-  for (const task of workspace.tasks) list.append(renderTask(context, task, onEdit));
+  for (const task of workspace.tasks) {
+    list.append(
+      renderTask(
+        context,
+        task,
+        onEdit,
+        connectionDraft,
+        startConnection,
+        connectTarget,
+        cancelConnection,
+      ),
+    );
+  }
   const connections = renderConnectionSummary(context, workspace);
   if (connections !== null) list.append(connections);
   return list;
@@ -319,6 +463,10 @@ function renderWorkspace(
   selectTask: (id: string | null) => void,
   collapsedLaneIds: ReadonlySet<string>,
   toggleLane: (laneId: string) => void,
+  connectionDraft: FlowConnectionDraft | null,
+  startConnection: (taskId: string, kind: CherryFlowKind) => void,
+  connectTarget: (taskId: string) => void,
+  cancelConnection: () => void,
 ): void {
   const header = element('header', 'cherry-header');
   const brand = button(
@@ -453,8 +601,26 @@ function renderWorkspace(
 
   const content =
     workspace.activeView === 'board'
-      ? renderBoard(context, workspace, (id) => selectTask(id), collapsedLaneIds, toggleLane)
-      : renderList(context, workspace, (id) => selectTask(id));
+      ? renderBoard(
+          context,
+          workspace,
+          (id) => selectTask(id),
+          collapsedLaneIds,
+          toggleLane,
+          connectionDraft,
+          startConnection,
+          connectTarget,
+          cancelConnection,
+        )
+      : renderList(
+          context,
+          workspace,
+          (id) => selectTask(id),
+          connectionDraft,
+          startConnection,
+          connectTarget,
+          cancelConnection,
+        );
 
   root.replaceChildren(header, toolbar, content);
 
@@ -562,6 +728,7 @@ function renderWorkspace(
 export class DefaultCherryUI implements CherryUIPackage<HTMLElement> {
   mount(root: HTMLElement, context: CherryUIContext): CherryUIHandle {
     let selectedTaskId: string | null = null;
+    let connectionDraft: FlowConnectionDraft | null = null;
     let lastWorkspaceId: string | null = null;
     const collapsedLaneIds = new Set<string>();
 
@@ -651,6 +818,7 @@ export class DefaultCherryUI implements CherryUIPackage<HTMLElement> {
 
       if (lastWorkspaceId !== screen.workspace.workspaceId) {
         collapsedLaneIds.clear();
+        connectionDraft = null;
         lastWorkspaceId = screen.workspace.workspaceId;
       }
       renderWorkspace(
@@ -666,6 +834,29 @@ export class DefaultCherryUI implements CherryUIPackage<HTMLElement> {
         (laneId) => {
           if (collapsedLaneIds.has(laneId)) collapsedLaneIds.delete(laneId);
           else collapsedLaneIds.add(laneId);
+          render();
+        },
+        connectionDraft,
+        (taskId, kind) => {
+          connectionDraft = { fromTaskId: taskId, kind };
+          render();
+        },
+        (taskId) => {
+          const draft = connectionDraft;
+          if (draft === null || draft.fromTaskId === taskId) return;
+          connectionDraft = null;
+          render();
+          void perform(
+            context,
+            context.intents.flow.connect({
+              fromTaskId: draft.fromTaskId,
+              toTaskId: taskId,
+              kind: draft.kind,
+            }),
+          );
+        },
+        () => {
+          connectionDraft = null;
           render();
         },
       );
