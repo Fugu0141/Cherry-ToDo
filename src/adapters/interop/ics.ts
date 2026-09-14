@@ -122,7 +122,11 @@ function scheduleFromProperty(property: IcsProperty | null): Schedule | null {
   const match = /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})?(Z)?$/.exec(value);
   if (match === null) return null;
   const date = `${match[1]}-${match[2]}-${match[3]}`;
-  const time = `${match[4]}:${match[5]}${match[6] === undefined ? '' : `:${match[6]}`}`;
+  const seconds = match[6];
+  const time =
+    seconds === undefined || seconds === '00'
+      ? `${match[4]}:${match[5]}`
+      : `${match[4]}:${match[5]}:${seconds}`;
   const timeZone = match[7] === 'Z' ? 'UTC' : property.params.TZID;
   const scheduled = scheduleAtDateTime(date, time, timeZone);
   return scheduled.ok ? scheduled.value : null;
