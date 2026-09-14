@@ -15,3 +15,11 @@ export {
   type V1EncryptedEnvelope,
   type V1EncryptedMigrationError,
 } from './v1/encrypted';
+
+export {
+  recoverLegacyBrowserV1,
+  V1_TASK_STORAGE_KEYS,
+  V1_WORKSPACE_STORAGE_KEY,
+  type LegacyBrowserRecoveryResult,
+  type LegacyBrowserStorageReader,
+} from './v1/legacy-browser';
