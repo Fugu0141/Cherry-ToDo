@@ -35,6 +35,9 @@ jobs:
       - name: Report production bundle metrics
         run: npm run metrics
 
+      - name: Verify static deployment output
+        run: npm run static:verify
+
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
 
