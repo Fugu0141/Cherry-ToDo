@@ -77,7 +77,8 @@ function normalizeStatuses(
       }
 
       const availability = deriveTaskCompletionAvailability(goal.taskId, tasks, graph);
-      const desiredStatus = goal.shouldBeDone && availability.kind === 'available' ? 'done' : 'todo';
+      const desiredStatus =
+        goal.shouldBeDone && availability.kind === 'available' ? 'done' : 'todo';
 
       if (task.status !== desiredStatus) {
         if (task.status === 'done' && desiredStatus === 'todo') {
