@@ -28,13 +28,21 @@ export interface InvalidEntityIdError {
   readonly value: string;
 }
 
-const ENTITY_ID_PATTERN = /^[^\u0000-\u001f\u007f]{1,256}$/;
+function containsControlCharacter(value: string): boolean {
+  return Array.from(value).some((character) => {
+    const codePoint = character.codePointAt(0);
+    return codePoint !== undefined && (codePoint < 32 || codePoint === 127);
+  });
+}
 
 export function parseEntityId<K extends EntityIdKind>(
   kind: K,
   value: string,
 ): Result<EntityIdByKind[K], InvalidEntityIdError> {
-  if (value.trim().length === 0 || !ENTITY_ID_PATTERN.test(value)) {
+  const invalid =
+    value.length > 256 || value.trim().length === 0 || containsControlCharacter(value);
+
+  if (invalid) {
     return err({ code: 'invalid-entity-id', kind, value });
   }
 
