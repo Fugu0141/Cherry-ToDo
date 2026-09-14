@@ -2,7 +2,6 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
 async function enterStart(page: Page): Promise<void> {
-  await page.goto('/');
   await page.getByRole('button', { name: '今はしない' }).click();
   await expect(page.getByLabel('ワークスペース名')).toBeVisible();
 }
@@ -16,6 +15,7 @@ async function blockingA11yViolations(page: Page) {
 
 test('system dark presentation remains readable and accessible', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'dark' });
+  await page.goto('/');
   await enterStart(page);
 
   const background = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
@@ -25,7 +25,8 @@ test('system dark presentation remains readable and accessible', async ({ page }
 
 test('explicit light presentation overrides a dark system preference', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'dark' });
-  await page.addInitScript(() => {
+  await page.goto('/');
+  await page.evaluate(() => {
     document.documentElement.dataset.cherryTheme = 'light';
   });
   await enterStart(page);
@@ -37,7 +38,8 @@ test('explicit light presentation overrides a dark system preference', async ({ 
 
 test('explicit dark presentation works independently of system preference', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'light' });
-  await page.addInitScript(() => {
+  await page.goto('/');
+  await page.evaluate(() => {
     document.documentElement.dataset.cherryTheme = 'dark';
   });
   await enterStart(page);
