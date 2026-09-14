@@ -39,6 +39,7 @@ import {
   type CompletionImpactPlan,
   type PreparedSemanticTransaction,
 } from './semantic-transaction';
+import { SnapshotHistory, type HistoryState } from '../../history/index';
 import type { FlowEdgeId, TabId, TaskId } from '../../../shared/ids/index';
 import type { RevisionMeta } from '../../../shared/revision/index';
 import { err, ok, type Result } from '../../../shared/result/index';
@@ -68,7 +69,9 @@ export type ApplicationError =
       readonly currentRevision: number;
     }
   | { readonly code: 'invalid-reorder'; readonly reason: string }
-  | { readonly code: 'invalid-board-point'; readonly taskId: TaskId };
+  | { readonly code: 'invalid-board-point'; readonly taskId: TaskId }
+  | { readonly code: 'nothing-to-undo' }
+  | { readonly code: 'nothing-to-redo' };
 
 export interface MutationPreview {
   readonly planId: string;
@@ -128,6 +131,7 @@ function withTask(tab: TabDocument, task: Task): TabDocument {
 export class ApplicationStore {
   readonly #now: () => string;
   readonly #pending = new Map<string, PendingMutation>();
+  readonly #history = new SnapshotHistory<WorkspaceDocument>();
   #planCounter = 0;
   #workspace: WorkspaceDocument;
 
@@ -142,6 +146,26 @@ export class ApplicationStore {
 
   get workspace(): WorkspaceDocument {
     return this.#workspace;
+  }
+
+  get historyState(): HistoryState {
+    return this.#history.state;
+  }
+
+  undo(): Result<WorkspaceDocument, ApplicationError> {
+    const previous = this.#history.undo(this.#workspace);
+    if (previous === undefined) return err({ code: 'nothing-to-undo' });
+    this.#pending.clear();
+    this.#workspace = previous;
+    return ok(this.#workspace);
+  }
+
+  redo(): Result<WorkspaceDocument, ApplicationError> {
+    const next = this.#history.redo(this.#workspace);
+    if (next === undefined) return err({ code: 'nothing-to-redo' });
+    this.#pending.clear();
+    this.#workspace = next;
+    return ok(this.#workspace);
   }
 
   taskExecutionReadModels(
@@ -643,8 +667,7 @@ export class ApplicationStore {
     }
 
     this.#pending.delete(planId);
-    this.#workspace = pending.workspace;
-    return ok(this.#workspace);
+    return ok(this.#commitCanonical(pending.workspace));
   }
 
   cancelMutation(planId: string): Result<WorkspaceDocument, ApplicationError> {
@@ -699,7 +722,7 @@ export class ApplicationStore {
       });
     }
 
-    this.#workspace = validation.value;
+    this.#commitCanonical(validation.value);
     return ok({ kind: 'committed', workspace: this.#workspace });
   }
 
@@ -715,7 +738,14 @@ export class ApplicationStore {
     );
     const validation = validateWorkspaceDocument(candidate);
     if (!validation.ok) return err({ code: 'workspace-invalid', causes: validation.error });
-    this.#workspace = validation.value;
+    this.#commitCanonical(validation.value);
     return ok({ kind: 'committed', workspace: this.#workspace });
+  }
+
+  #commitCanonical(next: WorkspaceDocument): WorkspaceDocument {
+    const previous = this.#workspace;
+    this.#history.record(previous);
+    this.#workspace = next;
+    return this.#workspace;
   }
 }
