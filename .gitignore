@@ -9,12 +9,15 @@ Thumbs.db
 # Logs
 *.log
 
-# Dependency folders, if the project adds a build step later
+# Dependencies
 node_modules/
 
-# Build outputs, if added later
+# Build / test outputs
 dist/
 build/
+coverage/
+.vite/
+*.tsbuildinfo
 
 # Local env files
 .env
