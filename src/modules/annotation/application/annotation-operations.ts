@@ -1,13 +1,14 @@
 import type { AnnotationId } from '../../../shared/ids/index';
 import type { RevisionMeta } from '../../../shared/revision/index';
+import { err, type Result } from '../../../shared/result/index';
 import type { Point } from '../../board/index';
 import {
   validateAnnotation,
+  type AnnotationValidationError,
+  type Rect,
   type StrokeAnnotation,
   type TextAnnotation,
 } from '../domain/annotation';
-import { err, ok, type Result } from '../../../shared/result/index';
-import type { AnnotationValidationError, Rect } from '../domain/annotation';
 
 export const TEXT_ANNOTATION_STYLE_TOKENS = ['note', 'accent', 'muted'] as const;
 export const STROKE_ANNOTATION_STYLE_TOKENS = ['ink', 'accent', 'muted'] as const;
