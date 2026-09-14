@@ -1,105 +1,36 @@
-# Contributing to Cherry
+# Contributing to Cherry V2.0
 
-Thank you for your interest in Cherry.
+Cherry V2.0 is currently being redesigned from the requirements upward.
 
-Cherry is still an early prototype, so contribution rules are intentionally simple for now.
+## Current rule
 
----
+During the requirements/basic-design phase, implementation PRs should not add product features unless the corresponding requirement and design have already been accepted.
 
-## Project direction
+Before implementation, every feature must have:
 
-Cherry is a task flow todo app for organizing task blocks as flows, branches, and schedules.
+1. a requirement / acceptance criteria,
+2. an owning module,
+3. an explicit public contract,
+4. a dependency direction,
+5. a test strategy.
 
-Before contributing, please read:
+## Branching
 
-1. `README.md`
-2. `docs/PROJECT_SPEC.md`
-3. `docs/PRODUCT_VISION.md`
-4. `docs/TECHNICAL_ARCHITECTURE.md`
-5. `docs/ORIGINALITY_REVIEW.md`
+Create work branches from `v2.0` after the bootstrap branch is merged. Keep PRs focused on one design decision, component, or feature.
 
----
+## Architecture principles
 
-## Good first contribution areas
+- Prefer composition over cross-module mutation.
+- Domain/application code must not depend directly on browser APIs or concrete storage implementations.
+- Infrastructure implements contracts owned by inner layers.
+- UI consumes application-facing APIs and must not own business rules.
+- Avoid hidden globals and implicit side effects.
+- Components should be independently testable and replaceable.
 
-Good early contribution areas include:
+## V1 reference
 
-- fixing small UI bugs
-- improving documentation
-- testing mobile behavior
-- simplifying confusing code
-- writing small issues with clear reproduction steps
-- proposing UX improvements with screenshots or sketches
-
-Please avoid large rewrites until the module structure is clearer.
-
----
-
-## Before opening a pull request
-
-Please check:
-
-- The app still opens from `index.html`.
-- Existing task creation still works.
-- Dragging tasks still works.
-- Date lane behavior still works.
-- No user-facing text accidentally refers to old project names.
-- The change does not copy UI, wording, or assets from another product.
-
----
-
-## Pull request style
-
-Small pull requests are preferred.
-
-A good PR should include:
-
-- what changed
-- why it changed
-- how to test it
-- screenshots or short videos for UI changes
-
-Example:
-
-```text
-Summary:
-Fix date modal default when dropping on boundary
-
-Test:
-1. Create two tasks on different dates.
-2. Drag one task to the boundary between lanes.
-3. Confirm that the date modal opens with the expected target date.
-```
-
----
-
-## Issues
-
-When opening an issue, please include:
-
-- what happened
-- what you expected
-- browser / device information
-- steps to reproduce
-- screenshot or video if useful
-
----
-
-## Design and originality
-
-Cherry may take inspiration from general task-flow concepts, but it must not clone another product.
-
-Do not contribute:
-
-- copied UI from another app
-- copied text or marketing copy
-- copied icons or illustrations
-- copied code without a compatible license
-
-See `docs/ORIGINALITY_REVIEW.md`.
-
----
+Do not copy V1 structure automatically. Refer to `main` only to discover required behavior, compatibility constraints, and lessons learned.
 
 ## License
 
-By contributing, you agree that your contribution will be licensed under the MIT License used by this repository.
+By contributing, you agree that your contribution will be licensed under the repository's MIT License.
