@@ -1,14 +1,19 @@
 import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 
+const typeCheckedFiles = ['src/**/*.ts', 'test/**/*.ts', 'vite.config.ts'];
+
 export default tseslint.config(
   {
     ignores: ['dist/**', 'node_modules/**'],
   },
   eslint.configs.recommended,
-  ...tseslint.configs.recommendedTypeChecked,
+  ...tseslint.configs.recommendedTypeChecked.map((config) => ({
+    ...config,
+    files: typeCheckedFiles,
+  })),
   {
-    files: ['src/**/*.ts', 'test/**/*.ts', 'vite.config.ts'],
+    files: typeCheckedFiles,
     languageOptions: {
       parserOptions: {
         projectService: true,
