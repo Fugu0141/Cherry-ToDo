@@ -20,7 +20,9 @@
     "check": "npm run format:check && npm run lint && npm run typecheck && npm run boundaries && npm run test && npm run build"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
     "@eslint/js": "10.0.1",
+    "@playwright/test": "1.63.0",
     "eslint": "10.9.1",
     "prettier": "3.9.6",
     "typescript": "6.0.3",
