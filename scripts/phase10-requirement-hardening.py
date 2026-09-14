@@ -12,11 +12,6 @@ def replace(path: str, old: str, new: str, count: int = 1) -> None:
 # UI contract: persistence settings + goal importance labels.
 replace(
     'src/ui-contract/index.ts',
-    "export type CherryTimeGuideMode = 'auto' | 'shown' | 'hidden';\n",
-    "export type CherryTimeGuideMode = 'auto' | 'shown' | 'hidden';\nexport type CherryPersistenceMode = 'memory' | 'persistent';\n",
-)
-replace(
-    'src/ui-contract/index.ts',
     """  readonly storage: {\n    allow(): Promise<UIActionResult>;\n    notNow(): Promise<UIActionResult>;\n  };\n""",
     """  readonly storage: {\n    allow(): Promise<UIActionResult>;\n    notNow(): Promise<UIActionResult>;\n    disable(clearPersistentData: boolean): Promise<UIActionResult>;\n  };\n""",
 )
@@ -122,8 +117,8 @@ for path in ['test/contracts/ui-contract.test.ts', 'test/contracts/ui-replaceabi
     replace(path, "storage: { allow: ok, notNow: ok },", "storage: { allow: ok, notNow: ok, disable: ok },")
     replace(
         path,
-        """      persistentStorageAvailable: true,\n      boardView: true,\n""",
-        """      persistentStorageAvailable: true,\n      persistentStorageEnabled: false,\n      boardView: true,\n""",
+        """        persistentStorageAvailable: true,\n        boardView: true,\n""",
+        """        persistentStorageAvailable: true,\n        persistentStorageEnabled: false,\n        boardView: true,\n""",
     )
 
 # Basic presentation for the new controls/marker.
