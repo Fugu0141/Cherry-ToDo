@@ -23,3 +23,9 @@ export {
   type LegacyBrowserRecoveryResult,
   type LegacyBrowserStorageReader,
 } from './v1/legacy-browser';
+
+export {
+  resolvePreparedV1Migration,
+  type V1MigrationDecision,
+  type V1MigrationResolution,
+} from './v1/session';
