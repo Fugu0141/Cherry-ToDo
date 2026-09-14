@@ -65,8 +65,8 @@ export function validateAnnotation(
       Number.isFinite(rect.y) &&
       Number.isFinite(rect.width) &&
       Number.isFinite(rect.height) &&
-      rect.width >= 0 &&
-      rect.height >= 0;
+      rect.width > 0 &&
+      rect.height > 0;
 
     return validRect ? ok(annotation) : err({ code: 'invalid-annotation-geometry' });
   }
@@ -75,7 +75,7 @@ export function validateAnnotation(
     return err({ code: 'invalid-annotation-style-token' });
   }
 
-  if (annotation.points.some((point) => !validPoint(point))) {
+  if (annotation.points.length < 2 || annotation.points.some((point) => !validPoint(point))) {
     return err({ code: 'invalid-annotation-geometry' });
   }
 
