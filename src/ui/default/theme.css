@@ -39,6 +39,7 @@
 }
 
 :root[data-cherry-theme='dark'] .cherry-header,
+:root[data-cherry-theme='dark'] .cherry-tab-bar,
 :root[data-cherry-theme='dark'] .cherry-toolbar,
 :root[data-cherry-theme='dark'] .cherry-board-flow-summary {
   background: rgba(24, 29, 36, 0.96);
@@ -48,6 +49,7 @@
 
 :root[data-cherry-theme='dark'] .cherry-segment,
 :root[data-cherry-theme='dark'] .cherry-button,
+:root[data-cherry-theme='dark'] .cherry-tab-button,
 :root[data-cherry-theme='dark'] .cherry-icon-button,
 :root[data-cherry-theme='dark'] .cherry-connection {
   background: #202630;
@@ -160,6 +162,7 @@
   }
 
   :root:not([data-cherry-theme='light']) .cherry-header,
+  :root:not([data-cherry-theme='light']) .cherry-tab-bar,
   :root:not([data-cherry-theme='light']) .cherry-toolbar,
   :root:not([data-cherry-theme='light']) .cherry-board-flow-summary {
     background: rgba(24, 29, 36, 0.96);
@@ -169,6 +172,7 @@
 
   :root:not([data-cherry-theme='light']) .cherry-segment,
   :root:not([data-cherry-theme='light']) .cherry-button,
+  :root:not([data-cherry-theme='light']) .cherry-tab-button,
   :root:not([data-cherry-theme='light']) .cherry-icon-button,
   :root:not([data-cherry-theme='light']) .cherry-connection {
     background: #202630;
@@ -253,7 +257,6 @@
   }
 }
 
-
 :root[data-cherry-theme='dark'] .cherry-task-badge.importance {
   color: #c9dcf2;
   background: #243448;
@@ -263,5 +266,19 @@
   :root:not([data-cherry-theme='light']) .cherry-task-badge.importance {
     color: #c9dcf2;
     background: #243448;
+  }
+}
+
+:root[data-cherry-theme='dark'] .cherry-tab-button.active {
+  background: #3a1e28;
+  border-color: #8f3a4d;
+  color: #ff9aac;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-cherry-theme='light']) .cherry-tab-button.active {
+    background: #3a1e28;
+    border-color: #8f3a4d;
+    color: #ff9aac;
   }
 }

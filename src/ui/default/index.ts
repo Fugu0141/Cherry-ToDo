@@ -577,6 +577,40 @@ function scheduleFromEditor(
   return { kind: 'datetime', date: date.value, time: time.value };
 }
 
+function renderTabBar(context: CherryUIContext, workspace: WorkspaceScreenModel): HTMLElement {
+  const bar = element('nav', 'cherry-tab-bar');
+  bar.setAttribute('aria-label', context.i18n.t('workspace.tabs'));
+
+  const list = element('div', 'cherry-tab-list');
+  for (const tab of workspace.tabs) {
+    const active = tab.id === workspace.tabId;
+    const open = button(
+      tab.name,
+      () => {
+        if (active) return;
+        void perform(context, context.intents.workspace.openTab(tab.id));
+      },
+      active ? 'cherry-tab-button active' : 'cherry-tab-button',
+    );
+    if (active) open.setAttribute('aria-current', 'page');
+    list.append(open);
+  }
+
+  const form = element('form', 'cherry-create-tab');
+  const field = labeledInput(context.i18n.t('workspace.tabName'), 'tabName');
+  const create = element('button', 'cherry-button');
+  create.type = 'submit';
+  create.textContent = context.i18n.t('workspace.createTab');
+  form.append(field.wrap, create);
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    void perform(context, context.intents.workspace.createTab({ name: field.input.value }));
+  });
+
+  bar.append(list, form);
+  return bar;
+}
+
 function renderWorkspace(
   root: HTMLElement,
   context: CherryUIContext,
@@ -645,6 +679,7 @@ function renderWorkspace(
   redo.setAttribute('aria-label', context.i18n.t('history.redo'));
   historyActions.append(undo, redo);
   header.append(brand, title, viewSwitch, historyActions);
+  const tabBar = renderTabBar(context, workspace);
 
   const toolbar = element('section', 'cherry-toolbar');
   const taskForm = element('form', 'cherry-inline-form');
@@ -865,7 +900,7 @@ function renderWorkspace(
           cancelConnection,
         );
 
-  root.replaceChildren(header, toolbar, content);
+  root.replaceChildren(header, tabBar, toolbar, content);
 
   if (workspace.activeView === 'board') {
     const connections = renderConnectionSummary(context, workspace);
@@ -1018,6 +1053,7 @@ export class DefaultCherryUI implements CherryUIPackage<HTMLElement> {
     let connectionDraft: FlowConnectionDraft | null = null;
     let drawingEnabled = false;
     let lastWorkspaceId: string | null = null;
+    let lastTabId: string | null = null;
     const collapsedLaneIds = new Set<string>();
     const interactionCoordinator = new InteractionCoordinator();
     let boardInteractionCleanup: (() => void) | null = null;
@@ -1110,11 +1146,18 @@ export class DefaultCherryUI implements CherryUIPackage<HTMLElement> {
         return;
       }
 
-      if (lastWorkspaceId !== screen.workspace.workspaceId) {
+      if (
+        lastWorkspaceId !== screen.workspace.workspaceId ||
+        lastTabId !== screen.workspace.tabId
+      ) {
         collapsedLaneIds.clear();
+        selectedTaskId = null;
+        cancelMobileConnection(interactionCoordinator);
+        interactionCoordinator.cancel();
         connectionDraft = null;
         drawingEnabled = false;
         lastWorkspaceId = screen.workspace.workspaceId;
+        lastTabId = screen.workspace.tabId;
       }
       renderWorkspace(
         root,
