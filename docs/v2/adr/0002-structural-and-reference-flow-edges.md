@@ -1,6 +1,8 @@
 # ADR-0002: Separate structural Flow edges from cyclic/reference Flow edges
 
-Status: **Proposed for V2 design freeze**
+Status: **Partially superseded by ADR-0004 — retained for decision history**
+
+> The structural/reference edge split remains part of V2.0. The original single-parent structural assumption in this ADR is obsolete. ADR-0004 is authoritative for the structural DAG and merge rules.
 
 ## Context
 
@@ -23,12 +25,14 @@ Represent Task connections as explicit directed `FlowEdge` entities with two sem
 
 Kinds: `continuation` and `branch`.
 
-Structural edges:
+The original proposal below assumed a single-parent structural tree/forest. **That cardinality assumption is superseded by ADR-0004**, which allows multiple incoming structural edges while keeping the structural graph acyclic.
+
+Structural edges in the original proposal:
 
 - are acyclic,
-- allow at most one incoming structural edge per Task,
+- allowed at most one incoming structural edge per Task (**superseded by ADR-0004**),
 - have explicit branch order,
-- define top-level ownership, executable flow, list grouping, and auto-layout input.
+- define executable flow, list/read-model grouping, and auto-layout input subject to the DAG rules in ADR-0004.
 
 ### Reference edges
 
@@ -39,7 +43,7 @@ Reference edges:
 - are directed,
 - may form cycles such as `A → B → C → A`,
 - are rendered as meaningful task-flow connections,
-- do not participate in structural ownership or algorithms that assume an acyclic forest.
+- do not participate in structural execution or algorithms that require the acyclic structural DAG.
 
 The UI may describe both in user-facing “flow” language; the distinction is an internal correctness boundary.
 
@@ -51,7 +55,7 @@ Rejected because it does not naturally support multiple existing-task links or c
 
 ### Make every edge a general cyclic graph edge
 
-Rejected for the initial stable V2 design because it makes deterministic primary ownership, subtree operations, beginner auto-layout, and list grouping unnecessarily complex.
+Rejected for the initial stable V2 design because primary execution/layout behavior benefits from a separately validated acyclic structural graph.
 
 ### Use board x/y order as flow order
 
@@ -62,11 +66,13 @@ Rejected because visual position is presentation state and must not become hidde
 Positive:
 
 - #80 reorder is a structural edge transaction,
-- #82 cycles are supported without recursive-layout failure,
+- #82 cycles are supported through reference edges without recursive-layout failure,
 - #83 connector renderer consumes one edge abstraction,
 - #93 mobile/desktop connection UIs share the same command contract,
-- list/auto-layout remains deterministic.
+- structural algorithms remain deterministic while supporting merges through ADR-0004.
 
 Trade-off:
 
 Users may see two kinds of connections that are internally different. Presentation must make any meaningful difference understandable without exposing graph-theory terminology.
+
+See ADR-0004 for the accepted V2.0 structural DAG, branching, merge, and derived-goal semantics.
