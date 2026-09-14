@@ -20,7 +20,6 @@ import {
   parseTabId,
   parseTaskId,
   parseWorkspaceId,
-  type FlowEdgeId,
   type TabId,
   type TaskId,
   type WorkspaceId,
@@ -407,7 +406,7 @@ function unwrapWorkspace(input: unknown): Result<
 }
 
 export function prepareV1Migration(
-  input: string | unknown,
+  input: unknown,
   options: V1MigrationOptions = {},
 ): Result<PreparedV1Migration, V1MigrationError> {
   let parsed: unknown = input;
