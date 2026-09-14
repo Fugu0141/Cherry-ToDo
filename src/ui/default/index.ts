@@ -9,6 +9,8 @@ import type {
   UIActionResult,
   WorkspaceScreenModel,
 } from '../../ui-contract/index';
+import { renderAnnotationLayers, renderAnnotationTools } from './annotation-ui';
+import { installAnnotationDrawing } from './interaction/annotation-drawing';
 import {
   beginMobileConnection,
   cancelMobileConnection,
@@ -258,12 +260,16 @@ function renderBoard(
   cancelConnection: () => void,
   interactionCoordinator: InteractionCoordinator,
   registerInteractionCleanup: (cleanup: () => void) => void,
+  drawingEnabled: boolean,
 ): HTMLElement {
   const scroll = element('main', 'cherry-board-scroll');
   const canvas = element('section', 'cherry-board-canvas');
-  canvas.style.minWidth = `${Math.max(workspace.board.width, 760)}px`;
-  canvas.style.minHeight = `${Math.max(workspace.board.height, 520)}px`;
+  const canvasWidth = Math.max(workspace.board.width, 760);
+  const canvasHeight = Math.max(workspace.board.height, 520);
+  canvas.style.minWidth = `${canvasWidth}px`;
+  canvas.style.minHeight = `${canvasHeight}px`;
   canvas.dataset.timeGuide = workspace.board.settings.timeGuide;
+  canvas.dataset.drawing = String(drawingEnabled);
   const dragMime = 'application/x-cherry-task-id';
 
   const laneByTaskId = new Map<string, string>();
@@ -281,10 +287,7 @@ function renderBoard(
 
   const flowLayer = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   flowLayer.setAttribute('class', 'cherry-flow-layer');
-  flowLayer.setAttribute(
-    'viewBox',
-    `0 0 ${Math.max(workspace.board.width, 760)} ${Math.max(workspace.board.height, 520)}`,
-  );
+  flowLayer.setAttribute('viewBox', `0 0 ${canvasWidth} ${canvasHeight}`);
   flowLayer.setAttribute('aria-hidden', 'true');
   const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
   const markerColors: Readonly<Record<CherryFlowKind, string>> = {
@@ -331,6 +334,9 @@ function renderBoard(
     flowLayer.append(path);
   }
   canvas.append(flowLayer);
+  for (const annotationNode of renderAnnotationLayers(workspace, canvasWidth, canvasHeight)) {
+    canvas.append(annotationNode);
+  }
 
   const droppedTaskId = (event: DragEvent): string | null => {
     const value =
@@ -420,7 +426,7 @@ function renderBoard(
       cancelConnection,
     );
     card.classList.add('cherry-board-task');
-    card.draggable = true;
+    card.draggable = !drawingEnabled;
     card.addEventListener('dragstart', (event) => {
       if (event.dataTransfer === null) return;
       event.dataTransfer.effectAllowed = 'move';
@@ -437,18 +443,35 @@ function renderBoard(
     canvas.append(card);
   }
 
-  registerInteractionCleanup(
-    installMobileBoardInteraction({
-      scroll,
-      canvas,
-      workspace,
-      collapsedLaneIds,
-      coordinator: interactionCoordinator,
-      dropTask: (taskId, target) => {
-        void perform(context, context.intents.board.dropTask({ taskId, target }));
-      },
-    }),
-  );
+  const drawingCleanup = installAnnotationDrawing({
+    canvas,
+    coordinator: interactionCoordinator,
+    enabled: () => drawingEnabled,
+    commitStroke: (points) => {
+      void perform(
+        context,
+        context.intents.annotation.createStroke({
+          points,
+          widthToken: 'medium',
+          styleToken: 'ink',
+        }),
+      );
+    },
+  });
+  const mobileCleanup = installMobileBoardInteraction({
+    scroll,
+    canvas,
+    workspace,
+    collapsedLaneIds,
+    coordinator: interactionCoordinator,
+    dropTask: (taskId, target) => {
+      void perform(context, context.intents.board.dropTask({ taskId, target }));
+    },
+  });
+  registerInteractionCleanup(() => {
+    drawingCleanup();
+    mobileCleanup();
+  });
 
   scroll.append(canvas);
   return scroll;
@@ -532,6 +555,8 @@ function renderWorkspace(
   cancelConnection: () => void,
   interactionCoordinator: InteractionCoordinator,
   registerInteractionCleanup: (cleanup: () => void) => void,
+  drawingEnabled: boolean,
+  setDrawingEnabled: (enabled: boolean) => void,
 ): void {
   const header = element('header', 'cherry-header');
   const brand = button(
@@ -758,6 +783,17 @@ function renderWorkspace(
     });
     settings.append(timeGuide.wrap);
     toolbar.append(settings);
+    toolbar.append(
+      renderAnnotationTools({
+        context,
+        workspace,
+        drawingEnabled,
+        setDrawingEnabled,
+        run: (promise) => {
+          void perform(context, promise);
+        },
+      }),
+    );
   }
 
   const content =
@@ -774,6 +810,7 @@ function renderWorkspace(
           cancelConnection,
           interactionCoordinator,
           registerInteractionCleanup,
+          drawingEnabled,
         )
       : renderList(
           context,
@@ -915,6 +952,7 @@ export class DefaultCherryUI implements CherryUIPackage<HTMLElement> {
   mount(root: HTMLElement, context: CherryUIContext): CherryUIHandle {
     let selectedTaskId: string | null = null;
     let connectionDraft: FlowConnectionDraft | null = null;
+    let drawingEnabled = false;
     let lastWorkspaceId: string | null = null;
     const collapsedLaneIds = new Set<string>();
     const interactionCoordinator = new InteractionCoordinator();
@@ -1009,6 +1047,7 @@ export class DefaultCherryUI implements CherryUIPackage<HTMLElement> {
       if (lastWorkspaceId !== screen.workspace.workspaceId) {
         collapsedLaneIds.clear();
         connectionDraft = null;
+        drawingEnabled = false;
         lastWorkspaceId = screen.workspace.workspaceId;
       }
       renderWorkspace(
@@ -1028,6 +1067,7 @@ export class DefaultCherryUI implements CherryUIPackage<HTMLElement> {
         },
         connectionDraft,
         (taskId, kind) => {
+          drawingEnabled = false;
           const draft = beginMobileConnection(interactionCoordinator, taskId, kind);
           if (draft === null) return;
           connectionDraft = draft;
@@ -1050,15 +1090,25 @@ export class DefaultCherryUI implements CherryUIPackage<HTMLElement> {
         (cleanup) => {
           boardInteractionCleanup = cleanup;
         },
+        drawingEnabled,
+        (enabled) => {
+          cancelMobileConnection(interactionCoordinator);
+          connectionDraft = null;
+          interactionCoordinator.cancel();
+          drawingEnabled = enabled;
+          render();
+        },
       );
     };
 
     const onKeyDown = (event: KeyboardEvent): void => {
       if (event.key !== 'Escape') return;
-      if (selectedTaskId === null && connectionDraft === null) return;
+      if (selectedTaskId === null && connectionDraft === null && !drawingEnabled) return;
       selectedTaskId = null;
       cancelMobileConnection(interactionCoordinator);
+      interactionCoordinator.cancel();
       connectionDraft = null;
+      drawingEnabled = false;
       render();
     };
     document.addEventListener('keydown', onKeyDown);
