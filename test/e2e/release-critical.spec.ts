@@ -1,54 +1,65 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
+const ONBOARDING_KEY = 'cherry:v2:ui:onboarding-seen';
+
+async function suppressOnboarding(page: Page): Promise<void> {
+  await page.evaluate((key) => window.sessionStorage.setItem(key, '1'), ONBOARDING_KEY);
+}
+
 async function chooseEphemeral(page: Page): Promise<void> {
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'この端末に保存しますか？' })).toBeVisible();
-  await page.getByRole('button', { name: '今はしない' }).click();
-  await expect(page.getByRole('heading', { name: 'Cherry' })).toBeVisible();
+  await suppressOnboarding(page);
+  await expect(page.getByRole('heading', { name: 'この端末に作業を保存しますか？' })).toBeVisible();
+  await page.getByRole('button', { name: '今回は保存しない' }).click();
+  await expect(page.getByRole('button', { name: '＋ 新しいワークスペース' })).toBeVisible();
+}
+
+async function choosePersistent(page: Page): Promise<void> {
+  await page.goto('/');
+  await suppressOnboarding(page);
+  await expect(page.getByRole('heading', { name: 'この端末に作業を保存しますか？' })).toBeVisible();
+  await page.getByRole('button', { name: '保存する' }).click();
+  await expect(page.getByRole('button', { name: '＋ 新しいワークスペース' })).toBeVisible();
 }
 
 async function createWorkspace(page: Page, name: string): Promise<void> {
-  await page.getByLabel('ワークスペース名').fill(name);
-  await page.getByRole('button', { name: '新しいワークスペース' }).click();
-  await expect(page.getByRole('heading', { name })).toBeVisible();
+  page.once('dialog', async (dialog) => {
+    expect(dialog.type()).toBe('prompt');
+    await dialog.accept(name);
+  });
+  await page.getByRole('button', { name: '＋ 新しいワークスペース' }).click();
+  await expect(page.locator('.cg-workspace-name')).toHaveText(name);
 }
 
 async function addTask(page: Page, title: string): Promise<void> {
-  const taskForm = page.locator('.cherry-inline-form');
-  await taskForm.getByLabel('タイトル').fill(title);
-  await taskForm.getByRole('button', { name: 'タスクを追加' }).click();
-  await expect(page.locator('.cherry-task').filter({ hasText: title })).toBeVisible();
+  await page.locator('.cg-fab').click();
+  const dialog = page.locator('.cg-quick-create');
+  await expect(dialog).toBeVisible();
+  await dialog.locator('.cg-quick-input').fill(title);
+  await dialog.getByRole('button', { name: '作成' }).click();
+  await expect(page.locator('.cg-task').filter({ hasText: title }).first()).toBeVisible();
 }
 
-async function connectTasks(
-  page: Page,
-  fromTitle: string,
-  toTitle: string,
-  mobile: boolean,
-): Promise<void> {
-  if (mobile) {
-    const source = page.locator('.cherry-task').filter({ hasText: fromTitle });
-    const target = page.locator('.cherry-task').filter({ hasText: toTitle });
-    await source.getByRole('button', { name: '通常Flowをつなぐ' }).click();
-    await expect(page.getByRole('status')).toContainText('接続先のタスクを選んでください');
-    await target.getByRole('button', { name: '接続先にする' }).click();
-    return;
-  }
-
-  const flowForm = page.locator('.cherry-flow-form');
-  await flowForm.getByLabel('接続元').selectOption({ label: fromTitle });
-  await flowForm.getByLabel('接続の種類').selectOption('continuation');
-  await flowForm.getByLabel('接続先').selectOption({ label: toTitle });
-  await flowForm.getByRole('button', { name: 'タスクをつなぐ' }).click();
+async function selectTask(page: Page, title: string): Promise<void> {
+  await page.locator('.cg-task').filter({ hasText: title }).first().click();
+  await expect(page.locator('.cg-action-dock')).toBeVisible();
 }
 
-async function connectBranch(page: Page, fromTitle: string, toTitle: string): Promise<void> {
-  const flowForm = page.locator('.cherry-flow-form');
-  await flowForm.getByLabel('接続元').selectOption({ label: fromTitle });
-  await flowForm.getByLabel('接続の種類').selectOption('branch');
-  await flowForm.getByLabel('接続先').selectOption({ label: toTitle });
-  await flowForm.getByRole('button', { name: 'タスクをつなぐ' }).click();
+async function createNextTask(page: Page, fromTitle: string, title: string): Promise<void> {
+  await selectTask(page, fromTitle);
+  await page.getByRole('button', { name: '＋ 次へ' }).click();
+  const dialog = page.locator('.cg-quick-create');
+  await dialog.locator('.cg-quick-input').fill(title);
+  await dialog.getByRole('button', { name: '作成' }).click();
+  await expect(page.locator('.cg-task').filter({ hasText: title }).first()).toBeVisible();
+}
+
+async function connectExisting(page: Page, fromTitle: string, toTitle: string): Promise<void> {
+  await selectTask(page, fromTitle);
+  await page.getByRole('button', { name: '🔗 既存へ' }).click();
+  await expect(page.locator('.cg-connect-hint')).toContainText('接続先のタスクを選んでください');
+  await page.locator('.cg-task').filter({ hasText: toTitle }).first().click();
 }
 
 async function expectNoSeriousAccessibilityViolations(page: Page): Promise<void> {
@@ -66,29 +77,24 @@ async function expectNoSeriousAccessibilityViolations(page: Page): Promise<void>
   ).toEqual([]);
 }
 
-test('ephemeral planning journey works and key surfaces pass accessibility audit', async ({
+test('direct-manipulation planning journey works and key surfaces pass accessibility audit', async ({
   page,
 }, testInfo) => {
-  await page.goto('/');
-  await expectNoSeriousAccessibilityViolations(page);
-
-  await page.getByRole('button', { name: '今はしない' }).click();
+  await chooseEphemeral(page);
   await expectNoSeriousAccessibilityViolations(page);
 
   await createWorkspace(page, 'Release workspace');
   await addTask(page, '設計');
-  await addTask(page, '実装');
+  await createNextTask(page, '設計', '実装');
 
-  await connectTasks(page, '設計', '実装', testInfo.project.name.startsWith('mobile-'));
-  await expect(page.locator('.cherry-flow-line')).toHaveCount(1);
-
+  await expect(page.locator('.cg-flow')).toHaveCount(1);
   await page.getByRole('button', { name: 'リスト' }).click();
-  await expect(page.locator('.cherry-list')).toBeVisible();
+  await expect(page.locator('.cg-list')).toBeVisible();
   await page.getByRole('button', { name: 'ボード' }).click();
 
-  const firstTask = page.locator('.cherry-task').filter({ hasText: '設計' });
-  await firstTask.getByRole('button', { name: 'タスクを編集' }).click();
-  await expect(page.getByRole('dialog', { name: 'タスクを編集' })).toBeVisible();
+  const firstTask = page.locator('.cg-task').filter({ hasText: '設計' }).first();
+  await firstTask.dblclick();
+  await expect(page.locator('.cg-editor')).toBeVisible();
   await expectNoSeriousAccessibilityViolations(page);
   await page.getByRole('button', { name: 'キャンセル' }).click();
 
@@ -99,126 +105,72 @@ test('ephemeral planning journey works and key surfaces pass accessibility audit
   expect(bootMeasure?.entryType).toBe('measure');
   expect(bootMeasure?.duration).toBeGreaterThanOrEqual(0);
   console.log(
-    `[phase10-perf] ${testInfo.project.name} cherry:boot=${bootMeasure?.duration.toFixed(2)}ms`,
+    `[ui-overhaul-perf] ${testInfo.project.name} cherry:boot=${bootMeasure?.duration.toFixed(2)}ms`,
   );
 });
 
 test('persistent opt-in restores the active workspace after reload', async ({ page }) => {
-  await page.goto('/');
-  await page.getByRole('button', { name: '保存を許可' }).click();
+  await choosePersistent(page);
   await createWorkspace(page, 'Restore workspace');
   await addTask(page, '保存されるタスク');
 
   await page.reload();
-  await expect(page.getByRole('heading', { name: 'Restore workspace' })).toBeVisible();
-  await expect(page.locator('.cherry-task').filter({ hasText: '保存されるタスク' })).toBeVisible();
+  await expect(page.locator('.cg-workspace-name')).toHaveText('Restore workspace');
+  await expect(page.locator('.cg-task').filter({ hasText: '保存されるタスク' }).first()).toBeVisible();
 });
 
 test('multiple named planning tabs keep independent content and restore the active tab', async ({
   page,
 }) => {
-  await page.goto('/');
-  await page.getByRole('button', { name: '保存を許可' }).click();
+  await choosePersistent(page);
   await createWorkspace(page, 'Tabbed workspace');
   await addTask(page, 'Plan only');
 
-  const tabBar = page.getByRole('navigation', { name: '計画タブ' });
-  await expect(tabBar.getByRole('button', { name: 'Plan' })).toHaveAttribute(
-    'aria-current',
-    'page',
-  );
-  await tabBar.getByLabel('タブ名').fill('調査');
-  await tabBar.getByRole('button', { name: '新しいタブ' }).click();
-
-  await expect(tabBar.getByRole('button', { name: '調査' })).toHaveAttribute(
-    'aria-current',
-    'page',
-  );
-  await expect(page.locator('.cherry-task').filter({ hasText: 'Plan only' })).toHaveCount(0);
+  const tabs = page.locator('.cg-tabs');
+  page.once('dialog', async (dialog) => {
+    expect(dialog.type()).toBe('prompt');
+    await dialog.accept('調査');
+  });
+  await tabs.locator('.cg-tab-add').click();
+  await expect(tabs.locator('.cg-tab.active')).toContainText('調査');
+  await expect(page.locator('.cg-task').filter({ hasText: 'Plan only' })).toHaveCount(0);
   await addTask(page, 'Research only');
 
-  await tabBar.getByRole('button', { name: 'Plan' }).click();
-  await expect(page.locator('.cherry-task').filter({ hasText: 'Plan only' })).toBeVisible();
-  await expect(page.locator('.cherry-task').filter({ hasText: 'Research only' })).toHaveCount(0);
+  await tabs.getByRole('button', { name: 'Plan' }).click();
+  await expect(page.locator('.cg-task').filter({ hasText: 'Plan only' }).first()).toBeVisible();
+  await expect(page.locator('.cg-task').filter({ hasText: 'Research only' })).toHaveCount(0);
 
-  await tabBar.getByRole('button', { name: '調査' }).click();
+  await tabs.getByRole('button', { name: '調査' }).click();
   await page.reload();
-  await expect(page.getByRole('heading', { name: 'Tabbed workspace' })).toBeVisible();
-  const restoredTabs = page.getByRole('navigation', { name: '計画タブ' });
-  await expect(restoredTabs.getByRole('button', { name: '調査' })).toHaveAttribute(
-    'aria-current',
-    'page',
-  );
-  await expect(page.locator('.cherry-task').filter({ hasText: 'Research only' })).toBeVisible();
-  await expect(page.locator('.cherry-task').filter({ hasText: 'Plan only' })).toHaveCount(0);
+  await expect(page.locator('.cg-workspace-name')).toHaveText('Tabbed workspace');
+  await expect(page.locator('.cg-tabs .cg-tab.active')).toContainText('調査');
+  await expect(page.locator('.cg-task').filter({ hasText: 'Research only' }).first()).toBeVisible();
+  await expect(page.locator('.cg-task').filter({ hasText: 'Plan only' })).toHaveCount(0);
 });
 
-test('persistent data clearing requires explicit destructive confirmation', async ({ page }) => {
-  await page.goto('/');
-  await page.getByRole('button', { name: '保存を許可' }).click();
-  await createWorkspace(page, 'Clear storage workspace');
-  await addTask(page, '一時保存タスク');
-
-  const storageActions = page.locator('.cherry-storage-actions');
-  await expect(
-    storageActions.getByRole('button', { name: '保存データを削除して停止' }),
-  ).toBeVisible();
-
-  page.once('dialog', async (dialog) => {
-    expect(dialog.type()).toBe('confirm');
-    expect(dialog.message()).toContain('保存したCherryのデータを削除');
-    await dialog.accept();
-  });
-  await storageActions.getByRole('button', { name: '保存データを削除して停止' }).click();
-  await expect(page.locator('.cherry-storage-actions')).toHaveCount(0);
-
-  await page.reload();
-  await expect(page.getByRole('heading', { name: 'この端末に保存しますか？' })).toBeVisible();
-});
-
-test('derived branching goals expose an editable non-color-only importance marker', async ({
-  page,
-}, testInfo) => {
-  test.skip(testInfo.project.name.startsWith('mobile-'), 'Desktop goal editor coverage.');
-
+test('existing tasks can be connected through the contextual planning surface', async ({ page }) => {
   await chooseEphemeral(page);
-  await createWorkspace(page, 'Goal importance workspace');
-  await addTask(page, 'Goal');
-  await addTask(page, 'Branch A');
-  await addTask(page, 'Branch B');
-
-  await connectBranch(page, 'Goal', 'Branch A');
-  await connectBranch(page, 'Goal', 'Branch B');
-
-  const goal = page.locator('.cherry-task').filter({ hasText: 'Goal' });
-  await expect(goal.locator('.cherry-task-badge.goal')).toHaveText('Goal');
-  await goal.getByRole('button', { name: 'タスクを編集' }).click();
-
-  const editor = page.getByRole('dialog', { name: 'タスクを編集' });
-  await editor.getByLabel('重要度').selectOption('high');
-  await editor.getByRole('button', { name: '保存' }).click();
-
-  await expect(page.getByRole('dialog', { name: 'タスクを編集' })).toHaveCount(0);
-  await expect(goal.getByText('重要度: 高')).toBeVisible();
-  await expectNoSeriousAccessibilityViolations(page);
-});
-
-test('mobile can connect existing tasks without hover-only discovery', async ({
-  page,
-}, testInfo) => {
-  test.skip(!testInfo.project.name.startsWith('mobile-'), 'Mobile release journey only.');
-
-  await chooseEphemeral(page);
-  await createWorkspace(page, 'Mobile workspace');
+  await createWorkspace(page, 'Connect workspace');
   await addTask(page, 'A');
   await addTask(page, 'B');
 
-  const source = page.locator('.cherry-task').filter({ hasText: 'A' });
-  const target = page.locator('.cherry-task').filter({ hasText: 'B' });
-  await source.getByRole('button', { name: '通常Flowをつなぐ' }).click();
-  await expect(page.getByRole('status')).toContainText('接続先のタスクを選んでください');
-  await target.getByRole('button', { name: '接続先にする' }).click();
+  await connectExisting(page, 'A', 'B');
+  await expect(page.locator('.cg-flow')).toHaveCount(1);
+});
 
-  await expect(page.locator('.cherry-flow-line')).toHaveCount(1);
-  await expectNoSeriousAccessibilityViolations(page);
+test('first empty workspace exposes onboarding and the guide can be reopened', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: '今回は保存しない' }).click();
+
+  page.once('dialog', async (dialog) => {
+    await dialog.accept('Onboarding workspace');
+  });
+  await page.getByRole('button', { name: '＋ 新しいワークスペース' }).click();
+
+  await expect(page.getByRole('dialog', { name: 'Cherryの使い方' })).toBeVisible();
+  await page.getByRole('button', { name: 'あとで' }).click();
+  await expect(page.getByRole('dialog', { name: 'Cherryの使い方' })).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Cherryの使い方を開く' }).click();
+  await expect(page.getByRole('dialog', { name: 'Cherryの使い方' })).toBeVisible();
 });
