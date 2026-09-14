@@ -1,5 +1,6 @@
 import { DefaultCherryUI } from '../ui/default/index';
 import '../ui/default/styles.css';
+import '../ui/default/drag.css';
 import { createBrowserApplicationComposition } from './create-browser-application';
 import { CherryUIRuntime } from './cherry-ui-runtime';
 
