@@ -21,11 +21,19 @@ import {
   type TaskValidationError,
 } from '../../task/index';
 import {
+  noSchedule,
+  scheduleAtDateTime,
+  scheduleOnDate,
   validateSchedule,
   type Schedule,
   type ScheduleValidationError,
 } from '../../schedule/index';
-import { validateBoardDocumentState, type BoardSettings, type Point } from '../../board/index';
+import {
+  validateBoardDocumentState,
+  type BoardPlacementDropIntent,
+  type BoardSettings,
+  type Point,
+} from '../../board/index';
 import {
   validateWorkspaceDocument,
   type TabDocument,
@@ -327,6 +335,69 @@ export class ApplicationStore {
     );
     if (!boardValidation.ok) return err({ code: 'invalid-board-point', taskId });
     return this.#commitSimpleTab(tabId, proposed, this.#now());
+  }
+
+  applyBoardDrop(
+    tabId: TabId,
+    taskId: TaskId,
+    intent: BoardPlacementDropIntent,
+  ): Result<MutationOutcome, ApplicationError> {
+    if (intent.kind === 'cancel') {
+      return ok({ kind: 'committed', workspace: this.#workspace });
+    }
+
+    if (intent.kind === 'visual-move') {
+      return this.moveTask(tabId, taskId, intent.point);
+    }
+
+    const resolved = this.#resolveTask(tabId, taskId);
+    if (!resolved.ok) return resolved;
+    const { tab, task } = resolved.value;
+
+    let nextSchedule: Schedule;
+    if (intent.date === null) {
+      nextSchedule = noSchedule();
+    } else if (task.schedule.kind === 'datetime') {
+      const scheduled = scheduleAtDateTime(intent.date, task.schedule.time, task.schedule.timeZone);
+      if (!scheduled.ok) return err({ code: 'schedule-invalid', cause: scheduled.error });
+      nextSchedule = scheduled.value;
+    } else {
+      const scheduled = scheduleOnDate(intent.date);
+      if (!scheduled.ok) return err({ code: 'schedule-invalid', cause: scheduled.error });
+      nextSchedule = scheduled.value;
+    }
+
+    const now = this.#now();
+    const updatedTask: Task = {
+      ...task,
+      schedule: nextSchedule,
+      meta: bumpMeta(task.meta, now),
+    };
+    const taskValidation = validateTask(updatedTask);
+    if (!taskValidation.ok) return err({ code: 'task-invalid', cause: taskValidation.error });
+
+    const board =
+      intent.point === undefined
+        ? tab.board
+        : {
+            ...tab.board,
+            positions: { ...tab.board.positions, [taskId]: intent.point },
+          };
+    const boardValidation = validateBoardDocumentState(
+      Object.values(tab.tasks).map((candidate) => candidate.id),
+      board,
+    );
+    if (!boardValidation.ok) return err({ code: 'invalid-board-point', taskId });
+
+    return this.#commitSimpleTab(
+      tabId,
+      {
+        ...tab,
+        tasks: { ...tab.tasks, [taskId]: taskValidation.value },
+        board: boardValidation.value,
+      },
+      now,
+    );
   }
 
   connectFlow(input: ConnectFlowInput): Result<MutationOutcome, ApplicationError> {
