@@ -169,9 +169,7 @@ export function layoutBoard(
         LANE_PADDING * 2 +
         maxRows * CARD_HEIGHT +
         Math.max(0, maxRows - 1) * VERTICAL_GAP
-      : LANE_PADDING * 2 +
-        maxRows * CARD_HEIGHT +
-        Math.max(0, maxRows - 1) * VERTICAL_GAP;
+      : LANE_PADDING * 2 + maxRows * CARD_HEIGHT + Math.max(0, maxRows - 1) * VERTICAL_GAP;
 
     for (const [rank, group] of groupedByRank) {
       const stableGroup = [...group].sort((left, right) => left.id.localeCompare(right.id));
@@ -191,11 +189,7 @@ export function layoutBoard(
           point = settings.showDateLanes
             ? {
                 x: task.manualPosition.x,
-                y:
-                  laneStartY +
-                  LANE_HEADER_HEIGHT +
-                  LANE_PADDING +
-                  task.manualPosition.y,
+                y: laneStartY + LANE_HEADER_HEIGHT + LANE_PADDING + task.manualPosition.y,
               }
             : task.manualPosition;
         } else {
