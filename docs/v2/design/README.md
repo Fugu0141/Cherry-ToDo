@@ -13,7 +13,10 @@ Related architecture decisions:
 - [`../adr/0005-replaceable-ui-package-contract.md`](../adr/0005-replaceable-ui-package-contract.md) — **Accepted for V2.0**
 - [`../adr/0006-merge-gates-and-invalidation.md`](../adr/0006-merge-gates-and-invalidation.md) — **Accepted for V2.0**
 - [`../adr/0007-goal-scope-and-junction-deletion.md`](../adr/0007-goal-scope-and-junction-deletion.md) — **Accepted for V2.0**
+- [`../adr/0008-goal-demotion-and-migration-normalization.md`](../adr/0008-goal-demotion-and-migration-normalization.md) — **Accepted for V2.0**
 
 ADR-0007 is the latest accepted decision for branching-goal completion scope and delete-one junction reconnection.
+
+ADR-0008 preserves completion state when a branching goal becomes an ordinary Task and requires user-visible normalization preview before V1 data that conflicts with V2 execution rules is committed.
 
 Implementation does not begin until the remaining design-freeze questions in `BASIC_DESIGN.md` are resolved and the relevant requirements/basic-design decisions are accepted/frozen.
