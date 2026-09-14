@@ -13,13 +13,20 @@ import type {
 import { InteractionCoordinator } from '../default/interaction/interaction-coordinator';
 import { installMobileBoardInteraction } from '../default/interaction/mobile-board-interaction';
 
-function el<K extends keyof HTMLElementTagNameMap>(tag: K, className?: string): HTMLElementTagNameMap[K] {
+function el<K extends keyof HTMLElementTagNameMap>(
+  tag: K,
+  className?: string,
+): HTMLElementTagNameMap[K] {
   const node = document.createElement(tag);
   if (className) node.className = className;
   return node;
 }
 
-function btn(label: string, onClick: (event: MouseEvent) => void, className = 'cg-btn'): HTMLButtonElement {
+function btn(
+  label: string,
+  onClick: (event: MouseEvent) => void,
+  className = 'cg-btn',
+): HTMLButtonElement {
   const node = el('button', className);
   node.type = 'button';
   node.textContent = label;
@@ -27,11 +34,16 @@ function btn(label: string, onClick: (event: MouseEvent) => void, className = 'c
   return node;
 }
 
-async function run(context: CherryUIContext, promise: Promise<UIActionResult>): Promise<UIActionResult> {
+async function run(
+  context: CherryUIContext,
+  promise: Promise<UIActionResult>,
+): Promise<UIActionResult> {
   let result = await promise;
   if (result.kind === 'confirmation-required') {
     const c = result.confirmation;
-    const accepted = window.confirm(`${context.i18n.t(c.titleKey)}\n\n${context.i18n.t(c.messageKey)}`);
+    const accepted = window.confirm(
+      `${context.i18n.t(c.titleKey)}\n\n${context.i18n.t(c.messageKey)}`,
+    );
     result = accepted
       ? await context.intents.confirmation.confirm(c.id)
       : await context.intents.confirmation.cancel(c.id);
@@ -85,7 +97,11 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       return screen.kind === 'workspace' ? screen.workspace : null;
     };
 
-    const createTask = async (title: string, parentTaskId: string | null, kind: CherryFlowKind): Promise<void> => {
+    const createTask = async (
+      title: string,
+      parentTaskId: string | null,
+      kind: CherryFlowKind,
+    ): Promise<void> => {
       const before = currentWorkspace();
       const existing = new Set(before?.tasks.map((task) => task.id) ?? []);
       const result = await perform(context.intents.task.create({ title }));
@@ -93,7 +109,9 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       const after = currentWorkspace();
       const created = after?.tasks.find((task) => !existing.has(task.id));
       if (!created) return;
-      await perform(context.intents.flow.connect({ fromTaskId: parentTaskId, toTaskId: created.id, kind }));
+      await perform(
+        context.intents.flow.connect({ fromTaskId: parentTaskId, toTaskId: created.id, kind }),
+      );
       selectedTaskId = created.id;
     };
 
@@ -105,7 +123,9 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       coordinator.cancel();
     };
 
-    const renderStart = (screen: Extract<ReturnType<CherryUIContext['getScreen']>, { kind: 'start' }>): void => {
+    const renderStart = (
+      screen: Extract<ReturnType<CherryUIContext['getScreen']>, { kind: 'start' }>,
+    ): void => {
       const main = el('main', 'cg-start');
       const hero = el('section', 'cg-start-hero');
       const brand = el('div', 'cg-wordmark');
@@ -114,11 +134,15 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       title.textContent = '流れを置いて、つないで、進める。';
       const sub = el('p');
       sub.textContent = 'タスクをリストに入力するのではなく、ボードを直接触って計画します。';
-      const newButton = btn('＋ 新しいワークスペース', () => {
-        const name = window.prompt('ワークスペース名', 'My Cherry');
-        if (!name?.trim()) return;
-        void perform(context.intents.workspace.create({ name: name.trim() }));
-      }, 'cg-btn cg-primary cg-large');
+      const newButton = btn(
+        '＋ 新しいワークスペース',
+        () => {
+          const name = window.prompt('ワークスペース名', 'My Cherry');
+          if (!name?.trim()) return;
+          void perform(context.intents.workspace.create({ name: name.trim() }));
+        },
+        'cg-btn cg-primary cg-large',
+      );
       hero.append(brand, title, sub, newButton);
       main.append(hero);
 
@@ -129,9 +153,13 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         recent.append(heading);
         const grid = el('div', 'cg-workspace-grid');
         for (const workspace of screen.workspaces) {
-          const card = btn(workspace.name, () => {
-            void perform(context.intents.workspace.open(workspace.id));
-          }, 'cg-workspace-card');
+          const card = btn(
+            workspace.name,
+            () => {
+              void perform(context.intents.workspace.open(workspace.id));
+            },
+            'cg-workspace-card',
+          );
           grid.append(card);
         }
         recent.append(grid);
@@ -148,7 +176,8 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       if (task.blocked) card.dataset.blocked = 'true';
       if (task.isDerivedGoal) card.dataset.goal = 'true';
       if (task.isMergeTarget) card.dataset.merge = 'true';
-      if (connectDraft !== null && connectDraft.fromTaskId !== task.id) card.dataset.connectTarget = 'true';
+      if (connectDraft !== null && connectDraft.fromTaskId !== task.id)
+        card.dataset.connectTarget = 'true';
       card.tabIndex = 0;
 
       const top = el('div', 'cg-task-main');
@@ -212,11 +241,13 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         if (connectDraft !== null && connectDraft.fromTaskId !== task.id) {
           const draft = connectDraft;
           connectDraft = null;
-          void perform(context.intents.flow.connect({
-            fromTaskId: draft.fromTaskId,
-            toTaskId: task.id,
-            kind: draft.kind,
-          }));
+          void perform(
+            context.intents.flow.connect({
+              fromTaskId: draft.fromTaskId,
+              toTaskId: task.id,
+              kind: draft.kind,
+            }),
+          );
           return;
         }
         selectedTaskId = selectedTaskId === task.id ? null : task.id;
@@ -273,7 +304,10 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
 
       const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
       svg.setAttribute('class', 'cg-flow-layer');
-      svg.setAttribute('viewBox', `0 0 ${Math.max(workspace.board.width, 1000)} ${Math.max(workspace.board.height, 680)}`);
+      svg.setAttribute(
+        'viewBox',
+        `0 0 ${Math.max(workspace.board.width, 1000)} ${Math.max(workspace.board.height, 680)}`,
+      );
       svg.setAttribute('aria-hidden', 'true');
       const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
       for (const kind of ['continuation', 'branch', 'reference'] as const) {
@@ -325,10 +359,15 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         const taskId = event.dataTransfer?.getData('application/x-cherry-task-id');
         if (!taskId) return;
         const rect = canvas.getBoundingClientRect();
-        void perform(context.intents.board.dropTask({
-          taskId,
-          target: { kind: 'canvas', point: { x: event.clientX - rect.left, y: event.clientY - rect.top } },
-        }));
+        void perform(
+          context.intents.board.dropTask({
+            taskId,
+            target: {
+              kind: 'canvas',
+              point: { x: event.clientX - rect.left, y: event.clientY - rect.top },
+            },
+          }),
+        );
       });
       canvas.addEventListener('click', (event) => {
         if (event.target === canvas || event.target === svg) {
@@ -369,19 +408,28 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       return main;
     };
 
-    const renderTaskActions = (workspace: WorkspaceScreenModel, task: TaskCardModel): HTMLElement => {
+    const renderTaskActions = (
+      workspace: WorkspaceScreenModel,
+      task: TaskCardModel,
+    ): HTMLElement => {
       const dock = el('aside', 'cg-action-dock');
       dock.setAttribute('aria-label', '選択中のタスク操作');
       if (task.canManuallyComplete) {
-        dock.append(btn(task.status === 'done' ? '↺ 戻す' : '✓ 完了', () => {
-          void perform(context.intents.task.setCompleted(task.id, task.status !== 'done'));
-        }));
+        dock.append(
+          btn(task.status === 'done' ? '↺ 戻す' : '✓ 完了', () => {
+            void perform(context.intents.task.setCompleted(task.id, task.status !== 'done'));
+          }),
+        );
       }
       dock.append(
-        btn('＋ 次へ', () => {
-          createDraft = { parentTaskId: task.id, kind: 'continuation' };
-          render();
-        }, 'cg-btn cg-primary'),
+        btn(
+          '＋ 次へ',
+          () => {
+            createDraft = { parentTaskId: task.id, kind: 'continuation' };
+            render();
+          },
+          'cg-btn cg-primary',
+        ),
         btn('↗ 分岐', () => {
           createDraft = { parentTaskId: task.id, kind: 'branch' };
           render();
@@ -416,17 +464,28 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
           ['branch', '↗ 分岐'],
           ['reference', '↝ 参照'],
         ] as const) {
-          const mode = btn(label, (event) => {
-            event.preventDefault();
-            createDraft = { parentTaskId: createDraft?.parentTaskId ?? null, kind };
-            render();
-          }, createDraft.kind === kind ? 'cg-chip active' : 'cg-chip');
+          const mode = btn(
+            label,
+            (event) => {
+              event.preventDefault();
+              createDraft = { parentTaskId: createDraft?.parentTaskId ?? null, kind };
+              render();
+            },
+            createDraft.kind === kind ? 'cg-chip active' : 'cg-chip',
+          );
           modes.append(mode);
         }
       }
       const actions = el('div', 'cg-dialog-actions');
       actions.append(
-        btn('キャンセル', () => { createDraft = null; render(); }, 'cg-btn cg-quiet'),
+        btn(
+          'キャンセル',
+          () => {
+            createDraft = null;
+            render();
+          },
+          'cg-btn cg-quiet',
+        ),
       );
       const submit = el('button', 'cg-btn cg-primary');
       submit.type = 'submit';
@@ -442,7 +501,10 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         void createTask(value, draft.parentTaskId, draft.kind).then(render);
       });
       overlay.addEventListener('pointerdown', (event) => {
-        if (event.target === overlay) { createDraft = null; render(); }
+        if (event.target === overlay) {
+          createDraft = null;
+          render();
+        }
       });
       overlay.append(form);
       queueMicrotask(() => input.focus());
@@ -466,7 +528,11 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       notesWrap.append(notesLabel, notes);
       const schedule = scheduleValue(task);
       const scheduleKind = el('select', 'cg-input');
-      for (const [value, label] of [['none', '日付なし'], ['date', '日付'], ['datetime', '日時']] as const) {
+      for (const [value, label] of [
+        ['none', '日付なし'],
+        ['date', '日付'],
+        ['datetime', '日時'],
+      ] as const) {
         const option = el('option');
         option.value = value;
         option.textContent = label;
@@ -477,16 +543,27 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       date.input.type = 'date';
       const time = field('時刻', schedule.time);
       time.input.type = 'time';
-      const danger = btn('削除', () => {
-        if (!window.confirm('このタスクを削除しますか？')) return;
-        editingTaskId = null;
-        selectedTaskId = null;
-        void perform(context.intents.task.deleteOnly(task.id));
-      }, 'cg-btn cg-danger');
+      const danger = btn(
+        '削除',
+        () => {
+          if (!window.confirm('このタスクを削除しますか？')) return;
+          editingTaskId = null;
+          selectedTaskId = null;
+          void perform(context.intents.task.deleteOnly(task.id));
+        },
+        'cg-btn cg-danger',
+      );
       const actions = el('div', 'cg-dialog-actions');
       actions.append(
         danger,
-        btn('キャンセル', () => { editingTaskId = null; render(); }, 'cg-btn cg-quiet'),
+        btn(
+          'キャンセル',
+          () => {
+            editingTaskId = null;
+            render();
+          },
+          'cg-btn cg-quiet',
+        ),
       );
       const save = el('button', 'cg-btn cg-primary');
       save.type = 'submit';
@@ -496,13 +573,20 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       form.addEventListener('submit', (event) => {
         event.preventDefault();
         let nextSchedule: CherryScheduleModel = { kind: 'none' };
-        if (scheduleKind.value === 'date' && date.input.value) nextSchedule = { kind: 'date', date: date.input.value };
+        if (scheduleKind.value === 'date' && date.input.value)
+          nextSchedule = { kind: 'date', date: date.input.value };
         if (scheduleKind.value === 'datetime' && date.input.value && time.input.value) {
           nextSchedule = { kind: 'datetime', date: date.input.value, time: time.input.value };
         }
         editingTaskId = null;
         void (async () => {
-          await perform(context.intents.task.update({ taskId: task.id, title: title.input.value, notes: notes.value }));
+          await perform(
+            context.intents.task.update({
+              taskId: task.id,
+              title: title.input.value,
+              notes: notes.value,
+            }),
+          );
           await perform(context.intents.task.setSchedule(task.id, nextSchedule));
         })();
       });
@@ -516,9 +600,23 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       const head = el('div', 'cg-settings-head');
       const title = el('strong');
       title.textContent = '表示と操作';
-      head.append(title, btn('×', () => { settingsOpen = false; render(); }, 'cg-icon'));
+      head.append(
+        title,
+        btn(
+          '×',
+          () => {
+            settingsOpen = false;
+            render();
+          },
+          'cg-icon',
+        ),
+      );
       panel.append(head);
-      const toggle = (label: string, checked: boolean, onChange: (checked: boolean) => void): HTMLElement => {
+      const toggle = (
+        label: string,
+        checked: boolean,
+        onChange: (checked: boolean) => void,
+      ): HTMLElement => {
         const row = el('label', 'cg-setting-row');
         const text = el('span');
         text.textContent = label;
@@ -530,21 +628,44 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         return row;
       };
       const apply = (next: Partial<typeof workspace.board.settings>) => {
-        void perform(context.intents.workspace.setBoardSettings({ ...workspace.board.settings, ...next }));
+        void perform(
+          context.intents.workspace.setBoardSettings({ ...workspace.board.settings, ...next }),
+        );
       };
       panel.append(
-        toggle('日付レーン', workspace.board.settings.showDateLanes, (checked) => apply({ showDateLanes: checked })),
-        toggle('自動整列', workspace.board.settings.autoLayout, (checked) => apply({ autoLayout: checked })),
+        toggle('日付レーン', workspace.board.settings.showDateLanes, (checked) =>
+          apply({ showDateLanes: checked }),
+        ),
+        toggle('自動整列', workspace.board.settings.autoLayout, (checked) =>
+          apply({ autoLayout: checked }),
+        ),
       );
       const guide = el('select', 'cg-input');
-      for (const [value, label] of [['auto', '時間ガイド: 自動'], ['shown', '時間ガイド: 表示'], ['hidden', '時間ガイド: 非表示']] as const) {
-        const option = el('option'); option.value = value; option.textContent = label; guide.append(option);
+      for (const [value, label] of [
+        ['auto', '時間ガイド: 自動'],
+        ['shown', '時間ガイド: 表示'],
+        ['hidden', '時間ガイド: 非表示'],
+      ] as const) {
+        const option = el('option');
+        option.value = value;
+        option.textContent = label;
+        guide.append(option);
       }
       guide.value = workspace.board.settings.timeGuide;
-      guide.addEventListener('change', () => apply({ timeGuide: guide.value as CherryTimeGuideMode }));
+      guide.addEventListener('change', () =>
+        apply({ timeGuide: guide.value as CherryTimeGuideMode }),
+      );
       panel.append(guide);
       if (context.capabilities.persistentStorageEnabled) {
-        panel.append(btn('端末保存を停止', () => { void perform(context.intents.storage.disable(false)); }, 'cg-btn cg-quiet'));
+        panel.append(
+          btn(
+            '端末保存を停止',
+            () => {
+              void perform(context.intents.storage.disable(false));
+            },
+            'cg-btn cg-quiet',
+          ),
+        );
       }
       return panel;
     };
@@ -562,41 +683,100 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       const shell = el('div', 'cg-shell');
       const header = el('header', 'cg-topbar');
       const left = el('div', 'cg-topbar-left');
-      const brand = btn('Cherry', () => { void perform(context.intents.workspace.goToStart()); }, 'cg-brand');
+      const brand = btn(
+        'Cherry',
+        () => {
+          void perform(context.intents.workspace.goToStart());
+        },
+        'cg-brand',
+      );
       const workspaceName = el('span', 'cg-workspace-name');
       workspaceName.textContent = workspace.workspaceName;
       left.append(brand, workspaceName);
 
       const center = el('nav', 'cg-tabs');
       for (const tab of workspace.tabs) {
-        const tabButton = btn(tab.name, () => {
-          if (tab.id !== workspace.tabId) void perform(context.intents.workspace.openTab(tab.id));
-        }, tab.id === workspace.tabId ? 'cg-tab active' : 'cg-tab');
+        const tabButton = btn(
+          tab.name,
+          () => {
+            if (tab.id !== workspace.tabId) void perform(context.intents.workspace.openTab(tab.id));
+          },
+          tab.id === workspace.tabId ? 'cg-tab active' : 'cg-tab',
+        );
         center.append(tabButton);
       }
-      center.append(btn('+', () => {
-        const name = window.prompt('タブ名', '新しいタブ');
-        if (name?.trim()) void perform(context.intents.workspace.createTab({ name: name.trim() }));
-      }, 'cg-tab cg-tab-add'));
+      center.append(
+        btn(
+          '+',
+          () => {
+            const name = window.prompt('タブ名', '新しいタブ');
+            if (name?.trim())
+              void perform(context.intents.workspace.createTab({ name: name.trim() }));
+          },
+          'cg-tab cg-tab-add',
+        ),
+      );
 
       const right = el('div', 'cg-topbar-actions');
-      const board = btn('ボード', () => { void perform(context.intents.workspace.setView('board')); }, workspace.activeView === 'board' ? 'cg-view active' : 'cg-view');
-      const list = btn('リスト', () => { void perform(context.intents.workspace.setView('list')); }, workspace.activeView === 'list' ? 'cg-view active' : 'cg-view');
-      const undo = btn('↶', () => { void perform(context.intents.history.undo()); }, 'cg-icon');
+      const board = btn(
+        'ボード',
+        () => {
+          void perform(context.intents.workspace.setView('board'));
+        },
+        workspace.activeView === 'board' ? 'cg-view active' : 'cg-view',
+      );
+      const list = btn(
+        'リスト',
+        () => {
+          void perform(context.intents.workspace.setView('list'));
+        },
+        workspace.activeView === 'list' ? 'cg-view active' : 'cg-view',
+      );
+      const undo = btn(
+        '↶',
+        () => {
+          void perform(context.intents.history.undo());
+        },
+        'cg-icon',
+      );
       undo.disabled = !workspace.canUndo;
-      const redo = btn('↷', () => { void perform(context.intents.history.redo()); }, 'cg-icon');
+      const redo = btn(
+        '↷',
+        () => {
+          void perform(context.intents.history.redo());
+        },
+        'cg-icon',
+      );
       redo.disabled = !workspace.canRedo;
-      right.append(board, list, undo, redo, btn('•••', () => { settingsOpen = !settingsOpen; render(); }, 'cg-icon'));
+      right.append(
+        board,
+        list,
+        undo,
+        redo,
+        btn(
+          '•••',
+          () => {
+            settingsOpen = !settingsOpen;
+            render();
+          },
+          'cg-icon',
+        ),
+      );
       header.append(left, center, right);
       shell.append(header);
 
-      const content = workspace.activeView === 'board' ? renderBoard(workspace) : renderList(workspace);
+      const content =
+        workspace.activeView === 'board' ? renderBoard(workspace) : renderList(workspace);
       shell.append(content);
 
-      const add = btn('+', () => {
-        createDraft = { parentTaskId: null, kind: 'continuation' };
-        render();
-      }, 'cg-fab');
+      const add = btn(
+        '+',
+        () => {
+          createDraft = { parentTaskId: null, kind: 'continuation' };
+          render();
+        },
+        'cg-fab',
+      );
       add.setAttribute('aria-label', 'タスクを追加');
       shell.append(add);
 
@@ -622,36 +802,68 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       const screen = context.getScreen();
       if (screen.kind === 'loading') {
         const splash = el('main', 'cg-splash');
-        const word = el('div', 'cg-wordmark'); word.textContent = 'Cherry'; splash.append(word);
-        root.replaceChildren(splash); return;
+        const word = el('div', 'cg-wordmark');
+        word.textContent = 'Cherry';
+        splash.append(word);
+        root.replaceChildren(splash);
+        return;
       }
       if (screen.kind === 'storage-decision') {
         const main = el('main', 'cg-start');
         const card = el('section', 'cg-storage-card');
-        const word = el('div', 'cg-wordmark'); word.textContent = 'Cherry';
-        const title = el('h1'); title.textContent = 'この端末に作業を保存しますか？';
-        const body = el('p'); body.textContent = '許可すると、閉じても続きから再開できます。あとから変更できます。';
+        const word = el('div', 'cg-wordmark');
+        word.textContent = 'Cherry';
+        const title = el('h1');
+        title.textContent = 'この端末に作業を保存しますか？';
+        const body = el('p');
+        body.textContent = '許可すると、閉じても続きから再開できます。あとから変更できます。';
         const actions = el('div', 'cg-dialog-actions');
         actions.append(
-          btn('今回は保存しない', () => { void perform(context.intents.storage.notNow()); }, 'cg-btn cg-quiet'),
-          btn('保存する', () => { void perform(context.intents.storage.allow()); }, 'cg-btn cg-primary'),
+          btn(
+            '今回は保存しない',
+            () => {
+              void perform(context.intents.storage.notNow());
+            },
+            'cg-btn cg-quiet',
+          ),
+          btn(
+            '保存する',
+            () => {
+              void perform(context.intents.storage.allow());
+            },
+            'cg-btn cg-primary',
+          ),
         );
-        card.append(word, title, body, actions); main.append(card); root.replaceChildren(main); return;
+        card.append(word, title, body, actions);
+        main.append(card);
+        root.replaceChildren(main);
+        return;
       }
-      if (screen.kind === 'start') { renderStart(screen); return; }
+      if (screen.kind === 'start') {
+        renderStart(screen);
+        return;
+      }
       if (screen.kind === 'error') {
         const main = el('main', 'cg-start');
         const card = el('section', 'cg-storage-card');
-        const title = el('h1'); title.textContent = 'Cherryを開けませんでした';
-        const body = el('p'); body.textContent = context.i18n.t(screen.error.messageKey);
-        card.append(title, body); main.append(card); root.replaceChildren(main); return;
+        const title = el('h1');
+        title.textContent = 'Cherryを開けませんでした';
+        const body = el('p');
+        body.textContent = context.i18n.t(screen.error.messageKey);
+        card.append(title, body);
+        main.append(card);
+        root.replaceChildren(main);
+        return;
       }
       renderWorkspace(screen.workspace);
     };
 
     const keydown = (event: KeyboardEvent): void => {
       const target = event.target;
-      const editingText = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement;
+      const editingText =
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target instanceof HTMLSelectElement;
       if ((event.ctrlKey || event.metaKey) && !editingText && event.key.toLowerCase() === 'z') {
         event.preventDefault();
         if (event.shiftKey) void perform(context.intents.history.redo());
