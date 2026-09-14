@@ -19,11 +19,12 @@ Fast pure tests for:
 - reference-cycle allowance,
 - structural reorder transformations,
 - derived branching-goal detection,
-- derived goal completion over nested branches and merged descendants,
-- automatic reopening of auto-completed goals,
+- derived goal completion over the full reachable structural Flow, including Tasks after reconvergence,
+- automatic reopening of completed derived goals through validated consequences,
 - merge-gate completion availability,
 - propagation of a closed merge gate to downstream structural Tasks,
 - ordinary one-line Flow remaining non-blocking,
+- delete-one predecessor/successor cardinality planning,
 - Task/Annotation validation,
 - schema normalization helpers.
 
@@ -36,11 +37,14 @@ Use in-memory ports to verify:
 - command transactions,
 - Undo/Redo,
 - Task-only removal and Flow reconnection,
+- one-to-many deletion preserving branch shape,
+- many-to-one deletion preserving merge shape,
+- many-to-many deletion not inventing cross-product relationships,
 - chain-limited downstream removal stopping before branch/merge junctions,
 - connect/reorder/merge operations,
-- automatic goal completion after the final required downstream Task completes,
-- auto-completed goal reopening after a required descendant reopens,
-- manual goal completion not being silently undone by the goal evaluator,
+- automatic goal completion only after every reachable structural descendant is complete,
+- completed goal reopening through the impact-plan flow when required downstream work becomes incomplete,
+- direct user completion of a current derived branching goal being rejected,
 - blocked completion commands being rejected even if requested by Presentation,
 - completion/topology changes producing a revision-aware impact plan before completed Tasks are reopened,
 - cancelling invalidation confirmation leaving canonical state untouched,
@@ -67,6 +71,8 @@ Examples:
 A browser repository and memory repository should satisfy the same observable repository behavior where their capabilities overlap.
 
 The default UI package must consume only the formal UI/application-facing contract. A contract test should fail if the default UI reaches into Domain internals or a concrete persistence adapter.
+
+Derived branching-goal read models must not expose a normal user completion action.
 
 ### 4. Migration/fixture tests
 
@@ -121,7 +127,8 @@ Verify component behavior and accessibility contracts:
 - blocked state explains the cause without relying only on color,
 - invalidation that reopens completed Tasks shows confirmation before mutation,
 - cancelling that confirmation performs no canonical mutation,
-- derived branching goals render their goal/importance state without relying only on color,
+- derived branching goals render their goal/importance/progress state without relying only on color,
+- derived branching goals do not display a normal completion checkbox/button,
 - theme state remains distinguishable without color alone,
 - i18n keys are used for user-facing strings,
 - the default UI can be mounted through `CherryUIPackage` without Domain/Application changes.
@@ -140,7 +147,7 @@ start
 → observe merge completion gate
 → complete prerequisites
 → verify gate unlocks downstream region
-→ complete downstream work
+→ complete the entire reachable downstream Flow
 → verify goal auto-completion
 → reopen a merge prerequisite
 → confirm affected completed Tasks return to incomplete
@@ -184,12 +191,15 @@ The same directional relationship MAY be represented through a reference edge wh
 - Task with 1 outgoing structural edge → ordinary Task.
 - Task with 2+ outgoing structural edges → derived branching goal.
 - Root status alone does not imply goal status.
+- A current derived branching goal exposes no normal manual completion action.
 
-### T-GOAL-002 — Automatic completion and reopening
+### T-GOAL-002 — Full reachable-Flow automatic completion
 
-For a derived branching goal, completing every structurally required downstream Task completes the parent goal automatically. Shared descendants created by a merge are counted once. Reference edges do not affect completion.
+For a derived branching goal, every reachable structural descendant must be complete before the parent goal auto-completes. A merge/reconvergence does not end the completion scope, so later Tasks after the merge remain required. Shared descendants are counted once. Reference edges do not affect completion.
 
-If Cherry auto-completed that goal and a required descendant later becomes incomplete, the goal reopens automatically as part of the same logical consequence transaction. A manual goal completion is not silently undone by the derived-goal evaluator alone.
+Adding a new unfinished structural descendant underneath an already-completed goal must produce an impact plan before the goal is reopened.
+
+A direct user completion request for a current derived branching goal is rejected by Application.
 
 ### T-FLOW-GATE-001 — Merge target blocks completion
 
@@ -223,32 +233,22 @@ Verify:
 
 ### T-FLOW-INVALIDATE-001 — Reopening a prerequisite requires confirmation
 
-Start from:
-
-```text
-A ✓ ─┐
-     ├→ C ✓ → D ✓
-B ✓ ─┘
-```
-
-Attempt to reopen `B`.
+Start from a completed merge target and completed downstream Task. Attempt to reopen one predecessor.
 
 Verify:
 
 1. Application computes an impact plan before mutation.
-2. The plan includes completed `C` and `D` as Tasks that would reopen.
+2. The plan includes completed Tasks that would reopen.
 3. Canonical state remains unchanged until confirmation.
-4. Cancel leaves `A/B/C/D` exactly as before.
-5. Confirm changes `B`, `C`, and `D` to the planned states transactionally.
-6. `C` and `D` then report blocked completion.
-7. Any affected auto-completed branching goals reopen in the same logical operation.
+4. Cancel leaves the graph exactly as before.
+5. Confirm applies all planned status changes transactionally.
+6. Affected Tasks then report blocked completion when appropriate.
+7. Any affected completed branching goals reopen in the same logical operation.
 8. Undo restores the prior statuses/edges consistently.
 
 ### T-FLOW-INVALIDATE-002 — New incomplete predecessor invalidates completed merge
 
-Given a completed merge target, connect a new incomplete structural predecessor.
-
-Verify that the operation produces an impact plan and cannot silently leave the target `done` behind a newly closed merge gate.
+Given a completed merge target, connect a new incomplete structural predecessor. Verify that the operation produces an impact plan and cannot silently leave the target `done` behind a newly closed merge gate.
 
 ### T-FLOW-INVALIDATE-003 — Stale impact plans are unsafe to commit
 
@@ -257,6 +257,19 @@ Calculate an invalidation plan, then change the graph revision before commit. Co
 ### T-DELETE-CHAIN-001 — Downstream deletion stops at junctions
 
 Verify that downstream deletion removes only a single unambiguous chain and stops before the next branch or merge junction. The preserved junction and unrelated paths remain canonical and valid.
+
+### T-DELETE-ONE-001 — Junction reconnection is conservative
+
+Verify:
+
+- one predecessor / one successor reconnects directly,
+- one predecessor / multiple successors preserves the branch and deterministic order,
+- multiple predecessors / one successor preserves the merge,
+- multiple predecessors / multiple successors creates no automatic predecessor-successor cross-product edges,
+- the many-to-many case exposes a confirmation plan before the surrounding Flow is disconnected,
+- cancel changes nothing,
+- confirm removes the junction Task and its incident edges,
+- Undo restores the exact original Task and edges.
 
 ## Mandatory regression: T-REG-222
 
@@ -277,17 +290,7 @@ The test should exercise geometry + intent resolution, not V1 implementation fun
 
 ## Requirement traceability
 
-Tests SHOULD carry requirement IDs in names or metadata, for example:
-
-```text
-R-FLOW-002 reorder continuation chain
-R-FLOW-006 branch then merge
-R-TASK-003 automatic branching-goal completion
-R-BOARD-001 hiding lanes preserves Schedule
-R-STORAGE-002 no persistent write before Allow
-R-UI-001 default UI uses formal UI contract
-R-INTEROP-002 failed import leaves workspace unchanged
-```
+Tests SHOULD carry requirement IDs or accepted ADR IDs in names or metadata. ADR-0007 is the current authority for full downstream goal completion and delete-one junction reconnection until the main requirements draft is consolidated.
 
 A release checklist can be generated from requirements with missing acceptance coverage rather than maintained as an unrelated hand-written list.
 
@@ -306,30 +309,10 @@ E2E may run on every PR or a scoped subset depending on runtime cost, but critic
 
 ## Manual testing
 
-Manual checks remain useful for:
-
-- visual density,
-- touch feel,
-- real mobile browser keyboard behavior,
-- drag/drop feel,
-- merged-flow readability,
-- blocked-task explanation clarity,
-- invalidation-confirmation clarity,
-- mobile existing-task connection prototypes,
-- theme aesthetics,
-- assistive-technology review.
+Manual checks remain useful for visual density, touch feel, real mobile browser keyboard behavior, drag/drop feel, merged-flow readability, blocked-task explanation clarity, invalidation-confirmation clarity, mobile existing-task connection prototypes, theme aesthetics, and assistive-technology review.
 
 Manual testing must not be the only protection for pure business rules that can be automated.
 
 ## Definition of Done for a feature
 
-A feature is not complete until:
-
-- requirement IDs are identified,
-- owning module is clear,
-- domain/application tests cover semantic rules,
-- relevant adapter/UI tests exist,
-- regression tests are added for fixed reproducible bugs,
-- desktop/mobile behavior is checked when the capability is shared,
-- data migration/compatibility impact is documented,
-- UI changes do not bypass the formal UI/application boundary.
+A feature is not complete until requirement/ADR traceability is identified, the owning module is clear, domain/application tests cover semantic rules, relevant adapter/UI tests exist, regressions are covered, desktop/mobile behavior is checked when shared, migration impact is documented, and UI changes do not bypass the formal UI/application boundary.
