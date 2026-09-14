@@ -1,6 +1,0 @@
-@media (max-width: 980px) {
-  .modal {
-    transition: max-height .16s ease !important;
-    will-change: auto !important;
-  }
-}

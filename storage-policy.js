@@ -1,1 +1,0 @@
-(()=>{const a=window.CherryStorageAdapters;window.CherryStoragePolicy={mode:()=>"persistent",storage:()=>a.local||a.memory}})();
