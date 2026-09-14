@@ -20,6 +20,11 @@ export {
 } from './domain/layout';
 
 export {
+  buildBoardFlowConnectorGeometry,
+  type BoardFlowConnectorGeometry,
+} from './domain/flow-geometry';
+
+export {
   resolveDropIntent,
   type BoardDropTarget,
   type BoardPlacementDropIntent,

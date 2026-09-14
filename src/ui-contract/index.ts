@@ -70,6 +70,7 @@ export interface TaskCardModel {
   readonly schedule: CherryScheduleModel;
   readonly scheduleLabel: string | null;
   readonly isDerivedGoal: boolean;
+  readonly isMergeTarget: boolean;
   readonly canManuallyComplete: boolean;
   readonly blocked: boolean;
   readonly blockedReasonKey: CherryMessageKey | null;
@@ -81,6 +82,7 @@ export interface FlowConnectionModel {
   readonly kind: CherryFlowKind;
   readonly fromTaskId: string;
   readonly toTaskId: string;
+  readonly path: string | null;
 }
 
 export interface WorkspaceScreenModel {
@@ -196,6 +198,9 @@ export const CHERRY_SEMANTIC_STATES = [
   'task-selected',
   'task-blocked',
   'derived-goal',
+  'merge-target',
+  'flow-connect-source',
+  'flow-connect-target',
   'flow-continuation',
   'flow-branch',
   'flow-reference',
@@ -246,12 +251,19 @@ export type CherryMessageKey =
   | 'task.time'
   | 'task.complete'
   | 'task.reopen'
+  | 'task.goal'
+  | 'task.merge'
   | 'task.blockedByMerge'
   | 'task.blockedDownstream'
   | 'flow.connect'
   | 'flow.from'
   | 'flow.to'
   | 'flow.kind'
+  | 'flow.connectContinuation'
+  | 'flow.connectBranch'
+  | 'flow.connectReference'
+  | 'flow.chooseTarget'
+  | 'flow.cancelConnect'
   | 'common.save'
   | 'common.cancel'
   | 'common.confirm'

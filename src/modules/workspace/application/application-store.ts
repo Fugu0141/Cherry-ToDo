@@ -409,6 +409,17 @@ export class ApplicationStore {
 
     const now = this.#now();
     const meta: RevisionMeta = { createdAt: now, updatedAt: now, revision: 0 };
+    const existingBranchOrders = Object.values(tab.flowEdges)
+      .filter(
+        (edge): edge is StructuralFlowEdge =>
+          edge.kind === 'branch' && edge.fromTaskId === input.fromTaskId,
+      )
+      .map((edge) => edge.order);
+    const structuralOrder =
+      input.order ??
+      (input.kind === 'branch' && existingBranchOrders.length > 0
+        ? Math.max(...existingBranchOrders) + 1
+        : 0);
     const edge: FlowEdge =
       input.kind === 'reference'
         ? {
@@ -423,7 +434,7 @@ export class ApplicationStore {
             kind: input.kind,
             fromTaskId: input.fromTaskId,
             toTaskId: input.toTaskId,
-            order: input.order ?? 0,
+            order: structuralOrder,
             meta,
           };
 
