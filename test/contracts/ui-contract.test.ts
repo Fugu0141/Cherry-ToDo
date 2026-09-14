@@ -28,9 +28,11 @@ function intents(): CherryUIIntents {
       update: ok,
       setCompleted: ok,
       setSchedule: ok,
+      deleteOnly: ok,
+      deleteDownstream: ok,
     },
     board: { dropTask: ok },
-    flow: { connect: ok },
+    flow: { connect: ok, disconnect: ok, reorder: ok },
     history: { undo: ok, redo: ok },
     confirmation: { confirm: ok, cancel: ok },
   };
@@ -81,5 +83,6 @@ describe('formal UI contract', () => {
     expect(ja.t('board.dateLanes')).toBe('日付レーン');
     expect(en.t('task.scheduleDateTime')).toBe('Date and time');
     expect(CHERRY_SEMANTIC_TOKENS.states).toContain('derived-goal');
+    expect(CHERRY_SEMANTIC_TOKENS.states).toContain('merge-target');
   });
 });

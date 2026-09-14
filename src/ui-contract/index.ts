@@ -94,6 +94,7 @@ export interface WorkspaceScreenModel {
   readonly board: BoardPresentationModel;
   readonly tasks: readonly TaskCardModel[];
   readonly connections: readonly FlowConnectionModel[];
+  readonly linearFlowOrder: readonly string[] | null;
   readonly canUndo: boolean;
   readonly canRedo: boolean;
 }
@@ -167,12 +168,16 @@ export interface CherryUIIntents {
     update(input: UpdateTaskIntent): Promise<UIActionResult>;
     setCompleted(taskId: string, completed: boolean): Promise<UIActionResult>;
     setSchedule(taskId: string, schedule: CherryScheduleModel): Promise<UIActionResult>;
+    deleteOnly(taskId: string): Promise<UIActionResult>;
+    deleteDownstream(taskId: string): Promise<UIActionResult>;
   };
   readonly board: {
     dropTask(input: DropTaskOnBoardIntent): Promise<UIActionResult>;
   };
   readonly flow: {
     connect(input: ConnectTasksIntent): Promise<UIActionResult>;
+    disconnect(edgeId: string): Promise<UIActionResult>;
+    reorder(orderedTaskIds: readonly string[]): Promise<UIActionResult>;
   };
   readonly history: {
     undo(): Promise<UIActionResult>;
@@ -253,6 +258,9 @@ export type CherryMessageKey =
   | 'task.reopen'
   | 'task.goal'
   | 'task.merge'
+  | 'task.deleteOnly'
+  | 'task.deleteDownstream'
+  | 'task.deleteConfirm'
   | 'task.blockedByMerge'
   | 'task.blockedDownstream'
   | 'flow.connect'
@@ -264,6 +272,12 @@ export type CherryMessageKey =
   | 'flow.connectReference'
   | 'flow.chooseTarget'
   | 'flow.cancelConnect'
+  | 'flow.disconnect'
+  | 'flow.reorder'
+  | 'flow.moveEarlier'
+  | 'flow.moveLater'
+  | 'history.undo'
+  | 'history.redo'
   | 'common.save'
   | 'common.cancel'
   | 'common.confirm'
