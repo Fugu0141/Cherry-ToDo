@@ -108,7 +108,7 @@ export function installDesktopHandleConnection(
     if (!current.moved && distance >= MOVE_THRESHOLD) {
       current.moved = true;
       current.sourceCard.dataset.connecting = 'true';
-      current.preview.hidden = false;
+      current.preview.removeAttribute('display');
     }
     if (!current.moved) return;
 
@@ -163,7 +163,7 @@ export function installDesktopHandleConnection(
       event.stopPropagation();
       const preview = document.createElementNS(SVG_NS, 'path');
       preview.setAttribute('class', 'cg-flow-preview');
-      preview.hidden = true;
+      preview.setAttribute('display', 'none');
       flowLayer.append(preview);
       session = {
         pointerId: event.pointerId,
