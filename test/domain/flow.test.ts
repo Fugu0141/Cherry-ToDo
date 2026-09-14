@@ -120,9 +120,10 @@ describe('structural Flow DAG', () => {
     });
     expect(continuations.ok).toBe(false);
     if (!continuations.ok) {
-      expect(continuations.error.some((error) => error.code === 'continuation-conflict')).toBe(
-        true,
+      const hasConflict = continuations.error.some(
+        (error) => error.code === 'continuation-conflict',
       );
+      expect(hasConflict).toBe(true);
     }
 
     const branchOrder = validateFlowGraph([a, b, c], {
@@ -131,9 +132,10 @@ describe('structural Flow DAG', () => {
     });
     expect(branchOrder.ok).toBe(false);
     if (!branchOrder.ok) {
-      expect(branchOrder.error.some((error) => error.code === 'branch-order-conflict')).toBe(
-        true,
+      const hasConflict = branchOrder.error.some(
+        (error) => error.code === 'branch-order-conflict',
       );
+      expect(hasConflict).toBe(true);
     }
   });
 
