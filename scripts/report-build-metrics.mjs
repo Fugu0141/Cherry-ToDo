@@ -27,7 +27,10 @@ const rows = walk(dist)
   .sort((left, right) => left.file.localeCompare(right.file));
 
 const total = rows.reduce(
-  (result, row) => ({ bytes: result.bytes + row.bytes, gzipBytes: result.gzipBytes + row.gzipBytes }),
+  (result, row) => ({
+    bytes: result.bytes + row.bytes,
+    gzipBytes: result.gzipBytes + row.gzipBytes,
+  }),
   { bytes: 0, gzipBytes: 0 },
 );
 

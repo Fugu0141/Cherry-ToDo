@@ -86,7 +86,9 @@ test('persistent opt-in restores the active workspace after reload', async ({ pa
   await expect(page.locator('.cherry-task').filter({ hasText: '保存されるタスク' })).toBeVisible();
 });
 
-test('mobile can connect existing tasks without hover-only discovery', async ({ page }, testInfo) => {
+test('mobile can connect existing tasks without hover-only discovery', async ({
+  page,
+}, testInfo) => {
   test.skip(!testInfo.project.name.startsWith('mobile-'), 'Mobile release journey only.');
 
   await chooseEphemeral(page);
