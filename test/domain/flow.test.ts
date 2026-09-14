@@ -132,9 +132,7 @@ describe('structural Flow DAG', () => {
     });
     expect(branchOrder.ok).toBe(false);
     if (!branchOrder.ok) {
-      const hasConflict = branchOrder.error.some(
-        (error) => error.code === 'branch-order-conflict',
-      );
+      const hasConflict = branchOrder.error.some((error) => error.code === 'branch-order-conflict');
       expect(hasConflict).toBe(true);
     }
   });
