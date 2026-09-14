@@ -6,15 +6,13 @@ This branch intentionally does **not** inherit the V1 implementation architectur
 
 ## Current phase
 
-V2.0 is currently in the **requirements and basic-design phase**.
+The V2.0 **requirements and Core/Application basic design are frozen for implementation** as of 2026-09-14.
 
-Implementation must not begin until the following are completed and reviewed:
+The final review covered the open-Issue inventory, requirements, module/dependency boundaries, Flow/Goal/merge/delete semantics, persistence consent, V1 migration, replaceable UI boundary, startup architecture, and test strategy.
 
-1. All currently open GitHub Issues are classified.
-2. V2.0 requirements cover every Issue that remains in scope.
-3. Core domain concepts and module boundaries are defined.
-4. Dependency direction and public interfaces are defined.
-5. Persistence, migration, UI, and testing strategies are defined.
+The exact mobile gesture/UI for connecting existing Tasks remains intentionally deferred to prototype testing; the capability and Core command contract are already required and this does not block implementation.
+
+The authoritative freeze record is [`docs/v2/DESIGN_FREEZE.md`](docs/v2/DESIGN_FREEZE.md).
 
 ## Design goal
 
@@ -33,9 +31,8 @@ Primary goals:
 
 ## Branch model
 
-- `main`: current V1 line / historical reference
+- `main`: V1 line / historical reference
 - `v2.0`: V2.0 integration branch
-- `chore/v2-bootstrap`: V2.0 clean-slate preparation branch
 - feature/design branches: created from `v2.0` after the bootstrap is merged
 
 See [`docs/README.md`](docs/README.md) for the V2 documentation layout.
