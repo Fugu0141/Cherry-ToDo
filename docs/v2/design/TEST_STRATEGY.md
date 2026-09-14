@@ -20,6 +20,10 @@ Fast pure tests for:
 - structural reorder transformations,
 - derived branching-goal detection,
 - derived goal completion over nested branches and merged descendants,
+- automatic reopening of auto-completed goals,
+- merge-gate completion availability,
+- propagation of a closed merge gate to downstream structural Tasks,
+- ordinary one-line Flow remaining non-blocking,
 - Task/Annotation validation,
 - schema normalization helpers.
 
@@ -32,9 +36,16 @@ Use in-memory ports to verify:
 - command transactions,
 - Undo/Redo,
 - Task-only removal and Flow reconnection,
-- downstream-scope removal behavior once the shared-merge policy is frozen,
+- chain-limited downstream removal stopping before branch/merge junctions,
 - connect/reorder/merge operations,
 - automatic goal completion after the final required downstream Task completes,
+- auto-completed goal reopening after a required descendant reopens,
+- manual goal completion not being silently undone by the goal evaluator,
+- blocked completion commands being rejected even if requested by Presentation,
+- completion/topology changes producing a revision-aware impact plan before completed Tasks are reopened,
+- cancelling invalidation confirmation leaving canonical state untouched,
+- confirming invalidation reopening affected Tasks and applying new blocked states transactionally,
+- stale impact plans being rejected or recomputed,
 - Schedule changes,
 - Board setting changes not mutating semantic data,
 - import candidate commit behavior,
@@ -106,6 +117,10 @@ Verify component behavior and accessibility contracts:
 - destructive actions are not primary on mobile,
 - directional connectors represent edge direction,
 - a merged structural Task keeps one canonical identity,
+- blocked merge/downstream Tasks present completion as unavailable,
+- blocked state explains the cause without relying only on color,
+- invalidation that reopens completed Tasks shows confirmation before mutation,
+- cancelling that confirmation performs no canonical mutation,
 - derived branching goals render their goal/importance state without relying only on color,
 - theme state remains distinguishable without color alone,
 - i18n keys are used for user-facing strings,
@@ -122,8 +137,13 @@ start
 → create Task
 → add continuation/branch
 → merge branches
+→ observe merge completion gate
+→ complete prerequisites
+→ verify gate unlocks downstream region
 → complete downstream work
 → verify goal auto-completion
+→ reopen a merge prerequisite
+→ confirm affected completed Tasks return to incomplete
 → reorder/connect
 → schedule
 → reload/restore when persistence is allowed
@@ -165,11 +185,78 @@ The same directional relationship MAY be represented through a reference edge wh
 - Task with 2+ outgoing structural edges → derived branching goal.
 - Root status alone does not imply goal status.
 
-### T-GOAL-002 — Automatic completion
+### T-GOAL-002 — Automatic completion and reopening
 
 For a derived branching goal, completing every structurally required downstream Task completes the parent goal automatically. Shared descendants created by a merge are counted once. Reference edges do not affect completion.
 
-A reopen test is added as soon as the design-freeze policy for auto-completed goal reopening is decided.
+If Cherry auto-completed that goal and a required descendant later becomes incomplete, the goal reopens automatically as part of the same logical consequence transaction. A manual goal completion is not silently undone by the derived-goal evaluator alone.
+
+### T-FLOW-GATE-001 — Merge target blocks completion
+
+```text
+A ✓ ─┐
+     ├→ C 🔒
+B □ ─┘
+```
+
+Verify:
+
+- `C` reports `blocked-by-merge`,
+- a completion command for `C` is rejected,
+- completing `B` unlocks `C`,
+- unlocking `C` does not auto-complete it.
+
+### T-FLOW-GATE-002 — Closed merge gate propagates downstream
+
+```text
+A ✓ ─┐
+     ├→ C 🔒 → D 🔒
+B □ ─┘
+```
+
+Verify:
+
+- `C` is blocked by its own merge prerequisites,
+- `D` inherits blocked completion because it lies behind `C`,
+- completing `B` unlocks both `C` and `D`,
+- the equivalent ordinary chain `A □ → B □ → C □` has no such completion lock.
+
+### T-FLOW-INVALIDATE-001 — Reopening a prerequisite requires confirmation
+
+Start from:
+
+```text
+A ✓ ─┐
+     ├→ C ✓ → D ✓
+B ✓ ─┘
+```
+
+Attempt to reopen `B`.
+
+Verify:
+
+1. Application computes an impact plan before mutation.
+2. The plan includes completed `C` and `D` as Tasks that would reopen.
+3. Canonical state remains unchanged until confirmation.
+4. Cancel leaves `A/B/C/D` exactly as before.
+5. Confirm changes `B`, `C`, and `D` to the planned states transactionally.
+6. `C` and `D` then report blocked completion.
+7. Any affected auto-completed branching goals reopen in the same logical operation.
+8. Undo restores the prior statuses/edges consistently.
+
+### T-FLOW-INVALIDATE-002 — New incomplete predecessor invalidates completed merge
+
+Given a completed merge target, connect a new incomplete structural predecessor.
+
+Verify that the operation produces an impact plan and cannot silently leave the target `done` behind a newly closed merge gate.
+
+### T-FLOW-INVALIDATE-003 — Stale impact plans are unsafe to commit
+
+Calculate an invalidation plan, then change the graph revision before commit. Commit must reject or recompute the stale plan rather than applying consequences calculated against an older graph.
+
+### T-DELETE-CHAIN-001 — Downstream deletion stops at junctions
+
+Verify that downstream deletion removes only a single unambiguous chain and stops before the next branch or merge junction. The preserved junction and unrelated paths remain canonical and valid.
 
 ## Mandatory regression: T-REG-222
 
@@ -226,6 +313,8 @@ Manual checks remain useful for:
 - real mobile browser keyboard behavior,
 - drag/drop feel,
 - merged-flow readability,
+- blocked-task explanation clarity,
+- invalidation-confirmation clarity,
 - mobile existing-task connection prototypes,
 - theme aesthetics,
 - assistive-technology review.
