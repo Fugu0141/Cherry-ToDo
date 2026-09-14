@@ -24,7 +24,11 @@ function button(label: string, action: () => void, className = 'cherry-button'):
   return node;
 }
 
-function translated(points: readonly { readonly x: number; readonly y: number }[], dx: number, dy: number) {
+function translated(
+  points: readonly { readonly x: number; readonly y: number }[],
+  dx: number,
+  dy: number,
+) {
   return points.map((point) => ({ x: point.x + dx, y: point.y + dy }));
 }
 
@@ -82,30 +86,38 @@ function textControls(
     button('↑', () => move(0, -20), 'cherry-icon-button'),
     button('↓', () => move(0, 20), 'cherry-icon-button'),
     button('→', () => move(20, 0), 'cherry-icon-button'),
-    button('−', () => {
-      run(
-        context.intents.annotation.updateText({
-          annotationId: annotation.id,
-          rect: {
-            ...annotation.rect,
-            width: Math.max(80, annotation.rect.width * 0.9),
-            height: Math.max(48, annotation.rect.height * 0.9),
-          },
-        }),
-      );
-    }, 'cherry-icon-button'),
-    button('+', () => {
-      run(
-        context.intents.annotation.updateText({
-          annotationId: annotation.id,
-          rect: {
-            ...annotation.rect,
-            width: annotation.rect.width * 1.1,
-            height: annotation.rect.height * 1.1,
-          },
-        }),
-      );
-    }, 'cherry-icon-button'),
+    button(
+      '−',
+      () => {
+        run(
+          context.intents.annotation.updateText({
+            annotationId: annotation.id,
+            rect: {
+              ...annotation.rect,
+              width: Math.max(80, annotation.rect.width * 0.9),
+              height: Math.max(48, annotation.rect.height * 0.9),
+            },
+          }),
+        );
+      },
+      'cherry-icon-button',
+    ),
+    button(
+      '+',
+      () => {
+        run(
+          context.intents.annotation.updateText({
+            annotationId: annotation.id,
+            rect: {
+              ...annotation.rect,
+              width: annotation.rect.width * 1.1,
+              height: annotation.rect.height * 1.1,
+            },
+          }),
+        );
+      },
+      'cherry-icon-button',
+    ),
   );
 
   const remove = button(
@@ -175,22 +187,30 @@ function strokeControls(
     button('↑', () => move(0, -20), 'cherry-icon-button'),
     button('↓', () => move(0, 20), 'cherry-icon-button'),
     button('→', () => move(20, 0), 'cherry-icon-button'),
-    button('−', () => {
-      run(
-        context.intents.annotation.updateStroke({
-          annotationId: annotation.id,
-          points: scaled(annotation.points, 0.9),
-        }),
-      );
-    }, 'cherry-icon-button'),
-    button('+', () => {
-      run(
-        context.intents.annotation.updateStroke({
-          annotationId: annotation.id,
-          points: scaled(annotation.points, 1.1),
-        }),
-      );
-    }, 'cherry-icon-button'),
+    button(
+      '−',
+      () => {
+        run(
+          context.intents.annotation.updateStroke({
+            annotationId: annotation.id,
+            points: scaled(annotation.points, 0.9),
+          }),
+        );
+      },
+      'cherry-icon-button',
+    ),
+    button(
+      '+',
+      () => {
+        run(
+          context.intents.annotation.updateStroke({
+            annotationId: annotation.id,
+            points: scaled(annotation.points, 1.1),
+          }),
+        );
+      },
+      'cherry-icon-button',
+    ),
   );
 
   const remove = button(
@@ -296,9 +316,15 @@ export function renderAnnotationTools(input: {
   return tools;
 }
 
-export function annotationExtent(annotation: AnnotationModel): { readonly x: number; readonly y: number } {
+export function annotationExtent(annotation: AnnotationModel): {
+  readonly x: number;
+  readonly y: number;
+} {
   if (annotation.kind === 'text') {
-    return { x: annotation.rect.x + annotation.rect.width, y: annotation.rect.y + annotation.rect.height };
+    return {
+      x: annotation.rect.x + annotation.rect.width,
+      y: annotation.rect.y + annotation.rect.height,
+    };
   }
   return {
     x: Math.max(0, ...annotation.points.map((point) => point.x)),
