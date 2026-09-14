@@ -1,4 +1,5 @@
 import {
+  buildBoardFlowConnectorGeometry,
   createEmptyBoardDocumentState,
   layoutBoard,
   resolveDropIntent,
@@ -485,6 +486,13 @@ export class CherryUIRuntime implements CherryUIContext {
     const structuralEdges = Object.values(tab.flowEdges).filter(
       (edge) => edge.kind !== 'reference',
     );
+    const incomingStructuralCounts = new Map<string, number>();
+    for (const edge of structuralEdges) {
+      incomingStructuralCounts.set(
+        edge.toTaskId,
+        (incomingStructuralCounts.get(edge.toTaskId) ?? 0) + 1,
+      );
+    }
     const layout = layoutBoard(
       Object.values(tab.tasks).map((task) => ({
         id: task.id,
@@ -532,18 +540,27 @@ export class CherryUIRuntime implements CherryUIContext {
           schedule: scheduleModel(task.schedule),
           scheduleLabel: scheduleLabel(task.schedule),
           isDerivedGoal: state?.isDerivedBranchingGoal ?? false,
+          isMergeTarget: (incomingStructuralCounts.get(task.id) ?? 0) >= 2,
           canManuallyComplete: manual?.kind === 'available',
           blocked,
           blockedReasonKey: blocked ? 'task.blockedByMerge' : null,
           position: layout.tasks[task.id]?.point ?? null,
         };
       }),
-      connections: Object.values(tab.flowEdges).map((edge) => ({
-        id: edge.id,
-        kind: edge.kind,
-        fromTaskId: edge.fromTaskId,
-        toTaskId: edge.toTaskId,
-      })),
+      connections: Object.values(tab.flowEdges).map((edge) => {
+        const from = layout.tasks[edge.fromTaskId]?.point;
+        const to = layout.tasks[edge.toTaskId]?.point;
+        return {
+          id: edge.id,
+          kind: edge.kind,
+          fromTaskId: edge.fromTaskId,
+          toTaskId: edge.toTaskId,
+          path:
+            from === undefined || to === undefined
+              ? null
+              : buildBoardFlowConnectorGeometry(from, to).path,
+        };
+      }),
       canUndo: this.#store.historyState.canUndo,
       canRedo: this.#store.historyState.canRedo,
     };
