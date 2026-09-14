@@ -1,0 +1,123 @@
+.cg-help-button {
+  position: fixed;
+  left: 18px;
+  bottom: 18px;
+  z-index: 34;
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--cg-border);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.96);
+  color: var(--cg-muted);
+  font-weight: 900;
+  box-shadow: var(--cg-shadow);
+  backdrop-filter: blur(14px);
+}
+
+.cg-help-button:hover {
+  color: var(--cg-accent);
+  border-color: rgba(216, 51, 82, 0.35);
+}
+
+.cg-onboarding-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  background: rgba(20, 24, 30, 0.52);
+  backdrop-filter: blur(3px);
+}
+
+.cg-onboarding-spotlight {
+  position: fixed;
+  z-index: 121;
+  border: 3px solid rgba(255, 255, 255, 0.96);
+  border-radius: 18px;
+  box-shadow:
+    0 0 0 5px rgba(216, 51, 82, 0.72),
+    0 16px 46px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+  transition: left 180ms ease, top 180ms ease, width 180ms ease, height 180ms ease;
+}
+
+.cg-onboarding-card {
+  position: fixed;
+  left: 50%;
+  bottom: 34px;
+  z-index: 122;
+  width: min(520px, calc(100vw - 32px));
+  transform: translateX(-50%);
+  padding: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.74);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.98);
+  color: var(--cg-text);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+}
+
+.cg-onboarding-eyebrow {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--cg-accent);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.cg-onboarding-card h2 {
+  margin: 0 0 8px;
+  font-size: 24px;
+  letter-spacing: -0.035em;
+}
+
+.cg-onboarding-card p {
+  margin: 0;
+  color: var(--cg-muted);
+  line-height: 1.75;
+}
+
+.cg-onboarding-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.cg-onboarding-button {
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 11px;
+  font: inherit;
+  font-weight: 760;
+}
+
+.cg-onboarding-button.quiet {
+  background: transparent;
+  color: var(--cg-muted);
+}
+
+.cg-onboarding-button.primary {
+  background: var(--cg-accent);
+  color: #fff;
+}
+
+@media (max-width: 700px) {
+  .cg-help-button {
+    left: 12px;
+    bottom: 12px;
+  }
+
+  .cg-onboarding-card {
+    bottom: 14px;
+    padding: 18px;
+    border-radius: 19px;
+  }
+
+  .cg-onboarding-card h2 {
+    font-size: 21px;
+  }
+
+  .cg-onboarding-spotlight {
+    border-radius: 14px;
+  }
+}
