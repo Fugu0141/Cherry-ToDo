@@ -28,29 +28,21 @@ jobs:
           from pathlib import Path
           p = Path('src/ui/default/index.ts')
           s = p.read_text()
-          old = """          const next = [...workspace.linearFlowOrder];
-          [next[index - 1], next[index]] = [next[index], next[index - 1]];
-          void perform(context, context.intents.flow.reorder(next));"""
-          new = """          const next = [...workspace.linearFlowOrder];
-          const current = next[index];
+          old = '[next[index - 1], next[index]] = [next[index], next[index - 1]];'
+          new = '''const current = next[index];
           const previous = next[index - 1];
           if (current === undefined || previous === undefined) return;
           next[index - 1] = current;
-          next[index] = previous;
-          void perform(context, context.intents.flow.reorder(next));"""
+          next[index] = previous;'''
           if old not in s:
               raise SystemExit('earlier swap target not found')
           s = s.replace(old, new, 1)
-          old = """          const next = [...workspace.linearFlowOrder];
-          [next[index], next[index + 1]] = [next[index + 1], next[index]];
-          void perform(context, context.intents.flow.reorder(next));"""
-          new = """          const next = [...workspace.linearFlowOrder];
-          const current = next[index];
+          old = '[next[index], next[index + 1]] = [next[index + 1], next[index]];'
+          new = '''const current = next[index];
           const following = next[index + 1];
           if (current === undefined || following === undefined) return;
           next[index] = following;
-          next[index + 1] = current;
-          void perform(context, context.intents.flow.reorder(next));"""
+          next[index + 1] = current;'''
           if old not in s:
               raise SystemExit('later swap target not found')
           p.write_text(s.replace(old, new, 1))
