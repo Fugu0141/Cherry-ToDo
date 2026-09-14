@@ -103,7 +103,9 @@ function violationsForImport(sourceRelative, targetRelative) {
 
   if (sourceRelative.startsWith('ui/')) {
     if (/^(modules|adapters|composition)\//.test(targetRelative)) {
-      violations.push('UI packages may consume ui-contract, not modules/adapters/composition directly');
+      violations.push(
+        'UI packages may consume ui-contract, not modules/adapters/composition directly',
+      );
     }
   }
 
