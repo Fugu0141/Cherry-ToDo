@@ -82,6 +82,7 @@ export interface FlowConnectionModel {
   readonly kind: CherryFlowKind;
   readonly fromTaskId: string;
   readonly toTaskId: string;
+  readonly path: string | null;
 }
 
 export interface WorkspaceScreenModel {
