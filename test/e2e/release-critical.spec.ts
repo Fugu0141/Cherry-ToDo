@@ -15,9 +15,9 @@ async function createWorkspace(page: Page, name: string): Promise<void> {
 }
 
 async function addTask(page: Page, title: string): Promise<void> {
-  const toolbar = page.locator('.cherry-toolbar');
-  await toolbar.getByLabel('タイトル').fill(title);
-  await toolbar.getByRole('button', { name: 'タスクを追加' }).click();
+  const taskForm = page.locator('.cherry-inline-form');
+  await taskForm.getByLabel('タイトル').fill(title);
+  await taskForm.getByRole('button', { name: 'タスクを追加' }).click();
   await expect(page.locator('.cherry-task').filter({ hasText: title })).toBeVisible();
 }
 
@@ -50,10 +50,9 @@ test('ephemeral planning journey works and key surfaces pass accessibility audit
   await addTask(page, '実装');
 
   const flowForm = page.locator('.cherry-flow-form');
-  const selects = flowForm.locator('select');
-  await selects.nth(0).selectOption({ label: '設計' });
-  await selects.nth(1).selectOption('continuation');
-  await selects.nth(2).selectOption({ label: '実装' });
+  await flowForm.getByLabel('接続元').selectOption({ label: '設計' });
+  await flowForm.getByLabel('接続の種類').selectOption('continuation');
+  await flowForm.getByLabel('接続先').selectOption({ label: '実装' });
   await flowForm.getByRole('button', { name: 'タスクをつなぐ' }).click();
   await expect(page.locator('.cherry-flow-line')).toHaveCount(1);
 
@@ -63,7 +62,7 @@ test('ephemeral planning journey works and key surfaces pass accessibility audit
 
   const firstTask = page.locator('.cherry-task').filter({ hasText: '設計' });
   await firstTask.getByRole('button', { name: 'タスクを編集' }).click();
-  await expect(page.getByRole('heading', { name: 'タスクを編集' })).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'タスクを編集' })).toBeVisible();
   await expectNoSeriousAccessibilityViolations(page);
   await page.getByRole('button', { name: 'キャンセル' }).click();
 
