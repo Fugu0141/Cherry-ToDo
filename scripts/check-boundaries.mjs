@@ -44,6 +44,11 @@ function moduleName(relativePath) {
   return match?.[1] ?? null;
 }
 
+function adapterPackageName(relativePath) {
+  const match = relativePath.match(/^adapters\/([^/]+)\//);
+  return match?.[1] ?? null;
+}
+
 function isPublicModuleEntry(relativePath) {
   return /^modules\/[^/]+\/index\.tsx?$/.test(relativePath);
 }
@@ -109,8 +114,15 @@ function violationsForImport(sourceRelative, targetRelative) {
     }
   }
 
-  if (!sourceRelative.startsWith('composition/') && targetRelative.startsWith('adapters/')) {
-    violations.push('only composition may import concrete adapters');
+  if (targetRelative.startsWith('adapters/')) {
+    const sourceAdapterPackage = adapterPackageName(sourceRelative);
+    const targetAdapterPackage = adapterPackageName(targetRelative);
+    const sameAdapterPackage =
+      sourceAdapterPackage !== null && sourceAdapterPackage === targetAdapterPackage;
+
+    if (!sourceRelative.startsWith('composition/') && !sameAdapterPackage) {
+      violations.push('only composition may import concrete adapters');
+    }
   }
 
   return violations;
@@ -127,6 +139,16 @@ function assertBoundaryRuleSelfTests() {
       source: 'composition/bootstrap.ts',
       target: 'adapters/persistence/browser/index.ts',
       mustFail: false,
+    },
+    {
+      source: 'adapters/interop/csv.ts',
+      target: 'adapters/interop/import-plan.ts',
+      mustFail: false,
+    },
+    {
+      source: 'adapters/interop/csv.ts',
+      target: 'adapters/migration/index.ts',
+      mustFail: true,
     },
     {
       source: 'modules/task/application/create-task.ts',
