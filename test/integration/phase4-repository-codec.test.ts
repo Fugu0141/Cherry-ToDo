@@ -90,24 +90,27 @@ function fixture(): WorkspaceDocument {
 class FakeBinaryStore implements BrowserBinaryStore {
   readonly #values = new Map<string, Uint8Array>();
 
-  async listKeys(): Promise<readonly string[]> {
-    return [...this.#values.keys()];
+  listKeys(): Promise<readonly string[]> {
+    return Promise.resolve([...this.#values.keys()]);
   }
 
-  async get(key: string): Promise<Uint8Array | null> {
-    return this.#values.get(key)?.slice() ?? null;
+  get(key: string): Promise<Uint8Array | null> {
+    return Promise.resolve(this.#values.get(key)?.slice() ?? null);
   }
 
-  async put(key: string, value: Uint8Array): Promise<void> {
+  put(key: string, value: Uint8Array): Promise<void> {
     this.#values.set(key, value.slice());
+    return Promise.resolve();
   }
 
-  async delete(key: string): Promise<void> {
+  delete(key: string): Promise<void> {
     this.#values.delete(key);
+    return Promise.resolve();
   }
 
-  async clear(): Promise<void> {
+  clear(): Promise<void> {
     this.#values.clear();
+    return Promise.resolve();
   }
 }
 
