@@ -42,7 +42,10 @@ function labeledInput(
   return { wrap, input };
 }
 
-function labeledSelect(label: string, className = 'cherry-select'): {
+function labeledSelect(
+  label: string,
+  className = 'cherry-select',
+): {
   wrap: HTMLLabelElement;
   select: HTMLSelectElement;
 } {
@@ -100,7 +103,8 @@ function renderTask(
     const checkbox = element('input', 'cherry-check');
     checkbox.type = 'checkbox';
     checkbox.checked = task.status === 'done';
-    checkbox.setAttribute('aria-label',
+    checkbox.setAttribute(
+      'aria-label',
       context.i18n.t(task.status === 'done' ? 'task.reopen' : 'task.complete'),
     );
     checkbox.addEventListener('change', () => {
@@ -181,9 +185,7 @@ function renderBoard(
       laneNode.style.height = `${lane.height}px`;
       const label = element('div', 'cherry-date-lane-label');
       label.textContent =
-        lane.kind === 'date' && lane.date !== null
-          ? lane.date
-          : context.i18n.t('board.undated');
+        lane.kind === 'date' && lane.date !== null ? lane.date : context.i18n.t('board.undated');
       laneNode.append(label);
       canvas.append(laneNode);
     }

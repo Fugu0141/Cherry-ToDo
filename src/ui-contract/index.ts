@@ -85,13 +85,7 @@ export type CherryScreenModel =
   | { readonly kind: 'error'; readonly error: PresentationError };
 
 export type PresentationErrorCode =
-  | 'validation'
-  | 'not-found'
-  | 'conflict'
-  | 'blocked'
-  | 'stale-plan'
-  | 'persistence'
-  | 'unknown';
+  'validation' | 'not-found' | 'conflict' | 'blocked' | 'stale-plan' | 'persistence' | 'unknown';
 
 export interface PresentationError {
   readonly code: PresentationErrorCode;

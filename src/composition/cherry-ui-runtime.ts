@@ -453,7 +453,9 @@ export class CherryUIRuntime implements CherryUIContext {
       return;
     }
 
-    const structuralEdges = Object.values(tab.flowEdges).filter((edge) => edge.kind !== 'reference');
+    const structuralEdges = Object.values(tab.flowEdges).filter(
+      (edge) => edge.kind !== 'reference',
+    );
     const layout = layoutBoard(
       Object.values(tab.tasks).map((task) => ({
         id: task.id,
