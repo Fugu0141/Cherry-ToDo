@@ -15,8 +15,16 @@ function id(value: string): TaskId {
 
 const A = id('A');
 const B = id('B');
-const manual: BoardSettings = { showDateLanes: true, autoLayout: false, timeGuide: 'auto' };
-const auto: BoardSettings = { showDateLanes: true, autoLayout: true, timeGuide: 'auto' };
+const manual: BoardSettings = {
+  showDateLanes: true,
+  autoLayout: false,
+  timeGuide: 'auto',
+};
+const auto: BoardSettings = {
+  showDateLanes: true,
+  autoLayout: true,
+  timeGuide: 'auto',
+};
 
 function resolve(input: Omit<ResolveDropIntentInput, 'taskId'>) {
   return resolveDropIntent({ taskId: A, ...input });
@@ -91,7 +99,11 @@ describe('Board DropIntent resolver', () => {
       orderedTaskIds: [B, A],
     });
     expect(
-      resolve({ settings: manual, target: { kind: 'canvas', point: { x: 1, y: 2 } }, cancelled: true }),
+      resolve({
+        settings: manual,
+        target: { kind: 'canvas', point: { x: 1, y: 2 } },
+        cancelled: true,
+      }),
     ).toEqual({ kind: 'cancel' });
   });
 });
