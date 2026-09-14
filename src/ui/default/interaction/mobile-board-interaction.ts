@@ -34,6 +34,7 @@ interface DragSession {
   readonly originalLeft: string;
   readonly originalTop: string;
   readonly grabOffset: InteractionPoint;
+  readonly originPointer: InteractionPoint;
   latestPointer: InteractionPoint;
   moved: boolean;
   frame: number | null;
@@ -57,7 +58,9 @@ function isInteractiveControl(target: EventTarget | null): boolean {
 }
 
 function pointInRect(point: InteractionPoint, rect: DOMRect): boolean {
-  return point.x >= rect.left && point.x <= rect.right && point.y >= rect.top && point.y <= rect.bottom;
+  return (
+    point.x >= rect.left && point.x <= rect.right && point.y >= rect.top && point.y <= rect.bottom
+  );
 }
 
 function parsePosition(value: string, fallback: number): number {
@@ -86,7 +89,10 @@ export function installMobileBoardInteraction(options: MobileBoardInteractionOpt
     session.card.classList.remove('dragging', 'touch-dragging');
   };
 
-  const laneTargetAt = (point: InteractionPoint, preview: InteractionPoint): CherryBoardDropTarget => {
+  const laneTargetAt = (
+    point: InteractionPoint,
+    preview: InteractionPoint,
+  ): CherryBoardDropTarget => {
     for (const laneNode of canvas.querySelectorAll<HTMLElement>('.cherry-date-lane')) {
       const rect = laneNode.getBoundingClientRect();
       if (!pointInRect(point, rect)) continue;
@@ -117,7 +123,10 @@ export function installMobileBoardInteraction(options: MobileBoardInteractionOpt
       if (!coordinator.ownsPointer(current.pointerId, 'dragging-task')) return;
 
       coordinator.updatePointer(current.pointerId, current.latestPointer);
-      if (!current.moved && interactionDistanceSquared(coordinator.state) >= DRAG_THRESHOLD_SQUARED) {
+      if (
+        !current.moved &&
+        interactionDistanceSquared(coordinator.state) >= DRAG_THRESHOLD_SQUARED
+      ) {
         current.moved = true;
         current.card.classList.add('dragging', 'touch-dragging');
       }
@@ -180,6 +189,7 @@ export function installMobileBoardInteraction(options: MobileBoardInteractionOpt
         originalLeft: card.style.left,
         originalTop: card.style.top,
         grabOffset: { x: event.clientX - cardRect.left, y: event.clientY - cardRect.top },
+        originPointer: { x: event.clientX, y: event.clientY },
         latestPointer: { x: event.clientX, y: event.clientY },
         moved: false,
         frame: null,
@@ -204,16 +214,18 @@ export function installMobileBoardInteraction(options: MobileBoardInteractionOpt
       coordinator.updatePointer(event.pointerId, current.latestPointer);
       coordinator.endPointer(event.pointerId);
 
-      const moved = current.moved || interactionDistanceSquared({
-        kind: 'dragging-task',
-        pointerId: current.pointerId,
-        origin: { x: event.clientX, y: event.clientY },
-        current: current.latestPointer,
-        subjectId: current.taskId,
-      }) >= DRAG_THRESHOLD_SQUARED;
+      const dx = current.latestPointer.x - current.originPointer.x;
+      const dy = current.latestPointer.y - current.originPointer.y;
+      const moved = current.moved || dx * dx + dy * dy >= DRAG_THRESHOLD_SQUARED;
       const preview = {
-        x: parsePosition(current.card.style.left, workspace.tasks.find((task) => task.id === current.taskId)?.position?.x ?? 0),
-        y: parsePosition(current.card.style.top, workspace.tasks.find((task) => task.id === current.taskId)?.position?.y ?? 0),
+        x: parsePosition(
+          current.card.style.left,
+          workspace.tasks.find((task) => task.id === current.taskId)?.position?.x ?? 0,
+        ),
+        y: parsePosition(
+          current.card.style.top,
+          workspace.tasks.find((task) => task.id === current.taskId)?.position?.y ?? 0,
+        ),
       };
       restoreCard(current);
       drag = null;
@@ -256,7 +268,10 @@ export function installMobileBoardInteraction(options: MobileBoardInteractionOpt
   on(scroll, 'pointermove', (event) => {
     const current = pan;
     if (current === null || current.pointerId !== event.pointerId) return;
-    const state = coordinator.updatePointer(event.pointerId, { x: event.clientX, y: event.clientY });
+    const state = coordinator.updatePointer(event.pointerId, {
+      x: event.clientX,
+      y: event.clientY,
+    });
     if (state === null || state.kind !== 'panning') return;
     event.preventDefault();
     scroll.scrollLeft = current.startScrollLeft - (state.current.x - state.origin.x);
