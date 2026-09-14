@@ -14,6 +14,6 @@ Related architecture decisions:
 - [`../adr/0006-merge-gates-and-invalidation.md`](../adr/0006-merge-gates-and-invalidation.md) — **Accepted for V2.0**
 - [`../adr/0007-goal-scope-and-junction-deletion.md`](../adr/0007-goal-scope-and-junction-deletion.md) — **Accepted for V2.0**
 
-ADR-0007 is the latest decision for branching-goal completion scope and delete-one junction reconnection and takes precedence over conflicting older draft wording until the consolidation pass.
+ADR-0007 is the latest accepted decision for branching-goal completion scope and delete-one junction reconnection.
 
 Implementation does not begin until the remaining design-freeze questions in `BASIC_DESIGN.md` are resolved and the relevant requirements/basic-design decisions are accepted/frozen.
