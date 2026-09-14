@@ -169,7 +169,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       root.replaceChildren(main);
     };
 
-    const renderTaskCard = (workspace: WorkspaceScreenModel, task: TaskCardModel): HTMLElement => {
+    const renderTaskCard = (task: TaskCardModel): HTMLElement => {
       const card = el('article', 'cg-task');
       card.dataset.taskId = task.id;
       if (task.id === selectedTaskId) card.dataset.selected = 'true';
@@ -337,7 +337,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       canvas.append(svg);
 
       for (const task of workspace.tasks) {
-        const card = renderTaskCard(workspace, task);
+        const card = renderTaskCard(task);
         card.classList.add('cg-board-task');
         if (hidden.has(task.id)) card.hidden = true;
         if (task.position) {
@@ -402,17 +402,14 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       heading.append(title, meta);
       main.append(heading);
       for (const task of workspace.tasks) {
-        const row = renderTaskCard(workspace, task);
+        const row = renderTaskCard(task);
         row.classList.add('cg-list-task');
         main.append(row);
       }
       return main;
     };
 
-    const renderTaskActions = (
-      workspace: WorkspaceScreenModel,
-      task: TaskCardModel,
-    ): HTMLElement => {
+    const renderTaskActions = (task: TaskCardModel): HTMLElement => {
       const dock = el('aside', 'cg-action-dock');
       dock.setAttribute('aria-label', '選択中のタスク操作');
       if (task.canManuallyComplete) {
@@ -844,7 +841,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         shell.append(hint);
       }
       const selected = workspace.tasks.find((task) => task.id === selectedTaskId);
-      if (selected) shell.append(renderTaskActions(workspace, selected));
+      if (selected) shell.append(renderTaskActions(selected));
       const settings = renderSettings(workspace);
       if (settings) shell.append(settings);
       const createDialog = renderCreateDialog();
