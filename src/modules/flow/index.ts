@@ -12,3 +12,15 @@ export {
   type StructuralFlowEdge,
   type StructuralFlowKind,
 } from './domain/flow';
+
+export {
+  buildTaskExecutionReadModels,
+  deriveManualCompletionControl,
+  deriveTaskCompletionAvailability,
+  evaluateDerivedGoalStatuses,
+  reachableStructuralTaskIds,
+  type GoalEvaluation,
+  type ManualCompletionControl,
+  type TaskCompletionAvailability,
+  type TaskExecutionReadModel,
+} from './domain/execution';
