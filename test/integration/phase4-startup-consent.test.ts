@@ -10,7 +10,10 @@ import {
   type SessionContext,
   type StorageConsentStore,
 } from '../../src/modules/startup/index';
-import { CHERRY_V2_SCHEMA_VERSION, type WorkspaceDocument } from '../../src/modules/workspace/index';
+import {
+  CHERRY_V2_SCHEMA_VERSION,
+  type WorkspaceDocument,
+} from '../../src/modules/workspace/index';
 import {
   parseTabId,
   parseWorkspaceId,
@@ -111,15 +114,10 @@ describe('Phase 4 startup and storage consent', () => {
     let persistentFactoryCalls = 0;
     let runtimeInitializations = 0;
 
-    const coordinator = new PersistenceCoordinator(
-      memoryWorkspaces,
-      memorySession,
-      consent,
-      () => {
-        persistentFactoryCalls += 1;
-        return Promise.resolve(persistent);
-      },
-    );
+    const coordinator = new PersistenceCoordinator(memoryWorkspaces, memorySession, consent, () => {
+      persistentFactoryCalls += 1;
+      return Promise.resolve(persistent);
+    });
     const controller = new StartupController(coordinator, () => {
       runtimeInitializations += 1;
       return Promise.resolve();
@@ -148,11 +146,8 @@ describe('Phase 4 startup and storage consent', () => {
     const consent = new FakeConsentStore(false);
     let runtimeInitializations = 0;
 
-    const coordinator = new PersistenceCoordinator(
-      memoryWorkspaces,
-      memorySession,
-      consent,
-      () => Promise.resolve(persistent),
+    const coordinator = new PersistenceCoordinator(memoryWorkspaces, memorySession, consent, () =>
+      Promise.resolve(persistent),
     );
     const controller = new StartupController(coordinator, () => {
       runtimeInitializations += 1;
@@ -255,11 +250,8 @@ describe('Phase 4 startup and storage consent', () => {
     const memorySession = new MemorySessionRepository(session());
     const consent = new FakeConsentStore(false);
     const persistent = persistentBundle();
-    const coordinator = new PersistenceCoordinator(
-      memoryWorkspaces,
-      memorySession,
-      consent,
-      () => Promise.resolve(persistent),
+    const coordinator = new PersistenceCoordinator(memoryWorkspaces, memorySession, consent, () =>
+      Promise.resolve(persistent),
     );
 
     expect((await coordinator.allowPersistence()).kind).toBe('activated');
