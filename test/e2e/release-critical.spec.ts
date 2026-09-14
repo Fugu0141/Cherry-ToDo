@@ -43,6 +43,14 @@ async function connectTasks(
   await flowForm.getByRole('button', { name: 'タスクをつなぐ' }).click();
 }
 
+async function connectBranch(page: Page, fromTitle: string, toTitle: string): Promise<void> {
+  const flowForm = page.locator('.cherry-flow-form');
+  await flowForm.getByLabel('接続元').selectOption({ label: fromTitle });
+  await flowForm.getByLabel('接続の種類').selectOption('branch');
+  await flowForm.getByLabel('接続先').selectOption({ label: toTitle });
+  await flowForm.getByRole('button', { name: 'タスクをつなぐ' }).click();
+}
+
 async function expectNoSeriousAccessibilityViolations(page: Page): Promise<void> {
   const result = await new AxeBuilder({ page }).analyze();
   const blocking = result.violations.filter(
@@ -90,6 +98,9 @@ test('ephemeral planning journey works and key surfaces pass accessibility audit
   });
   expect(bootMeasure?.entryType).toBe('measure');
   expect(bootMeasure?.duration).toBeGreaterThanOrEqual(0);
+  console.log(
+    `[phase10-perf] ${testInfo.project.name} cherry:boot=${bootMeasure?.duration.toFixed(2)}ms`,
+  );
 });
 
 test('persistent opt-in restores the active workspace after reload', async ({ page }) => {
@@ -101,6 +112,54 @@ test('persistent opt-in restores the active workspace after reload', async ({ pa
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Restore workspace' })).toBeVisible();
   await expect(page.locator('.cherry-task').filter({ hasText: '保存されるタスク' })).toBeVisible();
+});
+
+test('persistent data clearing requires explicit destructive confirmation', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: '保存を許可' }).click();
+  await createWorkspace(page, 'Clear storage workspace');
+  await addTask(page, '一時保存タスク');
+
+  const storageActions = page.locator('.cherry-storage-actions');
+  await expect(storageActions.getByRole('button', { name: '保存データを削除して停止' })).toBeVisible();
+
+  page.once('dialog', async (dialog) => {
+    expect(dialog.type()).toBe('confirm');
+    expect(dialog.message()).toContain('保存したCherryのデータを削除');
+    await dialog.accept();
+  });
+  await storageActions.getByRole('button', { name: '保存データを削除して停止' }).click();
+  await expect(page.locator('.cherry-storage-actions')).toHaveCount(0);
+
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'この端末に保存しますか？' })).toBeVisible();
+});
+
+test('derived branching goals expose an editable non-color-only importance marker', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name.startsWith('mobile-'), 'Desktop goal editor coverage.');
+
+  await chooseEphemeral(page);
+  await createWorkspace(page, 'Goal importance workspace');
+  await addTask(page, 'Goal');
+  await addTask(page, 'Branch A');
+  await addTask(page, 'Branch B');
+
+  await connectBranch(page, 'Goal', 'Branch A');
+  await connectBranch(page, 'Goal', 'Branch B');
+
+  const goal = page.locator('.cherry-task').filter({ hasText: 'Goal' });
+  await expect(goal.getByText('Goal', { exact: true })).toBeVisible();
+  await goal.getByRole('button', { name: 'タスクを編集' }).click();
+
+  const editor = page.getByRole('dialog', { name: 'タスクを編集' });
+  await editor.getByLabel('重要度').selectOption('high');
+  await editor.getByRole('button', { name: '保存' }).click();
+
+  await expect(page.getByRole('dialog', { name: 'タスクを編集' })).toHaveCount(0);
+  await expect(goal.getByText('重要度: 高')).toBeVisible();
+  await expectNoSeriousAccessibilityViolations(page);
 });
 
 test('mobile can connect existing tasks without hover-only discovery', async ({
