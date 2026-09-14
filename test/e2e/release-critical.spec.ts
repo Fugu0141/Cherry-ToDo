@@ -21,6 +21,28 @@ async function addTask(page: Page, title: string): Promise<void> {
   await expect(page.locator('.cherry-task').filter({ hasText: title })).toBeVisible();
 }
 
+async function connectTasks(
+  page: Page,
+  fromTitle: string,
+  toTitle: string,
+  mobile: boolean,
+): Promise<void> {
+  if (mobile) {
+    const source = page.locator('.cherry-task').filter({ hasText: fromTitle });
+    const target = page.locator('.cherry-task').filter({ hasText: toTitle });
+    await source.getByRole('button', { name: '通常Flowをつなぐ' }).click();
+    await expect(page.getByRole('status')).toContainText('接続先のタスクを選んでください');
+    await target.getByRole('button', { name: '接続先にする' }).click();
+    return;
+  }
+
+  const flowForm = page.locator('.cherry-flow-form');
+  await flowForm.getByLabel('接続元').selectOption({ label: fromTitle });
+  await flowForm.getByLabel('接続の種類').selectOption('continuation');
+  await flowForm.getByLabel('接続先').selectOption({ label: toTitle });
+  await flowForm.getByRole('button', { name: 'タスクをつなぐ' }).click();
+}
+
 async function expectNoSeriousAccessibilityViolations(page: Page): Promise<void> {
   const result = await new AxeBuilder({ page }).analyze();
   const blocking = result.violations.filter(
@@ -36,9 +58,10 @@ async function expectNoSeriousAccessibilityViolations(page: Page): Promise<void>
   ).toEqual([]);
 }
 
-test('ephemeral planning journey works and key surfaces pass accessibility audit', async ({
-  page,
-}) => {
+test('ephemeral planning journey works and key surfaces pass accessibility audit', async (
+  { page },
+  testInfo,
+) => {
   await page.goto('/');
   await expectNoSeriousAccessibilityViolations(page);
 
@@ -49,11 +72,7 @@ test('ephemeral planning journey works and key surfaces pass accessibility audit
   await addTask(page, '設計');
   await addTask(page, '実装');
 
-  const flowForm = page.locator('.cherry-flow-form');
-  await flowForm.getByLabel('接続元').selectOption({ label: '設計' });
-  await flowForm.getByLabel('接続の種類').selectOption('continuation');
-  await flowForm.getByLabel('接続先').selectOption({ label: '実装' });
-  await flowForm.getByRole('button', { name: 'タスクをつなぐ' }).click();
+  await connectTasks(page, '設計', '実装', testInfo.project.name.startsWith('mobile-'));
   await expect(page.locator('.cherry-flow-line')).toHaveCount(1);
 
   await page.getByRole('button', { name: 'リスト' }).click();
