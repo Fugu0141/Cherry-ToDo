@@ -421,7 +421,9 @@ describe('semantic reorder and Board/Schedule separation', () => {
   it('reorders an isolated linear Flow without changing Task identity or Schedule', () => {
     const date = parseLocalDate('2026-09-20');
     if (!date.ok) throw new Error('Invalid date fixture.');
-    const schedule = scheduleOnDate(date.value);
+    const scheduled = scheduleOnDate(date.value);
+    if (!scheduled.ok) throw new Error('Invalid Schedule fixture.');
+    const schedule = scheduled.value;
     const { workspace, tabId } = fixture(
       [task('A', 'todo', schedule), task('B'), task('C')],
       [structural('ab', 'continuation', 'A', 'B'), structural('bc', 'continuation', 'B', 'C')],
@@ -441,7 +443,9 @@ describe('semantic reorder and Board/Schedule separation', () => {
   it('moves a Task on Board without changing Flow or Schedule', () => {
     const date = parseLocalDate('2026-09-21');
     if (!date.ok) throw new Error('Invalid date fixture.');
-    const schedule = scheduleOnDate(date.value);
+    const scheduled = scheduleOnDate(date.value);
+    if (!scheduled.ok) throw new Error('Invalid Schedule fixture.');
+    const schedule = scheduled.value;
     const { workspace, tabId } = fixture(
       [task('A', 'todo', schedule), task('B')],
       [structural('ab', 'continuation', 'A', 'B')],
