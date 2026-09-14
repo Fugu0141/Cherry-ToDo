@@ -216,7 +216,18 @@ function renderConnectionSummary(
           ? 'flow-reference'
           : 'flow-continuation',
     );
-    pill.textContent = connectionLabel(workspace, edge.fromTaskId, edge.toTaskId);
+    const label = element('span');
+    label.textContent = connectionLabel(workspace, edge.fromTaskId, edge.toTaskId);
+    const remove = button(
+      '×',
+      () => {
+        void perform(context, context.intents.flow.disconnect(edge.id));
+      },
+      'cherry-connection-remove',
+    );
+    remove.title = context.i18n.t('flow.disconnect');
+    remove.setAttribute('aria-label', context.i18n.t('flow.disconnect'));
+    pill.append(label, remove);
     connections.append(pill);
   }
   return connections;
@@ -494,7 +505,29 @@ function renderWorkspace(
     workspace.activeView === 'list' ? 'cherry-segment-button active' : 'cherry-segment-button',
   );
   viewSwitch.append(boardButton, listButton);
-  header.append(brand, title, viewSwitch);
+  const historyActions = element('div', 'cherry-history-actions');
+  const undo = button(
+    '↶',
+    () => {
+      void perform(context, context.intents.history.undo());
+    },
+    'cherry-icon-button',
+  );
+  undo.disabled = !workspace.canUndo;
+  undo.title = context.i18n.t('history.undo');
+  undo.setAttribute('aria-label', context.i18n.t('history.undo'));
+  const redo = button(
+    '↷',
+    () => {
+      void perform(context, context.intents.history.redo());
+    },
+    'cherry-icon-button',
+  );
+  redo.disabled = !workspace.canRedo;
+  redo.title = context.i18n.t('history.redo');
+  redo.setAttribute('aria-label', context.i18n.t('history.redo'));
+  historyActions.append(undo, redo);
+  header.append(brand, title, viewSwitch, historyActions);
 
   const toolbar = element('section', 'cherry-toolbar');
   const taskForm = element('form', 'cherry-inline-form');
@@ -556,6 +589,50 @@ function renderWorkspace(
       );
     });
     toolbar.append(flowForm);
+  }
+
+  if (workspace.linearFlowOrder !== null) {
+    const reorder = element('section', 'cherry-flow-reorder');
+    const heading = element('strong');
+    heading.textContent = context.i18n.t('flow.reorder');
+    reorder.append(heading);
+    const byId = new Map(workspace.tasks.map((task) => [task.id, task.title]));
+    for (const [index, taskId] of workspace.linearFlowOrder.entries()) {
+      const row = element('div', 'cherry-flow-reorder-row');
+      const name = element('span');
+      name.textContent = byId.get(taskId) ?? taskId;
+      const earlier = button(
+        '↑',
+        () => {
+          if (index === 0 || workspace.linearFlowOrder === null) return;
+          const next = [...workspace.linearFlowOrder];
+          [next[index - 1], next[index]] = [next[index], next[index - 1]];
+          void perform(context, context.intents.flow.reorder(next));
+        },
+        'cherry-icon-button',
+      );
+      earlier.disabled = index === 0;
+      earlier.title = context.i18n.t('flow.moveEarlier');
+      earlier.setAttribute('aria-label', context.i18n.t('flow.moveEarlier'));
+      const later = button(
+        '↓',
+        () => {
+          if (workspace.linearFlowOrder === null || index >= workspace.linearFlowOrder.length - 1) {
+            return;
+          }
+          const next = [...workspace.linearFlowOrder];
+          [next[index], next[index + 1]] = [next[index + 1], next[index]];
+          void perform(context, context.intents.flow.reorder(next));
+        },
+        'cherry-icon-button',
+      );
+      later.disabled = index >= workspace.linearFlowOrder.length - 1;
+      later.title = context.i18n.t('flow.moveLater');
+      later.setAttribute('aria-label', context.i18n.t('flow.moveLater'));
+      row.append(name, earlier, later);
+      reorder.append(row);
+    }
+    toolbar.append(reorder);
   }
 
   if (workspace.activeView === 'board') {
@@ -691,6 +768,28 @@ function renderWorkspace(
       save.type = 'submit';
       save.textContent = context.i18n.t('common.save');
       actions.append(cancel, save);
+      const danger = element('div', 'cherry-editor-danger');
+      const deleteOnly = button(
+        context.i18n.t('task.deleteOnly'),
+        () => {
+          if (!window.confirm(context.i18n.t('task.deleteConfirm'))) return;
+          void perform(context, context.intents.task.deleteOnly(task.id)).then(() =>
+            selectTask(null),
+          );
+        },
+        'cherry-button danger',
+      );
+      const deleteDownstream = button(
+        context.i18n.t('task.deleteDownstream'),
+        () => {
+          if (!window.confirm(context.i18n.t('task.deleteConfirm'))) return;
+          void perform(context, context.intents.task.deleteDownstream(task.id)).then(() =>
+            selectTask(null),
+          );
+        },
+        'cherry-button danger ghost',
+      );
+      danger.append(deleteOnly, deleteDownstream);
       panel.append(
         heading,
         titleField.wrap,
@@ -698,6 +797,7 @@ function renderWorkspace(
         scheduleKind.wrap,
         scheduleFields,
         actions,
+        danger,
       );
       panel.addEventListener('submit', (event) => {
         event.preventDefault();
@@ -862,10 +962,19 @@ export class DefaultCherryUI implements CherryUIPackage<HTMLElement> {
       );
     };
 
+    const onKeyDown = (event: KeyboardEvent): void => {
+      if (event.key !== 'Escape') return;
+      if (selectedTaskId === null && connectionDraft === null) return;
+      selectedTaskId = null;
+      connectionDraft = null;
+      render();
+    };
+    document.addEventListener('keydown', onKeyDown);
     const unsubscribe = context.subscribe(render);
     render();
     return {
       unmount() {
+        document.removeEventListener('keydown', onKeyDown);
         unsubscribe();
         root.replaceChildren();
       },
