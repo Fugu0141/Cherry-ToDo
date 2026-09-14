@@ -83,9 +83,12 @@ export function installCherryOnboarding(root: HTMLElement): () => void {
 
   const workspaceMounted = (): boolean => root.querySelector('.cg-shell') !== null;
 
+  const currentOnboardingStep = (): CherryOnboardingStep =>
+    CHERRY_ONBOARDING_STEPS[currentStep] ?? CHERRY_ONBOARDING_STEPS[0]!;
+
   const updateSpotlight = (): void => {
     if (!overlay || !spotlight || !workspaceMounted()) return;
-    const step = CHERRY_ONBOARDING_STEPS[currentStep];
+    const step = currentOnboardingStep();
     const target = root.querySelector<HTMLElement>(step.selector);
     if (!target) {
       spotlight.hidden = true;
@@ -116,7 +119,7 @@ export function installCherryOnboarding(root: HTMLElement): () => void {
 
   const renderStep = (): void => {
     if (!card) return;
-    const step = CHERRY_ONBOARDING_STEPS[currentStep];
+    const step = currentOnboardingStep();
     card.replaceChildren();
 
     const eyebrow = document.createElement('span');
