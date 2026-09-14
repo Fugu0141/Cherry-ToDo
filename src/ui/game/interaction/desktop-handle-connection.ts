@@ -121,9 +121,10 @@ export function installDesktopHandleConnection(
     }
 
     const from = sourcePoint(canvas, current.sourceCard);
-    const to = current.target === null
-      ? boardPoint(canvas, event.clientX, event.clientY)
-      : targetPoint(canvas, current.target);
+    const to =
+      current.target === null
+        ? boardPoint(canvas, event.clientX, event.clientY)
+        : targetPoint(canvas, current.target);
     current.preview.setAttribute('d', previewPath(from, to));
   };
 

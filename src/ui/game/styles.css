@@ -90,6 +90,9 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .cg-flow-branch { stroke: var(--cg-accent); stroke-width: 2.8; }
 .cg-flow-reference { stroke: #8e959e; stroke-dasharray: 7 7; }
 .cg-flow-layer marker path { fill: #747b84; }
+.cg-flow-preview { fill: none; stroke: var(--cg-accent); stroke-width: 3.5; stroke-linecap: round; stroke-dasharray: 9 7; pointer-events: none; filter: drop-shadow(0 3px 5px rgba(216,51,82,.18)); }
+.cg-board-task[data-connecting="true"] { border-color: var(--cg-accent); box-shadow: 0 0 0 3px rgba(216,51,82,.11), 0 13px 30px rgba(24,28,35,.12); }
+.cg-board-task[data-flow-drop-target="true"] { border-color: var(--cg-accent); transform: translateY(-2px) scale(1.025); box-shadow: 0 0 0 5px rgba(216,51,82,.12), 0 15px 34px rgba(24,28,35,.14); }
 #cg-arrow-branch path { fill: var(--cg-accent); }
 #cg-arrow-reference path { fill: #8e959e; }
 

@@ -10,6 +10,7 @@ import type {
   WorkspaceScreenModel,
 } from '../../ui-contract/index';
 import { InteractionCoordinator } from '../default/interaction/interaction-coordinator';
+import { installDesktopHandleConnection } from './interaction/desktop-handle-connection';
 import { installMobileBoardInteraction } from '../default/interaction/mobile-board-interaction';
 
 function el<K extends keyof HTMLElementTagNameMap>(
@@ -232,6 +233,10 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       handle.setAttribute('aria-label', '次のタスクをつなぐ');
       handle.addEventListener('click', (event) => {
         event.stopPropagation();
+        if (handle.dataset.suppressClick === 'true') {
+          delete handle.dataset.suppressClick;
+          return;
+        }
         selectedTaskId = task.id;
         createDraft = { parentTaskId: task.id, kind: 'continuation' };
         render();
@@ -378,7 +383,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         }
       });
 
-      boardCleanup = installMobileBoardInteraction({
+      const mobileCleanup = installMobileBoardInteraction({
         scroll,
         canvas,
         workspace,
@@ -388,6 +393,37 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
           void perform(context.intents.board.dropTask({ taskId, target }));
         },
       });
+      const handleCleanup = installDesktopHandleConnection({
+        scroll,
+        canvas,
+        resolveKind: (sourceTaskId) =>
+          workspace.connections.some(
+            (edge) => edge.fromTaskId === sourceTaskId && edge.kind !== 'reference',
+          )
+            ? 'branch'
+            : 'continuation',
+        createNext: (sourceTaskId, kind) => {
+          selectedTaskId = sourceTaskId;
+          connectDraft = null;
+          createDraft = { parentTaskId: sourceTaskId, kind };
+          render();
+        },
+        connectExisting: (sourceTaskId, targetTaskId, kind) => {
+          connectDraft = null;
+          selectedTaskId = targetTaskId;
+          void perform(
+            context.intents.flow.connect({
+              fromTaskId: sourceTaskId,
+              toTaskId: targetTaskId,
+              kind,
+            }),
+          );
+        },
+      });
+      boardCleanup = () => {
+        handleCleanup();
+        mobileCleanup();
+      };
       scroll.append(canvas);
       return scroll;
     };
