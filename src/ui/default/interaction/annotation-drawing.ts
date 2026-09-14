@@ -14,7 +14,10 @@ function canvasPoint(canvas: HTMLElement, event: PointerEvent): CherryPoint {
 }
 
 function isAnnotationControl(target: EventTarget | null): boolean {
-  return target instanceof Element && target.closest('.cherry-annotation, button, input, textarea, select, a') !== null;
+  return (
+    target instanceof Element &&
+    target.closest('.cherry-annotation, button, input, textarea, select, a') !== null
+  );
 }
 
 export function installAnnotationDrawing(options: AnnotationDrawingOptions): () => void {
@@ -67,7 +70,11 @@ export function installAnnotationDrawing(options: AnnotationDrawingOptions): () 
   };
 
   const onPointerMove = (event: PointerEvent): void => {
-    if (pointerId !== event.pointerId || !coordinator.ownsPointer(event.pointerId, 'drawing-stroke')) return;
+    if (
+      pointerId !== event.pointerId ||
+      !coordinator.ownsPointer(event.pointerId, 'drawing-stroke')
+    )
+      return;
     event.preventDefault();
     coordinator.updatePointer(event.pointerId, { x: event.clientX, y: event.clientY });
     const point = canvasPoint(canvas, event);
