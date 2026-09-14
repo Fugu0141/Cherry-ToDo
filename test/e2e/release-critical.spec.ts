@@ -152,7 +152,7 @@ test('derived branching goals expose an editable non-color-only importance marke
   await connectBranch(page, 'Goal', 'Branch B');
 
   const goal = page.locator('.cherry-task').filter({ hasText: 'Goal' });
-  await expect(goal.getByText('Goal', { exact: true })).toBeVisible();
+  await expect(goal.locator('.cherry-task-badge.goal')).toHaveText('Goal');
   await goal.getByRole('button', { name: 'タスクを編集' }).click();
 
   const editor = page.getByRole('dialog', { name: 'タスクを編集' });
