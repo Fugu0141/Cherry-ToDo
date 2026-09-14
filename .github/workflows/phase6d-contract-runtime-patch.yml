@@ -22,6 +22,22 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - name: Fix patch fixture target
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('scripts/phase6d_contract_runtime_patch.py')
+          s = p.read_text()
+          s = s.replace(
+              "      setSchedule: ok,\n    },\n    flow: { connect: ok },",
+              "      setSchedule: ok,\n    },\n    board: { dropTask: ok },\n    flow: { connect: ok },",
+          )
+          s = s.replace(
+              "      setSchedule: ok,\n      deleteOnly: ok,\n      deleteDownstream: ok,\n    },\n    flow: { connect: ok, disconnect: ok, reorder: ok },",
+              "      setSchedule: ok,\n      deleteOnly: ok,\n      deleteDownstream: ok,\n    },\n    board: { dropTask: ok },\n    flow: { connect: ok, disconnect: ok, reorder: ok },",
+          )
+          p.write_text(s)
+          PY
       - run: python scripts/phase6d_contract_runtime_patch.py
       - run: npx prettier --write src/ui-contract/index.ts src/ui-contract/i18n.ts src/composition/cherry-ui-runtime.ts test/contracts/ui-contract.test.ts
       - name: Commit patch
