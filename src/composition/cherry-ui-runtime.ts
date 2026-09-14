@@ -1,5 +1,10 @@
-import { createEmptyBoardDocumentState } from '../modules/board/index';
-import type { Schedule } from '../modules/schedule/index';
+import { createEmptyBoardDocumentState, layoutBoard } from '../modules/board/index';
+import {
+  noSchedule,
+  scheduleAtDateTime,
+  scheduleOnDate,
+  type Schedule,
+} from '../modules/schedule/index';
 import type { StartupState } from '../modules/startup/index';
 import {
   ApplicationStore,
@@ -22,6 +27,7 @@ import {
   type CherryFlowKind,
   type CherryLocale,
   type CherryMessageKey,
+  type CherryScheduleModel,
   type CherryScreenModel,
   type CherryUIContext,
   type CherryUIIntents,
@@ -59,6 +65,27 @@ function scheduleLabel(schedule: Schedule): string | null {
   if (schedule.kind === 'none') return null;
   if (schedule.kind === 'date') return schedule.date;
   return `${schedule.date} ${schedule.time}`;
+}
+
+function scheduleModel(schedule: Schedule): CherryScheduleModel {
+  if (schedule.kind === 'none') return { kind: 'none' };
+  if (schedule.kind === 'date') return { kind: 'date', date: schedule.date };
+  return {
+    kind: 'datetime',
+    date: schedule.date,
+    time: schedule.time,
+    ...(schedule.timeZone === undefined ? {} : { timeZone: schedule.timeZone }),
+  };
+}
+
+function scheduleFromModel(model: CherryScheduleModel): Schedule | null {
+  if (model.kind === 'none') return noSchedule();
+  if (model.kind === 'date') {
+    const parsed = scheduleOnDate(model.date);
+    return parsed.ok ? parsed.value : null;
+  }
+  const parsed = scheduleAtDateTime(model.date, model.time, model.timeZone);
+  return parsed.ok ? parsed.value : null;
 }
 
 function unwrapId<T>(result: { readonly ok: true; readonly value: T } | { readonly ok: false }): T {
@@ -150,6 +177,8 @@ export class CherryUIRuntime implements CherryUIContext {
         open: (workspaceId) => this.#openWorkspace(workspaceId),
         goToStart: () => this.#showStart(),
         setView: (view) => this.#setView(view),
+        setBoardSettings: (settings) =>
+          this.#runMutation((store, tabId) => store.setBoardSettings(tabId, settings)),
       },
       task: {
         create: (input) =>
@@ -177,6 +206,7 @@ export class CherryUIRuntime implements CherryUIContext {
               store.setTaskStatus(tabId, parsed, completed ? 'done' : 'todo'),
             ),
           ),
+        setSchedule: (taskId, schedule) => this.#setSchedule(taskId, schedule),
       },
       flow: {
         connect: (input) => this.#connect(input.fromTaskId, input.toTaskId, input.kind),
@@ -282,12 +312,21 @@ export class CherryUIRuntime implements CherryUIContext {
   }
 
   async #setView(view: CherryView): Promise<UIActionResult> {
-    if (this.#store === null || this.#tabId === null)
+    if (this.#store === null || this.#tabId === null) {
       return this.#error('not-found', 'error.notFound');
+    }
     this.#view = view;
     await this.#rememberSession();
     this.#refreshWorkspace();
     return OK;
+  }
+
+  async #setSchedule(rawTaskId: string, model: CherryScheduleModel): Promise<UIActionResult> {
+    const schedule = scheduleFromModel(model);
+    if (schedule === null) return this.#error('validation', 'error.validation');
+    return this.#withTaskId(rawTaskId, (taskId) =>
+      this.#runMutation((store, tabId) => store.setSchedule(tabId, taskId, schedule)),
+    );
   }
 
   async #connect(fromRaw: string, toRaw: string, kind: CherryFlowKind): Promise<UIActionResult> {
@@ -317,8 +356,9 @@ export class CherryUIRuntime implements CherryUIContext {
   async #runMutation(
     action: (store: ApplicationStore, tabId: TabId) => ReturnType<ApplicationStore['createTask']>,
   ): Promise<UIActionResult> {
-    if (this.#store === null || this.#tabId === null)
+    if (this.#store === null || this.#tabId === null) {
       return this.#error('not-found', 'error.notFound');
+    }
     const previous = this.#store.workspace;
     const result = action(this.#store, this.#tabId);
     if (!result.ok) return { kind: 'error', error: presentationError(result.error) };
@@ -413,12 +453,43 @@ export class CherryUIRuntime implements CherryUIContext {
       return;
     }
 
+    const structuralEdges = Object.values(tab.flowEdges).filter(
+      (edge) => edge.kind !== 'reference',
+    );
+    const layout = layoutBoard(
+      Object.values(tab.tasks).map((task) => ({
+        id: task.id,
+        scheduleDate: task.schedule.kind === 'none' ? null : task.schedule.date,
+        ...(tab.board.positions[task.id] === undefined
+          ? {}
+          : { manualPosition: tab.board.positions[task.id] }),
+      })),
+      structuralEdges.map((edge) => ({
+        fromTaskId: edge.fromTaskId,
+        toTaskId: edge.toTaskId,
+      })),
+      tab.board.settings,
+    );
+
     const model: WorkspaceScreenModel = {
       workspaceId: workspace.id,
       workspaceName: workspace.name,
       tabId: tab.id,
       tabName: tab.name,
       activeView: this.#view,
+      board: {
+        settings: tab.board.settings,
+        lanes: layout.lanes.map((lane) => ({
+          id: lane.id,
+          kind: lane.kind,
+          date: lane.date,
+          taskIds: lane.taskIds,
+          startY: lane.startY,
+          height: lane.height,
+        })),
+        width: layout.width,
+        height: layout.height,
+      },
       tasks: Object.values(tab.tasks).map((task) => {
         const state = execution.value[task.id];
         const manual = state?.manualCompletionControl;
@@ -429,12 +500,13 @@ export class CherryUIRuntime implements CherryUIContext {
           notes: task.notes,
           status: task.status,
           importance: task.appearance.importance,
+          schedule: scheduleModel(task.schedule),
           scheduleLabel: scheduleLabel(task.schedule),
           isDerivedGoal: state?.isDerivedBranchingGoal ?? false,
           canManuallyComplete: manual?.kind === 'available',
           blocked,
           blockedReasonKey: blocked ? 'task.blockedByMerge' : null,
-          position: tab.board.positions[task.id] ?? null,
+          position: layout.tasks[task.id]?.point ?? null,
         };
       }),
       connections: Object.values(tab.flowEdges).map((edge) => ({

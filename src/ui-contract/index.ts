@@ -2,6 +2,39 @@ export type CherryView = 'board' | 'list';
 export type CherryTaskStatus = 'todo' | 'done';
 export type CherryTaskImportance = 'none' | 'low' | 'medium' | 'high' | 'urgent';
 export type CherryFlowKind = 'continuation' | 'branch' | 'reference';
+export type CherryTimeGuideMode = 'auto' | 'shown' | 'hidden';
+
+export type CherryScheduleModel =
+  | { readonly kind: 'none' }
+  | { readonly kind: 'date'; readonly date: string }
+  | {
+      readonly kind: 'datetime';
+      readonly date: string;
+      readonly time: string;
+      readonly timeZone?: string;
+    };
+
+export interface CherryBoardSettingsModel {
+  readonly showDateLanes: boolean;
+  readonly autoLayout: boolean;
+  readonly timeGuide: CherryTimeGuideMode;
+}
+
+export interface BoardLaneModel {
+  readonly id: string;
+  readonly kind: 'all' | 'date' | 'undated';
+  readonly date: string | null;
+  readonly taskIds: readonly string[];
+  readonly startY: number;
+  readonly height: number;
+}
+
+export interface BoardPresentationModel {
+  readonly settings: CherryBoardSettingsModel;
+  readonly lanes: readonly BoardLaneModel[];
+  readonly width: number;
+  readonly height: number;
+}
 
 export interface WorkspaceSummaryModel {
   readonly id: string;
@@ -15,6 +48,7 @@ export interface TaskCardModel {
   readonly notes: string;
   readonly status: CherryTaskStatus;
   readonly importance: CherryTaskImportance;
+  readonly schedule: CherryScheduleModel;
   readonly scheduleLabel: string | null;
   readonly isDerivedGoal: boolean;
   readonly canManuallyComplete: boolean;
@@ -36,6 +70,7 @@ export interface WorkspaceScreenModel {
   readonly tabId: string;
   readonly tabName: string;
   readonly activeView: CherryView;
+  readonly board: BoardPresentationModel;
   readonly tasks: readonly TaskCardModel[];
   readonly connections: readonly FlowConnectionModel[];
   readonly canUndo: boolean;
@@ -104,11 +139,13 @@ export interface CherryUIIntents {
     open(workspaceId: string): Promise<UIActionResult>;
     goToStart(): Promise<UIActionResult>;
     setView(view: CherryView): Promise<UIActionResult>;
+    setBoardSettings(settings: CherryBoardSettingsModel): Promise<UIActionResult>;
   };
   readonly task: {
     create(input: CreateTaskIntent): Promise<UIActionResult>;
     update(input: UpdateTaskIntent): Promise<UIActionResult>;
     setCompleted(taskId: string, completed: boolean): Promise<UIActionResult>;
+    setSchedule(taskId: string, schedule: CherryScheduleModel): Promise<UIActionResult>;
   };
   readonly flow: {
     connect(input: ConnectTasksIntent): Promise<UIActionResult>;
@@ -168,10 +205,23 @@ export type CherryMessageKey =
   | 'start.workspaceName'
   | 'workspace.board'
   | 'workspace.list'
+  | 'board.dateLanes'
+  | 'board.autoLayout'
+  | 'board.timeGuide'
+  | 'board.timeGuideAuto'
+  | 'board.timeGuideShown'
+  | 'board.timeGuideHidden'
+  | 'board.undated'
   | 'task.create'
   | 'task.edit'
   | 'task.title'
   | 'task.notes'
+  | 'task.schedule'
+  | 'task.scheduleNone'
+  | 'task.scheduleDate'
+  | 'task.scheduleDateTime'
+  | 'task.date'
+  | 'task.time'
   | 'task.complete'
   | 'task.reopen'
   | 'task.blockedByMerge'
