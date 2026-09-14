@@ -583,6 +583,8 @@ function renderWorkspace(
     },
     workspace.activeView === 'list' ? 'cherry-segment-button active' : 'cherry-segment-button',
   );
+  boardButton.setAttribute('aria-pressed', String(workspace.activeView === 'board'));
+  listButton.setAttribute('aria-pressed', String(workspace.activeView === 'list'));
   viewSwitch.append(boardButton, listButton);
   const historyActions = element('div', 'cherry-history-actions');
   const undo = button(
@@ -648,7 +650,9 @@ function renderWorkspace(
   if (workspace.tasks.length >= 2) {
     const flowForm = element('form', 'cherry-flow-form');
     const from = element('select', 'cherry-select');
+    from.setAttribute('aria-label', context.i18n.t('flow.from'));
     const to = element('select', 'cherry-select');
+    to.setAttribute('aria-label', context.i18n.t('flow.to'));
     for (const task of workspace.tasks) {
       const a = element('option');
       a.value = task.id;
@@ -661,6 +665,7 @@ function renderWorkspace(
     }
     if (workspace.tasks[1] !== undefined) to.value = workspace.tasks[1].id;
     const kind = element('select', 'cherry-select');
+    kind.setAttribute('aria-label', context.i18n.t('flow.kind'));
     const kinds: readonly CherryFlowKind[] = ['continuation', 'branch', 'reference'];
     const symbols: Readonly<Record<CherryFlowKind, string>> = {
       continuation: '→',
@@ -838,7 +843,11 @@ function renderWorkspace(
     if (task !== undefined) {
       const overlay = element('div', 'cherry-overlay');
       const panel = element('form', 'cherry-editor');
+      panel.setAttribute('role', 'dialog');
+      panel.setAttribute('aria-modal', 'true');
+      panel.setAttribute('aria-labelledby', 'cherry-task-editor-title');
       const heading = element('h2');
+      heading.id = 'cherry-task-editor-title';
       heading.textContent = context.i18n.t('task.edit');
       const titleField = labeledInput(context.i18n.t('task.title'), 'title', task.title);
       const notesLabel = element('label', 'cherry-field');
