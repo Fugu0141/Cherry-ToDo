@@ -28,8 +28,10 @@ function requestResult<T>(request: IDBRequest<T>): Promise<T> {
 function transactionDone(transaction: IDBTransaction): Promise<void> {
   return new Promise((resolve, reject) => {
     transaction.oncomplete = () => resolve();
-    transaction.onabort = () => reject(transaction.error ?? new Error('IndexedDB transaction aborted.'));
-    transaction.onerror = () => reject(transaction.error ?? new Error('IndexedDB transaction failed.'));
+    transaction.onabort = () =>
+      reject(transaction.error ?? new Error('IndexedDB transaction aborted.'));
+    transaction.onerror = () =>
+      reject(transaction.error ?? new Error('IndexedDB transaction failed.'));
   });
 }
 
@@ -39,11 +41,7 @@ export class IndexedDbBinaryStore implements BrowserBinaryStore {
   readonly #storeName: string;
   #databasePromise: Promise<IDBDatabase> | null = null;
 
-  constructor(
-    factory: IDBFactory,
-    databaseName = 'cherry-v2',
-    storeName = 'workspaces',
-  ) {
+  constructor(factory: IDBFactory, databaseName = 'cherry-v2', storeName = 'workspaces') {
     this.#factory = factory;
     this.#databaseName = databaseName;
     this.#storeName = storeName;
@@ -153,10 +151,7 @@ export class BrowserWorkspaceRepository implements WorkspaceRepository {
     return decoded.value;
   }
 
-  async save(
-    document: WorkspaceDocument,
-    expectedRevision?: number,
-  ): Promise<WorkspaceSaveResult> {
+  async save(document: WorkspaceDocument, expectedRevision?: number): Promise<WorkspaceSaveResult> {
     const validated = validateWorkspaceDocument(document);
     if (!validated.ok) {
       return { kind: 'invalid-document', errors: validated.error };

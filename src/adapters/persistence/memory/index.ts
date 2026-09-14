@@ -28,7 +28,9 @@ export class MemoryWorkspaceRepository implements WorkspaceRepository {
   async list(): Promise<readonly WorkspaceSummary[]> {
     return [...this.#documents.values()]
       .map((document) => workspaceSummary(document))
-      .sort((left, right) => left.name.localeCompare(right.name) || left.id.localeCompare(right.id));
+      .sort(
+        (left, right) => left.name.localeCompare(right.name) || left.id.localeCompare(right.id),
+      );
   }
 
   async load(id: WorkspaceId): Promise<WorkspaceDocument | null> {
@@ -36,10 +38,7 @@ export class MemoryWorkspaceRepository implements WorkspaceRepository {
     return document === undefined ? null : cloneWorkspace(document);
   }
 
-  async save(
-    document: WorkspaceDocument,
-    expectedRevision?: number,
-  ): Promise<WorkspaceSaveResult> {
+  async save(document: WorkspaceDocument, expectedRevision?: number): Promise<WorkspaceSaveResult> {
     const validated = validateWorkspaceDocument(document);
     if (!validated.ok) {
       return { kind: 'invalid-document', errors: validated.error };
