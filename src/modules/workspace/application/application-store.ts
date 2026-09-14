@@ -46,7 +46,9 @@ import { err, ok, type Result } from '../../../shared/result/index';
 export type ApplicationError =
   | { readonly code: 'tab-not-found'; readonly tabId: TabId }
   | { readonly code: 'task-not-found'; readonly taskId: TaskId }
+  | { readonly code: 'task-id-in-use'; readonly taskId: TaskId }
   | { readonly code: 'edge-not-found'; readonly edgeId: FlowEdgeId }
+  | { readonly code: 'edge-id-in-use'; readonly edgeId: FlowEdgeId }
   | { readonly code: 'task-invalid'; readonly cause: TaskValidationError }
   | { readonly code: 'schedule-invalid'; readonly cause: ScheduleValidationError }
   | { readonly code: 'flow-invalid'; readonly causes: readonly FlowInvariantError[] }
@@ -158,6 +160,9 @@ export class ApplicationStore {
   ): Result<MutationOutcome, ApplicationError> {
     const tab = this.#workspace.tabs[tabId];
     if (tab === undefined) return err({ code: 'tab-not-found', tabId });
+    if (tab.tasks[input.id] !== undefined) {
+      return err({ code: 'task-id-in-use', taskId: input.id });
+    }
 
     const now = this.#now();
     const created = createTask({
@@ -303,6 +308,9 @@ export class ApplicationStore {
   connectFlow(input: ConnectFlowInput): Result<MutationOutcome, ApplicationError> {
     const tab = this.#workspace.tabs[input.tabId];
     if (tab === undefined) return err({ code: 'tab-not-found', tabId: input.tabId });
+    if (tab.flowEdges[input.edgeId] !== undefined) {
+      return err({ code: 'edge-id-in-use', edgeId: input.edgeId });
+    }
 
     const now = this.#now();
     const meta: RevisionMeta = { createdAt: now, updatedAt: now, revision: 0 };
