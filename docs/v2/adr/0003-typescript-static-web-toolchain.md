@@ -1,6 +1,6 @@
 # ADR-0003: TypeScript strict-mode static web toolchain
 
-Status: **Proposed for V2 design freeze**
+Status: **Accepted for V2.0 — 2026-09-14**
 
 ## Context
 
