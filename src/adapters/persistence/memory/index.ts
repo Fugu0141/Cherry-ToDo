@@ -2,11 +2,11 @@ import {
   validateWorkspaceDocument,
   workspaceSummary,
   type WorkspaceDocument,
-  type WorkspaceId,
   type WorkspaceRepository,
   type WorkspaceSaveResult,
   type WorkspaceSummary,
 } from '../../../modules/workspace/index';
+import type { WorkspaceId } from '../../../shared/ids/index';
 
 function cloneWorkspace(document: WorkspaceDocument): WorkspaceDocument {
   return structuredClone(document);
