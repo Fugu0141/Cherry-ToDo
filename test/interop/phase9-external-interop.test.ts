@@ -167,7 +167,11 @@ describe('Phase 9 external interoperability', () => {
     expect(badDate.ok).toBe(false);
     if (!badDate.ok) expect(badDate.error.code).toBe('invalid-csv');
 
-    const badRelationship = importCsvToTab(csv.replace('task-a,task-b,continuation', 'missing,task-b,continuation'), 'bad.csv', NOW);
+    const badRelationship = importCsvToTab(
+      csv.replace('task-a,task-b,continuation', 'missing,task-b,continuation'),
+      'bad.csv',
+      NOW,
+    );
     expect(badRelationship.ok).toBe(false);
     if (!badRelationship.ok) expect(badRelationship.error.code).toBe('invalid-relationship');
   });
@@ -194,7 +198,11 @@ describe('Phase 9 external interoperability', () => {
     const stalePrepared = prepareExternalImportAsNewTab(current, csvImport.value, NOW);
     expect(stalePrepared.ok).toBe(true);
     if (!stalePrepared.ok) return;
-    const staleCommit = await commitPreparedExternalImport(repository, current, stalePrepared.value);
+    const staleCommit = await commitPreparedExternalImport(
+      repository,
+      current,
+      stalePrepared.value,
+    );
     expect(staleCommit.kind).toBe('save-failed');
   });
 });

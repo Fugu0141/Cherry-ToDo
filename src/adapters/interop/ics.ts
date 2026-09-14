@@ -151,7 +151,9 @@ export function importIcsToTab(
   const warnings: string[] = [];
   const tasks: Record<string, Task> = {};
   for (const [index, component] of components.entries()) {
-    const summary = unescapeText(first(component, 'SUMMARY')?.value ?? `Imported item ${index + 1}`);
+    const summary = unescapeText(
+      first(component, 'SUMMARY')?.value ?? `Imported item ${index + 1}`,
+    );
     const notes = unescapeText(first(component, 'DESCRIPTION')?.value ?? '');
     const uid = first(component, 'UID')?.value ?? `${component.kind}-${index + 1}`;
     const idResult = parseTaskId(`ics-${index + 1}-${stableHash(uid)}`);
@@ -159,10 +161,12 @@ export function importIcsToTab(
     const scheduleProperty =
       component.kind === 'VEVENT'
         ? first(component, 'DTSTART')
-        : first(component, 'DUE') ?? first(component, 'DTSTART');
+        : (first(component, 'DUE') ?? first(component, 'DTSTART'));
     const schedule = scheduleFromProperty(scheduleProperty);
     if (schedule === null) {
-      warnings.push(`Item ${index + 1} has an unsupported or malformed date and was imported unscheduled.`);
+      warnings.push(
+        `Item ${index + 1} has an unsupported or malformed date and was imported unscheduled.`,
+      );
     }
     if (first(component, 'RRULE') !== null) {
       warnings.push(`Recurring item ${index + 1} was imported once; recurrence was not expanded.`);
