@@ -1,0 +1,28 @@
+name: Phase 6C styles patch
+
+on:
+  push:
+    branches:
+      - feat/v2-phase6c-flow-visuals
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/v2-phase6c-flow-visuals
+      - run: python scripts/phase6c_styles_patch.py
+      - name: Commit patch
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/ui/default/styles.css
+          git commit -m "style: add Phase 6C Flow graph presentation"
+          git push
