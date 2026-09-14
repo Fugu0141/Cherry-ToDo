@@ -1,5 +1,5 @@
 import type { TaskId } from '../../../shared/ids/index.ts';
-import type { Result } from '../../../shared/result/index.ts';
+import { err, ok, type Result } from '../../../shared/result/index.ts';
 
 export interface Point {
   readonly x: number;
@@ -35,7 +35,21 @@ export function createEmptyBoardDocumentState(): BoardDocumentState {
   return { settings: DEFAULT_BOARD_SETTINGS, positions: {} };
 }
 
-export declare function validateBoardDocumentState(
+export function validateBoardDocumentState(
   taskIds: readonly TaskId[],
   state: BoardDocumentState,
-): Result<BoardDocumentState, readonly BoardValidationError[]>;
+): Result<BoardDocumentState, readonly BoardValidationError[]> {
+  const errors: BoardValidationError[] = [];
+  const taskIdSet = new Set<string>(taskIds);
+
+  for (const [taskId, point] of Object.entries(state.positions)) {
+    if (!taskIdSet.has(taskId)) {
+      errors.push({ code: 'unknown-position-task', taskId });
+    }
+    if (!Number.isFinite(point.x) || !Number.isFinite(point.y)) {
+      errors.push({ code: 'invalid-point', taskId });
+    }
+  }
+
+  return errors.length === 0 ? ok(state) : err(errors);
+}
