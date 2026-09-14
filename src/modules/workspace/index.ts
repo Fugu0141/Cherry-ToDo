@@ -16,3 +16,20 @@ export {
 } from './application/application-store';
 
 export type { CompletionImpactPlan } from './application/semantic-transaction';
+
+export {
+  commitPreparedWorkspaceCandidate,
+  prepareWorkspaceCandidate,
+  type PreparedWorkspaceCandidate,
+  type WorkspaceCandidateError,
+} from './application/workspace-candidate';
+
+export {
+  WorkspaceRepositoryCorruptDataError,
+  workspaceSummary,
+  type WorkspaceRepository,
+  type WorkspaceSaveResult,
+  type WorkspaceSummary,
+} from './ports/workspace-repository';
+
+export type { WorkspaceCodec, WorkspaceDecodeError } from './ports/workspace-codec';
