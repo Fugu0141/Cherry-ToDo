@@ -19,6 +19,6 @@ ADR-0006 defines merge execution gates, downstream blocking, and confirmation be
 
 ADR-0007 defines full reachable-Flow completion for derived branching goals, removes their normal manual completion action, and defines unambiguous reconnection rules when deleting a single branch/merge junction Task.
 
-ADR-0008 preserves a Task's current completion state when it stops being a derived branching goal and requires preview-before-normalization when imported V1 data conflicts with V2 execution rules.
+ADR-0008 defines both directions of Task/Goal topology transition: goal demotion preserves the current completion state, while promotion of an already-completed ordinary Task to a branching goal uses impact planning and confirmation when unfinished descendants make that completion invalid. It also requires preview-before-normalization when imported V1 data conflicts with V2 execution rules.
 
 Each ADR contains context, decision, alternatives/consequences as appropriate, and status. Proposed ADRs move to Accepted only through design review; accepted ADRs remain visible even if later superseded so the reason for architectural changes is preserved.
