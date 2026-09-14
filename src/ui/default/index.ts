@@ -606,7 +606,11 @@ function renderWorkspace(
         () => {
           if (index === 0 || workspace.linearFlowOrder === null) return;
           const next = [...workspace.linearFlowOrder];
-          [next[index - 1], next[index]] = [next[index], next[index - 1]];
+          const current = next[index];
+          const previous = next[index - 1];
+          if (current === undefined || previous === undefined) return;
+          next[index - 1] = current;
+          next[index] = previous;
           void perform(context, context.intents.flow.reorder(next));
         },
         'cherry-icon-button',
@@ -621,7 +625,11 @@ function renderWorkspace(
             return;
           }
           const next = [...workspace.linearFlowOrder];
-          [next[index], next[index + 1]] = [next[index + 1], next[index]];
+          const current = next[index];
+          const following = next[index + 1];
+          if (current === undefined || following === undefined) return;
+          next[index] = following;
+          next[index + 1] = current;
           void perform(context, context.intents.flow.reorder(next));
         },
         'cherry-icon-button',
