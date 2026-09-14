@@ -12,6 +12,7 @@ export {
   type ConnectFlowInput,
   type MutationOutcome,
   type MutationPreview,
+  type UpdateAnnotationInput,
   type UpdateTaskInput,
 } from './application/application-store';
 

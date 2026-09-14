@@ -31,6 +31,7 @@ function workspace(): WorkspaceScreenModel {
       blockedReasonKey: null,
       position: null,
     })),
+    annotations: [],
     connections: [
       { id: 'e1', kind: 'continuation', fromTaskId: 'task-a', toTaskId: 'task-b', path: null },
       { id: 'e2', kind: 'branch', fromTaskId: 'task-a', toTaskId: 'task-c', path: null },

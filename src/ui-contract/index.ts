@@ -41,6 +41,31 @@ export interface CherryPoint {
   readonly y: number;
 }
 
+export interface CherryRect {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
+
+export interface TextAnnotationModel {
+  readonly id: string;
+  readonly kind: 'text';
+  readonly rect: CherryRect;
+  readonly text: string;
+  readonly styleToken: string;
+}
+
+export interface StrokeAnnotationModel {
+  readonly id: string;
+  readonly kind: 'stroke';
+  readonly points: readonly CherryPoint[];
+  readonly widthToken: string;
+  readonly styleToken: string;
+}
+
+export type AnnotationModel = TextAnnotationModel | StrokeAnnotationModel;
+
 export type CherryBoardDropTarget =
   | { readonly kind: 'canvas'; readonly point: CherryPoint }
   | {
@@ -93,6 +118,7 @@ export interface WorkspaceScreenModel {
   readonly activeView: CherryView;
   readonly board: BoardPresentationModel;
   readonly tasks: readonly TaskCardModel[];
+  readonly annotations: readonly AnnotationModel[];
   readonly connections: readonly FlowConnectionModel[];
   readonly linearFlowOrder: readonly string[] | null;
   readonly canUndo: boolean;
@@ -151,6 +177,32 @@ export interface ConnectTasksIntent {
   readonly kind: CherryFlowKind;
 }
 
+export interface CreateTextAnnotationIntent {
+  readonly rect: CherryRect;
+  readonly text: string;
+  readonly styleToken: string;
+}
+
+export interface CreateStrokeAnnotationIntent {
+  readonly points: readonly CherryPoint[];
+  readonly widthToken: string;
+  readonly styleToken: string;
+}
+
+export interface UpdateTextAnnotationIntent {
+  readonly annotationId: string;
+  readonly rect?: CherryRect;
+  readonly text?: string;
+  readonly styleToken?: string;
+}
+
+export interface UpdateStrokeAnnotationIntent {
+  readonly annotationId: string;
+  readonly points?: readonly CherryPoint[];
+  readonly widthToken?: string;
+  readonly styleToken?: string;
+}
+
 export interface CherryUIIntents {
   readonly storage: {
     allow(): Promise<UIActionResult>;
@@ -179,6 +231,13 @@ export interface CherryUIIntents {
     disconnect(edgeId: string): Promise<UIActionResult>;
     reorder(orderedTaskIds: readonly string[]): Promise<UIActionResult>;
   };
+  readonly annotation: {
+    createText(input: CreateTextAnnotationIntent): Promise<UIActionResult>;
+    createStroke(input: CreateStrokeAnnotationIntent): Promise<UIActionResult>;
+    updateText(input: UpdateTextAnnotationIntent): Promise<UIActionResult>;
+    updateStroke(input: UpdateStrokeAnnotationIntent): Promise<UIActionResult>;
+    delete(annotationId: string): Promise<UIActionResult>;
+  };
   readonly history: {
     undo(): Promise<UIActionResult>;
     redo(): Promise<UIActionResult>;
@@ -195,6 +254,7 @@ export interface CherryUICapabilities {
   readonly listView: boolean;
   readonly taskEditing: boolean;
   readonly structuralConnections: boolean;
+  readonly annotations: boolean;
 }
 
 export const CHERRY_SEMANTIC_STATES = [
@@ -209,6 +269,9 @@ export const CHERRY_SEMANTIC_STATES = [
   'flow-continuation',
   'flow-branch',
   'flow-reference',
+  'annotation-text',
+  'annotation-stroke',
+  'annotation-drawing',
   'action-danger',
 ] as const;
 
@@ -247,6 +310,17 @@ export type CherryMessageKey =
   | 'mobile.startFlow'
   | 'mobile.startFlowHint'
   | 'mobile.connectionHint'
+  | 'annotation.freehand'
+  | 'annotation.addText'
+  | 'annotation.newText'
+  | 'annotation.draw'
+  | 'annotation.stopDrawing'
+  | 'annotation.manage'
+  | 'annotation.text'
+  | 'annotation.stroke'
+  | 'annotation.style'
+  | 'annotation.width'
+  | 'annotation.delete'
   | 'task.create'
   | 'task.edit'
   | 'task.title'

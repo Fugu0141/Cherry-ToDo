@@ -33,6 +33,13 @@ function intents(): CherryUIIntents {
     },
     board: { dropTask: ok },
     flow: { connect: ok, disconnect: ok, reorder: ok },
+    annotation: {
+      createText: ok,
+      createStroke: ok,
+      updateText: ok,
+      updateStroke: ok,
+      delete: ok,
+    },
     history: { undo: ok, redo: ok },
     confirmation: { confirm: ok, cancel: ok },
   };
@@ -62,6 +69,7 @@ describe('formal UI contract', () => {
         listView: true,
         taskEditing: true,
         structuralConnections: true,
+        annotations: true,
       },
       i18n: createCherryI18n('ja'),
       semanticTokens: CHERRY_SEMANTIC_TOKENS,

@@ -1,3 +1,4 @@
+import { annotationBounds } from '../modules/annotation/index';
 import {
   buildBoardFlowConnectorGeometry,
   createEmptyBoardDocumentState,
@@ -19,10 +20,12 @@ import {
   type WorkspaceDocument,
 } from '../modules/workspace/index';
 import {
+  parseAnnotationId,
   parseFlowEdgeId,
   parseTabId,
   parseTaskId,
   parseWorkspaceId,
+  type AnnotationId,
   type TabId,
   type TaskId,
 } from '../shared/ids/index';
@@ -56,12 +59,17 @@ function presentationError(error: ApplicationError): PresentationError {
   if (
     error.code === 'tab-not-found' ||
     error.code === 'task-not-found' ||
+    error.code === 'annotation-not-found' ||
     error.code === 'edge-not-found' ||
     error.code === 'plan-not-found'
   ) {
     return { code: 'not-found', messageKey: 'error.notFound' };
   }
-  if (error.code === 'task-id-in-use' || error.code === 'edge-id-in-use') {
+  if (
+    error.code === 'task-id-in-use' ||
+    error.code === 'annotation-id-in-use' ||
+    error.code === 'edge-id-in-use'
+  ) {
     return { code: 'conflict', messageKey: 'error.conflict' };
   }
   return { code: 'validation', messageKey: 'error.validation' };
@@ -190,6 +198,7 @@ export class CherryUIRuntime implements CherryUIContext {
     listView: true,
     taskEditing: true,
     structuralConnections: true,
+    annotations: true,
   } as const;
   readonly semanticTokens = CHERRY_SEMANTIC_TOKENS;
   readonly i18n;
@@ -254,6 +263,50 @@ export class CherryUIRuntime implements CherryUIContext {
         connect: (input) => this.#connect(input.fromTaskId, input.toTaskId, input.kind),
         disconnect: (edgeId) => this.#disconnect(edgeId),
         reorder: (orderedTaskIds) => this.#reorder(orderedTaskIds),
+      },
+      annotation: {
+        createText: (input) =>
+          this.#runMutation((store, tabId) =>
+            store.createTextAnnotation(tabId, {
+              id: unwrapId(parseAnnotationId(randomId('annotation'))),
+              rect: input.rect,
+              text: input.text,
+              styleToken: input.styleToken,
+            }),
+          ),
+        createStroke: (input) =>
+          this.#runMutation((store, tabId) =>
+            store.createStrokeAnnotation(tabId, {
+              id: unwrapId(parseAnnotationId(randomId('annotation'))),
+              points: input.points,
+              widthToken: input.widthToken,
+              styleToken: input.styleToken,
+            }),
+          ),
+        updateText: (input) =>
+          this.#withAnnotationId(input.annotationId, (annotationId) =>
+            this.#runMutation((store, tabId) =>
+              store.updateAnnotation(tabId, annotationId, {
+                ...(input.rect === undefined ? {} : { rect: input.rect }),
+                ...(input.text === undefined ? {} : { text: input.text }),
+                ...(input.styleToken === undefined ? {} : { styleToken: input.styleToken }),
+              }),
+            ),
+          ),
+        updateStroke: (input) =>
+          this.#withAnnotationId(input.annotationId, (annotationId) =>
+            this.#runMutation((store, tabId) =>
+              store.updateAnnotation(tabId, annotationId, {
+                ...(input.points === undefined ? {} : { points: input.points }),
+                ...(input.widthToken === undefined ? {} : { widthToken: input.widthToken }),
+                ...(input.styleToken === undefined ? {} : { styleToken: input.styleToken }),
+              }),
+            ),
+          ),
+        delete: (annotationId) =>
+          this.#withAnnotationId(annotationId, (parsed) =>
+            this.#runMutation((store, tabId) => store.deleteAnnotation(tabId, parsed)),
+          ),
       },
       history: {
         undo: () => this.#history('undo'),
@@ -433,6 +486,15 @@ export class CherryUIRuntime implements CherryUIContext {
     return action(parsed.value);
   }
 
+  async #withAnnotationId(
+    rawId: string,
+    action: (annotationId: AnnotationId) => Promise<UIActionResult>,
+  ): Promise<UIActionResult> {
+    const parsed = parseAnnotationId(rawId);
+    if (!parsed.ok) return this.#error('validation', 'error.validation');
+    return action(parsed.value);
+  }
+
   async #runMutation(
     action: (store: ApplicationStore, tabId: TabId) => ReturnType<ApplicationStore['createTask']>,
   ): Promise<UIActionResult> {
@@ -558,6 +620,19 @@ export class CherryUIRuntime implements CherryUIContext {
       tab.board.settings,
     );
 
+    const annotationExtents = Object.values(tab.annotations).map((annotation) => {
+      if (annotation.kind === 'text') {
+        return {
+          x: annotation.rect.x + annotation.rect.width,
+          y: annotation.rect.y + annotation.rect.height,
+        };
+      }
+      const bounds = annotationBounds(annotation.points);
+      return { x: bounds.x + bounds.width, y: bounds.y + bounds.height };
+    });
+    const annotationWidth = Math.max(0, ...annotationExtents.map((extent) => extent.x)) + 80;
+    const annotationHeight = Math.max(0, ...annotationExtents.map((extent) => extent.y)) + 80;
+
     const model: WorkspaceScreenModel = {
       workspaceId: workspace.id,
       workspaceName: workspace.name,
@@ -574,8 +649,8 @@ export class CherryUIRuntime implements CherryUIContext {
           startY: lane.startY,
           height: lane.height,
         })),
-        width: layout.width,
-        height: layout.height,
+        width: Math.max(layout.width, annotationWidth),
+        height: Math.max(layout.height, annotationHeight),
       },
       tasks: Object.values(tab.tasks).map((task) => {
         const state = execution.value[task.id];
@@ -597,6 +672,23 @@ export class CherryUIRuntime implements CherryUIContext {
           position: layout.tasks[task.id]?.point ?? null,
         };
       }),
+      annotations: Object.values(tab.annotations).map((annotation) =>
+        annotation.kind === 'text'
+          ? {
+              id: annotation.id,
+              kind: 'text' as const,
+              rect: annotation.rect,
+              text: annotation.text,
+              styleToken: annotation.styleToken,
+            }
+          : {
+              id: annotation.id,
+              kind: 'stroke' as const,
+              points: annotation.points,
+              widthToken: annotation.widthToken,
+              styleToken: annotation.styleToken,
+            },
+      ),
       linearFlowOrder: deriveLinearFlowOrder(
         Object.values(tab.tasks).map((task) => task.id),
         structuralEdges.map((edge) => ({
