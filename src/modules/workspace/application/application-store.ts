@@ -217,6 +217,92 @@ export class ApplicationStore {
     return ok({ kind: 'committed', workspace: this.#workspace });
   }
 
+  renameTab(tabId: TabId, rawName: string): Result<MutationOutcome, ApplicationError> {
+    const tab = this.#workspace.tabs[tabId];
+    if (tab === undefined) return err({ code: 'tab-not-found', tabId });
+    const name = rawName.trim();
+    if (name.length === 0) return err({ code: 'invalid-tab-name' });
+    if (name === tab.name) return ok({ kind: 'committed', workspace: this.#workspace });
+
+    const now = this.#now();
+    const candidate = bumpWorkspaceRevision(
+      {
+        ...this.#workspace,
+        tabs: {
+          ...this.#workspace.tabs,
+          [tabId]: { ...tab, name, meta: bumpMeta(tab.meta, now) },
+        },
+      },
+      now,
+    );
+    const validation = validateWorkspaceDocument(candidate);
+    if (!validation.ok) return err({ code: 'workspace-invalid', causes: validation.error });
+    this.#commitCanonical(validation.value);
+    return ok({ kind: 'committed', workspace: this.#workspace });
+  }
+
+  duplicateTab(
+    sourceTabId: TabId,
+    newTabId: TabId,
+    rawName?: string,
+  ): Result<MutationOutcome, ApplicationError> {
+    const source = this.#workspace.tabs[sourceTabId];
+    if (source === undefined) return err({ code: 'tab-not-found', tabId: sourceTabId });
+    if (this.#workspace.tabs[newTabId] !== undefined) {
+      return err({ code: 'tab-id-in-use', tabId: newTabId });
+    }
+    const name = (rawName ?? `${source.name} copy`).trim();
+    if (name.length === 0) return err({ code: 'invalid-tab-name' });
+
+    const now = this.#now();
+    const duplicate: TabDocument = {
+      ...source,
+      id: newTabId,
+      name,
+      tasks: { ...source.tasks },
+      flowEdges: { ...source.flowEdges },
+      annotations: { ...source.annotations },
+      board: {
+        ...source.board,
+        positions: { ...source.board.positions },
+        settings: { ...source.board.settings },
+      },
+      meta: { createdAt: now, updatedAt: now, revision: 0 },
+    };
+    const sourceIndex = this.#workspace.tabOrder.indexOf(sourceTabId);
+    const tabOrder = [...this.#workspace.tabOrder];
+    tabOrder.splice(sourceIndex < 0 ? tabOrder.length : sourceIndex + 1, 0, newTabId);
+    const candidate = bumpWorkspaceRevision(
+      {
+        ...this.#workspace,
+        tabs: { ...this.#workspace.tabs, [newTabId]: duplicate },
+        tabOrder,
+      },
+      now,
+    );
+    const validation = validateWorkspaceDocument(candidate);
+    if (!validation.ok) return err({ code: 'workspace-invalid', causes: validation.error });
+    this.#commitCanonical(validation.value);
+    return ok({ kind: 'committed', workspace: this.#workspace });
+  }
+
+  deleteTab(tabId: TabId): Result<MutationOutcome, ApplicationError> {
+    if (this.#workspace.tabs[tabId] === undefined) return err({ code: 'tab-not-found', tabId });
+    const now = this.#now();
+    const candidate = bumpWorkspaceRevision(
+      {
+        ...this.#workspace,
+        tabs: withoutKey(this.#workspace.tabs, tabId),
+        tabOrder: this.#workspace.tabOrder.filter((candidateId) => candidateId !== tabId),
+      },
+      now,
+    );
+    const validation = validateWorkspaceDocument(candidate);
+    if (!validation.ok) return err({ code: 'workspace-invalid', causes: validation.error });
+    this.#commitCanonical(validation.value);
+    return ok({ kind: 'committed', workspace: this.#workspace });
+  }
+
   undo(): Result<WorkspaceDocument, ApplicationError> {
     const previous = this.#history.undo(this.#workspace);
     if (previous === undefined) return err({ code: 'nothing-to-undo' });

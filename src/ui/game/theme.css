@@ -1,0 +1,205 @@
+:root {
+  color-scheme: light;
+}
+
+:root[data-cherry-theme='light'] {
+  color-scheme: light;
+}
+
+:root[data-cherry-theme='dark'] {
+  color-scheme: dark;
+  --cg-surface: #181d24;
+  --cg-surface-2: #202630;
+  --cg-border: #38424f;
+  --cg-text: #eef2f6;
+  --cg-muted: #b7c0cb;
+  --cg-accent-soft: #3a1e28;
+  --cg-danger: #ff9aac;
+  background: #101318;
+  color: var(--cg-text);
+}
+
+:root[data-cherry-theme='dark'] body,
+:root[data-cherry-theme='dark'] .cg-shell,
+:root[data-cherry-theme='dark'] .cg-start,
+:root[data-cherry-theme='dark'] .cg-splash,
+:root[data-cherry-theme='dark'] .cg-board-scroll,
+:root[data-cherry-theme='dark'] .cg-board {
+  background-color: #101318;
+  color: var(--cg-text);
+}
+
+:root[data-cherry-theme='dark'] .cg-board {
+  background-image: radial-gradient(#46515f 1px, transparent 1px);
+}
+
+:root[data-cherry-theme='dark'] .cg-board[data-time-guide='shown'] {
+  background-image:
+    linear-gradient(to bottom, rgba(255, 107, 134, 0.1) 1px, transparent 1px),
+    radial-gradient(#46515f 1px, transparent 1px);
+}
+
+:root[data-cherry-theme='dark'] .cg-topbar,
+:root[data-cherry-theme='dark'] .cg-task,
+:root[data-cherry-theme='dark'] .cg-settings,
+:root[data-cherry-theme='dark'] .cg-dialog,
+:root[data-cherry-theme='dark'] .cg-action-dock,
+:root[data-cherry-theme='dark'] .cg-flow-map,
+:root[data-cherry-theme='dark'] .cg-workspace-card,
+:root[data-cherry-theme='dark'] .cg-storage-card,
+:root[data-cherry-theme='dark'] .cg-tab-menu,
+:root[data-cherry-theme='dark'] .cg-onboarding-card,
+:root[data-cherry-theme='dark'] .cg-lane-label {
+  background: rgba(24, 29, 36, 0.97);
+  border-color: var(--cg-border);
+  color: var(--cg-text);
+}
+
+:root[data-cherry-theme='dark'] .cg-lane {
+  background: rgba(32, 38, 48, 0.58);
+  border-color: var(--cg-border);
+}
+
+:root[data-cherry-theme='dark'] .cg-input,
+:root[data-cherry-theme='dark'] .cg-textarea,
+:root[data-cherry-theme='dark'] input,
+:root[data-cherry-theme='dark'] textarea,
+:root[data-cherry-theme='dark'] select {
+  background-color: #151a21;
+  border-color: #46515f;
+  color: var(--cg-text);
+}
+
+:root[data-cherry-theme='dark'] .cg-btn,
+:root[data-cherry-theme='dark'] .cg-view,
+:root[data-cherry-theme='dark'] .cg-chip {
+  background: var(--cg-surface-2);
+  color: var(--cg-text);
+}
+
+:root[data-cherry-theme='dark'] .cg-icon,
+:root[data-cherry-theme='dark'] .cg-tab,
+:root[data-cherry-theme='dark'] .cg-brand,
+:root[data-cherry-theme='dark'] .cg-btn.cg-quiet {
+  background: transparent;
+}
+
+:root[data-cherry-theme='dark'] .cg-view.active {
+  background: #2a313c;
+}
+
+:root[data-cherry-theme='dark'] .cg-tab.active,
+:root[data-cherry-theme='dark'] .cg-badge.cg-goal {
+  background: var(--cg-accent-soft);
+  color: #ff9aac;
+}
+
+:root[data-cherry-theme='dark'] .cg-task[data-blocked='true'] {
+  background: #2b2418;
+}
+
+:root[data-cherry-theme='dark'] .cg-help-button {
+  background: rgba(24, 29, 36, 0.97);
+  border-color: var(--cg-border);
+  color: var(--cg-muted);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-cherry-theme]) {
+    color-scheme: dark;
+    --cg-surface: #181d24;
+    --cg-surface-2: #202630;
+    --cg-border: #38424f;
+    --cg-text: #eef2f6;
+    --cg-muted: #b7c0cb;
+    --cg-accent-soft: #3a1e28;
+    --cg-danger: #ff9aac;
+    background: #101318;
+    color: var(--cg-text);
+  }
+
+  :root:not([data-cherry-theme]) body,
+  :root:not([data-cherry-theme]) .cg-shell,
+  :root:not([data-cherry-theme]) .cg-start,
+  :root:not([data-cherry-theme]) .cg-splash,
+  :root:not([data-cherry-theme]) .cg-board-scroll,
+  :root:not([data-cherry-theme]) .cg-board {
+    background-color: #101318;
+    color: var(--cg-text);
+  }
+
+  :root:not([data-cherry-theme]) .cg-board {
+    background-image: radial-gradient(#46515f 1px, transparent 1px);
+  }
+
+  :root:not([data-cherry-theme]) .cg-board[data-time-guide='shown'] {
+    background-image:
+      linear-gradient(to bottom, rgba(255, 107, 134, 0.1) 1px, transparent 1px),
+      radial-gradient(#46515f 1px, transparent 1px);
+  }
+
+  :root:not([data-cherry-theme]) .cg-topbar,
+  :root:not([data-cherry-theme]) .cg-task,
+  :root:not([data-cherry-theme]) .cg-settings,
+  :root:not([data-cherry-theme]) .cg-dialog,
+  :root:not([data-cherry-theme]) .cg-action-dock,
+  :root:not([data-cherry-theme]) .cg-flow-map,
+  :root:not([data-cherry-theme]) .cg-workspace-card,
+  :root:not([data-cherry-theme]) .cg-storage-card,
+  :root:not([data-cherry-theme]) .cg-tab-menu,
+  :root:not([data-cherry-theme]) .cg-onboarding-card,
+  :root:not([data-cherry-theme]) .cg-lane-label {
+    background: rgba(24, 29, 36, 0.97);
+    border-color: var(--cg-border);
+    color: var(--cg-text);
+  }
+
+  :root:not([data-cherry-theme]) .cg-lane {
+    background: rgba(32, 38, 48, 0.58);
+    border-color: var(--cg-border);
+  }
+
+  :root:not([data-cherry-theme]) .cg-input,
+  :root:not([data-cherry-theme]) .cg-textarea,
+  :root:not([data-cherry-theme]) input,
+  :root:not([data-cherry-theme]) textarea,
+  :root:not([data-cherry-theme]) select {
+    background-color: #151a21;
+    border-color: #46515f;
+    color: var(--cg-text);
+  }
+
+  :root:not([data-cherry-theme]) .cg-btn,
+  :root:not([data-cherry-theme]) .cg-view,
+  :root:not([data-cherry-theme]) .cg-chip {
+    background: var(--cg-surface-2);
+    color: var(--cg-text);
+  }
+
+  :root:not([data-cherry-theme]) .cg-icon,
+  :root:not([data-cherry-theme]) .cg-tab,
+  :root:not([data-cherry-theme]) .cg-brand,
+  :root:not([data-cherry-theme]) .cg-btn.cg-quiet {
+    background: transparent;
+  }
+
+  :root:not([data-cherry-theme]) .cg-view.active {
+    background: #2a313c;
+  }
+
+  :root:not([data-cherry-theme]) .cg-tab.active,
+  :root:not([data-cherry-theme]) .cg-badge.cg-goal {
+    background: var(--cg-accent-soft);
+    color: #ff9aac;
+  }
+
+  :root:not([data-cherry-theme]) .cg-task[data-blocked='true'] {
+    background: #2b2418;
+  }
+
+  :root:not([data-cherry-theme]) .cg-help-button {
+    background: rgba(24, 29, 36, 0.97);
+    border-color: var(--cg-border);
+    color: var(--cg-muted);
+  }
+}

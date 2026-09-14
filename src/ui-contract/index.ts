@@ -160,11 +160,30 @@ export type UIActionResult =
   | { readonly kind: 'confirmation-required'; readonly confirmation: ConfirmationDescriptor }
   | { readonly kind: 'error'; readonly error: PresentationError };
 
+export interface ImportExternalTextIntent {
+  readonly source: string;
+  readonly name: string;
+}
+
+export type UITextExportResult =
+  | {
+      readonly kind: 'ok';
+      readonly fileName: string;
+      readonly mimeType: string;
+      readonly content: string;
+    }
+  | { readonly kind: 'error'; readonly error: PresentationError };
+
 export interface CreateWorkspaceIntent {
   readonly name: string;
 }
 
 export interface CreateTabIntent {
+  readonly name: string;
+}
+
+export interface RenameTabIntent {
+  readonly tabId: string;
   readonly name: string;
 }
 
@@ -223,6 +242,9 @@ export interface CherryUIIntents {
     create(input: CreateWorkspaceIntent): Promise<UIActionResult>;
     open(workspaceId: string): Promise<UIActionResult>;
     createTab(input: CreateTabIntent): Promise<UIActionResult>;
+    renameTab(input: RenameTabIntent): Promise<UIActionResult>;
+    duplicateTab(tabId: string): Promise<UIActionResult>;
+    deleteTab(tabId: string): Promise<UIActionResult>;
     openTab(tabId: string): Promise<UIActionResult>;
     goToStart(): Promise<UIActionResult>;
     setView(view: CherryView): Promise<UIActionResult>;
@@ -250,6 +272,11 @@ export interface CherryUIIntents {
     updateText(input: UpdateTextAnnotationIntent): Promise<UIActionResult>;
     updateStroke(input: UpdateStrokeAnnotationIntent): Promise<UIActionResult>;
     delete(annotationId: string): Promise<UIActionResult>;
+  };
+  readonly interop: {
+    exportCsv(): Promise<UITextExportResult>;
+    importCsv(input: ImportExternalTextIntent): Promise<UIActionResult>;
+    importIcs(input: ImportExternalTextIntent): Promise<UIActionResult>;
   };
   readonly history: {
     undo(): Promise<UIActionResult>;
