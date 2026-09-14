@@ -26,7 +26,7 @@ The primary user journey is:
 Create a goal or task
 → break it down
 → connect tasks into a visible flow
-→ revise order and branches
+→ revise order, branches, and merges
 → add dates/times only where useful
 → execute from Board or List view
 ```
@@ -72,6 +72,10 @@ Cherry MUST remain usable without an account or network connection. Persistent b
 ### P-007 — Data safety before convenience
 
 A failed parse, migration, import, persistence operation, or future synchronization attempt MUST NOT silently destroy the last readable workspace.
+
+### P-008 — UI is a replaceable product component
+
+Cherry Core/Application MUST remain usable independently of the standard V2 UI. V2.0 MUST define a formal presentation/UI contract so the standard UI can later be replaced by another compatible UI package without rewriting Task, Flow, Schedule, storage, migration, or history logic.
 
 ## 4. Core data requirements
 
@@ -123,11 +127,22 @@ At minimum V2 requires:
 - a persistent browser repository,
 - a migration/import path for supported V1 data.
 
-### R-STORAGE-002 — Persistent-storage policy and consent
+### R-STORAGE-002 — Explicit opt-in before persistent browser storage
 
-Before browser persistence is enabled, Cherry MUST explain what local persistence does and provide an explicit user choice. Choosing not to enable persistence MUST leave the app usable in an ephemeral session.
+Cherry MUST obtain explicit user permission before enabling or writing Cherry user data to persistent browser storage, including `localStorage`, IndexedDB, or an equivalent persistent browser store.
 
-Settings MUST provide a way to disable persistent saving and clear locally persisted Cherry data. This is a product/privacy requirement; the documentation MUST NOT claim a specific law universally requires this behavior without separate legal review. Covers #92.
+Before permission is granted:
+
+- Cherry MUST operate through the in-memory repository,
+- Cherry MUST NOT silently persist workspace/task data,
+- the UI MUST explain what local persistence does and that the data remains on the device under the local-only implementation,
+- the user MUST be able to choose **Allow** or **Not now**.
+
+Choosing **Not now** MUST keep Cherry fully usable for the current session without persistence. A refusal MUST NOT be silently converted into consent.
+
+After permission is granted, Cherry MAY persist the consent state and workspace data through the approved persistent adapter. Settings MUST provide a way to disable persistent saving and clear locally persisted Cherry data with an explicit destructive confirmation.
+
+This is a product/privacy requirement; the documentation MUST NOT claim a specific law universally requires this behavior without separate legal review. Covers #92.
 
 ### R-WORKSPACE-001 — Multiple planning tabs
 
@@ -137,10 +152,14 @@ A workspace MUST support multiple named tabs/planning surfaces. Each tab MUST ke
 
 V2 MUST NOT reuse V1 runtime code merely for compatibility. Compatibility is implemented at the boundary through explicit readers/migrators.
 
-Supported V1 `.cherry` data and any explicitly supported legacy browser data MUST either:
+Official V1 compatibility for V2 MUST cover supported native `.cherry` workspace files, including supported encrypted V1 `.cherry` envelopes. Legacy browser-storage recovery is best-effort and MUST remain non-destructive.
+
+Supported V1 data MUST either:
 
 1. migrate into a validated V2 candidate document, or
 2. fail with a clear non-destructive error.
+
+Legacy browser-storage data MAY be offered as a recovery path when a safe reader is practical, but failure to recover it MUST NOT block the V2 runtime.
 
 ## 6. Task and Flow requirements
 
@@ -148,14 +167,37 @@ Supported V1 `.cherry` data and any explicitly supported legacy browser data MUS
 
 A Task MUST contain semantic work data only: identity, title/content, completion state, optional notes/metadata, optional schedule, appearance marker, and audit metadata. Board coordinates and connector rendering data MUST NOT live inside Task semantics.
 
-### R-FLOW-001 — Explicit Flow edges
+### R-TASK-002 — Derived branching goals
+
+Cherry MUST NOT require a separate persisted `goal` entity/type merely to represent a goal.
+
+A standalone item is represented as one Task. A Task becomes a **derived branching goal** when it has two or more outgoing structural Flow connections. This goal meaning is derived from current Flow topology and MUST update when topology changes.
+
+A Task with zero or one outgoing structural connection remains an ordinary Task for this rule, even if it is a root/top-level item.
+
+### R-TASK-003 — Automatic completion of branching goals
+
+When every structural task required by all outgoing branches of a derived branching goal has been completed, Cherry MUST automatically mark that parent goal complete.
+
+The completion calculation:
+
+- MUST use structural Flow only,
+- MUST ignore reference/cyclic edges,
+- MUST work for nested branches and structural merges,
+- MUST be deterministic and testable without UI code.
+
+The exact policy for reopening a previously auto-completed goal when a downstream Task is reopened is an explicit design-freeze question and MUST be resolved before this behavior is implemented.
+
+### R-FLOW-001 — Explicit Flow edges and structural DAG
 
 Task relationships MUST be represented by explicit directed Flow-edge entities rather than inferred from coordinates or encoded only through a Task `parentId`.
 
 V2 distinguishes:
 
-- **structural edges** — primary sequence/branch relationships used for executable flow, list grouping, and auto-layout,
-- **reference/cyclic edges** — additional directed relationships that may form cycles without becoming recursive structural ownership.
+- **structural edges** — the primary acyclic task-flow graph used for execution, list/read models, goal derivation, and auto-layout,
+- **reference/cyclic edges** — additional directed relationships that may form cycles without becoming part of the structural DAG.
+
+The structural Flow MUST support both **branching** and **merging**. A Task MAY therefore have multiple incoming structural edges. Structural cycles remain forbidden.
 
 ### R-FLOW-002 — Semantic reordering
 
@@ -163,19 +205,49 @@ Users MUST be able to reorder an existing structural flow (for example `A → B 
 
 ### R-FLOW-003 — Connect existing tasks
 
-Users MUST be able to connect existing tasks through Flow commands with validation for self-links, duplicates, ownership, and structural invariants.
+Users MUST be able to connect existing tasks through Flow commands with validation for self-links, duplicates, and structural invariants.
 
-Desktop MAY use direct drag/drop with a preview. Mobile MUST use an interaction that does not conflict with normal task movement (for example selection + action sheet/target picker). Covers completed #71 and open #93.
+Desktop MAY use direct drag/drop with a preview. Mobile MUST also support connecting existing Tasks, but the concrete mobile gesture/UI is intentionally **not frozen yet**. The chosen mobile interaction MUST be prototyped separately and MUST NOT conflict with normal task movement, board pan/scroll, or edge auto-scroll. Covers completed #71 and open #93.
 
 ### R-FLOW-004 — Cyclic/reference connections
 
 Freehand-capable boards MUST support directed cyclic connections such as `A → B → C → A` without infinite recursion, app freeze, or corruption.
 
-Cyclic/reference edges MUST NOT accidentally become input to structural traversal/auto-layout algorithms that require an acyclic structure. Self-links are out of scope for the first V2 implementation unless explicitly enabled later. Covers #82.
+Cyclic/reference edges MUST NOT accidentally become input to structural traversal/auto-layout algorithms that require an acyclic graph. Self-links are out of scope for the first V2 implementation unless explicitly enabled later. Covers #82.
 
 ### R-FLOW-005 — Directional connector presentation
 
 Flow connections SHOULD render direction clearly, including arrowheads or an equivalent directional affordance. Connector rendering MUST be replaceable and MUST consume Flow data rather than own it. Direction and edge type MUST remain understandable without relying on color alone. Covers #83.
+
+### R-FLOW-006 — Structural merge support
+
+Cherry MUST support converging structural flows such as:
+
+```text
+A → C
+B → C
+```
+
+and branch-then-merge flows such as:
+
+```text
+      ┌→ B ─┐
+A ────┤     ├→ D
+      └→ C ─┘
+```
+
+Layout, traversal, completion, history, import/export, and validation MUST treat the structural graph as a DAG rather than assuming a tree/forest with single-parent ownership.
+
+### R-FLOW-007 — Explicit deletion scope
+
+Deleting a Task that participates in structural Flow MUST ask the user to choose the destructive scope rather than silently guessing.
+
+At minimum the UI MUST offer concepts equivalent to:
+
+- **Delete this Task only** — remove the selected Task while preserving the surrounding Flow where a valid reconnection can be formed; root/leaf cases preserve the remaining Tasks without accidental cascade.
+- **Delete this Task and its downstream Flow** — remove the selected Task and an explicitly defined downstream structural scope after confirmation.
+
+Delete operations MUST be transactional and undoable where practical. The exact treatment of a downstream Task that is shared by another incoming path in a merged DAG is a design-freeze question and MUST be resolved before cascade deletion is implemented.
 
 ### R-HISTORY-001 — Undo/redo at command boundaries
 
@@ -218,6 +290,10 @@ With auto layout off, user positions are authoritative presentation data. With a
 
 A freehand planning experience MUST be obtained by composing Board settings and optional capabilities, not by creating a second Task/Workspace model. Task-flow editing remains primary even when annotations are enabled. Covers parent #81.
 
+### R-BOARD-004 — DAG-aware layout
+
+Auto-layout MUST accept structural branching and merging without duplicating canonical Task entities, entering recursive loops, or treating a merged Task as if it were independently owned by only one parent.
+
 ### R-DROP-001 — Explicit drop intent and canonical-state safety
 
 Dragging MUST operate on ephemeral interaction state until a drop target resolves to a valid intent.
@@ -238,9 +314,9 @@ Collapsed/completed date lanes MUST expose real hit geometry; hit testing MUST N
 
 ### R-APPEARANCE-001 — Goal importance marker
 
-Users MUST be able to assign a small semantic importance/marker set to a top-level goal. Theme-specific color is a presentation mapping, not the stored meaning.
+Users MUST be able to assign a small semantic importance/marker set to a **derived branching goal**. Theme-specific color is a presentation mapping, not the stored meaning.
 
-The UI MUST preserve selected/completed/destructive states and MUST NOT rely on color alone. The marker MUST survive persistence and native import/export. Covers #78.
+The UI MUST preserve selected/completed/destructive states and MUST NOT rely on color alone. The marker MUST survive persistence and native import/export. If topology changes so the Task is no longer a branching goal, the persisted marker MUST remain safe and MUST NOT corrupt the model; Presentation decides whether it remains visible/editable. Covers #78.
 
 ### R-ANNOTATION-001 — Text annotations
 
@@ -254,7 +330,7 @@ Hand-drawn strokes MUST use Board coordinates and an explicit drawing interactio
 
 Supported annotations MUST survive reload and `.cherry` export/import and participate in Undo/Redo as logical operations.
 
-## 9. Adaptive editor and mobile UX
+## 9. Adaptive editor, mobile UX, and replaceable UI
 
 ### R-EDITOR-001 — One editor contract, adaptive presentation
 
@@ -285,6 +361,24 @@ At most one interaction controller owns an active pointer/touch sequence. Task d
 
 Edge auto-scroll is a service used by the active drag controller and updates scroll + dragged preview coherently. Covers #93 and remaining #5 drag/scroll concerns.
 
+### R-UI-001 — Formal UI package contract in V2.0
+
+V2.0 MUST expose a formal presentation/UI contract and ship the standard Cherry UI as one implementation of that contract.
+
+The contract MUST be based on stable application-facing concepts such as read models/selectors, intents/commands, interaction capabilities, localized strings/keys, and semantic presentation tokens. It MUST NOT expose Domain internals or require a specific rendering framework.
+
+### R-UI-002 — Whole-UI replaceability
+
+The composition root MUST be able to select/wire a compatible UI package without changing Domain/Application modules.
+
+A replacement UI MUST be able to provide its own Start screen, Board, List, Task editor, desktop/mobile interaction surfaces, connector renderer, and visual theme while reusing the same application commands and data model.
+
+V2.0 only needs to ship one production UI package, but the replacement boundary itself is a required V2.0 feature.
+
+### R-UI-003 — Semantic styling boundary
+
+The standard UI SHOULD expose stable semantic component/state hooks or tokens so visual redesigns do not require business-logic changes. Raw theme colors and framework-specific component types MUST NOT leak into Domain/Application public contracts.
+
 ## 10. Interoperability requirements
 
 ### R-INTEROP-001 — `.cherry` is full-fidelity native format
@@ -301,7 +395,7 @@ A common `VEVENT` subset MUST be importable as Cherry Tasks with safe Schedule c
 
 ### R-INTEROP-004 — CSV adapter
 
-Cherry MUST support a documented CSV export and a safe simple CSV import. UTF-8 Japanese text, date/time validation, duplicate IDs, missing parents, and invalid relationships MUST be handled predictably. Full-fidelity backup remains `.cherry`, not CSV. Covers #89.
+Cherry MUST support a documented CSV export and a safe simple CSV import. UTF-8 Japanese text, date/time validation, duplicate IDs, missing relationships, and invalid Flow edges MUST be handled predictably. Full-fidelity backup remains `.cherry`, not CSV. Covers #89.
 
 ## 11. Future sync readiness
 
@@ -333,15 +427,19 @@ Every module MUST expose a documented public API. Cross-module imports into anot
 
 ### NFR-ARCH-002 — Dependency direction
 
-Domain code MUST NOT depend on Browser APIs, UI frameworks, storage engines, import parsers, or concrete adapters. Application use cases depend on domain types and ports. Infrastructure implements ports. Presentation depends on application-facing contracts.
+Domain code MUST NOT depend on Browser APIs, UI frameworks, storage engines, import parsers, or concrete adapters. Application use cases depend on domain types and ports. Infrastructure implements ports. UI packages depend on the application-facing UI/presentation contract.
 
 ### NFR-ARCH-003 — Replaceability and testability
 
-Storage, clocks, ID generation, file codecs, importers/exporters, and platform capabilities MUST be injectable/replaceable in tests and composition.
+Storage, clocks, ID generation, file codecs, importers/exporters, platform capabilities, and the UI package MUST be injectable/replaceable in tests and composition.
 
 ### NFR-ARCH-004 — No hidden global mutation
 
 V2 MUST NOT use global function replacement/monkey patching as a feature integration mechanism.
+
+### NFR-ARCH-005 — UI framework isolation
+
+No UI framework type may appear in Domain/Application public contracts. A future UI package implemented with a different rendering technology MUST be able to consume the same application-facing contract.
 
 ### NFR-PERF-001 — Startup work budget by architecture
 
@@ -368,7 +466,7 @@ Unless later moved into scope by an accepted requirement change:
 - full Miro-compatible drawing/shape suite,
 - unbounded recurrence expansion,
 - self-loop Flow edges,
-- arbitrary plugin execution,
+- arbitrary plugin execution beyond the formal UI-package boundary,
 - V1 release checklist #66.
 
 ## 15. Requirements freeze exit criteria
@@ -379,5 +477,9 @@ Requirements may be frozen when:
 2. every in-scope Issue maps to requirement IDs,
 3. product principles contain no unresolved contradiction,
 4. V1 compatibility boundaries are explicit,
-5. basic design assigns every requirement to an owning module,
-6. test strategy can verify the MUST-level acceptance criteria.
+5. structural branch/merge semantics and derived-goal completion behavior are explicit,
+6. deletion scope semantics for shared merged descendants are resolved,
+7. auto-completed-goal reopen behavior is resolved,
+8. the V2 UI package contract is accepted,
+9. basic design assigns every requirement to an owning module,
+10. test strategy can verify the MUST-level acceptance criteria.
