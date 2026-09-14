@@ -25,7 +25,11 @@ function button(label: string, action: () => void, className = 'cherry-button'):
   return node;
 }
 
-function labeledInput(label: string, name: string, value = ''): { wrap: HTMLLabelElement; input: HTMLInputElement } {
+function labeledInput(
+  label: string,
+  name: string,
+  value = '',
+): { wrap: HTMLLabelElement; input: HTMLInputElement } {
   const wrap = element('label', 'cherry-field');
   const text = element('span', 'cherry-label');
   text.textContent = label;
@@ -114,18 +118,30 @@ function renderWorkspace(
   selectTask: (id: string | null) => void,
 ): void {
   const header = element('header', 'cherry-header');
-  const brand = button(context.i18n.t('app.name'), () => {
-    void perform(context, context.intents.workspace.goToStart());
-  }, 'cherry-brand');
+  const brand = button(
+    context.i18n.t('app.name'),
+    () => {
+      void perform(context, context.intents.workspace.goToStart());
+    },
+    'cherry-brand',
+  );
   const title = element('h1', 'cherry-workspace-title');
   title.textContent = workspace.workspaceName;
   const viewSwitch = element('div', 'cherry-segment');
-  const boardButton = button(context.i18n.t('workspace.board'), () => {
-    void perform(context, context.intents.workspace.setView('board'));
-  }, workspace.activeView === 'board' ? 'cherry-segment-button active' : 'cherry-segment-button');
-  const listButton = button(context.i18n.t('workspace.list'), () => {
-    void perform(context, context.intents.workspace.setView('list'));
-  }, workspace.activeView === 'list' ? 'cherry-segment-button active' : 'cherry-segment-button');
+  const boardButton = button(
+    context.i18n.t('workspace.board'),
+    () => {
+      void perform(context, context.intents.workspace.setView('board'));
+    },
+    workspace.activeView === 'board' ? 'cherry-segment-button active' : 'cherry-segment-button',
+  );
+  const listButton = button(
+    context.i18n.t('workspace.list'),
+    () => {
+      void perform(context, context.intents.workspace.setView('list'));
+    },
+    workspace.activeView === 'list' ? 'cherry-segment-button active' : 'cherry-segment-button',
+  );
   viewSwitch.append(boardButton, listButton);
   header.append(brand, title, viewSwitch);
 
@@ -191,7 +207,10 @@ function renderWorkspace(
     toolbar.append(flowForm);
   }
 
-  const content = element('main', workspace.activeView === 'board' ? 'cherry-board' : 'cherry-list');
+  const content = element(
+    'main',
+    workspace.activeView === 'board' ? 'cherry-board' : 'cherry-list',
+  );
   for (const task of workspace.tasks) {
     content.append(renderTask(context, task, (id) => selectTask(id)));
   }
@@ -281,9 +300,13 @@ export class DefaultCherryUI implements CherryUIPackage<HTMLElement> {
           button(context.i18n.t('storage.notNow'), () => {
             void perform(context, context.intents.storage.notNow());
           }),
-          button(context.i18n.t('storage.allow'), () => {
-            void perform(context, context.intents.storage.allow());
-          }, 'cherry-button primary'),
+          button(
+            context.i18n.t('storage.allow'),
+            () => {
+              void perform(context, context.intents.storage.allow());
+            },
+            'cherry-button primary',
+          ),
         );
         card.append(title, description, actions);
         center.append(card);
@@ -311,9 +334,13 @@ export class DefaultCherryUI implements CherryUIPackage<HTMLElement> {
         });
         const list = element('section', 'cherry-workspace-list');
         for (const workspace of screen.workspaces) {
-          const open = button(workspace.name, () => {
-            void perform(context, context.intents.workspace.open(workspace.id));
-          }, 'cherry-workspace-card');
+          const open = button(
+            workspace.name,
+            () => {
+              void perform(context, context.intents.workspace.open(workspace.id));
+            },
+            'cherry-workspace-card',
+          );
           list.append(open);
         }
         main.append(heading, form, list);
