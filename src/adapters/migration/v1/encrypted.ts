@@ -34,9 +34,7 @@ function isRecord(value: unknown): value is UnknownRecord {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
-function parseEnvelope(
-  input: string | unknown,
-): Result<V1EncryptedEnvelope, V1EncryptedMigrationError> {
+function parseEnvelope(input: unknown): Result<V1EncryptedEnvelope, V1EncryptedMigrationError> {
   let parsed: unknown = input;
   if (typeof input === 'string') {
     try {
@@ -76,7 +74,7 @@ function fromBase64(value: string): Uint8Array | null {
 }
 
 export async function decryptV1CherryEnvelope(
-  input: string | unknown,
+  input: unknown,
   passphrase: string,
   cryptoProvider: Crypto | undefined = globalThis.crypto,
 ): Promise<Result<unknown, V1EncryptedMigrationError>> {
@@ -126,7 +124,7 @@ export async function decryptV1CherryEnvelope(
 }
 
 export async function prepareEncryptedV1Migration(
-  input: string | unknown,
+  input: unknown,
   passphrase: string,
   options: V1MigrationOptions = {},
   cryptoProvider: Crypto | undefined = globalThis.crypto,
