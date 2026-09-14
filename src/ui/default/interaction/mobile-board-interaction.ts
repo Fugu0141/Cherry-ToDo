@@ -287,8 +287,11 @@ export function installMobileBoardInteraction(options: MobileBoardInteractionOpt
   on(scroll, 'pointercancel', finishPan);
 
   return () => {
-    if (drag?.frame !== null) window.cancelAnimationFrame(drag.frame);
-    if (drag !== null) restoreCard(drag);
+    const activeDrag = drag;
+  if (activeDrag !== null && activeDrag.frame !== null) {
+    window.cancelAnimationFrame(activeDrag.frame);
+  }
+    if (activeDrag !== null) restoreCard(activeDrag);
     drag = null;
     pan = null;
     coordinator.cancel();
