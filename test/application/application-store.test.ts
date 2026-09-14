@@ -460,3 +460,42 @@ describe('semantic reorder and Board/Schedule separation', () => {
     expect(value.flowEdges).toEqual(beforeEdges);
   });
 });
+
+describe('Application workspace tabs', () => {
+  it('creates a named planning tab with independent semantic and Board state', () => {
+    const { workspace, tabId } = fixture([task('Existing task')]);
+    const store = new ApplicationStore(workspace, () => '2026-09-14T02:00:00.000Z');
+    const secondTabId = unwrapId(parseTabId('research'));
+
+    committed(expectOk(store.createTab(secondTabId, ' Research ')));
+
+    expect(store.workspace.tabOrder).toEqual([tabId, secondTabId]);
+    expect(tab(store, secondTabId).name).toBe('Research');
+    expect(Object.keys(tab(store, secondTabId).tasks)).toEqual([]);
+    expect(tab(store, tabId).tasks['Existing task']).toBeDefined();
+
+    const firstSettings = tab(store, tabId).board.settings;
+    const secondSettings = { ...firstSettings, autoLayout: !firstSettings.autoLayout };
+    committed(expectOk(store.setBoardSettings(secondTabId, secondSettings)));
+
+    expect(tab(store, secondTabId).board.settings).toEqual(secondSettings);
+    expect(tab(store, tabId).board.settings).toEqual(firstSettings);
+  });
+
+  it('rejects duplicate tab IDs and blank names without mutating the workspace', () => {
+    const { workspace, tabId } = fixture([]);
+    const store = new ApplicationStore(workspace);
+    const revision = store.workspace.meta.revision;
+
+    const duplicate = store.createTab(tabId, 'Duplicate');
+    expect(duplicate.ok).toBe(false);
+    if (!duplicate.ok) expect(duplicate.error.code).toBe('tab-id-in-use');
+
+    const blank = store.createTab(unwrapId(parseTabId('blank')), '   ');
+    expect(blank.ok).toBe(false);
+    if (!blank.ok) expect(blank.error.code).toBe('invalid-tab-name');
+
+    expect(store.workspace.meta.revision).toBe(revision);
+    expect(store.workspace.tabOrder).toEqual([tabId]);
+  });
+});

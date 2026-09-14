@@ -1,6 +1,7 @@
 import type {
   CherryFlowKind,
   CherryScheduleModel,
+  CherryTaskImportance,
   CherryTimeGuideMode,
   CherryUIContext,
   CherryUIHandle,
@@ -95,6 +96,27 @@ async function perform(context: CherryUIContext, promise: Promise<UIActionResult
   }
 }
 
+function renderStorageControls(context: CherryUIContext): HTMLElement | null {
+  if (!context.capabilities.persistentStorageEnabled) return null;
+
+  const controls = element('section', 'cherry-storage-actions');
+  controls.setAttribute('aria-label', context.i18n.t('storage.settings'));
+  controls.append(
+    button(context.i18n.t('storage.disable'), () => {
+      void perform(context, context.intents.storage.disable(false));
+    }),
+    button(
+      context.i18n.t('storage.disableAndClear'),
+      () => {
+        if (!window.confirm(context.i18n.t('storage.clearConfirm'))) return;
+        void perform(context, context.intents.storage.disable(true));
+      },
+      'cherry-button danger ghost',
+    ),
+  );
+  return controls;
+}
+
 interface FlowConnectionDraft {
   readonly fromTaskId: string;
   readonly kind: CherryFlowKind;
@@ -154,6 +176,20 @@ function renderTask(
       const merge = element('span', 'cherry-task-badge merge');
       merge.textContent = context.i18n.t('task.merge');
       badges.append(merge);
+    }
+    if (task.isDerivedGoal && task.importance !== 'none') {
+      const importance = element('span', 'cherry-task-badge importance');
+      const label =
+        task.importance === 'low'
+          ? context.i18n.t('task.importanceLow')
+          : task.importance === 'medium'
+            ? context.i18n.t('task.importanceMedium')
+            : task.importance === 'high'
+              ? context.i18n.t('task.importanceHigh')
+              : context.i18n.t('task.importanceUrgent');
+      importance.textContent = `${context.i18n.t('task.importance')}: ${label}`;
+      importance.dataset.importance = task.importance;
+      badges.append(importance);
     }
     card.append(badges);
   }
@@ -541,6 +577,40 @@ function scheduleFromEditor(
   return { kind: 'datetime', date: date.value, time: time.value };
 }
 
+function renderTabBar(context: CherryUIContext, workspace: WorkspaceScreenModel): HTMLElement {
+  const bar = element('nav', 'cherry-tab-bar');
+  bar.setAttribute('aria-label', context.i18n.t('workspace.tabs'));
+
+  const list = element('div', 'cherry-tab-list');
+  for (const tab of workspace.tabs) {
+    const active = tab.id === workspace.tabId;
+    const open = button(
+      tab.name,
+      () => {
+        if (active) return;
+        void perform(context, context.intents.workspace.openTab(tab.id));
+      },
+      active ? 'cherry-tab-button active' : 'cherry-tab-button',
+    );
+    if (active) open.setAttribute('aria-current', 'page');
+    list.append(open);
+  }
+
+  const form = element('form', 'cherry-create-tab');
+  const field = labeledInput(context.i18n.t('workspace.tabName'), 'tabName');
+  const create = element('button', 'cherry-button');
+  create.type = 'submit';
+  create.textContent = context.i18n.t('workspace.createTab');
+  form.append(field.wrap, create);
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    void perform(context, context.intents.workspace.createTab({ name: field.input.value }));
+  });
+
+  bar.append(list, form);
+  return bar;
+}
+
 function renderWorkspace(
   root: HTMLElement,
   context: CherryUIContext,
@@ -583,6 +653,8 @@ function renderWorkspace(
     },
     workspace.activeView === 'list' ? 'cherry-segment-button active' : 'cherry-segment-button',
   );
+  boardButton.setAttribute('aria-pressed', String(workspace.activeView === 'board'));
+  listButton.setAttribute('aria-pressed', String(workspace.activeView === 'list'));
   viewSwitch.append(boardButton, listButton);
   const historyActions = element('div', 'cherry-history-actions');
   const undo = button(
@@ -607,6 +679,7 @@ function renderWorkspace(
   redo.setAttribute('aria-label', context.i18n.t('history.redo'));
   historyActions.append(undo, redo);
   header.append(brand, title, viewSwitch, historyActions);
+  const tabBar = renderTabBar(context, workspace);
 
   const toolbar = element('section', 'cherry-toolbar');
   const taskForm = element('form', 'cherry-inline-form');
@@ -622,6 +695,8 @@ function renderWorkspace(
     });
   });
   toolbar.append(taskForm);
+  const storageControls = renderStorageControls(context);
+  if (storageControls !== null) toolbar.append(storageControls);
 
   if (workspace.tasks.length === 0) {
     const startFlow = element('section', 'cherry-mobile-flow-start');
@@ -648,7 +723,9 @@ function renderWorkspace(
   if (workspace.tasks.length >= 2) {
     const flowForm = element('form', 'cherry-flow-form');
     const from = element('select', 'cherry-select');
+    from.setAttribute('aria-label', context.i18n.t('flow.from'));
     const to = element('select', 'cherry-select');
+    to.setAttribute('aria-label', context.i18n.t('flow.to'));
     for (const task of workspace.tasks) {
       const a = element('option');
       a.value = task.id;
@@ -661,6 +738,7 @@ function renderWorkspace(
     }
     if (workspace.tasks[1] !== undefined) to.value = workspace.tasks[1].id;
     const kind = element('select', 'cherry-select');
+    kind.setAttribute('aria-label', context.i18n.t('flow.kind'));
     const kinds: readonly CherryFlowKind[] = ['continuation', 'branch', 'reference'];
     const symbols: Readonly<Record<CherryFlowKind, string>> = {
       continuation: '→',
@@ -822,7 +900,7 @@ function renderWorkspace(
           cancelConnection,
         );
 
-  root.replaceChildren(header, toolbar, content);
+  root.replaceChildren(header, tabBar, toolbar, content);
 
   if (workspace.activeView === 'board') {
     const connections = renderConnectionSummary(context, workspace);
@@ -838,7 +916,11 @@ function renderWorkspace(
     if (task !== undefined) {
       const overlay = element('div', 'cherry-overlay');
       const panel = element('form', 'cherry-editor');
+      panel.setAttribute('role', 'dialog');
+      panel.setAttribute('aria-modal', 'true');
+      panel.setAttribute('aria-labelledby', 'cherry-task-editor-title');
       const heading = element('h2');
+      heading.id = 'cherry-task-editor-title';
       heading.textContent = context.i18n.t('task.edit');
       const titleField = labeledInput(context.i18n.t('task.title'), 'title', task.title);
       const notesLabel = element('label', 'cherry-field');
@@ -847,6 +929,26 @@ function renderWorkspace(
       const notes = element('textarea', 'cherry-textarea');
       notes.value = task.notes;
       notesLabel.append(notesText, notes);
+
+      const importanceField = task.isDerivedGoal
+        ? labeledSelect(context.i18n.t('task.importance'))
+        : null;
+      if (importanceField !== null) {
+        const options: readonly [CherryTaskImportance, string][] = [
+          ['none', context.i18n.t('task.importanceNone')],
+          ['low', context.i18n.t('task.importanceLow')],
+          ['medium', context.i18n.t('task.importanceMedium')],
+          ['high', context.i18n.t('task.importanceHigh')],
+          ['urgent', context.i18n.t('task.importanceUrgent')],
+        ];
+        for (const [value, label] of options) {
+          const option = element('option');
+          option.value = value;
+          option.textContent = label;
+          importanceField.select.append(option);
+        }
+        importanceField.select.value = task.importance;
+      }
 
       const scheduleKind = labeledSelect(context.i18n.t('task.schedule'));
       const scheduleKinds = [
@@ -913,15 +1015,9 @@ function renderWorkspace(
         'cherry-button danger ghost',
       );
       danger.append(deleteOnly, deleteDownstream);
-      panel.append(
-        heading,
-        titleField.wrap,
-        notesLabel,
-        scheduleKind.wrap,
-        scheduleFields,
-        actions,
-        danger,
-      );
+      panel.append(heading, titleField.wrap, notesLabel);
+      if (importanceField !== null) panel.append(importanceField.wrap);
+      panel.append(scheduleKind.wrap, scheduleFields, actions, danger);
       panel.addEventListener('submit', (event) => {
         event.preventDefault();
         const schedule = scheduleFromEditor(scheduleKind.select, dateField.input, timeField.input);
@@ -936,6 +1032,9 @@ function renderWorkspace(
               taskId: task.id,
               title: titleField.input.value,
               notes: notes.value,
+              ...(importanceField === null
+                ? {}
+                : { importance: importanceField.select.value as CherryTaskImportance }),
             }),
           );
           await perform(context, context.intents.task.setSchedule(task.id, schedule));
@@ -954,6 +1053,7 @@ export class DefaultCherryUI implements CherryUIPackage<HTMLElement> {
     let connectionDraft: FlowConnectionDraft | null = null;
     let drawingEnabled = false;
     let lastWorkspaceId: string | null = null;
+    let lastTabId: string | null = null;
     const collapsedLaneIds = new Set<string>();
     const interactionCoordinator = new InteractionCoordinator();
     let boardInteractionCleanup: (() => void) | null = null;
@@ -1027,6 +1127,8 @@ export class DefaultCherryUI implements CherryUIPackage<HTMLElement> {
           list.append(open);
         }
         main.append(heading, form, list);
+        const storageControls = renderStorageControls(context);
+        if (storageControls !== null) main.append(storageControls);
         root.replaceChildren(main);
         return;
       }
@@ -1044,11 +1146,18 @@ export class DefaultCherryUI implements CherryUIPackage<HTMLElement> {
         return;
       }
 
-      if (lastWorkspaceId !== screen.workspace.workspaceId) {
+      if (
+        lastWorkspaceId !== screen.workspace.workspaceId ||
+        lastTabId !== screen.workspace.tabId
+      ) {
         collapsedLaneIds.clear();
+        selectedTaskId = null;
+        cancelMobileConnection(interactionCoordinator);
+        interactionCoordinator.cancel();
         connectionDraft = null;
         drawingEnabled = false;
         lastWorkspaceId = screen.workspace.workspaceId;
+        lastTabId = screen.workspace.tabId;
       }
       renderWorkspace(
         root,

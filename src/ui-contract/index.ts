@@ -86,6 +86,11 @@ export interface WorkspaceSummaryModel {
   readonly updatedAt: string;
 }
 
+export interface WorkspaceTabSummaryModel {
+  readonly id: string;
+  readonly name: string;
+}
+
 export interface TaskCardModel {
   readonly id: string;
   readonly title: string;
@@ -115,6 +120,7 @@ export interface WorkspaceScreenModel {
   readonly workspaceName: string;
   readonly tabId: string;
   readonly tabName: string;
+  readonly tabs: readonly WorkspaceTabSummaryModel[];
   readonly activeView: CherryView;
   readonly board: BoardPresentationModel;
   readonly tasks: readonly TaskCardModel[];
@@ -155,6 +161,10 @@ export type UIActionResult =
   | { readonly kind: 'error'; readonly error: PresentationError };
 
 export interface CreateWorkspaceIntent {
+  readonly name: string;
+}
+
+export interface CreateTabIntent {
   readonly name: string;
 }
 
@@ -207,10 +217,13 @@ export interface CherryUIIntents {
   readonly storage: {
     allow(): Promise<UIActionResult>;
     notNow(): Promise<UIActionResult>;
+    disable(clearPersistentData: boolean): Promise<UIActionResult>;
   };
   readonly workspace: {
     create(input: CreateWorkspaceIntent): Promise<UIActionResult>;
     open(workspaceId: string): Promise<UIActionResult>;
+    createTab(input: CreateTabIntent): Promise<UIActionResult>;
+    openTab(tabId: string): Promise<UIActionResult>;
     goToStart(): Promise<UIActionResult>;
     setView(view: CherryView): Promise<UIActionResult>;
     setBoardSettings(settings: CherryBoardSettingsModel): Promise<UIActionResult>;
@@ -250,6 +263,7 @@ export interface CherryUIIntents {
 
 export interface CherryUICapabilities {
   readonly persistentStorageAvailable: boolean;
+  readonly persistentStorageEnabled: boolean;
   readonly boardView: boolean;
   readonly listView: boolean;
   readonly taskEditing: boolean;
@@ -295,11 +309,18 @@ export type CherryMessageKey =
   | 'storage.description'
   | 'storage.allow'
   | 'storage.notNow'
+  | 'storage.settings'
+  | 'storage.disable'
+  | 'storage.disableAndClear'
+  | 'storage.clearConfirm'
   | 'start.title'
   | 'start.createWorkspace'
   | 'start.workspaceName'
   | 'workspace.board'
   | 'workspace.list'
+  | 'workspace.tabs'
+  | 'workspace.tabName'
+  | 'workspace.createTab'
   | 'board.dateLanes'
   | 'board.autoLayout'
   | 'board.timeGuide'
@@ -325,6 +346,12 @@ export type CherryMessageKey =
   | 'task.edit'
   | 'task.title'
   | 'task.notes'
+  | 'task.importance'
+  | 'task.importanceNone'
+  | 'task.importanceLow'
+  | 'task.importanceMedium'
+  | 'task.importanceHigh'
+  | 'task.importanceUrgent'
   | 'task.schedule'
   | 'task.scheduleNone'
   | 'task.scheduleDate'

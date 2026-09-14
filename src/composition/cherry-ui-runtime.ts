@@ -66,6 +66,7 @@ function presentationError(error: ApplicationError): PresentationError {
     return { code: 'not-found', messageKey: 'error.notFound' };
   }
   if (
+    error.code === 'tab-id-in-use' ||
     error.code === 'task-id-in-use' ||
     error.code === 'annotation-id-in-use' ||
     error.code === 'edge-id-in-use'
@@ -192,14 +193,17 @@ export class CherryUIRuntime implements CherryUIContext {
   #tabId: TabId | null = null;
   #view: CherryView = 'board';
 
-  readonly capabilities = {
-    persistentStorageAvailable: true,
-    boardView: true,
-    listView: true,
-    taskEditing: true,
-    structuralConnections: true,
-    annotations: true,
-  } as const;
+  get capabilities() {
+    return {
+      persistentStorageAvailable: true,
+      persistentStorageEnabled: this.#application.persistence.mode === 'persistent',
+      boardView: true,
+      listView: true,
+      taskEditing: true,
+      structuralConnections: true,
+      annotations: true,
+    } as const;
+  }
   readonly semanticTokens = CHERRY_SEMANTIC_TOKENS;
   readonly i18n;
   readonly intents: CherryUIIntents;
@@ -211,10 +215,13 @@ export class CherryUIRuntime implements CherryUIContext {
       storage: {
         allow: () => this.#resolveStartup(this.#application.startup.chooseAllow()),
         notNow: () => this.#resolveStartup(this.#application.startup.chooseNotNow()),
+        disable: (clearPersistentData) => this.#disablePersistence(clearPersistentData),
       },
       workspace: {
         create: (input) => this.#createWorkspace(input.name),
         open: (workspaceId) => this.#openWorkspace(workspaceId),
+        createTab: (input) => this.#createTab(input.name),
+        openTab: (tabId) => this.#openTab(tabId),
         goToStart: () => this.#showStart(),
         setView: (view) => this.#setView(view),
         setBoardSettings: (settings) =>
@@ -332,6 +339,18 @@ export class CherryUIRuntime implements CherryUIContext {
     await this.#applyStartupState(await this.#application.startup.boot());
   }
 
+  async #disablePersistence(clearPersistentData: boolean): Promise<UIActionResult> {
+    const result = await this.#application.persistence.disablePersistence({
+      clearPersistentData,
+      confirmed: true,
+    });
+    if (result.kind === 'failed') return this.#error('persistence', 'error.persistence');
+
+    if (this.#store === null) await this.#showStart();
+    else this.#refreshWorkspace();
+    return OK;
+  }
+
   async #resolveStartup(statePromise: Promise<StartupState>): Promise<UIActionResult> {
     await this.#applyStartupState(await statePromise);
     return this.#screen.kind === 'error' ? { kind: 'error', error: this.#screen.error } : OK;
@@ -403,6 +422,51 @@ export class CherryUIRuntime implements CherryUIContext {
     this.#store = new ApplicationStore(workspace);
     this.#tabId = tabId;
     this.#view = 'board';
+    await this.#rememberSession();
+    this.#refreshWorkspace();
+    return OK;
+  }
+
+  async #createTab(rawName: string): Promise<UIActionResult> {
+    if (this.#store === null || this.#tabId === null) {
+      return this.#error('not-found', 'error.notFound');
+    }
+    const name = rawName.trim();
+    if (name.length === 0) return this.#error('validation', 'error.validation');
+
+    const previous = this.#store.workspace;
+    const tabId = unwrapId(parseTabId(randomId('tab')));
+    const result = this.#store.createTab(tabId, name);
+    if (!result.ok) return { kind: 'error', error: presentationError(result.error) };
+    if (result.value.kind === 'confirmation-required') return confirmationResult(result.value);
+
+    const saved = await this.#application.persistence.workspaceRepository.save(
+      this.#store.workspace,
+      previous.meta.revision,
+    );
+    if (saved.kind !== 'saved') {
+      this.#store = new ApplicationStore(previous);
+      this.#refreshWorkspace();
+      return this.#error(
+        saved.kind === 'revision-conflict' ? 'conflict' : 'persistence',
+        saved.kind === 'revision-conflict' ? 'error.conflict' : 'error.persistence',
+      );
+    }
+
+    this.#tabId = tabId;
+    await this.#rememberSession();
+    this.#refreshWorkspace();
+    return OK;
+  }
+
+  async #openTab(rawId: string): Promise<UIActionResult> {
+    if (this.#store === null) return this.#error('not-found', 'error.notFound');
+    const parsed = parseTabId(rawId);
+    if (!parsed.ok) return this.#error('validation', 'error.validation');
+    if (this.#store.workspace.tabs[parsed.value] === undefined) {
+      return this.#error('not-found', 'error.notFound');
+    }
+    this.#tabId = parsed.value;
     await this.#rememberSession();
     this.#refreshWorkspace();
     return OK;
@@ -535,6 +599,12 @@ export class CherryUIRuntime implements CherryUIContext {
       this.#refreshWorkspace();
       return this.#error('persistence', 'error.persistence');
     }
+    if (this.#tabId === null || result.value.tabs[this.#tabId] === undefined) {
+      const fallbackTabId = result.value.tabOrder[0];
+      if (fallbackTabId === undefined) return this.#error('not-found', 'error.notFound');
+      this.#tabId = fallbackTabId;
+      await this.#rememberSession();
+    }
     this.#refreshWorkspace();
     return OK;
   }
@@ -638,6 +708,10 @@ export class CherryUIRuntime implements CherryUIContext {
       workspaceName: workspace.name,
       tabId: tab.id,
       tabName: tab.name,
+      tabs: workspace.tabOrder.flatMap((tabId) => {
+        const candidate = workspace.tabs[tabId];
+        return candidate === undefined ? [] : [{ id: candidate.id, name: candidate.name }];
+      }),
       activeView: this.#view,
       board: {
         settings: tab.board.settings,
