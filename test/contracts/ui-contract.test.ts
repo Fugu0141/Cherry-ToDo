@@ -29,6 +29,7 @@ function intents(): CherryUIIntents {
       setCompleted: ok,
       setSchedule: ok,
     },
+    board: { dropTask: ok },
     flow: { connect: ok },
     history: { undo: ok, redo: ok },
     confirmation: { confirm: ok, cancel: ok },
