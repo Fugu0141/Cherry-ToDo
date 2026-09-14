@@ -1,6 +1,6 @@
 # Cherry V2 Phase 10 Release Gate
 
-Status: **Release-candidate evidence — final PR verification pending — 2026-09-14**
+Status: **Release-candidate ready — 2026-09-14**
 
 This document turns Phase 10 of `IMPLEMENTATION_PLAN.md` into an executable release gate. It is not a new source of product semantics; `DESIGN_FREEZE.md`, accepted ADRs, and the requirements remain authoritative.
 
@@ -46,15 +46,24 @@ Manual source review on 2026-09-14 confirmed the following items that are archit
 - directional/relationship meaning is available through arrow/shape/textual affordances and is not intentionally encoded only by color.
 - migration/import flows use candidate validation/commit boundaries rather than executing V1 runtime code.
 
-## Current reference evidence
+## Final reference evidence
 
-The last fully green gate before the final multiple-tab audit recorded 37 Vitest files / 117 tests, 14 Playwright passes / 2 intentional project-specific skips, static deployment verification, and a production bundle of about 114 kB (about 30.7 kB gzip). Browser `cherry:boot` measurements in that run were 2.70 ms on the desktop profile and 1.70 ms on the mobile profile.
+The clean PR #271 release gate after the multiple-tab and traceability work recorded:
 
-These numbers are historical reference evidence only. The final PR gate after the multiple-tab completion is authoritative, and performance values are not universal device budgets.
+- Prettier, ESLint, strict TypeScript, architecture boundaries, and Vite production build: PASS;
+- Architecture boundaries: 62 TypeScript files checked;
+- Vitest: 37 files / 119 tests PASS;
+- requirement traceability: 67 normative requirement/principle IDs mapped;
+- static deployment verification: PASS with 2 relative local asset references;
+- Playwright: 16 PASS / 2 intentional project-specific skips across desktop/mobile Chromium profiles;
+- production bundle: 117,965 bytes total / 31,409 gzip bytes;
+- browser `cherry:boot` reference measurement: desktop 2.00 ms, mobile 2.40 ms.
 
-## Release-candidate decision rule
+The browser timing and bundle figures identify one CI reference run and are evidence, not universal device budgets. The release workflow remains authoritative for later candidate changes.
 
-Cherry V2 may be called release-candidate ready only when all of the following are true:
+## Release-candidate decision
+
+All Phase 10 decision criteria are satisfied for the current candidate:
 
 1. all normal quality gates pass;
 2. critical desktop and mobile E2E journeys pass;
@@ -66,4 +75,6 @@ Cherry V2 may be called release-candidate ready only when all of the following a
 8. static production output is verified for the supported GitHub Pages path model;
 9. `REQUIREMENT_TRACEABILITY.md` passes its machine audit;
 10. `RELEASE_NOTES.md` and `KNOWN_LIMITATIONS.md` describe shipped behavior accurately;
-11. PR #271's final V2 CI and V2 Release Gate are green on the clean branch with no temporary patch workflows/scripts.
+11. temporary Phase 10 patch workflows/scripts have been removed from the candidate branch.
+
+Any code or release-document change after this evidence must pass V2 CI and V2 Release Gate again before merge.
