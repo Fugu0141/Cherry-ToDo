@@ -20,12 +20,12 @@ import {
   type TaskImportance,
   type TaskValidationError,
 } from '../../task/index';
-import { validateSchedule, type Schedule, type ScheduleValidationError } from '../../schedule/index';
 import {
-  validateBoardDocumentState,
-  type BoardSettings,
-  type Point,
-} from '../../board/index';
+  validateSchedule,
+  type Schedule,
+  type ScheduleValidationError,
+} from '../../schedule/index';
+import { validateBoardDocumentState, type BoardSettings, type Point } from '../../board/index';
 import {
   validateWorkspaceDocument,
   type TabDocument,
@@ -110,11 +110,10 @@ function graphOf(tab: TabDocument): FlowGraph {
   return { edges: tab.flowEdges };
 }
 
-function stableTaskIds(ids: Iterable<TaskId>): readonly TaskId[] {
-  return [...new Set(ids)].sort((left, right) => left.localeCompare(right));
-}
-
-function withoutKey<T>(record: Readonly<Record<string, T>>, key: string): Readonly<Record<string, T>> {
+function withoutKey<T>(
+  record: Readonly<Record<string, T>>,
+  key: string,
+): Readonly<Record<string, T>> {
   const next = { ...record };
   delete next[key];
   return next;
@@ -122,10 +121,6 @@ function withoutKey<T>(record: Readonly<Record<string, T>>, key: string): Readon
 
 function withTask(tab: TabDocument, task: Task): TabDocument {
   return { ...tab, tasks: { ...tab.tasks, [task.id]: task } };
-}
-
-function structuralIncidentEdges(taskId: TaskId, graph: FlowGraph): readonly StructuralFlowEdge[] {
-  return [...incomingStructuralEdges(taskId, graph), ...outgoingStructuralEdges(taskId, graph)];
 }
 
 export class ApplicationStore {
@@ -172,12 +167,15 @@ export class ApplicationStore {
     if (!created.ok) return err({ code: 'task-invalid', cause: created.error });
 
     const proposed = withTask(tab, created.value);
-    return this.#applyPrepared(tabId, prepareSemanticTransaction({
-      original: tab,
-      proposed,
-      baseRevision: this.#workspace.meta.revision,
-      updatedAt: now,
-    }));
+    return this.#applyPrepared(
+      tabId,
+      prepareSemanticTransaction({
+        original: tab,
+        proposed,
+        baseRevision: this.#workspace.meta.revision,
+        updatedAt: now,
+      }),
+    );
   }
 
   updateTask(
@@ -284,11 +282,7 @@ export class ApplicationStore {
     return this.#commitSimpleTab(tabId, { ...tab, board: { ...tab.board, settings } }, this.#now());
   }
 
-  moveTask(
-    tabId: TabId,
-    taskId: TaskId,
-    point: Point,
-  ): Result<MutationOutcome, ApplicationError> {
+  moveTask(tabId: TabId, taskId: TaskId, point: Point): Result<MutationOutcome, ApplicationError> {
     const resolved = this.#resolveTask(tabId, taskId);
     if (!resolved.ok) return resolved;
     if (!Number.isFinite(point.x) || !Number.isFinite(point.y)) {
@@ -350,10 +344,7 @@ export class ApplicationStore {
     );
   }
 
-  disconnectFlow(
-    tabId: TabId,
-    edgeId: FlowEdgeId,
-  ): Result<MutationOutcome, ApplicationError> {
+  disconnectFlow(tabId: TabId, edgeId: FlowEdgeId): Result<MutationOutcome, ApplicationError> {
     const tab = this.#workspace.tabs[tabId];
     if (tab === undefined) return err({ code: 'tab-not-found', tabId });
     if (tab.flowEdges[edgeId] === undefined) return err({ code: 'edge-not-found', edgeId });
@@ -384,7 +375,10 @@ export class ApplicationStore {
     const tab = this.#workspace.tabs[tabId];
     if (tab === undefined) return err({ code: 'tab-not-found', tabId });
     if (orderedTaskIds.length < 2 || new Set(orderedTaskIds).size !== orderedTaskIds.length) {
-      return err({ code: 'invalid-reorder', reason: 'Reorder requires at least two unique Tasks.' });
+      return err({
+        code: 'invalid-reorder',
+        reason: 'Reorder requires at least two unique Tasks.',
+      });
     }
 
     const selected = new Set(orderedTaskIds);
@@ -392,7 +386,6 @@ export class ApplicationStore {
       return err({ code: 'invalid-reorder', reason: 'Reorder references an unknown Task.' });
     }
 
-    const graph = graphOf(tab);
     const structural = Object.values(tab.flowEdges).filter(
       (edge): edge is StructuralFlowEdge => edge.kind !== 'reference',
     );
@@ -573,10 +566,7 @@ export class ApplicationStore {
     );
   }
 
-  deleteDownstreamFlow(
-    tabId: TabId,
-    taskId: TaskId,
-  ): Result<MutationOutcome, ApplicationError> {
+  deleteDownstreamFlow(tabId: TabId, taskId: TaskId): Result<MutationOutcome, ApplicationError> {
     const resolved = this.#resolveTask(tabId, taskId);
     if (!resolved.ok) return resolved;
     const tab = resolved.value.tab;
@@ -673,9 +663,7 @@ export class ApplicationStore {
     tab: TabDocument,
     updatedAt: string,
   ): Result<MutationOutcome, ApplicationError> {
-    return this.#commitWorkspace(tabId, tab, updatedAt).ok
-      ? ok({ kind: 'committed', workspace: this.#workspace })
-      : this.#commitWorkspace(tabId, tab, updatedAt);
+    return this.#commitWorkspace(tabId, tab, updatedAt);
   }
 
   #applyPrepared(
