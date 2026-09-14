@@ -2,6 +2,7 @@ import type { WorkspaceRepository } from '../../workspace/index';
 import type {
   PersistentStorageBundle,
   PersistentStorageFactory,
+  SessionContext,
   SessionRepository,
   StorageConsentStore,
 } from '../ports/startup-storage';
@@ -83,7 +84,7 @@ export class PersistenceCoordinator {
     }
 
     const copiedWorkspaceIds: string[] = [];
-    let previousPersistentSession = null;
+    let previousPersistentSession: SessionContext | null = null;
     let wroteSession = false;
 
     try {
@@ -119,10 +120,9 @@ export class PersistenceCoordinator {
       this.#activateBundle(bundle);
       return { kind: 'activated' };
     } catch (error) {
+      const persistentSummaries = await bundle.workspaceRepository.list();
       for (const id of copiedWorkspaceIds) {
-        const summary = (await bundle.workspaceRepository.list()).find(
-          (candidate) => String(candidate.id) === id,
-        );
+        const summary = persistentSummaries.find((candidate) => String(candidate.id) === id);
         if (summary !== undefined) await bundle.workspaceRepository.delete(summary.id);
       }
 
@@ -144,13 +144,14 @@ export class PersistenceCoordinator {
     }
 
     try {
-      if (this.#mode === 'persistent' && this.#persistentBundle !== null) {
-        for (const summary of await this.#persistentBundle.workspaceRepository.list()) {
-          const document = await this.#persistentBundle.workspaceRepository.load(summary.id);
+      const persistentBundle = this.#persistentBundle;
+      if (this.#mode === 'persistent' && persistentBundle !== null) {
+        for (const summary of await persistentBundle.workspaceRepository.list()) {
+          const document = await persistentBundle.workspaceRepository.load(summary.id);
           if (document !== null) await this.#memoryWorkspaceRepository.save(document);
         }
 
-        const context = await this.#persistentBundle.sessionRepository.load();
+        const context = await persistentBundle.sessionRepository.load();
         if (context === null) await this.#memorySessionRepository.clear();
         else await this.#memorySessionRepository.save(context);
       }
@@ -158,9 +159,10 @@ export class PersistenceCoordinator {
       await this.#consentStore.revoke();
       this.#activateMemory();
 
-      if (options.clearPersistentData && this.#persistentBundle !== null) {
-        await this.#persistentBundle.clearAll();
+      if (options.clearPersistentData && persistentBundle !== null) {
+        await persistentBundle.clearAll();
       }
+      this.#persistentBundle = null;
 
       return { kind: 'disabled' };
     } catch (error) {
