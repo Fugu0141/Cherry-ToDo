@@ -117,6 +117,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .cg-badge { border-radius: 999px; padding: 3px 7px; background: #eff1f3; color: #5d646d; font-size: 9px; font-weight: 900; letter-spacing: .08em; }
 .cg-badge.cg-goal { background: var(--cg-accent-soft); color: #a52a41; }
 .cg-badge.cg-warn { background: #fff4df; color: #835115; }
+.cg-badge.cg-importance { background: #eef1f5; color: #4f5864; }
 .cg-flow-handle {
   position: absolute; right: -15px; top: 50%; width: 31px; height: 31px; transform: translateY(-50%); border: 2px solid #fff; border-radius: 50%; background: var(--cg-accent); color: #fff; padding: 0; font-size: 22px; line-height: 1; font-weight: 500; box-shadow: 0 4px 12px rgba(216,51,82,.28); opacity: 0; transition: opacity 120ms ease, transform 120ms ease;
 }

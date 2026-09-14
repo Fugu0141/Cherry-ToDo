@@ -1,6 +1,7 @@
 import type {
   CherryFlowKind,
   CherryScheduleModel,
+  CherryTaskImportance,
   CherryTimeGuideMode,
   CherryUIContext,
   CherryUIHandle,
@@ -104,6 +105,17 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
 
     const perform = (promise: Promise<UIActionResult>) => run(context, promise);
     const tr = (ja: string, en: string): string => (context.i18n.locale === 'ja' ? ja : en);
+    const importanceLabel = (value: CherryTaskImportance): string => {
+      const labels: Record<CherryTaskImportance, readonly [string, string]> = {
+        none: ['なし', 'None'],
+        low: ['低', 'Low'],
+        medium: ['中', 'Medium'],
+        high: ['高', 'High'],
+        urgent: ['緊急', 'Urgent'],
+      };
+      const [ja, en] = labels[value];
+      return tr(ja, en);
+    };
 
     const currentWorkspace = (): WorkspaceScreenModel | null => {
       const screen = context.getScreen();
@@ -227,7 +239,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       top.append(text);
       card.append(top);
 
-      if (task.isDerivedGoal || task.isMergeTarget || task.blocked) {
+      if (task.isDerivedGoal || task.isMergeTarget || task.blocked || task.importance !== 'none') {
         const badges = el('div', 'cg-badges');
         if (task.isDerivedGoal) {
           const badge = el('span', 'cg-badge cg-goal');
@@ -242,6 +254,11 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         if (task.blocked) {
           const badge = el('span', 'cg-badge cg-warn');
           badge.textContent = 'LOCKED';
+          badges.append(badge);
+        }
+        if (task.importance !== 'none') {
+          const badge = el('span', 'cg-badge cg-importance');
+          badge.textContent = `${tr('重要度', 'Importance')}: ${importanceLabel(task.importance)}`;
           badges.append(badge);
         }
         card.append(badges);
@@ -610,6 +627,19 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       date.input.type = 'date';
       const time = field(tr('時刻', 'Time'), schedule.time);
       time.input.type = 'time';
+      const importanceWrap = el('label', 'cg-field');
+      const importanceCaption = el('span', 'cg-field-label');
+      importanceCaption.textContent = tr('重要度', 'Importance');
+      const importance = el('select', 'cg-input');
+      importance.setAttribute('aria-label', tr('重要度', 'Importance'));
+      for (const value of ['none', 'low', 'medium', 'high', 'urgent'] as const) {
+        const option = el('option');
+        option.value = value;
+        option.textContent = importanceLabel(value);
+        importance.append(option);
+      }
+      importance.value = task.importance;
+      importanceWrap.append(importanceCaption, importance);
       const danger = btn(
         tr('削除', 'Delete'),
         () => {
@@ -636,7 +666,16 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       save.type = 'submit';
       save.textContent = tr('保存', 'Save');
       actions.append(save);
-      form.append(heading, title.wrap, notesWrap, scheduleKind, date.wrap, time.wrap, actions);
+      form.append(
+        heading,
+        title.wrap,
+        notesWrap,
+        scheduleKind,
+        date.wrap,
+        time.wrap,
+        importanceWrap,
+        actions,
+      );
       form.addEventListener('submit', (event) => {
         event.preventDefault();
         let nextSchedule: CherryScheduleModel = { kind: 'none' };
@@ -652,6 +691,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
               taskId: task.id,
               title: title.input.value,
               notes: notes.value,
+              importance: importance.value as CherryTaskImportance,
             }),
           );
           await perform(context.intents.task.setSchedule(task.id, nextSchedule));
@@ -770,6 +810,20 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
               void perform(context.intents.storage.disable(false));
             },
             'cg-btn cg-quiet',
+          ),
+          btn(
+            tr('保存データを削除して停止', 'Clear saved data & stop storage'),
+            () => {
+              const accepted = window.confirm(
+                tr(
+                  'この端末に保存したCherryデータを削除しますか？',
+                  'Clear saved Cherry data from this device?',
+                ),
+              );
+              if (!accepted) return;
+              void perform(context.intents.storage.disable(true));
+            },
+            'cg-btn cg-danger',
           ),
         );
       }
