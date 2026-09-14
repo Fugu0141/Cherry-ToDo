@@ -7,14 +7,14 @@ import {
   validateFlowGraph,
   type FlowEdge,
   type FlowGraph,
-} from '../../src/modules/flow/index.ts';
+} from '../../src/modules/flow/index';
 import {
   parseFlowEdgeId,
   parseTaskId,
   type FlowEdgeId,
   type TaskId,
-} from '../../src/shared/ids/index.ts';
-import { revisionMeta } from './fixtures.ts';
+} from '../../src/shared/ids/index';
+import { revisionMeta } from './fixtures';
 
 function taskId(value: string): TaskId {
   const result = parseTaskId(value);

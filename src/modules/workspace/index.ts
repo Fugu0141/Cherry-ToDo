@@ -4,4 +4,4 @@ export {
   type TabDocument,
   type WorkspaceDocument,
   type WorkspaceValidationError,
-} from './domain/workspace.ts';
+} from './domain/workspace';

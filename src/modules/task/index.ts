@@ -7,4 +7,4 @@ export {
   type TaskImportance,
   type TaskStatus,
   type TaskValidationError,
-} from './domain/task.ts';
+} from './domain/task';

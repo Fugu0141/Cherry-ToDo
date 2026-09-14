@@ -3,14 +3,14 @@ import {
   validateSchedule,
   type Schedule,
   type ScheduleValidationError,
-} from '../../schedule/index.ts';
-import type { TaskId } from '../../../shared/ids/index.ts';
+} from '../../schedule/index';
+import type { TaskId } from '../../../shared/ids/index';
 import {
   validateRevisionMeta,
   type RevisionMeta,
   type RevisionMetaError,
-} from '../../../shared/revision/index.ts';
-import { err, ok, type Result } from '../../../shared/result/index.ts';
+} from '../../../shared/revision/index';
+import { err, ok, type Result } from '../../../shared/result/index';
 
 export type TaskStatus = 'todo' | 'done';
 export type TaskImportance = 'none' | 'low' | 'medium' | 'high' | 'urgent';

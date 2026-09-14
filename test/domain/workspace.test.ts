@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
-import { createEmptyBoardDocumentState } from '../../src/modules/board/index.ts';
-import type { FlowEdge } from '../../src/modules/flow/index.ts';
-import { noSchedule } from '../../src/modules/schedule/index.ts';
-import type { Task } from '../../src/modules/task/index.ts';
+import { createEmptyBoardDocumentState } from '../../src/modules/board/index';
+import type { FlowEdge } from '../../src/modules/flow/index';
+import { noSchedule } from '../../src/modules/schedule/index';
+import type { Task } from '../../src/modules/task/index';
 import {
   CHERRY_V2_SCHEMA_VERSION,
   validateWorkspaceDocument,
   type WorkspaceDocument,
-} from '../../src/modules/workspace/index.ts';
+} from '../../src/modules/workspace/index';
 import {
   parseFlowEdgeId,
   parseTabId,
@@ -18,8 +18,8 @@ import {
   type TabId,
   type TaskId,
   type WorkspaceId,
-} from '../../src/shared/ids/index.ts';
-import { revisionMeta } from './fixtures.ts';
+} from '../../src/shared/ids/index';
+import { revisionMeta } from './fixtures';
 
 function unwrapId<T>(result: { readonly ok: true; readonly value: T } | { readonly ok: false }): T {
   if (!result.ok) throw new Error('Invalid fixture id.');

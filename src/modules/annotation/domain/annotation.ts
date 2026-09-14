@@ -1,11 +1,11 @@
-import type { AnnotationId } from '../../../shared/ids/index.ts';
+import type { AnnotationId } from '../../../shared/ids/index';
 import {
   validateRevisionMeta,
   type RevisionMeta,
   type RevisionMetaError,
-} from '../../../shared/revision/index.ts';
-import { err, ok, type Result } from '../../../shared/result/index.ts';
-import type { Point } from '../../board/index.ts';
+} from '../../../shared/revision/index';
+import { err, ok, type Result } from '../../../shared/result/index';
+import type { Point } from '../../board/index';
 
 export interface Rect {
   readonly x: number;

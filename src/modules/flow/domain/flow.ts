@@ -1,6 +1,6 @@
-import type { FlowEdgeId, TaskId } from '../../../shared/ids/index.ts';
-import { validateRevisionMeta, type RevisionMeta } from '../../../shared/revision/index.ts';
-import { err, ok, type Result } from '../../../shared/result/index.ts';
+import type { FlowEdgeId, TaskId } from '../../../shared/ids/index';
+import { validateRevisionMeta, type RevisionMeta } from '../../../shared/revision/index';
+import { err, ok, type Result } from '../../../shared/result/index';
 
 export type StructuralFlowKind = 'continuation' | 'branch';
 

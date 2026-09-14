@@ -1,4 +1,4 @@
-import { err, ok, type Result } from '../../../shared/result/index.ts';
+import { err, ok, type Result } from '../../../shared/result/index';
 
 declare const localDateBrand: unique symbol;
 declare const localTimeBrand: unique symbol;
