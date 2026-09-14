@@ -9,6 +9,8 @@ import type {
   UIActionResult,
   WorkspaceScreenModel,
 } from '../../ui-contract/index';
+import { InteractionCoordinator } from './interaction/interaction-coordinator';
+import { installMobileBoardInteraction } from './interaction/mobile-board-interaction';
 
 function element<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -243,6 +245,8 @@ function renderBoard(
   startConnection: (taskId: string, kind: CherryFlowKind) => void,
   connectTarget: (taskId: string) => void,
   cancelConnection: () => void,
+  interactionCoordinator: InteractionCoordinator,
+  registerInteractionCleanup: (cleanup: () => void) => void,
 ): HTMLElement {
   const scroll = element('main', 'cherry-board-scroll');
   const canvas = element('section', 'cherry-board-canvas');
@@ -422,6 +426,19 @@ function renderBoard(
     canvas.append(card);
   }
 
+  registerInteractionCleanup(
+    installMobileBoardInteraction({
+      scroll,
+      canvas,
+      workspace,
+      collapsedLaneIds,
+      coordinator: interactionCoordinator,
+      dropTask: (taskId, target) => {
+        void perform(context, context.intents.board.dropTask({ taskId, target }));
+      },
+    }),
+  );
+
   scroll.append(canvas);
   return scroll;
 }
@@ -478,6 +495,8 @@ function renderWorkspace(
   startConnection: (taskId: string, kind: CherryFlowKind) => void,
   connectTarget: (taskId: string) => void,
   cancelConnection: () => void,
+  interactionCoordinator: InteractionCoordinator,
+  registerInteractionCleanup: (cleanup: () => void) => void,
 ): void {
   const header = element('header', 'cherry-header');
   const brand = button(
@@ -696,6 +715,8 @@ function renderWorkspace(
           startConnection,
           connectTarget,
           cancelConnection,
+          interactionCoordinator,
+          registerInteractionCleanup,
         )
       : renderList(
           context,
@@ -839,8 +860,12 @@ export class DefaultCherryUI implements CherryUIPackage<HTMLElement> {
     let connectionDraft: FlowConnectionDraft | null = null;
     let lastWorkspaceId: string | null = null;
     const collapsedLaneIds = new Set<string>();
+    const interactionCoordinator = new InteractionCoordinator();
+    let boardInteractionCleanup: (() => void) | null = null;
 
     const render = (): void => {
+      boardInteractionCleanup?.();
+      boardInteractionCleanup = null;
       const screen = context.getScreen();
       if (screen.kind === 'loading') {
         const loading = element('main', 'cherry-center');
@@ -967,6 +992,10 @@ export class DefaultCherryUI implements CherryUIPackage<HTMLElement> {
           connectionDraft = null;
           render();
         },
+        interactionCoordinator,
+        (cleanup) => {
+          boardInteractionCleanup = cleanup;
+        },
       );
     };
 
@@ -982,6 +1011,8 @@ export class DefaultCherryUI implements CherryUIPackage<HTMLElement> {
     render();
     return {
       unmount() {
+        boardInteractionCleanup?.();
+        interactionCoordinator.cancel();
         document.removeEventListener('keydown', onKeyDown);
         unsubscribe();
         root.replaceChildren();
