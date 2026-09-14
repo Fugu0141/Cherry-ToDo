@@ -52,16 +52,18 @@ export class IndexedDbBinaryStore implements BrowserBinaryStore {
   async listKeys(): Promise<readonly string[]> {
     const database = await this.#database();
     const transaction = database.transaction(this.#storeName, 'readonly');
+    const done = transactionDone(transaction);
     const keys = await requestResult(transaction.objectStore(this.#storeName).getAllKeys());
-    await transactionDone(transaction);
+    await done;
     return keys.map((key) => String(key));
   }
 
   async get(key: string): Promise<Uint8Array | null> {
     const database = await this.#database();
     const transaction = database.transaction(this.#storeName, 'readonly');
+    const done = transactionDone(transaction);
     const value = await requestResult(transaction.objectStore(this.#storeName).get(key));
-    await transactionDone(transaction);
+    await done;
 
     if (value === undefined) return null;
     if (value instanceof Uint8Array) return value.slice();
@@ -72,22 +74,25 @@ export class IndexedDbBinaryStore implements BrowserBinaryStore {
   async put(key: string, value: Uint8Array): Promise<void> {
     const database = await this.#database();
     const transaction = database.transaction(this.#storeName, 'readwrite');
+    const done = transactionDone(transaction);
     transaction.objectStore(this.#storeName).put(value.slice(), key);
-    await transactionDone(transaction);
+    await done;
   }
 
   async delete(key: string): Promise<void> {
     const database = await this.#database();
     const transaction = database.transaction(this.#storeName, 'readwrite');
+    const done = transactionDone(transaction);
     transaction.objectStore(this.#storeName).delete(key);
-    await transactionDone(transaction);
+    await done;
   }
 
   async clear(): Promise<void> {
     const database = await this.#database();
     const transaction = database.transaction(this.#storeName, 'readwrite');
+    const done = transactionDone(transaction);
     transaction.objectStore(this.#storeName).clear();
-    await transactionDone(transaction);
+    await done;
   }
 
   #database(): Promise<IDBDatabase> {
