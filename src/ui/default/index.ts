@@ -9,6 +9,12 @@ import type {
   UIActionResult,
   WorkspaceScreenModel,
 } from '../../ui-contract/index';
+import {
+  beginMobileConnection,
+  cancelMobileConnection,
+  completeMobileConnection,
+} from './interaction/mobile-connection-flow';
+import { buildListFlowContext } from './interaction/mobile-flow-presentation';
 import { InteractionCoordinator } from './interaction/interaction-coordinator';
 import { installMobileBoardInteraction } from './interaction/mobile-board-interaction';
 
@@ -174,7 +180,12 @@ function renderTask(
       ['reference', '↝', 'flow.connectReference'],
     ] as const;
     for (const [kind, symbol, labelKey] of options) {
-      const handle = button(symbol, () => startConnection(task.id, kind), 'cherry-flow-handle');
+      const handle = button('', () => startConnection(task.id, kind), 'cherry-flow-handle');
+      const glyph = element('span', 'cherry-flow-handle-glyph');
+      glyph.textContent = symbol;
+      const mobileLabel = element('span', 'cherry-mobile-flow-label');
+      mobileLabel.textContent = context.i18n.t(labelKey);
+      handle.append(glyph, mobileLabel);
       handle.title = context.i18n.t(labelKey);
       handle.setAttribute('aria-label', context.i18n.t(labelKey));
       connectors.append(handle);
@@ -454,17 +465,41 @@ function renderList(
 ): HTMLElement {
   const list = element('main', 'cherry-list');
   for (const task of workspace.tasks) {
-    list.append(
-      renderTask(
-        context,
-        task,
-        onEdit,
-        connectionDraft,
-        startConnection,
-        connectTarget,
-        cancelConnection,
-      ),
+    const card = renderTask(
+      context,
+      task,
+      onEdit,
+      connectionDraft,
+      startConnection,
+      connectTarget,
+      cancelConnection,
     );
+    const flow = buildListFlowContext(workspace, task.id);
+    if (
+      flow.incomingStructuralTitles.length > 0 ||
+      flow.outgoingStructuralTitles.length > 0 ||
+      flow.referenceTitles.length > 0
+    ) {
+      const contextLine = element('div', 'cherry-list-flow-context');
+      if (flow.incomingStructuralTitles.length > 0) {
+        const incoming = element('span');
+        incoming.textContent = `${context.i18n.t('flow.from')}: ${flow.incomingStructuralTitles.join(', ')}`;
+        contextLine.append(incoming);
+      }
+      if (flow.outgoingStructuralTitles.length > 0) {
+        const outgoing = element('span');
+        outgoing.textContent = `${context.i18n.t('flow.to')}: ${flow.outgoingStructuralTitles.join(', ')}`;
+        contextLine.append(outgoing);
+      }
+      if (flow.referenceTitles.length > 0) {
+        const references = element('span');
+        references.textContent = `↝ ${flow.referenceTitles.join(', ')}`;
+        references.setAttribute('aria-label', context.i18n.t('flow.connectReference'));
+        contextLine.append(references);
+      }
+      card.append(contextLine);
+    }
+    list.append(card);
   }
   const connections = renderConnectionSummary(context, workspace);
   if (connections !== null) list.append(connections);
@@ -562,6 +597,28 @@ function renderWorkspace(
     });
   });
   toolbar.append(taskForm);
+
+  if (workspace.tasks.length === 0) {
+    const startFlow = element('section', 'cherry-mobile-flow-start');
+    const startFlowTitle = element('strong');
+    startFlowTitle.textContent = context.i18n.t('mobile.startFlow');
+    const startFlowHint = element('p');
+    startFlowHint.textContent = context.i18n.t('mobile.startFlowHint');
+    const startFlowAction = button(
+      context.i18n.t('task.create'),
+      () => newTitle.input.focus(),
+      'cherry-button primary',
+    );
+    startFlow.append(startFlowTitle, startFlowHint, startFlowAction);
+    toolbar.append(startFlow);
+  }
+
+  if (connectionDraft !== null) {
+    const connectionHint = element('p', 'cherry-mobile-connection-hint');
+    connectionHint.textContent = context.i18n.t('mobile.connectionHint');
+    connectionHint.setAttribute('role', 'status');
+    toolbar.append(connectionHint);
+  }
 
   if (workspace.tasks.length >= 2) {
     const flowForm = element('form', 'cherry-flow-form');
@@ -971,24 +1028,21 @@ export class DefaultCherryUI implements CherryUIPackage<HTMLElement> {
         },
         connectionDraft,
         (taskId, kind) => {
-          connectionDraft = { fromTaskId: taskId, kind };
+          const draft = beginMobileConnection(interactionCoordinator, taskId, kind);
+          if (draft === null) return;
+          connectionDraft = draft;
           render();
         },
         (taskId) => {
-          const draft = connectionDraft;
-          if (draft === null || draft.fromTaskId === taskId) return;
+          if (connectionDraft === null) return;
+          const intent = completeMobileConnection(interactionCoordinator, taskId);
+          if (intent === null) return;
           connectionDraft = null;
           render();
-          void perform(
-            context,
-            context.intents.flow.connect({
-              fromTaskId: draft.fromTaskId,
-              toTaskId: taskId,
-              kind: draft.kind,
-            }),
-          );
+          void perform(context, context.intents.flow.connect(intent));
         },
         () => {
+          cancelMobileConnection(interactionCoordinator);
           connectionDraft = null;
           render();
         },
@@ -1003,6 +1057,7 @@ export class DefaultCherryUI implements CherryUIPackage<HTMLElement> {
       if (event.key !== 'Escape') return;
       if (selectedTaskId === null && connectionDraft === null) return;
       selectedTaskId = null;
+      cancelMobileConnection(interactionCoordinator);
       connectionDraft = null;
       render();
     };

@@ -292,9 +292,10 @@ export function installMobileBoardInteraction(options: MobileBoardInteractionOpt
       window.cancelAnimationFrame(activeDrag.frame);
     }
     if (activeDrag !== null) restoreCard(activeDrag);
+    const state = coordinator.state;
+    if (state.kind === 'dragging-task' || state.kind === 'panning') coordinator.cancel();
     drag = null;
     pan = null;
-    coordinator.cancel();
     for (const cleanup of cleanups) cleanup();
   };
 }
