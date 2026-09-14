@@ -32,6 +32,9 @@ jobs:
       - name: Run V2 static and headless gates
         run: npm run check
 
+      - name: Verify requirement traceability
+        run: npm run traceability:check
+
       - name: Report production bundle metrics
         run: npm run metrics
 

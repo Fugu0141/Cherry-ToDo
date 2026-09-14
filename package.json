@@ -20,8 +20,9 @@
     "boundaries": "node scripts/check-boundaries.mjs",
     "metrics": "node scripts/report-build-metrics.mjs",
     "static:verify": "node scripts/verify-static-build.mjs",
+    "traceability:check": "node scripts/verify-requirement-traceability.mjs",
     "check": "npm run format:check && npm run lint && npm run typecheck && npm run boundaries && npm run test && npm run build",
-    "release:check": "npm run check && npm run metrics && npm run static:verify && npm run test:e2e"
+    "release:check": "npm run check && npm run traceability:check && npm run metrics && npm run static:verify && npm run test:e2e"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",
