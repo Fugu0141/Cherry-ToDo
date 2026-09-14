@@ -221,6 +221,9 @@ export class CherryUIRuntime implements CherryUIContext {
         create: (input) => this.#createWorkspace(input.name),
         open: (workspaceId) => this.#openWorkspace(workspaceId),
         createTab: (input) => this.#createTab(input.name),
+        renameTab: (input) => this.#renameTab(input.tabId, input.name),
+        duplicateTab: (tabId) => this.#duplicateTab(tabId),
+        deleteTab: (tabId) => this.#deleteTab(tabId),
         openTab: (tabId) => this.#openTab(tabId),
         goToStart: () => this.#showStart(),
         setView: (view) => this.#setView(view),
@@ -455,6 +458,92 @@ export class CherryUIRuntime implements CherryUIContext {
 
     this.#tabId = tabId;
     await this.#rememberSession();
+    this.#refreshWorkspace();
+    return OK;
+  }
+
+  async #renameTab(rawId: string, rawName: string): Promise<UIActionResult> {
+    if (this.#store === null) return this.#error('not-found', 'error.notFound');
+    const parsed = parseTabId(rawId);
+    if (!parsed.ok) return this.#error('validation', 'error.validation');
+    const previous = this.#store.workspace;
+    const result = this.#store.renameTab(parsed.value, rawName);
+    if (!result.ok) return { kind: 'error', error: presentationError(result.error) };
+    const saved = await this.#application.persistence.workspaceRepository.save(
+      this.#store.workspace,
+      previous.meta.revision,
+    );
+    if (saved.kind !== 'saved') {
+      this.#store = new ApplicationStore(previous);
+      this.#refreshWorkspace();
+      return this.#error(
+        saved.kind === 'revision-conflict' ? 'conflict' : 'persistence',
+        saved.kind === 'revision-conflict' ? 'error.conflict' : 'error.persistence',
+      );
+    }
+    this.#refreshWorkspace();
+    return OK;
+  }
+
+  async #duplicateTab(rawId: string): Promise<UIActionResult> {
+    if (this.#store === null) return this.#error('not-found', 'error.notFound');
+    const parsed = parseTabId(rawId);
+    if (!parsed.ok) return this.#error('validation', 'error.validation');
+    const previous = this.#store.workspace;
+    const tabId = unwrapId(parseTabId(randomId('tab')));
+    const result = this.#store.duplicateTab(parsed.value, tabId);
+    if (!result.ok) return { kind: 'error', error: presentationError(result.error) };
+    const saved = await this.#application.persistence.workspaceRepository.save(
+      this.#store.workspace,
+      previous.meta.revision,
+    );
+    if (saved.kind !== 'saved') {
+      this.#store = new ApplicationStore(previous);
+      this.#refreshWorkspace();
+      return this.#error(
+        saved.kind === 'revision-conflict' ? 'conflict' : 'persistence',
+        saved.kind === 'revision-conflict' ? 'error.conflict' : 'error.persistence',
+      );
+    }
+    this.#tabId = tabId;
+    await this.#rememberSession();
+    this.#refreshWorkspace();
+    return OK;
+  }
+
+  async #deleteTab(rawId: string): Promise<UIActionResult> {
+    if (this.#store === null) return this.#error('not-found', 'error.notFound');
+    const parsed = parseTabId(rawId);
+    if (!parsed.ok) return this.#error('validation', 'error.validation');
+    const previous = this.#store.workspace;
+    const result = this.#store.deleteTab(parsed.value);
+    if (!result.ok) return { kind: 'error', error: presentationError(result.error) };
+
+    if (this.#store.workspace.tabOrder.length === 0) {
+      await this.#application.persistence.workspaceRepository.delete(this.#store.workspace.id);
+      this.#store = null;
+      this.#tabId = null;
+      return this.#showStart();
+    }
+
+    const saved = await this.#application.persistence.workspaceRepository.save(
+      this.#store.workspace,
+      previous.meta.revision,
+    );
+    if (saved.kind !== 'saved') {
+      this.#store = new ApplicationStore(previous);
+      this.#refreshWorkspace();
+      return this.#error(
+        saved.kind === 'revision-conflict' ? 'conflict' : 'persistence',
+        saved.kind === 'revision-conflict' ? 'error.conflict' : 'error.persistence',
+      );
+    }
+    if (this.#tabId === parsed.value) {
+      const fallback = this.#store.workspace.tabOrder[0];
+      if (fallback === undefined) return this.#error('not-found', 'error.notFound');
+      this.#tabId = fallback;
+      await this.#rememberSession();
+    }
     this.#refreshWorkspace();
     return OK;
   }

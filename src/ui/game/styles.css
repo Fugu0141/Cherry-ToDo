@@ -65,6 +65,14 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .cg-tab { flex: 0 0 auto; min-height: 34px; border-radius: 999px; padding: 6px 12px; background: transparent; font-size: 13px; }
 .cg-tab.active { background: var(--cg-accent-soft); color: #a42840; font-weight: 780; }
 .cg-tab-add { width: 34px; padding: 0; font-size: 18px; }
+.cg-tab-item { position: relative; display: inline-flex; align-items: center; flex: 0 0 auto; }
+.cg-tab-item .cg-tab.active { padding-right: 30px; }
+.cg-tab-more { position: absolute; right: 3px; width: 27px; height: 27px; min-height: 0; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--cg-muted); font-weight: 800; }
+.cg-tab-more:hover { background: rgba(216,51,82,.08); color: var(--cg-accent); }
+.cg-tab-menu { position: absolute; top: calc(100% + 7px); right: 0; z-index: 75; min-width: 154px; padding: 6px; border: 1px solid var(--cg-border); border-radius: 13px; background: rgba(255,255,255,.98); box-shadow: var(--cg-shadow); }
+.cg-tab-menu-action { display: block; width: 100%; min-height: 36px; padding: 7px 10px; border: 0; border-radius: 9px; background: transparent; text-align: left; white-space: nowrap; }
+.cg-tab-menu-action:hover { background: var(--cg-surface-2); }
+.cg-tab-menu-action.danger { color: var(--cg-danger); }
 .cg-view { min-height: 34px; padding: 6px 10px; background: transparent; font-size: 13px; }
 .cg-view.active { background: #edf0f3; font-weight: 780; }
 

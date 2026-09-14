@@ -84,6 +84,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
     let editingTaskId: string | null = null;
     let connectDraft: ConnectDraft | null = null;
     let settingsOpen = false;
+    let tabMenuId: string | null = null;
     let boardCleanup: (() => void) | null = null;
     let lastTabId: string | null = null;
     const collapsedLaneIds = new Set<string>();
@@ -119,6 +120,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       editingTaskId = null;
       connectDraft = null;
       settingsOpen = false;
+      tabMenuId = null;
       coordinator.cancel();
     };
 
@@ -695,14 +697,71 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
 
       const center = el('nav', 'cg-tabs');
       for (const tab of workspace.tabs) {
+        const item = el('div', 'cg-tab-item');
         const tabButton = btn(
           tab.name,
           () => {
+            tabMenuId = null;
             if (tab.id !== workspace.tabId) void perform(context.intents.workspace.openTab(tab.id));
           },
           tab.id === workspace.tabId ? 'cg-tab active' : 'cg-tab',
         );
-        center.append(tabButton);
+        item.append(tabButton);
+        if (tab.id === workspace.tabId) {
+          item.append(
+            btn(
+              '⋯',
+              (event) => {
+                event.stopPropagation();
+                tabMenuId = tabMenuId === tab.id ? null : tab.id;
+                render();
+              },
+              'cg-tab-more',
+            ),
+          );
+          if (tabMenuId === tab.id) {
+            const menu = el('div', 'cg-tab-menu');
+            menu.append(
+              btn(
+                '名前を変更',
+                () => {
+                  const name = window.prompt('タブ名', tab.name);
+                  tabMenuId = null;
+                  if (name?.trim()) {
+                    void perform(
+                      context.intents.workspace.renameTab({ tabId: tab.id, name: name.trim() }),
+                    );
+                  } else {
+                    render();
+                  }
+                },
+                'cg-tab-menu-action',
+              ),
+              btn(
+                '複製',
+                () => {
+                  tabMenuId = null;
+                  void perform(context.intents.workspace.duplicateTab(tab.id));
+                },
+                'cg-tab-menu-action',
+              ),
+              btn(
+                '削除',
+                () => {
+                  tabMenuId = null;
+                  if (!window.confirm(`「${tab.name}」を削除しますか？`)) {
+                    render();
+                    return;
+                  }
+                  void perform(context.intents.workspace.deleteTab(tab.id));
+                },
+                'cg-tab-menu-action danger',
+              ),
+            );
+            item.append(menu);
+          }
+        }
+        center.append(item);
       }
       center.append(
         btn(

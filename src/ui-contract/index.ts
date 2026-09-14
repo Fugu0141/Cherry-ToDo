@@ -168,6 +168,11 @@ export interface CreateTabIntent {
   readonly name: string;
 }
 
+export interface RenameTabIntent {
+  readonly tabId: string;
+  readonly name: string;
+}
+
 export interface CreateTaskIntent {
   readonly title: string;
   readonly notes?: string;
@@ -223,6 +228,9 @@ export interface CherryUIIntents {
     create(input: CreateWorkspaceIntent): Promise<UIActionResult>;
     open(workspaceId: string): Promise<UIActionResult>;
     createTab(input: CreateTabIntent): Promise<UIActionResult>;
+    renameTab(input: RenameTabIntent): Promise<UIActionResult>;
+    duplicateTab(tabId: string): Promise<UIActionResult>;
+    deleteTab(tabId: string): Promise<UIActionResult>;
     openTab(tabId: string): Promise<UIActionResult>;
     goToStart(): Promise<UIActionResult>;
     setView(view: CherryView): Promise<UIActionResult>;
