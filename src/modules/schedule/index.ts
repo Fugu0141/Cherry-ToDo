@@ -9,4 +9,4 @@ export {
   type LocalTime,
   type Schedule,
   type ScheduleValidationError,
-} from './domain/schedule.ts';
+} from './domain/schedule';

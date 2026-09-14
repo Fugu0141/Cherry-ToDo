@@ -6,7 +6,7 @@ import {
   parseTabId,
   parseTaskId,
   parseWorkspaceId,
-} from '../../src/shared/ids/index.ts';
+} from '../../src/shared/ids/index';
 
 describe('stable entity ids', () => {
   it('preserves valid serialized values without rewriting them', () => {

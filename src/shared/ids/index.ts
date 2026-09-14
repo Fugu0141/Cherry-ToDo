@@ -1,4 +1,4 @@
-import { err, ok, type Result } from '../result/index.ts';
+import { err, ok, type Result } from '../result/index';
 
 declare const entityIdBrand: unique symbol;
 

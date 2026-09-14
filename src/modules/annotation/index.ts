@@ -5,4 +5,4 @@ export {
   type Rect,
   type StrokeAnnotation,
   type TextAnnotation,
-} from './domain/annotation.ts';
+} from './domain/annotation';

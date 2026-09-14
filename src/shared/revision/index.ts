@@ -1,4 +1,4 @@
-import { err, ok, type Result } from '../result/index.ts';
+import { err, ok, type Result } from '../result/index';
 
 export interface RevisionMeta {
   readonly createdAt: string;

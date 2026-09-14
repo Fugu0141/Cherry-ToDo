@@ -7,4 +7,4 @@ export {
   type BoardValidationError,
   type Point,
   type TimeGuideMode,
-} from './domain/board.ts';
+} from './domain/board';

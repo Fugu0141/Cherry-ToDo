@@ -2,21 +2,21 @@ import {
   validateAnnotation,
   type Annotation,
   type AnnotationValidationError,
-} from '../../annotation/index.ts';
+} from '../../annotation/index';
 import {
   validateBoardDocumentState,
   type BoardDocumentState,
   type BoardValidationError,
-} from '../../board/index.ts';
-import { validateFlowGraph, type FlowEdge, type FlowInvariantError } from '../../flow/index.ts';
-import { validateTask, type Task, type TaskValidationError } from '../../task/index.ts';
-import type { TabId, TaskId, WorkspaceId } from '../../../shared/ids/index.ts';
+} from '../../board/index';
+import { validateFlowGraph, type FlowEdge, type FlowInvariantError } from '../../flow/index';
+import { validateTask, type Task, type TaskValidationError } from '../../task/index';
+import type { TabId, TaskId, WorkspaceId } from '../../../shared/ids/index';
 import {
   validateRevisionMeta,
   type RevisionMeta,
   type RevisionMetaError,
-} from '../../../shared/revision/index.ts';
-import { err, ok, type Result } from '../../../shared/result/index.ts';
+} from '../../../shared/revision/index';
+import { err, ok, type Result } from '../../../shared/result/index';
 
 export const CHERRY_V2_SCHEMA_VERSION = 2 as const;
 

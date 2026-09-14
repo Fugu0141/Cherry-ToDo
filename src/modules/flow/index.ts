@@ -11,4 +11,4 @@ export {
   type ReferenceFlowEdge,
   type StructuralFlowEdge,
   type StructuralFlowKind,
-} from './domain/flow.ts';
+} from './domain/flow';

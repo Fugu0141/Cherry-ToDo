@@ -1,5 +1,5 @@
-import type { TaskId } from '../../../shared/ids/index.ts';
-import { err, ok, type Result } from '../../../shared/result/index.ts';
+import type { TaskId } from '../../../shared/ids/index';
+import { err, ok, type Result } from '../../../shared/result/index';
 
 export interface Point {
   readonly x: number;

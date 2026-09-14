@@ -4,7 +4,7 @@ import {
   parseLocalDate,
   scheduleAtDateTime,
   scheduleOnDate,
-} from '../../src/modules/schedule/index.ts';
+} from '../../src/modules/schedule/index';
 
 describe('Schedule', () => {
   it('keeps date-only values timezone-neutral and unchanged', () => {
