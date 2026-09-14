@@ -156,6 +156,11 @@ export interface CherrySemanticTokens {
   readonly states: readonly CherrySemanticState[];
 }
 
+export const CHERRY_SEMANTIC_TOKENS: CherrySemanticTokens = {
+  stateAttribute: 'data-cherry-state',
+  states: CHERRY_SEMANTIC_STATES,
+};
+
 export type CherryLocale = 'ja' | 'en';
 
 export type CherryMessageKey =
@@ -215,3 +220,5 @@ export interface CherryUIHandle {
 export interface CherryUIPackage<THost = unknown> {
   mount(host: THost, context: CherryUIContext): CherryUIHandle;
 }
+
+export { createCherryI18n } from './i18n';
