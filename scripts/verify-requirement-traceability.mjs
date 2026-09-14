@@ -22,8 +22,12 @@ const incomplete = rows.filter((row) => !row.content.includes('PASS')).map((row)
 const failures = [];
 if (missing.length > 0) failures.push(`Missing requirement IDs: ${missing.join(', ')}`);
 if (unknown.length > 0) failures.push(`Unknown requirement IDs: ${unknown.join(', ')}`);
-if (duplicates.length > 0) failures.push(`Duplicate requirement IDs: ${[...new Set(duplicates)].join(', ')}`);
-if (incomplete.length > 0) failures.push(`Rows without PASS evidence: ${incomplete.join(', ')}`);
+if (duplicates.length > 0) {
+  failures.push(`Duplicate requirement IDs: ${[...new Set(duplicates)].join(', ')}`);
+}
+if (incomplete.length > 0) {
+  failures.push(`Rows without PASS evidence: ${incomplete.join(', ')}`);
+}
 
 if (failures.length > 0) {
   throw new Error(`Requirement traceability verification failed.\n${failures.join('\n')}`);
