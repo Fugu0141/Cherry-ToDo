@@ -63,6 +63,16 @@ function field(label: string, value = ''): { wrap: HTMLLabelElement; input: HTML
   return { wrap, input };
 }
 
+function downloadTextFile(fileName: string, mimeType: string, content: string): void {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = fileName;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
 function scheduleValue(task: TaskCardModel): { kind: string; date: string; time: string } {
   if (task.schedule.kind === 'none') return { kind: 'none', date: '', time: '' };
   if (task.schedule.kind === 'date') return { kind: 'date', date: task.schedule.date, time: '' };
@@ -698,6 +708,45 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         apply({ timeGuide: guide.value as CherryTimeGuideMode }),
       );
       panel.append(guide);
+
+      const dataHeading = el('strong', 'cg-settings-section-title');
+      dataHeading.textContent = 'データ';
+      const importFile = (accept: string, kind: 'csv' | 'ics'): void => {
+        const input = el('input');
+        input.type = 'file';
+        input.accept = accept;
+        input.hidden = true;
+        input.addEventListener('change', () => {
+          const file = input.files?.[0];
+          if (!file) return;
+          void file
+            .text()
+            .then((source) =>
+              perform(
+                kind === 'csv'
+                  ? context.intents.interop.importCsv({ source, name: file.name })
+                  : context.intents.interop.importIcs({ source, name: file.name }),
+              ),
+            );
+        });
+        panel.append(input);
+        input.click();
+      };
+      panel.append(
+        dataHeading,
+        btn('CSVを書き出す', () => {
+          void context.intents.interop.exportCsv().then((result) => {
+            if (result.kind === 'error') {
+              window.alert(context.i18n.t(result.error.messageKey));
+              return;
+            }
+            downloadTextFile(result.fileName, result.mimeType, result.content);
+          });
+        }),
+        btn('CSVを取り込む', () => importFile('.csv,text/csv', 'csv')),
+        btn('ICSを取り込む', () => importFile('.ics,text/calendar', 'ics')),
+      );
+
       if (context.capabilities.persistentStorageEnabled) {
         panel.append(
           btn(

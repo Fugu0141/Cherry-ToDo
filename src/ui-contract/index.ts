@@ -160,6 +160,20 @@ export type UIActionResult =
   | { readonly kind: 'confirmation-required'; readonly confirmation: ConfirmationDescriptor }
   | { readonly kind: 'error'; readonly error: PresentationError };
 
+export interface ImportExternalTextIntent {
+  readonly source: string;
+  readonly name: string;
+}
+
+export type UITextExportResult =
+  | {
+      readonly kind: 'ok';
+      readonly fileName: string;
+      readonly mimeType: string;
+      readonly content: string;
+    }
+  | { readonly kind: 'error'; readonly error: PresentationError };
+
 export interface CreateWorkspaceIntent {
   readonly name: string;
 }
@@ -258,6 +272,11 @@ export interface CherryUIIntents {
     updateText(input: UpdateTextAnnotationIntent): Promise<UIActionResult>;
     updateStroke(input: UpdateStrokeAnnotationIntent): Promise<UIActionResult>;
     delete(annotationId: string): Promise<UIActionResult>;
+  };
+  readonly interop: {
+    exportCsv(): Promise<UITextExportResult>;
+    importCsv(input: ImportExternalTextIntent): Promise<UIActionResult>;
+    importIcs(input: ImportExternalTextIntent): Promise<UIActionResult>;
   };
   readonly history: {
     undo(): Promise<UIActionResult>;

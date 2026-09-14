@@ -1,3 +1,11 @@
+import {
+  commitPreparedExternalImport,
+  exportTabToCsv,
+  importCsvToTab,
+  importIcsToTab,
+  prepareExternalImportAsNewTab,
+  type ExternalTabImport,
+} from '../adapters/interop/index';
 import { annotationBounds } from '../modules/annotation/index';
 import {
   buildBoardFlowConnectorGeometry,
@@ -43,6 +51,7 @@ import {
   type DropTaskOnBoardIntent,
   type PresentationError,
   type UIActionResult,
+  type UITextExportResult,
   type WorkspaceScreenModel,
 } from '../ui-contract/index';
 import type { BrowserApplicationComposition } from './create-browser-application';
@@ -317,6 +326,11 @@ export class CherryUIRuntime implements CherryUIContext {
           this.#withAnnotationId(annotationId, (parsed) =>
             this.#runMutation((store, tabId) => store.deleteAnnotation(tabId, parsed)),
           ),
+      },
+      interop: {
+        exportCsv: () => this.#exportCsv(),
+        importCsv: (input) => this.#importExternalText('csv', input.source, input.name),
+        importIcs: (input) => this.#importExternalText('ics', input.source, input.name),
       },
       history: {
         undo: () => this.#history('undo'),
@@ -670,6 +684,71 @@ export class CherryUIRuntime implements CherryUIContext {
         saved.kind === 'revision-conflict' ? 'error.conflict' : 'error.persistence',
       );
     }
+    this.#refreshWorkspace();
+    return OK;
+  }
+
+  async #exportCsv(): Promise<UITextExportResult> {
+    if (this.#store === null || this.#tabId === null) {
+      return { kind: 'error', error: { code: 'not-found', messageKey: 'error.notFound' } };
+    }
+    const tab = this.#store.workspace.tabs[this.#tabId];
+    if (tab === undefined) {
+      return { kind: 'error', error: { code: 'not-found', messageKey: 'error.notFound' } };
+    }
+    const stem = tab.name.trim().replace(/[\/:*?"<>|]+/g, '_') || 'cherry-tab';
+    return {
+      kind: 'ok',
+      fileName: `${stem}.csv`,
+      mimeType: 'text/csv;charset=utf-8',
+      content: exportTabToCsv(tab),
+    };
+  }
+
+  async #importExternalText(
+    format: 'csv' | 'ics',
+    source: string,
+    rawName: string,
+  ): Promise<UIActionResult> {
+    if (this.#store === null || this.#tabId === null) {
+      return this.#error('not-found', 'error.notFound');
+    }
+    const name = rawName.trim() || (format === 'csv' ? 'CSV import' : 'Calendar import');
+    const parsed = format === 'csv' ? importCsvToTab(source, name) : importIcsToTab(source, name);
+    if (!parsed.ok) {
+      return {
+        kind: 'error',
+        error: { code: 'validation', messageKey: 'error.validation', detail: parsed.error.message },
+      };
+    }
+    const imported: ExternalTabImport = parsed.value;
+    const previous = this.#store.workspace;
+    const prepared = prepareExternalImportAsNewTab(previous, imported);
+    if (!prepared.ok) {
+      return {
+        kind: 'error',
+        error: {
+          code: 'validation',
+          messageKey: 'error.validation',
+          detail: prepared.error.message,
+        },
+      };
+    }
+    const committed = await commitPreparedExternalImport(
+      this.#application.persistence.workspaceRepository,
+      previous,
+      prepared.value,
+    );
+    if (committed.kind !== 'saved') {
+      return this.#error(
+        committed.result.kind === 'revision-conflict' ? 'conflict' : 'persistence',
+        committed.result.kind === 'revision-conflict' ? 'error.conflict' : 'error.persistence',
+      );
+    }
+    this.#store = new ApplicationStore(committed.workspace);
+    this.#tabId = prepared.value.importedTabId;
+    this.#view = 'board';
+    await this.#rememberSession();
     this.#refreshWorkspace();
     return OK;
   }
