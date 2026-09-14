@@ -4,7 +4,8 @@ const messages: Readonly<Record<CherryLocale, Readonly<Record<CherryMessageKey, 
   ja: {
     'app.name': 'Cherry',
     'storage.title': 'この端末に保存しますか？',
-    'storage.description': '許可すると、ワークスペースをこのブラウザに保存して次回起動時に復元できます。',
+    'storage.description':
+      '許可すると、ワークスペースをこのブラウザに保存して次回起動時に復元できます。',
     'storage.allow': '保存を許可',
     'storage.notNow': '今はしない',
     'start.title': 'ワークスペース',
@@ -35,12 +36,14 @@ const messages: Readonly<Record<CherryLocale, Readonly<Record<CherryMessageKey, 
     'error.persistence': '保存処理に失敗しました。',
     'error.unknown': '予期しないエラーが発生しました。',
     'confirmation.reopen.title': '完了状態が変更されます',
-    'confirmation.reopen.message': 'この変更により、完了済みのタスクが未完了に戻ります。続行しますか？',
+    'confirmation.reopen.message':
+      'この変更により、完了済みのタスクが未完了に戻ります。続行しますか？',
   },
   en: {
     'app.name': 'Cherry',
     'storage.title': 'Save on this device?',
-    'storage.description': 'Allow Cherry to save workspaces in this browser and restore them on your next visit.',
+    'storage.description':
+      'Allow Cherry to save workspaces in this browser and restore them on your next visit.',
     'storage.allow': 'Allow saving',
     'storage.notNow': 'Not now',
     'start.title': 'Workspaces',
@@ -71,7 +74,8 @@ const messages: Readonly<Record<CherryLocale, Readonly<Record<CherryMessageKey, 
     'error.persistence': 'Cherry could not save your data.',
     'error.unknown': 'An unexpected error occurred.',
     'confirmation.reopen.title': 'Completed tasks will change',
-    'confirmation.reopen.message': 'This change will return completed tasks to incomplete. Continue?',
+    'confirmation.reopen.message':
+      'This change will return completed tasks to incomplete. Continue?',
   },
 };
 
