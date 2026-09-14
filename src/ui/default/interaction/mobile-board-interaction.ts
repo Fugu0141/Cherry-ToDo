@@ -1,8 +1,8 @@
 import type { CherryBoardDropTarget, WorkspaceScreenModel } from '../../../ui-contract/index';
 import { resolveEdgeAutoScroll } from './edge-auto-scroll';
 import {
-  InteractionCoordinator,
   interactionDistanceSquared,
+  type InteractionCoordinator,
   type InteractionPoint,
 } from './interaction-coordinator';
 
