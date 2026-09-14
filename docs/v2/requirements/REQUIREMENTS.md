@@ -50,6 +50,7 @@ Examples:
 - Freehand movement MUST NOT reorder the flow.
 - Flow reordering MUST NOT change dates/times.
 - Cancelling a drag/drop MUST NOT leave canonical data in an intermediate state.
+- A change that would reopen already-completed Tasks MUST be previewed/confirmed before canonical mutation.
 
 ### P-003 — Composition instead of modes and patches
 
@@ -175,7 +176,7 @@ A standalone item is represented as one Task. A Task becomes a **derived branchi
 
 A Task with zero or one outgoing structural connection remains an ordinary Task for this rule, even if it is a root/top-level item.
 
-### R-TASK-003 — Automatic completion of branching goals
+### R-TASK-003 — Automatic completion and reopening of branching goals
 
 When every structural task required by all outgoing branches of a derived branching goal has been completed, Cherry MUST automatically mark that parent goal complete.
 
@@ -184,9 +185,12 @@ The completion calculation:
 - MUST use structural Flow only,
 - MUST ignore reference/cyclic edges,
 - MUST work for nested branches and structural merges,
+- MUST de-duplicate shared descendants,
 - MUST be deterministic and testable without UI code.
 
-The exact policy for reopening a previously auto-completed goal when a downstream Task is reopened is an explicit design-freeze question and MUST be resolved before this behavior is implemented.
+If Cherry automatically completed a branching goal and a required downstream structural Task later becomes incomplete, Cherry MUST automatically reopen that goal.
+
+A goal that the user explicitly completed manually MUST NOT be silently reopened merely by the derived-goal evaluator. Automatic and manual completion intent MUST therefore remain distinguishable at the application/history level where needed.
 
 ### R-FLOW-001 — Explicit Flow edges and structural DAG
 
@@ -238,22 +242,101 @@ A ────┤     ├→ D
 
 Layout, traversal, completion, history, import/export, and validation MUST treat the structural graph as a DAG rather than assuming a tree/forest with single-parent ownership.
 
-### R-FLOW-007 — Explicit deletion scope
+### R-FLOW-007 — Explicit deletion scope with chain-limited downstream deletion
 
 Deleting a Task that participates in structural Flow MUST ask the user to choose the destructive scope rather than silently guessing.
 
 At minimum the UI MUST offer concepts equivalent to:
 
 - **Delete this Task only** — remove the selected Task while preserving the surrounding Flow where a valid reconnection can be formed; root/leaf cases preserve the remaining Tasks without accidental cascade.
-- **Delete this Task and its downstream Flow** — remove the selected Task and an explicitly defined downstream structural scope after confirmation.
+- **Delete this Task and its downstream Flow** — remove the selected Task and the following single unambiguous structural chain after confirmation.
 
-Delete operations MUST be transactional and undoable where practical. The exact treatment of a downstream Task that is shared by another incoming path in a merged DAG is a design-freeze question and MUST be resolved before cascade deletion is implemented.
+For downstream Flow deletion, traversal MUST stop before the next structural junction. A junction is reached when the next Task is either:
+
+- a merge point with two or more incoming structural edges, or
+- a branch point with two or more outgoing structural edges.
+
+The junction Task itself MUST be preserved. Deletion MUST NOT cross a branch/merge junction automatically or delete a Task that is shared by another structural path merely because one path was selected.
+
+Delete operations MUST be transactional and undoable where practical.
+
+### R-FLOW-008 — Merge targets are execution gates
+
+A Task with two or more incoming structural edges is a merge execution gate.
+
+A merge target MUST NOT be newly marked complete while one or more direct structural predecessor Tasks are incomplete.
+
+Example:
+
+```text
+A ✓ ─┐
+     ├→ C 🔒
+B □ ─┘
+```
+
+`C` remains editable and schedulable, but completion is unavailable until `B` is also complete.
+
+When all merge prerequisites become complete, the merge target becomes available for normal completion. It MUST NOT auto-complete merely because the gate opened.
+
+The Application/Domain MUST enforce this rule even if a UI package incorrectly enables a completion control.
+
+### R-FLOW-009 — Ordinary chains remain flexible; closed merge gates propagate blocking
+
+A normal one-line structural Flow does not, by itself, create hard completion prerequisites. Cherry uses ordinary Flow primarily to show intended task order.
+
+Therefore `A □ → B □ → C □` MUST NOT automatically lock `B` or `C` merely because `A` is incomplete.
+
+However, when a Task lies structurally downstream of an unresolved merge execution gate, it MUST inherit that blocked completion state until the gate is resolved.
+
+Example:
+
+```text
+A ✓ ─┐
+     ├→ C 🔒 → D 🔒
+B □ ─┘
+```
+
+Completing `B` opens the gate and makes both `C` and `D` available for normal completion.
+
+Reference/cyclic edges MUST NOT create or propagate these structural execution locks.
+
+Completion availability SHOULD be derived from the current structural DAG rather than persisted as an independently mutable `locked` flag.
+
+### R-FLOW-010 — Completion invalidation requires impact planning and confirmation
+
+If a status or structural Flow change would cause one or more already-completed Tasks to become invalid under the current merge-gate rules, Cherry MUST NOT silently mutate those completed Tasks.
+
+Before canonical mutation:
+
+1. Application MUST calculate the affected completion/blocked-state consequence set against a known document/graph revision.
+2. Presentation MUST warn the user that completed Tasks will return to incomplete.
+3. The user MUST be able to cancel with no canonical mutation.
+4. On confirmation, the validated consequences MUST be committed transactionally with the initiating change where practical.
+
+Example wording:
+
+```text
+この変更により、完了済みのタスクが未完了に戻ります。
+続行しますか？
+```
+
+The same rule applies when invalidation is caused by:
+
+- reopening a merge predecessor,
+- connecting a new incomplete predecessor to a completed merge,
+- rewiring completed Tasks behind a closed merge gate.
+
+The resulting transaction MAY reopen affected auto-completed branching goals as required by `R-TASK-003`.
+
+A stale consequence plan MUST be rejected or recomputed if the graph/document revision changed before commit.
 
 ### R-HISTORY-001 — Undo/redo at command boundaries
 
 Create, update, delete, reconnect, reorder, schedule changes, Board movement, and annotation edits MUST participate in a shared history mechanism when the operation is user-visible and reversible.
 
 History SHOULD store command-level inverse operations/patches rather than serializing the entire workspace for every pointer update.
+
+Automatic goal-completion/reopening and confirmed merge-gate invalidation caused by one user command SHOULD be recorded as the same logical transaction where practical.
 
 ## 7. Schedule, Board, and layout requirements
 
@@ -419,6 +502,8 @@ Light, dark, and system-theme presentation MUST remain readable. Semantic state 
 
 Required actions MUST be keyboard-accessible where applicable on desktop and touch-accessible on mobile. Critical meaning MUST NOT rely only on color or hover.
 
+Blocked completion MUST be communicated with an accessible non-color-only explanation.
+
 ## 13. Non-functional requirements
 
 ### NFR-ARCH-001 — Modular contracts
@@ -477,9 +562,9 @@ Requirements may be frozen when:
 2. every in-scope Issue maps to requirement IDs,
 3. product principles contain no unresolved contradiction,
 4. V1 compatibility boundaries are explicit,
-5. structural branch/merge semantics and derived-goal completion behavior are explicit,
-6. deletion scope semantics for shared merged descendants are resolved,
-7. auto-completed-goal reopen behavior is resolved,
+5. structural branch/merge semantics and derived-goal completion/reopening behavior are explicit,
+6. chain-limited deletion semantics at branch/merge junctions are explicit,
+7. merge execution-gate, downstream blocking, and invalidation-confirmation behavior are explicit,
 8. the V2 UI package contract is accepted,
 9. basic design assigns every requirement to an owning module,
 10. test strategy can verify the MUST-level acceptance criteria.
