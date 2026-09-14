@@ -207,9 +207,7 @@ export class CherryUIRuntime implements CherryUIContext {
 
   async #resolveStartup(statePromise: Promise<StartupState>): Promise<UIActionResult> {
     await this.#applyStartupState(await statePromise);
-    return this.#screen.kind === 'error'
-      ? { kind: 'error', error: this.#screen.error }
-      : OK;
+    return this.#screen.kind === 'error' ? { kind: 'error', error: this.#screen.error } : OK;
   }
 
   async #applyStartupState(state: StartupState): Promise<void> {
@@ -284,7 +282,8 @@ export class CherryUIRuntime implements CherryUIContext {
   }
 
   async #setView(view: CherryView): Promise<UIActionResult> {
-    if (this.#store === null || this.#tabId === null) return this.#error('not-found', 'error.notFound');
+    if (this.#store === null || this.#tabId === null)
+      return this.#error('not-found', 'error.notFound');
     this.#view = view;
     await this.#rememberSession();
     this.#refreshWorkspace();
@@ -308,7 +307,11 @@ export class CherryUIRuntime implements CherryUIContext {
 
   async #withTaskId(
     rawId: string,
-    action: (taskId: ReturnType<typeof unwrapId<ReturnType<typeof parseTaskId> extends { value: infer T } ? T : never>>) => Promise<UIActionResult>,
+    action: (
+      taskId: ReturnType<
+        typeof unwrapId<ReturnType<typeof parseTaskId> extends { value: infer T } ? T : never>
+      >,
+    ) => Promise<UIActionResult>,
   ): Promise<UIActionResult> {
     const parsed = parseTaskId(rawId);
     if (!parsed.ok) return this.#error('validation', 'error.validation');
@@ -318,7 +321,8 @@ export class CherryUIRuntime implements CherryUIContext {
   async #runMutation(
     action: (store: ApplicationStore, tabId: TabId) => ReturnType<ApplicationStore['createTask']>,
   ): Promise<UIActionResult> {
-    if (this.#store === null || this.#tabId === null) return this.#error('not-found', 'error.notFound');
+    if (this.#store === null || this.#tabId === null)
+      return this.#error('not-found', 'error.notFound');
     const previous = this.#store.workspace;
     const result = action(this.#store, this.#tabId);
     if (!result.ok) return { kind: 'error', error: presentationError(result.error) };
@@ -330,7 +334,10 @@ export class CherryUIRuntime implements CherryUIContext {
     if (saved.kind !== 'saved') {
       this.#store = new ApplicationStore(previous);
       this.#refreshWorkspace();
-      return this.#error(saved.kind === 'revision-conflict' ? 'conflict' : 'persistence', saved.kind === 'revision-conflict' ? 'error.conflict' : 'error.persistence');
+      return this.#error(
+        saved.kind === 'revision-conflict' ? 'conflict' : 'persistence',
+        saved.kind === 'revision-conflict' ? 'error.conflict' : 'error.persistence',
+      );
     }
     this.#refreshWorkspace();
     return OK;
@@ -394,7 +401,10 @@ export class CherryUIRuntime implements CherryUIContext {
     const workspace = this.#store.workspace;
     const tab = workspace.tabs[this.#tabId];
     if (tab === undefined) {
-      this.#setScreen({ kind: 'error', error: { code: 'not-found', messageKey: 'error.notFound' } });
+      this.#setScreen({
+        kind: 'error',
+        error: { code: 'not-found', messageKey: 'error.notFound' },
+      });
       return;
     }
     const execution = this.#store.taskExecutionReadModels(this.#tabId);
