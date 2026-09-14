@@ -1,13 +1,7 @@
 # Issue Inventory
 
-The complete inventory of currently Open GitHub Issues will be created here before V2 requirements are frozen.
+The V2 Issue inventory converts GitHub Issues into requirements and architecture workstreams instead of implementing one patch per Issue.
 
-Each Issue will record:
+- [`OPEN_ISSUE_INVENTORY.md`](OPEN_ISSUE_INVENTORY.md) — all currently open Issues, their V2 disposition, and requirement/design destination.
 
-- Issue number and title
-- category
-- observed problem / requested behavior
-- V2 disposition
-- requirement IDs it maps to
-- duplicate/related Issues
-- migration or compatibility notes
+No Issue should be closed merely because it is listed here. Close/supersede decisions should happen after the V2 requirement/design review is accepted.

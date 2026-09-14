@@ -1,13 +1,6 @@
 # V2 Requirements
 
-Requirements will be written after the complete GitHub Issue inventory is reviewed.
+- [`REQUIREMENTS.md`](REQUIREMENTS.md) — canonical draft requirements for Cherry V2.0.
+- Issue traceability lives in [`../issues/OPEN_ISSUE_INVENTORY.md`](../issues/OPEN_ISSUE_INVENTORY.md).
 
-Each requirement should include:
-
-- stable requirement ID
-- statement of required behavior
-- rationale
-- acceptance criteria
-- related GitHub Issues
-- priority
-- compatibility/migration constraints when applicable
+Requirements are frozen before implementation begins. Any later change to a frozen requirement must be deliberate and traceable to an Issue/ADR/design update.
