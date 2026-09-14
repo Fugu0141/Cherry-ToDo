@@ -1,7 +1,8 @@
 # Cherry V2.0 Basic Design
 
 Status: **Draft — basic-design freeze candidate**  
-Requirements: `../requirements/REQUIREMENTS.md`
+Requirements: `../requirements/REQUIREMENTS.md`  
+Detailed Flow execution semantics: `FLOW_EXECUTION_RULES.md`
 
 ## 1. Design objective
 
@@ -156,7 +157,7 @@ The initial repository MAY keep these as directories rather than publishing sepa
 | --- | --- | --- |
 | Workspace | workspace/tab identity, document aggregate, tab lifecycle | DOM, concrete persistence, task rendering |
 | Task | Task entity and task-level invariants | Flow topology, board coordinates |
-| Flow | structural/reference edges, DAG invariants, merge/branch/reorder/connect/disconnect | connector rendering |
+| Flow | structural/reference edges, DAG invariants, merge/branch/reorder/connect/disconnect, execution availability | connector rendering |
 | Schedule | schedule value object and schedule-changing rules | date-lane geometry |
 | Board | settings, positions, layout inputs/outputs, drop-intent semantics | Task meaning or persistence |
 | History | reversible command transactions | pointer events or persistence format |
@@ -165,7 +166,7 @@ The initial repository MAY keep these as directories rather than publishing sepa
 | Startup | app startup/session state machine | Board rendering |
 | Persistence adapters | storage engine implementation | business rules |
 | UI contract | application-facing read models, intents, capabilities, semantic hooks | concrete DOM/framework implementation |
-| UI package | rendering, input collection, accessibility, responsive presentation | domain mutation and persistence |
+| UI package | rendering, input collection, confirmations, accessibility, responsive presentation | domain mutation and persistence |
 
 ## 5. Canonical data model
 
@@ -246,8 +247,6 @@ Derived goal completion is application/domain behavior, not UI behavior.
 
 For a derived branching goal `G`, define its structural completion set as Tasks reachable from `G` through outgoing structural edges. Reference edges do not participate.
 
-Initial rule:
-
 ```text
 all Tasks in structural completion set are done
 → G becomes done automatically
@@ -259,9 +258,14 @@ The evaluator MUST:
 - handle shared descendants after structural merges,
 - never recurse through reference cycles,
 - be deterministic under topological traversal,
-- emit one logical completion change per affected goal rather than UI-side cascading mutations.
+- de-duplicate shared descendants,
+- emit one logical completion/reopening change per affected goal rather than UI-side cascading mutations.
 
-**Open before design freeze:** if a downstream Task is later reopened, decide whether an auto-completed goal automatically reopens, and how to distinguish an automatic completion from an explicit manual completion.
+Cherry distinguishes automatic goal completion from explicit manual completion.
+
+If Cherry auto-completed a goal and a required downstream structural Task later becomes incomplete, the auto-completed goal reopens automatically as part of the same consequence transaction.
+
+A goal explicitly completed by the user is not silently reopened merely by the derived-goal evaluator.
 
 ### 5.5 Schedule
 
@@ -329,12 +333,52 @@ Reference edges:
 - may form cycles,
 - may create `A → B → C → A`,
 - are directional,
-- never participate in structural goal completion, DAG ordering, or automatic structural layout unless a future explicit algorithm says otherwise,
+- never participate in structural goal completion, structural execution locks, DAG ordering, or automatic structural layout unless a future explicit algorithm says otherwise,
 - are removed transactionally when an endpoint Task is deleted.
 
 The separation keeps cyclic/freehand relationships available while allowing structural algorithms to operate on an acyclic DAG.
 
-### 5.7 Board document state
+### 5.7 Derived completion availability and merge gates
+
+Completion availability is derived from the structural graph; it is not stored as an independently mutable `locked` boolean.
+
+Conceptually:
+
+```ts
+type TaskCompletionAvailability =
+  | { kind: "available" }
+  | {
+      kind: "blocked-by-merge";
+      gateTaskIds: TaskId[];
+      remainingPredecessorIds: TaskId[];
+    };
+```
+
+A Task with two or more incoming structural edges is a merge execution gate.
+
+If any direct structural predecessor of the merge target is incomplete, that merge target cannot be completed.
+
+A normal one-line structural chain is not a hard prerequisite system:
+
+```text
+A □ → B □ → C □
+```
+
+`B` and `C` remain completable because ordinary Flow communicates intended order.
+
+However, a currently closed merge gate propagates its blocked execution state into its downstream structural region:
+
+```text
+A ✓ ─┐
+     ├→ C 🔒 → D 🔒
+B □ ─┘
+```
+
+When `B` becomes complete, the gate opens and both `C` and `D` become available again.
+
+A blocked Task remains editable, schedulable, movable, and inspectable; only completion is unavailable due to this rule.
+
+### 5.8 Board document state
 
 ```ts
 interface BoardDocumentState {
@@ -352,7 +396,7 @@ Positions are presentation data. Layout output does not modify Task/Flow/Schedul
 
 A viewport (`scroll`, `zoom`) may be stored as local session/view preference, but it is not required to be part of the portable semantic document.
 
-### 5.8 Annotation
+### 5.9 Annotation
 
 ```ts
 type Annotation = TextAnnotation | StrokeAnnotation;
@@ -394,6 +438,7 @@ workspace.moveFlowToTab
 task.create
 task.update
 task.setStatus
+task.previewStatusChange
 task.deleteOnly
 task.deleteDownstreamFlow
 
@@ -403,6 +448,7 @@ flow.connectReference
 flow.disconnect
 flow.reorder
 flow.merge
+flow.previewMutation
 
 schedule.set
 schedule.clear
@@ -427,17 +473,58 @@ type CommandResult<T> =
   | { ok: false; error: AppError };
 ```
 
+### 6.1 Ordinary command transaction
+
 A command transaction performs:
 
 1. input validation,
 2. domain invariant validation,
 3. state change,
-4. dependent derived-goal evaluation when Flow/completion changes require it,
+4. dependent derived-goal/execution-availability evaluation,
 5. history inverse/patch creation when reversible,
 6. event publication,
 7. persistence scheduling when persistence is allowed.
 
 The UI receives the result; it does not perform steps 2–7 itself.
+
+### 6.2 Plan-before-commit for completion invalidation
+
+Some commands can turn an already-completed Task into a state that is invalid under the current merge-gate rules. Examples include reopening a merge predecessor or connecting a new incomplete predecessor to an already-completed merge.
+
+These commands use a revision-aware plan/confirm/commit boundary.
+
+Conceptually:
+
+```ts
+interface CompletionImpactPlan {
+  baseRevision: number;
+  directChanges: TaskId[];
+  autoReopenedGoalIds: TaskId[];
+  invalidatedCompletedTaskIds: TaskId[];
+  newlyBlockedTaskIds: TaskId[];
+}
+```
+
+Flow:
+
+```text
+user intent
+→ Application computes impact plan
+→ no canonical mutation yet
+→ UI shows confirmation if completed Tasks would reopen
+→ cancel: discard plan
+→ confirm: revision-check/recompute
+→ commit all validated changes transactionally
+```
+
+Example confirmation:
+
+```text
+この変更により、完了済みのタスクが未完了に戻ります。
+続行しますか？
+```
+
+If the document/graph changed after the plan was produced, commit rejects the stale plan or recomputes it before applying mutation.
 
 ## 7. Query/read model
 
@@ -452,6 +539,8 @@ flow.getStructuralSuccessors
 flow.getStructuralPredecessors
 flow.getTopologicalOrder
 flow.isDerivedGoal
+flow.getCompletionAvailability
+flow.getBlockingMergeGates
 flow.getOutgoingReferences
 schedule.getTasksForDate
 schedule.getUndatedTasks
@@ -463,6 +552,8 @@ Board and List may build different read models from the same semantic document.
 
 Because structural Flow is a DAG, read models MUST NOT assume exclusive single-parent ownership. A merged Task is one canonical Task even if more than one upstream path reaches it.
 
+Read models may expose a blocked Task's gate/progress information, but UI packages cannot override the Application's completion validation.
+
 ## 8. History design
 
 History is application-level and records logical user operations.
@@ -471,7 +562,8 @@ History is application-level and records logical user operations.
 - A stroke creates one entry when the stroke is committed, not one per sampled point.
 - Reordering or merging Flow stores the edge changes required to reverse it.
 - Delete stores enough removed entities/edges to restore safely.
-- Automatic goal completion caused by one user command belongs to the same logical transaction where practical.
+- Automatic goal completion/reopening caused by one user command belongs to the same logical transaction where practical.
+- Confirmed invalidation that reopens completed Tasks is stored with the initiating status/Flow mutation as one logical transaction where practical.
 
 The initial implementation uses inverse changes/patches, not full event sourcing. Event sourcing is not required to satisfy V2 requirements.
 
@@ -568,6 +660,8 @@ Connection creation is two-stage:
 ```text
 Interaction chooses source + target + desired relation
 → Flow application command validates
+→ if completion consequences exist, produce impact plan
+→ confirm when required
 → Edge is created transactionally
 ```
 
@@ -613,15 +707,31 @@ B → C
 
 The target remains one canonical Task `C`. Board/List/Layout code must not clone `C` just to satisfy a tree-based renderer.
 
-### 10.4 Delete behavior
+If creating or rewiring a merge would invalidate already-completed Tasks, the operation uses the impact-plan confirmation process before mutation.
+
+### 10.4 Merge execution gates
+
+A merge target with any incomplete direct structural predecessor reports `blocked-by-merge` and cannot be newly marked complete.
+
+The blocked state propagates structurally downstream while the gate remains unresolved.
+
+```text
+A ✓ ─┐
+     ├→ C 🔒 → D 🔒
+B □ ─┘
+```
+
+When `B` is completed, both `C` and `D` become available. Neither is auto-completed by the gate opening.
+
+This rule is intentionally different from normal one-line Flow, where sequence alone does not lock later Tasks.
+
+### 10.5 Delete behavior
 
 When a Task participates in structural Flow, Presentation asks for deletion scope before dispatching a destructive command.
 
 #### Delete this Task only
 
 The application removes the selected Task and attempts to preserve the surrounding structural paths by reconnecting predecessors to successors when that reconnection is valid.
-
-Examples:
 
 ```text
 A → B → C
@@ -633,11 +743,36 @@ Root deletion leaves successors as roots where no predecessor remains. Leaf dele
 
 #### Delete this Task and downstream Flow
 
-A second explicit command removes the selected Task plus a downstream structural scope after confirmation.
+This command removes the selected Task plus only the following **single unambiguous structural chain**.
 
-**Open before design freeze:** if a downstream Task is shared by another incoming path outside the selected deletion scope, decide whether it is retained automatically or can be explicitly included in the destructive operation.
+Traversal stops before the next Task if that next Task is either:
 
-Both deletion paths participate in History where practical.
+- a merge point (`incoming structural edge count >= 2`), or
+- a branch point (`outgoing structural edge count >= 2`).
+
+The junction Task itself is preserved.
+
+Example merge boundary:
+
+```text
+A → B → C ─┐
+            ├→ D → E
+X ──────────┘
+```
+
+Deleting downstream from `B` removes `B` and `C`, then stops before `D`.
+
+Example branch boundary:
+
+```text
+A → B → C
+        ├→ D
+        └→ E
+```
+
+Deleting downstream from `B` stops before `C`, preserving the branch junction and both branches.
+
+The full removal set is calculated before mutation. Both deletion paths participate in History where practical.
 
 ## 11. Schedule and Board composition
 
@@ -676,6 +811,8 @@ Auto-layout consumes a structural DAG, not a tree. It must:
 - avoid recursive duplication of merged descendants,
 - use a cycle check before layout,
 - keep Reference edges out of structural rank/order calculations unless a future explicit algorithm opts in.
+
+Execution blocked/unblocked state is semantic read-model data and does not create duplicate layout nodes.
 
 ## 12. Startup/session architecture
 
@@ -851,6 +988,7 @@ Localized string keys/messages
 Semantic component/state tokens
 Navigation/startup state
 Typed error presentation data
+Impact plans / confirmation descriptors
 ```
 
 The contract does not expose:
@@ -901,9 +1039,27 @@ Default presentation strategy:
 
 All strategies call the same Task/Schedule application use cases.
 
-### 17.4 Semantic styling hooks
+### 17.4 Merge-gate and invalidation presentation
 
-The default UI SHOULD expose stable semantic states/tokens such as task-card, selected, completed, derived-goal, importance, connection kind, and danger action so large visual redesigns can happen without modifying business logic.
+The UI contract exposes completion availability and impact-plan information semantically.
+
+Default UI may render a blocked Task with a lock/progress affordance such as:
+
+```text
+🔒 前提タスク 1 / 2 完了
+```
+
+or for inherited downstream blocking:
+
+```text
+🔒 前の合流タスクの完了待ち
+```
+
+When an operation would reopen completed Tasks, the UI MUST show a confirmation before invoking the commit phase. The UI does not calculate which Tasks are affected; it displays the Application-provided impact plan.
+
+### 17.5 Semantic styling hooks
+
+The default UI SHOULD expose stable semantic states/tokens such as task-card, selected, completed, blocked-by-merge, derived-goal, importance, connection kind, and danger action so large visual redesigns can happen without modifying business logic.
 
 This is a styling/extensibility boundary, not permission for arbitrary untrusted plugin execution.
 
@@ -922,6 +1078,8 @@ PersistenceError
 MigrationError
 ImportError
 Permission/CapabilityError
+StalePlanError
+CompletionBlockedError
 ```
 
 UI packages map errors to localized messages. Infrastructure retains technical cause information for diagnostics without exposing sensitive contents unnecessarily.
@@ -940,8 +1098,10 @@ tab.changed
 task.created
 task.updated
 task.deleted
+task.completionAvailabilityChanged
 flow.changed
 goal.autoCompleted
+goal.autoReopened
 schedule.changed
 board.changed
 annotation.changed
@@ -966,34 +1126,48 @@ Implementation should follow this order after design freeze:
 2. Shared IDs/Result/schema utilities.
 3. Task + Schedule value model.
 4. Structural DAG/reference Flow model, merge support, and invariant tests.
-5. Derived-goal detection/completion evaluator.
-6. Workspace aggregate/document validation.
-7. Application store, command transactions, History, and deletion commands.
-8. Memory repository + schema codec/migrators.
-9. Startup state machine + mandatory storage-consent policy.
-10. Browser persistence adapter.
-11. UI contract and contract tests.
-12. Minimal default Start/Board/List shell wired only through the UI contract.
-13. Task editor + desktop Task/Flow/Schedule interactions.
-14. Board DAG layout/drop resolver + #222 regression.
-15. Mobile InteractionCoordinator/edge scroll; prototype connection UX without freezing it prematurely.
-16. Goal appearance + automatic goal-completion presentation.
-17. Freehand/reference edges/annotations.
-18. `.cherry` V1 import, including supported encrypted V1 files, + native V2 export/import.
-19. Best-effort legacy browser-storage recovery.
-20. ICS/CSV adapters.
-21. Broader E2E, accessibility, performance, UI-package swap proof, and release hardening.
+5. Derived-goal detection/completion/reopening evaluator.
+6. Merge execution-gate availability evaluator and downstream blocking propagation.
+7. Revision-aware completion-impact planner and plan/confirm/commit command support.
+8. Workspace aggregate/document validation.
+9. Application store, command transactions, History, and chain-limited deletion commands.
+10. Memory repository + schema codec/migrators.
+11. Startup state machine + mandatory storage-consent policy.
+12. Browser persistence adapter.
+13. UI contract and contract tests.
+14. Minimal default Start/Board/List shell wired only through the UI contract.
+15. Task editor + desktop Task/Flow/Schedule interactions.
+16. Merge-gate/invalidation confirmation UI.
+17. Board DAG layout/drop resolver + #222 regression.
+18. Mobile InteractionCoordinator/edge scroll; prototype connection UX without freezing it prematurely.
+19. Goal appearance + automatic goal-completion presentation.
+20. Freehand/reference edges/annotations.
+21. `.cherry` V1 import, including supported encrypted V1 files, + native V2 export/import.
+22. Best-effort legacy browser-storage recovery.
+23. ICS/CSV adapters.
+24. Broader E2E, accessibility, performance, UI-package swap proof, and release hardening.
 
 The order is dependency-driven: a UI feature is not implemented before the semantic component it needs exists.
 
 ## 22. Remaining design-freeze questions
 
-The following decisions are intentionally still open after the 2026-09-14 review:
+After the 2026-09-14 Flow review, the major structural semantics are resolved:
 
-1. **Auto-completed goal reopening:** if a downstream Task is reopened, should a goal that Cherry auto-completed automatically reopen? How should this interact with a user manually marking the goal complete?
-2. **Cascade deletion with merges:** when “delete this Task and downstream Flow” reaches a Task that is also reachable from an upstream path outside the deletion scope, should the shared Task always be retained, or can the confirmation include it?
-3. **Merged Task presentation:** in List view and auto-layout, should a merged Task appear once with multiple incoming indicators, or may some views repeat a visual representation while still pointing to one canonical Task? This is presentation policy, but the read-model contract should be explicit before UI implementation.
-4. **Mobile existing-task connection UX:** capability is required, exact touch interaction remains intentionally deferred until prototype testing.
+- structural Flow is a branching/merging DAG,
+- derived goals and auto-completion/reopening are defined,
+- downstream deletion stops before branch/merge junctions,
+- merge targets are execution gates,
+- blocked state propagates downstream from a closed merge gate,
+- ordinary one-line Flow remains non-blocking,
+- completed-state invalidation requires Application impact planning and UI confirmation,
+- UI package replacement is a V2.0 boundary,
+- persistent browser storage requires explicit opt-in.
+
+The following product/UX decision remains intentionally deferred rather than blocking Core design:
+
+1. **Mobile existing-task connection UX:** capability is required, but the exact touch interaction will be selected after prototype testing against the stable Flow commands.
+
+Any newly discovered semantic ambiguity should be resolved before the affected implementation milestone rather than patched inside Presentation.
 
 ## 23. Basic-design freeze criteria
 
@@ -1001,9 +1175,9 @@ Basic design is ready to freeze when:
 
 - every MUST requirement has one owning module,
 - structural DAG/reference edge semantics are accepted,
-- branch/merge and derived-goal semantics are accepted,
-- goal reopen behavior is resolved,
-- destructive downstream-delete behavior for shared merged Tasks is resolved,
+- branch/merge and derived-goal completion/reopening semantics are accepted,
+- merge-gate/downstream-blocking/invalidation-confirmation semantics are accepted,
+- chain-limited downstream deletion semantics are accepted,
 - persisted data model is accepted,
 - explicit persistence consent and V1 migration boundaries are accepted,
 - UI package contract is accepted,
