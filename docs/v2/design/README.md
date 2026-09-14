@@ -1,19 +1,12 @@
 # V2 Basic Design
 
-Basic design will be created only after the requirements inventory is sufficiently stable.
+- [`BASIC_DESIGN.md`](BASIC_DESIGN.md) — canonical draft architecture and module/data/interaction design.
+- [`TEST_STRATEGY.md`](TEST_STRATEGY.md) — test pyramid, regression strategy, traceability, and Definition of Done.
 
-The design must define at minimum:
+Related proposed architecture decisions:
 
-- domain model
-- application/use-case boundaries
-- ports/interfaces
-- infrastructure adapters
-- UI/component boundaries
-- composition/dependency injection
-- state ownership
-- persistence schema and versioning
-- V1 data migration
-- import/export contracts
-- error handling
-- testing architecture
-- module dependency rules
+- [`../adr/0001-modular-hexagonal-architecture.md`](../adr/0001-modular-hexagonal-architecture.md)
+- [`../adr/0002-structural-and-reference-flow-edges.md`](../adr/0002-structural-and-reference-flow-edges.md)
+- [`../adr/0003-typescript-static-web-toolchain.md`](../adr/0003-typescript-static-web-toolchain.md)
+
+Implementation does not begin until the relevant requirements and basic-design decisions are accepted/frozen.
