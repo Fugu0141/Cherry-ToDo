@@ -13,11 +13,14 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "eslint src test scripts vite.config.ts eslint.config.mjs",
+    "test:e2e": "playwright test",
+    "lint": "eslint src test scripts vite.config.ts playwright.config.ts eslint.config.mjs",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\" \"scripts/**/*.mjs\" \"*.{ts,mjs,json,html}\" \".github/workflows/*.yml\" \"docs/v2/DEVELOPMENT_SETUP.md\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\" \"scripts/**/*.mjs\" \"*.{ts,mjs,json,html}\" \".github/workflows/*.yml\" \"docs/v2/DEVELOPMENT_SETUP.md\"",
     "boundaries": "node scripts/check-boundaries.mjs",
-    "check": "npm run format:check && npm run lint && npm run typecheck && npm run boundaries && npm run test && npm run build"
+    "metrics": "node scripts/report-build-metrics.mjs",
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm run boundaries && npm run test && npm run build",
+    "release:check": "npm run check && npm run metrics && npm run test:e2e"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",
