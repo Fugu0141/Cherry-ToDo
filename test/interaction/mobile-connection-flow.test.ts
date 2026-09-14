@@ -12,7 +12,7 @@ describe('mobile existing-Task connection flow', () => {
     const coordinator = new InteractionCoordinator();
 
     expect(beginMobileConnection(coordinator, 'task-a', 'branch')).toEqual({
-      sourceTaskId: 'task-a',
+      fromTaskId: 'task-a',
       kind: 'branch',
     });
     expect(coordinator.state.kind).toBe('creating-connection');
