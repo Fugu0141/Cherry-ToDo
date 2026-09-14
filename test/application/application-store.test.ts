@@ -132,7 +132,9 @@ function confirmation(outcome: MutationOutcome) {
   return outcome.preview;
 }
 
-function expectOk<T, E>(result: { readonly ok: true; readonly value: T } | { readonly ok: false; readonly error: E }): T {
+function expectOk<T, E>(
+  result: { readonly ok: true; readonly value: T } | { readonly ok: false; readonly error: E },
+): T {
   expect(result.ok).toBe(true);
   if (!result.ok) throw new Error(`Expected ok result, got ${JSON.stringify(result.error)}`);
   return result.value;
@@ -142,10 +144,7 @@ describe('Application completion semantics', () => {
   it('rejects direct derived-goal completion and auto-completes it after all descendants finish', () => {
     const { workspace, tabId } = fixture(
       [task('A'), task('B', 'done'), task('C')],
-      [
-        structural('ab', 'branch', 'A', 'B', 0),
-        structural('ac', 'branch', 'A', 'C', 1),
-      ],
+      [structural('ab', 'branch', 'A', 'B', 0), structural('ac', 'branch', 'A', 'C', 1)],
     );
     const store = new ApplicationStore(workspace, () => '2026-09-14T01:00:00.000Z');
 
@@ -161,10 +160,7 @@ describe('Application completion semantics', () => {
   it('keeps ordinary one-line Flow non-blocking', () => {
     const { workspace, tabId } = fixture(
       [task('A'), task('B'), task('C')],
-      [
-        structural('ab', 'continuation', 'A', 'B'),
-        structural('bc', 'continuation', 'B', 'C'),
-      ],
+      [structural('ab', 'continuation', 'A', 'B'), structural('bc', 'continuation', 'B', 'C')],
     );
     const store = new ApplicationStore(workspace);
 
@@ -204,7 +200,10 @@ describe('revision-aware completion impact planning', () => {
         structural('cd', 'continuation', 'C', 'D'),
       ],
     );
-    return { ...built, store: new ApplicationStore(built.workspace, () => '2026-09-14T02:00:00.000Z') };
+    return {
+      ...built,
+      store: new ApplicationStore(built.workspace, () => '2026-09-14T02:00:00.000Z'),
+    };
   }
 
   it('previews invalidation before mutation, cancel changes nothing, and confirm commits atomically', () => {
@@ -276,10 +275,7 @@ describe('revision-aware completion impact planning', () => {
       const descendantStatus = status === 'done' ? 'done' : 'todo';
       const { workspace, tabId } = fixture(
         [task('A', status), task('B', descendantStatus), task('C', descendantStatus)],
-        [
-          structural('ab', 'branch', 'A', 'B', 0),
-          structural('ac', 'branch', 'A', 'C', 1),
-        ],
+        [structural('ab', 'branch', 'A', 'B', 0), structural('ac', 'branch', 'A', 'C', 1)],
       );
       const store = new ApplicationStore(workspace);
       committed(expectOk(store.disconnectFlow(tabId, edgeId('ac'))));
@@ -292,10 +288,7 @@ describe('Delete this Task only', () => {
   it('reconnects one predecessor to one successor', () => {
     const { workspace, tabId } = fixture(
       [task('A'), task('B'), task('C')],
-      [
-        structural('ab', 'continuation', 'A', 'B'),
-        structural('bc', 'continuation', 'B', 'C'),
-      ],
+      [structural('ab', 'continuation', 'A', 'B'), structural('bc', 'continuation', 'B', 'C')],
     );
     const store = new ApplicationStore(workspace);
 
@@ -323,7 +316,14 @@ describe('Delete this Task only', () => {
     committed(expectOk(store.deleteTaskOnly(tabId, taskId('B'))));
     const edges = Object.values(tab(store, tabId).flowEdges);
     expect(edges).toHaveLength(2);
-    expect(edges.map((edge) => [edge.kind, edge.fromTaskId, edge.toTaskId, 'order' in edge ? edge.order : -1])).toEqual([
+    expect(
+      edges.map((edge) => [
+        edge.kind,
+        edge.fromTaskId,
+        edge.toTaskId,
+        'order' in edge ? edge.order : -1,
+      ]),
+    ).toEqual([
       ['branch', taskId('A'), taskId('C'), 0],
       ['branch', taskId('A'), taskId('D'), 1],
     ]);
@@ -388,10 +388,11 @@ describe('chain-limited downstream deletion', () => {
     committed(expectOk(store.deleteDownstreamFlow(tabId, taskId('A'))));
     const value = tab(store, tabId);
     expect(Object.keys(value.tasks).sort()).toEqual(['C', 'D', 'E']);
-    expect(Object.values(value.flowEdges).map((edge) => edge.id).sort()).toEqual([
-      edgeId('cd'),
-      edgeId('ce'),
-    ]);
+    expect(
+      Object.values(value.flowEdges)
+        .map((edge) => edge.id)
+        .sort(),
+    ).toEqual([edgeId('cd'), edgeId('ce')]);
   });
 
   it('stops before the next merge junction', () => {
@@ -423,16 +424,11 @@ describe('semantic reorder and Board/Schedule separation', () => {
     const schedule = scheduleOnDate(date.value);
     const { workspace, tabId } = fixture(
       [task('A', 'todo', schedule), task('B'), task('C')],
-      [
-        structural('ab', 'continuation', 'A', 'B'),
-        structural('bc', 'continuation', 'B', 'C'),
-      ],
+      [structural('ab', 'continuation', 'A', 'B'), structural('bc', 'continuation', 'B', 'C')],
     );
     const store = new ApplicationStore(workspace);
 
-    committed(
-      expectOk(store.reorderLinearFlow(tabId, [taskId('A'), taskId('C'), taskId('B')])),
-    );
+    committed(expectOk(store.reorderLinearFlow(tabId, [taskId('A'), taskId('C'), taskId('B')])));
     const value = tab(store, tabId);
     expect(Object.keys(value.tasks).sort()).toEqual(['A', 'B', 'C']);
     expect(value.tasks.A?.schedule).toEqual(schedule);
