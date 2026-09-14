@@ -59,14 +59,19 @@ describe('Phase 8 reference and annotation primitives', () => {
       order: 0,
       meta,
     });
-    const edges = [structural('ab', 'A', 'B'), structural('bc', 'B', 'C'), structural('ca', 'C', 'A')];
+    const edges = [
+      structural('ab', 'A', 'B'),
+      structural('bc', 'B', 'C'),
+      structural('ca', 'C', 'A'),
+    ];
     const result = validateFlowGraph(
       [task('A'), task('B'), task('C')],
       Object.fromEntries(edges.map((value) => [value.id, value])),
     );
 
     expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.error.some((issue) => issue.code === 'structural-cycle')).toBe(true);
+    if (!result.ok)
+      expect(result.error.some((issue) => issue.code === 'structural-cycle')).toBe(true);
   });
 
   it('simplifies dense drawing samples and preserves the first and final points', () => {

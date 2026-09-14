@@ -1,7 +1,11 @@
 import type { AnnotationId } from '../../../shared/ids/index';
 import type { RevisionMeta } from '../../../shared/revision/index';
 import type { Point } from '../../board/index';
-import { validateAnnotation, type StrokeAnnotation, type TextAnnotation } from '../domain/annotation';
+import {
+  validateAnnotation,
+  type StrokeAnnotation,
+  type TextAnnotation,
+} from '../domain/annotation';
 import { err, ok, type Result } from '../../../shared/result/index';
 import type { AnnotationValidationError, Rect } from '../domain/annotation';
 
@@ -86,7 +90,11 @@ export function createStrokeAnnotation(
   }) as Result<StrokeAnnotation, AnnotationValidationError>;
 }
 
-export function translatePoints(points: readonly Point[], dx: number, dy: number): readonly Point[] {
+export function translatePoints(
+  points: readonly Point[],
+  dx: number,
+  dy: number,
+): readonly Point[] {
   return points.map((point) => ({ x: point.x + dx, y: point.y + dy }));
 }
 
