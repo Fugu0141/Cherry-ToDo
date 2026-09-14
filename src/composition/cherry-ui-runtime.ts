@@ -103,6 +103,31 @@ function randomId(prefix: string): string {
   return `${prefix}-${crypto.randomUUID()}`;
 }
 
+function deriveLinearFlowOrder(
+  taskIds: readonly string[],
+  edges: readonly { readonly fromTaskId: string; readonly toTaskId: string }[],
+): readonly string[] | null {
+  if (taskIds.length < 2 || edges.length !== taskIds.length - 1) return null;
+  const incoming = new Map<string, string>();
+  const outgoing = new Map<string, string>();
+  for (const edge of edges) {
+    if (incoming.has(edge.toTaskId) || outgoing.has(edge.fromTaskId)) return null;
+    incoming.set(edge.toTaskId, edge.fromTaskId);
+    outgoing.set(edge.fromTaskId, edge.toTaskId);
+  }
+  const roots = taskIds.filter((taskId) => !incoming.has(taskId));
+  if (roots.length !== 1) return null;
+  const ordered: string[] = [];
+  const visited = new Set<string>();
+  let cursor: string | undefined = roots[0];
+  while (cursor !== undefined && !visited.has(cursor)) {
+    ordered.push(cursor);
+    visited.add(cursor);
+    cursor = outgoing.get(cursor);
+  }
+  return ordered.length === taskIds.length ? ordered : null;
+}
+
 function createWorkspaceDocument(name: string): { document: WorkspaceDocument; tabId: TabId } {
   const now = new Date().toISOString();
   const workspaceId = unwrapId(parseWorkspaceId(randomId('workspace')));
@@ -213,12 +238,22 @@ export class CherryUIRuntime implements CherryUIContext {
             ),
           ),
         setSchedule: (taskId, schedule) => this.#setSchedule(taskId, schedule),
+        deleteOnly: (taskId) =>
+          this.#withTaskId(taskId, (parsed) =>
+            this.#runMutation((store, tabId) => store.deleteTaskOnly(tabId, parsed)),
+          ),
+        deleteDownstream: (taskId) =>
+          this.#withTaskId(taskId, (parsed) =>
+            this.#runMutation((store, tabId) => store.deleteDownstreamFlow(tabId, parsed)),
+          ),
       },
       board: {
         dropTask: (input) => this.#dropTask(input),
       },
       flow: {
         connect: (input) => this.#connect(input.fromTaskId, input.toTaskId, input.kind),
+        disconnect: (edgeId) => this.#disconnect(edgeId),
+        reorder: (orderedTaskIds) => this.#reorder(orderedTaskIds),
       },
       history: {
         undo: () => this.#history('undo'),
@@ -372,6 +407,21 @@ export class CherryUIRuntime implements CherryUIContext {
         toTaskId: to.value,
       }),
     );
+  }
+
+  async #disconnect(rawEdgeId: string): Promise<UIActionResult> {
+    const edgeId = parseFlowEdgeId(rawEdgeId);
+    if (!edgeId.ok) return this.#error('validation', 'error.validation');
+    return this.#runMutation((store, tabId) => store.disconnectFlow(tabId, edgeId.value));
+  }
+
+  async #reorder(rawTaskIds: readonly string[]): Promise<UIActionResult> {
+    const parsed = rawTaskIds.map((taskId) => parseTaskId(taskId));
+    if (parsed.some((result) => !result.ok)) {
+      return this.#error('validation', 'error.validation');
+    }
+    const taskIds = parsed.flatMap((result) => (result.ok ? [result.value] : []));
+    return this.#runMutation((store, tabId) => store.reorderLinearFlow(tabId, taskIds));
   }
 
   async #withTaskId(
@@ -547,6 +597,13 @@ export class CherryUIRuntime implements CherryUIContext {
           position: layout.tasks[task.id]?.point ?? null,
         };
       }),
+      linearFlowOrder: deriveLinearFlowOrder(
+        Object.values(tab.tasks).map((task) => task.id),
+        structuralEdges.map((edge) => ({
+          fromTaskId: edge.fromTaskId,
+          toTaskId: edge.toTaskId,
+        })),
+      ),
       connections: Object.values(tab.flowEdges).map((edge) => {
         const from = layout.tasks[edge.fromTaskId]?.point;
         const to = layout.tasks[edge.toTaskId]?.point;
