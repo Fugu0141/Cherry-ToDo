@@ -1,0 +1,254 @@
+:root {
+  color-scheme: light;
+}
+
+.cherry-button.primary {
+  background: #d83352;
+}
+
+.cherry-start-heading p,
+.cherry-task-meta {
+  color: #646b75;
+}
+
+:root[data-cherry-theme='dark'] {
+  color-scheme: dark;
+  color: #eef2f6;
+  background: #101318;
+}
+
+:root[data-cherry-theme='dark'] body,
+:root[data-cherry-theme='dark'] .cherry-board-scroll,
+:root[data-cherry-theme='dark'] .cherry-board-canvas {
+  background-color: #101318;
+  color: #eef2f6;
+}
+
+:root[data-cherry-theme='dark'] .cherry-dialog,
+:root[data-cherry-theme='dark'] .cherry-create-workspace,
+:root[data-cherry-theme='dark'] .cherry-workspace-card,
+:root[data-cherry-theme='dark'] .cherry-task,
+:root[data-cherry-theme='dark'] .cherry-editor,
+:root[data-cherry-theme='dark'] .cherry-flow-reorder-row,
+:root[data-cherry-theme='dark'] .cherry-date-lane-label,
+:root[data-cherry-theme='dark'] .cherry-flow-handle,
+:root[data-cherry-theme='dark'] .cherry-segment-button.active {
+  background: #181d24;
+  border-color: #38424f;
+  color: #eef2f6;
+}
+
+:root[data-cherry-theme='dark'] .cherry-header,
+:root[data-cherry-theme='dark'] .cherry-toolbar,
+:root[data-cherry-theme='dark'] .cherry-board-flow-summary {
+  background: rgba(24, 29, 36, 0.96);
+  border-color: #38424f;
+  color: #eef2f6;
+}
+
+:root[data-cherry-theme='dark'] .cherry-segment,
+:root[data-cherry-theme='dark'] .cherry-button,
+:root[data-cherry-theme='dark'] .cherry-icon-button,
+:root[data-cherry-theme='dark'] .cherry-connection {
+  background: #202630;
+  color: #eef2f6;
+}
+
+:root[data-cherry-theme='dark'] .cherry-button.primary,
+:root[data-cherry-theme='dark'] .cherry-button.danger {
+  background: #b72842;
+  color: #fff;
+}
+
+:root[data-cherry-theme='dark'] .cherry-button.danger.ghost {
+  background: transparent;
+  color: #ff9aac;
+  border-color: #8f3a4d;
+}
+
+:root[data-cherry-theme='dark'] .cherry-input,
+:root[data-cherry-theme='dark'] .cherry-textarea,
+:root[data-cherry-theme='dark'] .cherry-select {
+  background: #151a21;
+  border-color: #46515f;
+  color: #eef2f6;
+}
+
+:root[data-cherry-theme='dark'] .cherry-label,
+:root[data-cherry-theme='dark'] .cherry-task-notes,
+:root[data-cherry-theme='dark'] .cherry-task-meta,
+:root[data-cherry-theme='dark'] .cherry-toggle,
+:root[data-cherry-theme='dark'] .cherry-start-heading p {
+  color: #b7c0cb;
+}
+
+:root[data-cherry-theme='dark'] .cherry-date-lane {
+  background: rgba(32, 38, 48, 0.7);
+  border-color: #38424f;
+}
+
+:root[data-cherry-theme='dark'] .cherry-board-canvas {
+  background-image: radial-gradient(#46515f 1px, transparent 1px);
+}
+
+:root[data-cherry-theme='dark'] .cherry-board-canvas[data-time-guide='shown'] {
+  background-image:
+    linear-gradient(to bottom, rgba(255, 107, 134, 0.1) 1px, transparent 1px),
+    radial-gradient(#46515f 1px, transparent 1px);
+}
+
+:root[data-cherry-theme='dark'] .cherry-task[data-cherry-state~='task-blocked'] {
+  background: #2b2418;
+  border-color: #80683a;
+}
+
+:root[data-cherry-theme='dark'] .cherry-task-blocked {
+  color: #ffd28a;
+}
+
+:root[data-cherry-theme='dark'] .cherry-task-badge.goal,
+:root[data-cherry-theme='dark'] .cherry-connection[data-cherry-state='flow-branch'],
+:root[data-cherry-theme='dark'] .cherry-flow-target-button {
+  background: #3a1e28;
+  color: #ff9aac;
+  border-color: #8f3a4d;
+}
+
+:root[data-cherry-theme='dark'] .cherry-task-badge.merge {
+  background: #392f17;
+  color: #ffe08a;
+}
+
+:root[data-cherry-theme='dark'] .cherry-flow-line {
+  stroke: #bbc4cf;
+}
+
+:root[data-cherry-theme='dark'] .cherry-flow-line[data-cherry-state='flow-branch'] {
+  stroke: #ff7891;
+}
+
+:root[data-cherry-theme='dark'] .cherry-flow-line[data-cherry-state='flow-reference'] {
+  stroke: #aeb8c4;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-cherry-theme='light']) {
+    color-scheme: dark;
+    color: #eef2f6;
+    background: #101318;
+  }
+
+  :root:not([data-cherry-theme='light']) body,
+  :root:not([data-cherry-theme='light']) .cherry-board-scroll,
+  :root:not([data-cherry-theme='light']) .cherry-board-canvas {
+    background-color: #101318;
+    color: #eef2f6;
+  }
+
+  :root:not([data-cherry-theme='light']) .cherry-dialog,
+  :root:not([data-cherry-theme='light']) .cherry-create-workspace,
+  :root:not([data-cherry-theme='light']) .cherry-workspace-card,
+  :root:not([data-cherry-theme='light']) .cherry-task,
+  :root:not([data-cherry-theme='light']) .cherry-editor,
+  :root:not([data-cherry-theme='light']) .cherry-flow-reorder-row,
+  :root:not([data-cherry-theme='light']) .cherry-date-lane-label,
+  :root:not([data-cherry-theme='light']) .cherry-flow-handle,
+  :root:not([data-cherry-theme='light']) .cherry-segment-button.active {
+    background: #181d24;
+    border-color: #38424f;
+    color: #eef2f6;
+  }
+
+  :root:not([data-cherry-theme='light']) .cherry-header,
+  :root:not([data-cherry-theme='light']) .cherry-toolbar,
+  :root:not([data-cherry-theme='light']) .cherry-board-flow-summary {
+    background: rgba(24, 29, 36, 0.96);
+    border-color: #38424f;
+    color: #eef2f6;
+  }
+
+  :root:not([data-cherry-theme='light']) .cherry-segment,
+  :root:not([data-cherry-theme='light']) .cherry-button,
+  :root:not([data-cherry-theme='light']) .cherry-icon-button,
+  :root:not([data-cherry-theme='light']) .cherry-connection {
+    background: #202630;
+    color: #eef2f6;
+  }
+
+  :root:not([data-cherry-theme='light']) .cherry-button.primary,
+  :root:not([data-cherry-theme='light']) .cherry-button.danger {
+    background: #b72842;
+    color: #fff;
+  }
+
+  :root:not([data-cherry-theme='light']) .cherry-button.danger.ghost {
+    background: transparent;
+    color: #ff9aac;
+    border-color: #8f3a4d;
+  }
+
+  :root:not([data-cherry-theme='light']) .cherry-input,
+  :root:not([data-cherry-theme='light']) .cherry-textarea,
+  :root:not([data-cherry-theme='light']) .cherry-select {
+    background: #151a21;
+    border-color: #46515f;
+    color: #eef2f6;
+  }
+
+  :root:not([data-cherry-theme='light']) .cherry-label,
+  :root:not([data-cherry-theme='light']) .cherry-task-notes,
+  :root:not([data-cherry-theme='light']) .cherry-task-meta,
+  :root:not([data-cherry-theme='light']) .cherry-toggle,
+  :root:not([data-cherry-theme='light']) .cherry-start-heading p {
+    color: #b7c0cb;
+  }
+
+  :root:not([data-cherry-theme='light']) .cherry-date-lane {
+    background: rgba(32, 38, 48, 0.7);
+    border-color: #38424f;
+  }
+
+  :root:not([data-cherry-theme='light']) .cherry-board-canvas {
+    background-image: radial-gradient(#46515f 1px, transparent 1px);
+  }
+
+  :root:not([data-cherry-theme='light']) .cherry-board-canvas[data-time-guide='shown'] {
+    background-image:
+      linear-gradient(to bottom, rgba(255, 107, 134, 0.1) 1px, transparent 1px),
+      radial-gradient(#46515f 1px, transparent 1px);
+  }
+
+  :root:not([data-cherry-theme='light']) .cherry-task[data-cherry-state~='task-blocked'] {
+    background: #2b2418;
+    border-color: #80683a;
+  }
+
+  :root:not([data-cherry-theme='light']) .cherry-task-blocked {
+    color: #ffd28a;
+  }
+
+  :root:not([data-cherry-theme='light']) .cherry-task-badge.goal,
+  :root:not([data-cherry-theme='light']) .cherry-connection[data-cherry-state='flow-branch'],
+  :root:not([data-cherry-theme='light']) .cherry-flow-target-button {
+    background: #3a1e28;
+    color: #ff9aac;
+    border-color: #8f3a4d;
+  }
+
+  :root:not([data-cherry-theme='light']) .cherry-task-badge.merge {
+    background: #392f17;
+    color: #ffe08a;
+  }
+
+  :root:not([data-cherry-theme='light']) .cherry-flow-line {
+    stroke: #bbc4cf;
+  }
+
+  :root:not([data-cherry-theme='light']) .cherry-flow-line[data-cherry-state='flow-branch'] {
+    stroke: #ff7891;
+  }
+
+  :root:not([data-cherry-theme='light']) .cherry-flow-line[data-cherry-state='flow-reference'] {
+    stroke: #aeb8c4;
+  }
+}
