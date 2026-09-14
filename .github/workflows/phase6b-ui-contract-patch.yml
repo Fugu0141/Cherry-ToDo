@@ -1,0 +1,52 @@
+name: Phase 6B UI contract patch
+
+on:
+  push:
+    branches:
+      - feat/v2-phase6b-drop-intents
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/v2-phase6b-drop-intents
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Patch UI contract
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('src/ui-contract/index.ts')
+          s = p.read_text()
+          marker = """export interface WorkspaceSummaryModel {"""
+          insert = """export interface CherryPoint {\n  readonly x: number;\n  readonly y: number;\n}\n\nexport type CherryBoardDropTarget =\n  | { readonly kind: 'canvas'; readonly point: CherryPoint }\n  | {\n      readonly kind: 'date-lane';\n      readonly date: string | null;\n      readonly point: CherryPoint;\n      readonly collapsed: boolean;\n    };\n\nexport interface DropTaskOnBoardIntent {\n  readonly taskId: string;\n  readonly target: CherryBoardDropTarget;\n}\n\n"""
+          if marker not in s:
+              raise SystemExit('workspace marker not found')
+          s = s.replace(marker, insert + marker, 1)
+
+          marker = """  readonly flow: {\n    connect(input: ConnectTasksIntent): Promise<UIActionResult>;\n  };"""
+          replacement = """  readonly board: {\n    dropTask(input: DropTaskOnBoardIntent): Promise<UIActionResult>;\n  };\n  readonly flow: {\n    connect(input: ConnectTasksIntent): Promise<UIActionResult>;\n  };"""
+          if marker not in s:
+              raise SystemExit('flow intent marker not found')
+          s = s.replace(marker, replacement, 1)
+          p.write_text(s)
+          PY
+      - run: npx prettier --write src/ui-contract/index.ts
+      - name: Commit patch
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/ui-contract/index.ts
+          git commit -m "feat: add Board drop UI contract"
+          git push
