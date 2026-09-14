@@ -1,5 +1,13 @@
 # V2 Tests
 
-V2 test structure will be defined together with the architecture.
+The V2 test layout mirrors the frozen test strategy:
 
-Tests should ultimately cover domain rules, application use cases, adapter contracts, integration boundaries, and user-visible acceptance criteria without depending on V1 implementation details.
+- `domain/` — pure semantic rules.
+- `application/` — use cases, commands, transactions, History.
+- `contracts/` — ports, UI-contract, and architecture contracts.
+- `interaction/` — gesture/interaction state machines.
+- `integration/` — adapter and composition integration.
+- `regression/` — focused reported-bug fixtures.
+- `e2e/` — critical user journeys.
+
+Phase 1 includes a real contract-layer smoke test so Vitest exercises source code immediately. Later phases populate the remaining directories as their semantics are implemented.
