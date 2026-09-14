@@ -84,6 +84,15 @@ function parseCsv(source: string): readonly string[][] {
   return rows;
 }
 
+function stableHash(value: string): string {
+  let hash = 0x811c9dc5;
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return (hash >>> 0).toString(16).padStart(8, '0');
+}
+
 function meta(now: string): RevisionMeta {
   return { createdAt: now, updatedAt: now, revision: 0 };
 }
@@ -272,8 +281,15 @@ export function importCsvToTab(
       continue;
     }
     const orderRaw = edgeRow.cells[indexOf('flow_order')] ?? '';
+    if (!/^\d+$/.test(orderRaw)) {
+      return err({
+        code: 'invalid-relationship',
+        row: edgeRow.row,
+        message: 'Structural Flow order must be an explicit non-negative integer.',
+      });
+    }
     const order = Number(orderRaw);
-    if (!Number.isSafeInteger(order) || order < 0) {
+    if (!Number.isSafeInteger(order)) {
       return err({
         code: 'invalid-relationship',
         row: edgeRow.row,
@@ -301,7 +317,7 @@ export function importCsvToTab(
       message: `CSV Flow graph is invalid: ${flowValidation.error.map((issue) => issue.code).join(', ')}`,
     });
   }
-  const tabId = parseTabId(`csv-${Math.abs(source.length)}-${Object.keys(tasks).length}`);
+  const tabId = parseTabId(`csv-${stableHash(source)}`);
   if (!tabId.ok) {
     return err({ code: 'invalid-csv', row: 1, message: 'Could not allocate CSV import tab ID.' });
   }
