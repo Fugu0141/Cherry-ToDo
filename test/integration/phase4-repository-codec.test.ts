@@ -182,7 +182,7 @@ describe('Phase 4 native V2 data and repositories', () => {
     expect(prepared.ok).toBe(false);
 
     if (prepared.ok) {
-      await commitPreparedWorkspaceCandidate(repository, prepared, current.meta.revision);
+      await commitPreparedWorkspaceCandidate(repository, prepared.value, current.meta.revision);
     }
 
     expect(await repository.load(current.id)).toEqual(current);
