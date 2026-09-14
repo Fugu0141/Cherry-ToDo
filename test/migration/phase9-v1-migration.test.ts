@@ -74,18 +74,23 @@ describe('Phase 9 V1 migration', () => {
     expect(tab?.tasks.root?.status).toBe('todo');
     expect(tab?.tasks.a?.schedule).toEqual({ kind: 'date', date: '2026-09-20' });
     expect(tab?.board.positions.root).toEqual({ x: 100, y: 80 });
-    expect(Object.values(tab?.flowEdges ?? {}).map((edge) => edge.kind).sort()).toEqual([
-      'branch',
-      'continuation',
-    ]);
+    expect(
+      Object.values(tab?.flowEdges ?? {})
+        .map((edge) => edge.kind)
+        .sort(),
+    ).toEqual(['branch', 'continuation']);
   });
 
   it('decrypts the frozen encrypted V1 fixture with the valid passphrase and fails safely otherwise', async () => {
-    const valid = await prepareEncryptedV1Migration(encryptedFixture, 'correct horse', { now: NOW });
+    const valid = await prepareEncryptedV1Migration(encryptedFixture, 'correct horse', {
+      now: NOW,
+    });
     expect(valid.ok).toBe(true);
     if (valid.ok) expect(valid.value.normalized.tabs['tab-main']?.tasks.root?.status).toBe('todo');
 
-    const invalid = await prepareEncryptedV1Migration(encryptedFixture, 'wrong passphrase', { now: NOW });
+    const invalid = await prepareEncryptedV1Migration(encryptedFixture, 'wrong passphrase', {
+      now: NOW,
+    });
     expect(invalid.ok).toBe(false);
     if (!invalid.ok) expect(invalid.error.code).toBe('invalid-credentials');
   });

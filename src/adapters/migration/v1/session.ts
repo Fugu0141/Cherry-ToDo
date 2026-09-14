@@ -7,9 +7,7 @@ import {
 
 export type V1MigrationDecision = 'cancel' | 'confirm';
 
-export type V1MigrationResolution =
-  | { readonly kind: 'cancelled' }
-  | V1MigrationCommitResult;
+export type V1MigrationResolution = { readonly kind: 'cancelled' } | V1MigrationCommitResult;
 
 export function resolvePreparedV1Migration(
   repository: WorkspaceRepository,

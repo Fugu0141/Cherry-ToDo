@@ -34,7 +34,9 @@ function isRecord(value: unknown): value is UnknownRecord {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
-function parseEnvelope(input: string | unknown): Result<V1EncryptedEnvelope, V1EncryptedMigrationError> {
+function parseEnvelope(
+  input: string | unknown,
+): Result<V1EncryptedEnvelope, V1EncryptedMigrationError> {
   let parsed: unknown = input;
   if (typeof input === 'string') {
     try {
@@ -87,7 +89,10 @@ export async function decryptV1CherryEnvelope(
   const iv = fromBase64(envelope.value.cipher.iv);
   const ciphertext = fromBase64(envelope.value.data);
   if (salt === null || iv === null || ciphertext === null || salt.length === 0 || iv.length === 0) {
-    return err({ code: 'invalid-envelope', message: 'Encrypted Cherry envelope contains invalid base64.' });
+    return err({
+      code: 'invalid-envelope',
+      message: 'Encrypted Cherry envelope contains invalid base64.',
+    });
   }
 
   try {
@@ -110,11 +115,7 @@ export async function decryptV1CherryEnvelope(
       false,
       ['decrypt'],
     );
-    const plaintext = await cryptoProvider.subtle.decrypt(
-      { name: 'AES-GCM', iv },
-      key,
-      ciphertext,
-    );
+    const plaintext = await cryptoProvider.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext);
     return ok(JSON.parse(new TextDecoder().decode(plaintext)) as unknown);
   } catch {
     return err({

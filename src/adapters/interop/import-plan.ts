@@ -58,7 +58,10 @@ export function prepareExternalImportAsNewTab(
     meta: current.meta,
   });
   if (!importedValidation.ok) {
-    return err({ code: 'invalid-import-tab', message: 'Imported tab is not valid Cherry V2 data.' });
+    return err({
+      code: 'invalid-import-tab',
+      message: 'Imported tab is not valid Cherry V2 data.',
+    });
   }
 
   const importedTabId = uniqueTabId(current, imported.tab.id);

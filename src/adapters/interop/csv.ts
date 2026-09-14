@@ -169,7 +169,10 @@ export function importCsvToTab(
 ): Result<ExternalTabImport, CsvImportError> {
   const rows = parseCsv(source);
   const header = rows[0];
-  if (header === undefined || CHERRY_CSV_COLUMNS.some((column, index) => header[index] !== column)) {
+  if (
+    header === undefined ||
+    CHERRY_CSV_COLUMNS.some((column, index) => header[index] !== column)
+  ) {
     return err({
       code: 'invalid-header',
       row: 1,
@@ -191,12 +194,20 @@ export function importCsvToTab(
       continue;
     }
     if (type !== 'task') {
-      return err({ code: 'invalid-csv', row: rowNumber, message: 'record_type must be task or flow.' });
+      return err({
+        code: 'invalid-csv',
+        row: rowNumber,
+        message: 'record_type must be task or flow.',
+      });
     }
     const idRaw = cells[indexOf('id')] ?? '';
     const parsedId = parseTaskId(idRaw);
     if (!parsedId.ok || tasks[parsedId.value] !== undefined) {
-      return err({ code: 'invalid-csv', row: rowNumber, message: `Invalid or duplicate Task ID "${idRaw}".` });
+      return err({
+        code: 'invalid-csv',
+        row: rowNumber,
+        message: `Invalid or duplicate Task ID "${idRaw}".`,
+      });
     }
     const status = taskStatus(cells[indexOf('status')] ?? '');
     const taskImportance = importance(cells[indexOf('importance')] ?? '');
@@ -263,7 +274,11 @@ export function importCsvToTab(
     const orderRaw = edgeRow.cells[indexOf('flow_order')] ?? '';
     const order = Number(orderRaw);
     if (!Number.isSafeInteger(order) || order < 0) {
-      return err({ code: 'invalid-relationship', row: edgeRow.row, message: 'Invalid Flow order.' });
+      return err({
+        code: 'invalid-relationship',
+        row: edgeRow.row,
+        message: 'Invalid Flow order.',
+      });
     }
     flowEdges[edgeId] = {
       id: edgeId,
@@ -304,7 +319,9 @@ export function importCsvToTab(
       taskCount: Object.keys(tasks).length,
       connectionCount: Object.keys(flowEdges).length,
       skippedCount: 0,
-      warnings: ['CSV does not preserve Board positions or annotations; native .cherry is the full-fidelity format.'],
+      warnings: [
+        'CSV does not preserve Board positions or annotations; native .cherry is the full-fidelity format.',
+      ],
     },
   });
 }

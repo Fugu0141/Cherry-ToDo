@@ -176,18 +176,25 @@ function scheduleFromLegacy(
   return noSchedule();
 }
 
-function boardState(state: UnknownRecord, positions: Readonly<Record<string, { x: number; y: number }>>): BoardDocumentState {
+function boardState(
+  state: UnknownRecord,
+  positions: Readonly<Record<string, { x: number; y: number }>>,
+): BoardDocumentState {
   const board = isRecord(state.board) ? state.board : {};
   const settings = isRecord(board.settings) ? board.settings : {};
   const timeGuideCandidate = text(settings.timeGuide);
   const timeGuide =
-    timeGuideCandidate === 'shown' || timeGuideCandidate === 'hidden' || timeGuideCandidate === 'auto'
+    timeGuideCandidate === 'shown' ||
+    timeGuideCandidate === 'hidden' ||
+    timeGuideCandidate === 'auto'
       ? timeGuideCandidate
       : DEFAULT_BOARD_SETTINGS.timeGuide;
   return {
     settings: {
       showDateLanes:
-        bool(state.showLanes) ?? bool(settings.showDateLanes) ?? DEFAULT_BOARD_SETTINGS.showDateLanes,
+        bool(state.showLanes) ??
+        bool(settings.showDateLanes) ??
+        DEFAULT_BOARD_SETTINGS.showDateLanes,
       autoLayout: bool(settings.autoLayout) ?? DEFAULT_BOARD_SETTINGS.autoLayout,
       timeGuide,
     },
@@ -359,7 +366,7 @@ function migrateTab(
         });
       }
     }
-    const order = kind === 'branch' ? branchOrder.get(parentId) ?? 0 : 0;
+    const order = kind === 'branch' ? (branchOrder.get(parentId) ?? 0) : 0;
     if (kind === 'branch') branchOrder.set(parentId, order + 1);
     const meta = revisionMeta(rawTab.updatedAt, now);
     flowEdges[edgeId] = { id: edgeId, kind, fromTaskId: parentId, toTaskId: childId, order, meta };
@@ -377,10 +384,13 @@ function migrateTab(
   });
 }
 
-function unwrapWorkspace(input: unknown): Result<{
-  readonly sourceKind: 'workspace' | 'payload';
-  readonly workspace: UnknownRecord;
-}, V1MigrationError> {
+function unwrapWorkspace(input: unknown): Result<
+  {
+    readonly sourceKind: 'workspace' | 'payload';
+    readonly workspace: UnknownRecord;
+  },
+  V1MigrationError
+> {
   if (!isRecord(input)) {
     return err({ code: 'unsupported-v1-format', message: 'V1 import root must be an object.' });
   }
@@ -431,13 +441,19 @@ export function prepareV1Migration(
     const migrated = migrateTab(rawTabValue, index, now, warnings);
     if (!migrated.ok) return migrated;
     if (tabs[migrated.value.id] !== undefined) {
-      return err({ code: 'invalid-v1-workspace', message: `Duplicate V1 tab ID "${migrated.value.id}".` });
+      return err({
+        code: 'invalid-v1-workspace',
+        message: `Duplicate V1 tab ID "${migrated.value.id}".`,
+      });
     }
     tabs[migrated.value.id] = migrated.value;
     tabOrder.push(migrated.value.id);
   }
   if (tabOrder.length === 0) {
-    return err({ code: 'invalid-v1-workspace', message: 'V1 workspace contains no supported tabs.' });
+    return err({
+      code: 'invalid-v1-workspace',
+      message: 'V1 workspace contains no supported tabs.',
+    });
   }
 
   const workspaceMeta = revisionMeta(rawWorkspace.updatedAt, now);
@@ -467,7 +483,10 @@ export function prepareV1Migration(
   const normalized: WorkspaceDocument = { ...candidate, tabs: normalizedTabs };
   const normalizedValidation = validateWorkspaceDocument(normalized);
   if (!normalizedValidation.ok) {
-    return err({ code: 'invalid-v2-candidate', message: 'Normalized V1 migration candidate is invalid.' });
+    return err({
+      code: 'invalid-v2-candidate',
+      message: 'Normalized V1 migration candidate is invalid.',
+    });
   }
 
   return ok({
