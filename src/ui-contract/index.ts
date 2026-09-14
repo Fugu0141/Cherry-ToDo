@@ -36,6 +36,25 @@ export interface BoardPresentationModel {
   readonly height: number;
 }
 
+export interface CherryPoint {
+  readonly x: number;
+  readonly y: number;
+}
+
+export type CherryBoardDropTarget =
+  | { readonly kind: 'canvas'; readonly point: CherryPoint }
+  | {
+      readonly kind: 'date-lane';
+      readonly date: string | null;
+      readonly point: CherryPoint;
+      readonly collapsed: boolean;
+    };
+
+export interface DropTaskOnBoardIntent {
+  readonly taskId: string;
+  readonly target: CherryBoardDropTarget;
+}
+
 export interface WorkspaceSummaryModel {
   readonly id: string;
   readonly name: string;
@@ -146,6 +165,9 @@ export interface CherryUIIntents {
     update(input: UpdateTaskIntent): Promise<UIActionResult>;
     setCompleted(taskId: string, completed: boolean): Promise<UIActionResult>;
     setSchedule(taskId: string, schedule: CherryScheduleModel): Promise<UIActionResult>;
+  };
+  readonly board: {
+    dropTask(input: DropTaskOnBoardIntent): Promise<UIActionResult>;
   };
   readonly flow: {
     connect(input: ConnectTasksIntent): Promise<UIActionResult>;
