@@ -3,6 +3,7 @@
 - [`../DESIGN_FREEZE.md`](../DESIGN_FREEZE.md) — **final V2.0 design-freeze authority and wording corrections**.
 - [`BASIC_DESIGN.md`](BASIC_DESIGN.md) — architecture and module/data/interaction design baseline.
 - [`FLOW_EXECUTION_RULES.md`](FLOW_EXECUTION_RULES.md) — derived-goal completion, merge execution gates, blocking/invalidation, and deletion semantics, subject to the freeze corrections.
+- [`MOBILE_INTERACTION.md`](MOBILE_INTERACTION.md) — **accepted default-UI mobile interaction mapping**, including the validated existing-Task connection UX.
 - [`TEST_STRATEGY.md`](TEST_STRATEGY.md) — test pyramid, regression strategy, traceability, and Definition of Done.
 
 Related architecture decisions:
@@ -20,4 +21,4 @@ ADR-0007 is authoritative for full downstream branching-goal completion scope, n
 
 ADR-0008 defines both directions of Task/Goal topology transition and requires user-visible normalization preview before V1 data that conflicts with V2 execution rules is committed.
 
-The Core/Application design is frozen for implementation as of 2026-09-14. The exact mobile existing-task connection gesture remains intentionally deferred to UI prototype testing and is not a Core design blocker.
+The Core/Application design is frozen for implementation as of 2026-09-14. The exact mobile existing-task connection gesture was intentionally deferred by the design freeze and is now resolved for the default V2 UI by `MOBILE_INTERACTION.md` after Phase 7 prototype validation; no Core/Application semantics changed.
