@@ -53,14 +53,21 @@ export class IndexedDbBinaryStore implements BrowserBinaryStore {
     const done = transactionDone(transaction);
     const keys = await requestResult(transaction.objectStore(this.#storeName).getAllKeys());
     await done;
-    return keys.map((key) => String(key));
+
+    return keys.map((key) => {
+      if (typeof key !== 'string') {
+        throw new Error('Cherry IndexedDB contains a non-string workspace key.');
+      }
+      return key;
+    });
   }
 
   async get(key: string): Promise<Uint8Array | null> {
     const database = await this.#database();
     const transaction = database.transaction(this.#storeName, 'readonly');
     const done = transactionDone(transaction);
-    const value = await requestResult(transaction.objectStore(this.#storeName).get(key));
+    const request = transaction.objectStore(this.#storeName).get(key) as IDBRequest<unknown>;
+    const value: unknown = await requestResult(request);
     await done;
 
     if (value === undefined) return null;
