@@ -215,19 +215,17 @@ export class ApplicationStore {
       return ok({ kind: 'committed', workspace: this.#workspace });
     }
 
-    if (status === 'done') {
-      const control = deriveManualCompletionControl(taskId, tab.tasks, graphOf(tab));
-      if (control.kind === 'derived-goal-controlled') {
-        return err({ code: 'derived-goal-controlled', taskId });
-      }
-      if (control.kind === 'blocked-by-merge') {
-        return err({
-          code: 'completion-blocked',
-          taskId,
-          gateTaskIds: control.gateTaskIds,
-          remainingPredecessorIds: control.remainingPredecessorIds,
-        });
-      }
+    const control = deriveManualCompletionControl(taskId, tab.tasks, graphOf(tab));
+    if (control.kind === 'derived-goal-controlled') {
+      return err({ code: 'derived-goal-controlled', taskId });
+    }
+    if (status === 'done' && control.kind === 'blocked-by-merge') {
+      return err({
+        code: 'completion-blocked',
+        taskId,
+        gateTaskIds: control.gateTaskIds,
+        remainingPredecessorIds: control.remainingPredecessorIds,
+      });
     }
 
     const now = this.#now();
