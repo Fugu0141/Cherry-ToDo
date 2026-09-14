@@ -42,7 +42,8 @@ export function parseLocalDate(value: string): Result<LocalDate, ScheduleValidat
   const year = Number(match[1]);
   const month = Number(match[2]);
   const day = Number(match[3]);
-  const valid = year >= 1 && month >= 1 && month <= 12 && day >= 1 && day <= daysInMonth(year, month);
+  const valid =
+    year >= 1 && month >= 1 && month <= 12 && day >= 1 && day <= daysInMonth(year, month);
 
   return valid ? ok(value as LocalDate) : err({ code: 'invalid-local-date', value });
 }

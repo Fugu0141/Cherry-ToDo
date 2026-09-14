@@ -8,11 +8,7 @@ import {
   type BoardDocumentState,
   type BoardValidationError,
 } from '../../board/index.ts';
-import {
-  validateFlowGraph,
-  type FlowEdge,
-  type FlowInvariantError,
-} from '../../flow/index.ts';
+import { validateFlowGraph, type FlowEdge, type FlowInvariantError } from '../../flow/index.ts';
 import { validateTask, type Task, type TaskValidationError } from '../../task/index.ts';
 import type { TabId, TaskId, WorkspaceId } from '../../../shared/ids/index.ts';
 import {
