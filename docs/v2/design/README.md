@@ -1,6 +1,7 @@
 # V2 Basic Design
 
 - [`BASIC_DESIGN.md`](BASIC_DESIGN.md) — canonical draft architecture and module/data/interaction design.
+- [`FLOW_EXECUTION_RULES.md`](FLOW_EXECUTION_RULES.md) — derived-goal completion, merge completion gates, and chain-limited downstream deletion semantics.
 - [`TEST_STRATEGY.md`](TEST_STRATEGY.md) — test pyramid, regression strategy, traceability, and Definition of Done.
 
 Related architecture decisions:
@@ -11,4 +12,4 @@ Related architecture decisions:
 - [`../adr/0004-structural-dag-merges-and-derived-goals.md`](../adr/0004-structural-dag-merges-and-derived-goals.md) — **Accepted for V2.0**
 - [`../adr/0005-replaceable-ui-package-contract.md`](../adr/0005-replaceable-ui-package-contract.md) — **Accepted for V2.0**
 
-Implementation does not begin until the remaining design-freeze questions in `BASIC_DESIGN.md` are resolved and the relevant requirements/basic-design decisions are accepted/frozen.
+Implementation does not begin until the remaining design-freeze questions in `BASIC_DESIGN.md` / `FLOW_EXECUTION_RULES.md` are resolved and the relevant requirements/basic-design decisions are accepted/frozen.
