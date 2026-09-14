@@ -114,6 +114,45 @@ test('persistent opt-in restores the active workspace after reload', async ({ pa
   await expect(page.locator('.cherry-task').filter({ hasText: '保存されるタスク' })).toBeVisible();
 });
 
+test('multiple named planning tabs keep independent content and restore the active tab', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: '保存を許可' }).click();
+  await createWorkspace(page, 'Tabbed workspace');
+  await addTask(page, 'Plan only');
+
+  const tabBar = page.getByRole('navigation', { name: '計画タブ' });
+  await expect(tabBar.getByRole('button', { name: 'Plan' })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
+  await tabBar.getByLabel('タブ名').fill('調査');
+  await tabBar.getByRole('button', { name: '新しいタブ' }).click();
+
+  await expect(tabBar.getByRole('button', { name: '調査' })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
+  await expect(page.locator('.cherry-task').filter({ hasText: 'Plan only' })).toHaveCount(0);
+  await addTask(page, 'Research only');
+
+  await tabBar.getByRole('button', { name: 'Plan' }).click();
+  await expect(page.locator('.cherry-task').filter({ hasText: 'Plan only' })).toBeVisible();
+  await expect(page.locator('.cherry-task').filter({ hasText: 'Research only' })).toHaveCount(0);
+
+  await tabBar.getByRole('button', { name: '調査' }).click();
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Tabbed workspace' })).toBeVisible();
+  const restoredTabs = page.getByRole('navigation', { name: '計画タブ' });
+  await expect(restoredTabs.getByRole('button', { name: '調査' })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
+  await expect(page.locator('.cherry-task').filter({ hasText: 'Research only' })).toBeVisible();
+  await expect(page.locator('.cherry-task').filter({ hasText: 'Plan only' })).toHaveCount(0);
+});
+
 test('persistent data clearing requires explicit destructive confirmation', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: '保存を許可' }).click();

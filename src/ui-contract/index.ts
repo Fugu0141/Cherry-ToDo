@@ -86,6 +86,11 @@ export interface WorkspaceSummaryModel {
   readonly updatedAt: string;
 }
 
+export interface WorkspaceTabSummaryModel {
+  readonly id: string;
+  readonly name: string;
+}
+
 export interface TaskCardModel {
   readonly id: string;
   readonly title: string;
@@ -115,6 +120,7 @@ export interface WorkspaceScreenModel {
   readonly workspaceName: string;
   readonly tabId: string;
   readonly tabName: string;
+  readonly tabs: readonly WorkspaceTabSummaryModel[];
   readonly activeView: CherryView;
   readonly board: BoardPresentationModel;
   readonly tasks: readonly TaskCardModel[];
@@ -155,6 +161,10 @@ export type UIActionResult =
   | { readonly kind: 'error'; readonly error: PresentationError };
 
 export interface CreateWorkspaceIntent {
+  readonly name: string;
+}
+
+export interface CreateTabIntent {
   readonly name: string;
 }
 
@@ -212,6 +222,8 @@ export interface CherryUIIntents {
   readonly workspace: {
     create(input: CreateWorkspaceIntent): Promise<UIActionResult>;
     open(workspaceId: string): Promise<UIActionResult>;
+    createTab(input: CreateTabIntent): Promise<UIActionResult>;
+    openTab(tabId: string): Promise<UIActionResult>;
     goToStart(): Promise<UIActionResult>;
     setView(view: CherryView): Promise<UIActionResult>;
     setBoardSettings(settings: CherryBoardSettingsModel): Promise<UIActionResult>;
@@ -306,6 +318,9 @@ export type CherryMessageKey =
   | 'start.workspaceName'
   | 'workspace.board'
   | 'workspace.list'
+  | 'workspace.tabs'
+  | 'workspace.tabName'
+  | 'workspace.createTab'
   | 'board.dateLanes'
   | 'board.autoLayout'
   | 'board.timeGuide'

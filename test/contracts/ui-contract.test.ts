@@ -19,6 +19,8 @@ function intents(): CherryUIIntents {
     workspace: {
       create: ok,
       open: ok,
+      createTab: ok,
+      openTab: ok,
       goToStart: ok,
       setView: ok,
       setBoardSettings: ok,

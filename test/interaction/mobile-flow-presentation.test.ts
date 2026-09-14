@@ -9,6 +9,7 @@ function workspace(): WorkspaceScreenModel {
     workspaceName: 'Mobile Flow',
     tabId: 'tab-1',
     tabName: 'Main',
+    tabs: [{ id: 'tab-1', name: 'Main' }],
     activeView: 'list',
     board: {
       settings: { showDateLanes: false, autoLayout: true, timeGuide: 'auto' },

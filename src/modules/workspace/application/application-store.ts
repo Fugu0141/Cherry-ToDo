@@ -40,6 +40,7 @@ import {
   type ScheduleValidationError,
 } from '../../schedule/index';
 import {
+  createEmptyBoardDocumentState,
   validateBoardDocumentState,
   type BoardPlacementDropIntent,
   type BoardSettings,
@@ -65,6 +66,8 @@ import { err, ok, type Result } from '../../../shared/result/index';
 
 export type ApplicationError =
   | { readonly code: 'tab-not-found'; readonly tabId: TabId }
+  | { readonly code: 'tab-id-in-use'; readonly tabId: TabId }
+  | { readonly code: 'invalid-tab-name' }
   | { readonly code: 'task-not-found'; readonly taskId: TaskId }
   | { readonly code: 'task-id-in-use'; readonly taskId: TaskId }
   | { readonly code: 'annotation-not-found'; readonly annotationId: AnnotationId }
@@ -180,6 +183,38 @@ export class ApplicationStore {
 
   get historyState(): HistoryState {
     return this.#history.state;
+  }
+
+  createTab(tabId: TabId, rawName: string): Result<MutationOutcome, ApplicationError> {
+    if (this.#workspace.tabs[tabId] !== undefined) {
+      return err({ code: 'tab-id-in-use', tabId });
+    }
+
+    const name = rawName.trim();
+    if (name.length === 0) return err({ code: 'invalid-tab-name' });
+
+    const now = this.#now();
+    const tab: TabDocument = {
+      id: tabId,
+      name,
+      tasks: {},
+      flowEdges: {},
+      annotations: {},
+      board: createEmptyBoardDocumentState(),
+      meta: { createdAt: now, updatedAt: now, revision: 0 },
+    };
+    const candidate = bumpWorkspaceRevision(
+      {
+        ...this.#workspace,
+        tabs: { ...this.#workspace.tabs, [tabId]: tab },
+        tabOrder: [...this.#workspace.tabOrder, tabId],
+      },
+      now,
+    );
+    const validation = validateWorkspaceDocument(candidate);
+    if (!validation.ok) return err({ code: 'workspace-invalid', causes: validation.error });
+    this.#commitCanonical(validation.value);
+    return ok({ kind: 'committed', workspace: this.#workspace });
   }
 
   undo(): Result<WorkspaceDocument, ApplicationError> {
