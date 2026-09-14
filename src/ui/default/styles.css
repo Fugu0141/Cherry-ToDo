@@ -378,3 +378,9 @@ button { cursor: pointer; }
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Phase 10: storage settings and derived-goal importance */
+.cherry-storage-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; align-items: center; }
+.cherry-start > .cherry-storage-actions { margin: 20px 0 0; }
+.cherry-task-badge.importance { color: #40546b; background: #edf3fa; }

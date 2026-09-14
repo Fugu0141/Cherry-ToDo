@@ -252,3 +252,16 @@
     stroke: #aeb8c4;
   }
 }
+
+
+:root[data-cherry-theme='dark'] .cherry-task-badge.importance {
+  color: #c9dcf2;
+  background: #243448;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-cherry-theme='light']) .cherry-task-badge.importance {
+    color: #c9dcf2;
+    background: #243448;
+  }
+}

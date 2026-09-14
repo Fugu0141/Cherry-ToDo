@@ -192,14 +192,17 @@ export class CherryUIRuntime implements CherryUIContext {
   #tabId: TabId | null = null;
   #view: CherryView = 'board';
 
-  readonly capabilities = {
-    persistentStorageAvailable: true,
-    boardView: true,
-    listView: true,
-    taskEditing: true,
-    structuralConnections: true,
-    annotations: true,
-  } as const;
+  get capabilities() {
+    return {
+      persistentStorageAvailable: true,
+      persistentStorageEnabled: this.#application.persistence.mode === 'persistent',
+      boardView: true,
+      listView: true,
+      taskEditing: true,
+      structuralConnections: true,
+      annotations: true,
+    } as const;
+  }
   readonly semanticTokens = CHERRY_SEMANTIC_TOKENS;
   readonly i18n;
   readonly intents: CherryUIIntents;
@@ -211,6 +214,7 @@ export class CherryUIRuntime implements CherryUIContext {
       storage: {
         allow: () => this.#resolveStartup(this.#application.startup.chooseAllow()),
         notNow: () => this.#resolveStartup(this.#application.startup.chooseNotNow()),
+        disable: (clearPersistentData) => this.#disablePersistence(clearPersistentData),
       },
       workspace: {
         create: (input) => this.#createWorkspace(input.name),
@@ -330,6 +334,18 @@ export class CherryUIRuntime implements CherryUIContext {
 
   async boot(): Promise<void> {
     await this.#applyStartupState(await this.#application.startup.boot());
+  }
+
+  async #disablePersistence(clearPersistentData: boolean): Promise<UIActionResult> {
+    const result = await this.#application.persistence.disablePersistence({
+      clearPersistentData,
+      confirmed: true,
+    });
+    if (result.kind === 'failed') return this.#error('persistence', 'error.persistence');
+
+    if (this.#store === null) await this.#showStart();
+    else this.#refreshWorkspace();
+    return OK;
   }
 
   async #resolveStartup(statePromise: Promise<StartupState>): Promise<UIActionResult> {

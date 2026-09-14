@@ -1,6 +1,7 @@
 import type {
   CherryFlowKind,
   CherryScheduleModel,
+  CherryTaskImportance,
   CherryTimeGuideMode,
   CherryUIContext,
   CherryUIHandle,
@@ -95,6 +96,27 @@ async function perform(context: CherryUIContext, promise: Promise<UIActionResult
   }
 }
 
+function renderStorageControls(context: CherryUIContext): HTMLElement | null {
+  if (!context.capabilities.persistentStorageEnabled) return null;
+
+  const controls = element('section', 'cherry-storage-actions');
+  controls.setAttribute('aria-label', context.i18n.t('storage.settings'));
+  controls.append(
+    button(context.i18n.t('storage.disable'), () => {
+      void perform(context, context.intents.storage.disable(false));
+    }),
+    button(
+      context.i18n.t('storage.disableAndClear'),
+      () => {
+        if (!window.confirm(context.i18n.t('storage.clearConfirm'))) return;
+        void perform(context, context.intents.storage.disable(true));
+      },
+      'cherry-button danger ghost',
+    ),
+  );
+  return controls;
+}
+
 interface FlowConnectionDraft {
   readonly fromTaskId: string;
   readonly kind: CherryFlowKind;
@@ -154,6 +176,20 @@ function renderTask(
       const merge = element('span', 'cherry-task-badge merge');
       merge.textContent = context.i18n.t('task.merge');
       badges.append(merge);
+    }
+    if (task.isDerivedGoal && task.importance !== 'none') {
+      const importance = element('span', 'cherry-task-badge importance');
+      const label =
+        task.importance === 'low'
+          ? context.i18n.t('task.importanceLow')
+          : task.importance === 'medium'
+            ? context.i18n.t('task.importanceMedium')
+            : task.importance === 'high'
+              ? context.i18n.t('task.importanceHigh')
+              : context.i18n.t('task.importanceUrgent');
+      importance.textContent = `${context.i18n.t('task.importance')}: ${label}`;
+      importance.dataset.importance = task.importance;
+      badges.append(importance);
     }
     card.append(badges);
   }
@@ -624,6 +660,8 @@ function renderWorkspace(
     });
   });
   toolbar.append(taskForm);
+  const storageControls = renderStorageControls(context);
+  if (storageControls !== null) toolbar.append(storageControls);
 
   if (workspace.tasks.length === 0) {
     const startFlow = element('section', 'cherry-mobile-flow-start');
@@ -857,6 +895,26 @@ function renderWorkspace(
       notes.value = task.notes;
       notesLabel.append(notesText, notes);
 
+      const importanceField = task.isDerivedGoal
+        ? labeledSelect(context.i18n.t('task.importance'))
+        : null;
+      if (importanceField !== null) {
+        const options: readonly [CherryTaskImportance, string][] = [
+          ['none', context.i18n.t('task.importanceNone')],
+          ['low', context.i18n.t('task.importanceLow')],
+          ['medium', context.i18n.t('task.importanceMedium')],
+          ['high', context.i18n.t('task.importanceHigh')],
+          ['urgent', context.i18n.t('task.importanceUrgent')],
+        ];
+        for (const [value, label] of options) {
+          const option = element('option');
+          option.value = value;
+          option.textContent = label;
+          importanceField.select.append(option);
+        }
+        importanceField.select.value = task.importance;
+      }
+
       const scheduleKind = labeledSelect(context.i18n.t('task.schedule'));
       const scheduleKinds = [
         ['none', context.i18n.t('task.scheduleNone')],
@@ -922,15 +980,9 @@ function renderWorkspace(
         'cherry-button danger ghost',
       );
       danger.append(deleteOnly, deleteDownstream);
-      panel.append(
-        heading,
-        titleField.wrap,
-        notesLabel,
-        scheduleKind.wrap,
-        scheduleFields,
-        actions,
-        danger,
-      );
+      panel.append(heading, titleField.wrap, notesLabel);
+      if (importanceField !== null) panel.append(importanceField.wrap);
+      panel.append(scheduleKind.wrap, scheduleFields, actions, danger);
       panel.addEventListener('submit', (event) => {
         event.preventDefault();
         const schedule = scheduleFromEditor(scheduleKind.select, dateField.input, timeField.input);
@@ -945,6 +997,9 @@ function renderWorkspace(
               taskId: task.id,
               title: titleField.input.value,
               notes: notes.value,
+              ...(importanceField === null
+                ? {}
+                : { importance: importanceField.select.value as CherryTaskImportance }),
             }),
           );
           await perform(context, context.intents.task.setSchedule(task.id, schedule));
@@ -1036,6 +1091,8 @@ export class DefaultCherryUI implements CherryUIPackage<HTMLElement> {
           list.append(open);
         }
         main.append(heading, form, list);
+        const storageControls = renderStorageControls(context);
+        if (storageControls !== null) main.append(storageControls);
         root.replaceChildren(main);
         return;
       }
