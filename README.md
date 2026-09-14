@@ -10,9 +10,11 @@ The V2.0 **requirements and Core/Application basic design are frozen for impleme
 
 The final review covered the open-Issue inventory, requirements, module/dependency boundaries, Flow/Goal/merge/delete semantics, persistence consent, V1 migration, replaceable UI boundary, startup architecture, and test strategy.
 
-The exact mobile gesture/UI for connecting existing Tasks remains intentionally deferred to prototype testing; the capability and Core command contract are already required and this does not block implementation.
+Implementation is governed by the phased roadmap in [`docs/v2/IMPLEMENTATION_PLAN.md`](docs/v2/IMPLEMENTATION_PLAN.md). Work should not advance to the next phase until the current phase exit criteria are satisfied or the plan is deliberately amended.
 
-The authoritative freeze record is [`docs/v2/DESIGN_FREEZE.md`](docs/v2/DESIGN_FREEZE.md).
+The exact mobile gesture/UI for connecting existing Tasks remains intentionally deferred to prototype testing; the capability and Core command contract are already required and this does not block earlier implementation phases.
+
+The authoritative design freeze record is [`docs/v2/DESIGN_FREEZE.md`](docs/v2/DESIGN_FREEZE.md).
 
 ## Design goal
 
@@ -33,6 +35,10 @@ Primary goals:
 
 - `main`: V1 line / historical reference
 - `v2.0`: V2.0 integration branch
-- feature/design branches: created from `v2.0` after the bootstrap is merged
+- feature/design branches: created from `v2.0`
 
-See [`docs/README.md`](docs/README.md) for the V2 documentation layout.
+## Immediate next step
+
+Only **Phase 1 — Engineering foundation and architecture guardrails** should begin next. Task/Flow product implementation starts after the Phase 1 gates pass.
+
+See [`docs/README.md`](docs/README.md) for the V2 documentation map.
