@@ -130,3 +130,31 @@ button { cursor: pointer; }
 .cherry-button.danger { background: #b72842; border-color: #b72842; color: #fff; }
 .cherry-button.danger.ghost { background: #fff; color: #a3263d; }
 .cherry-button:focus-visible, .cherry-icon-button:focus-visible, .cherry-segment-button:focus-visible, .cherry-workspace-card:focus-visible { outline: 3px solid rgba(216,51,82,.25); outline-offset: 2px; }
+
+
+/* Phase 7B: mobile single-owner Board interaction */
+@media (max-width: 680px), (pointer: coarse) {
+  .cherry-board-scroll {
+    touch-action: none;
+    overscroll-behavior: contain;
+    min-height: calc(100dvh - 196px);
+  }
+
+  .cherry-board-task {
+    touch-action: none;
+  }
+
+  .cherry-board-task.touch-dragging {
+    transition: none;
+    z-index: 8;
+    box-shadow: 0 18px 44px rgba(25, 29, 36, .18);
+  }
+
+  .cherry-flow-handle,
+  .cherry-flow-target-button,
+  .cherry-icon-button,
+  .cherry-date-lane-label {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
