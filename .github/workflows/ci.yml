@@ -29,5 +29,5 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run Phase 1 quality gates
+      - name: Run V2 quality gates
         run: npm run check
