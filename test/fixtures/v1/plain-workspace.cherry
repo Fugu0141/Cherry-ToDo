@@ -1,0 +1,59 @@
+{
+  "format": "cherry-workspace",
+  "version": 1,
+  "exportedAt": "2026-09-14T00:00:00.000Z",
+  "workspace": {
+    "version": 1,
+    "activeTabId": "tab-main",
+    "tabs": [
+      {
+        "id": "tab-main",
+        "name": "学習",
+        "state": {
+          "tasks": {
+            "root": {
+              "id": "root",
+              "title": "数学",
+              "parentId": null,
+              "x": 100,
+              "y": 80,
+              "targetAt": "2026-09-20",
+              "status": "done",
+              "branchMode": null
+            },
+            "a": {
+              "id": "a",
+              "title": "問題集",
+              "parentId": "root",
+              "x": 380,
+              "y": 20,
+              "targetAt": "2026-09-20",
+              "status": "done",
+              "branchMode": "same"
+            },
+            "b": {
+              "id": "b",
+              "title": "復習",
+              "parentId": "root",
+              "x": 380,
+              "y": 180,
+              "targetAt": "2026-09-21",
+              "status": "todo",
+              "branchMode": "branch"
+            }
+          },
+          "showLanes": true,
+          "viewMode": "board",
+          "board": {
+            "settings": {
+              "autoLayout": false,
+              "timeGuide": "auto"
+            }
+          }
+        },
+        "updatedAt": "2026-09-14T00:00:00.000Z"
+      }
+    ],
+    "updatedAt": "2026-09-14T00:00:00.000Z"
+  }
+}
