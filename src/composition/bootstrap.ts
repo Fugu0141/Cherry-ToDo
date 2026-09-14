@@ -1,11 +1,15 @@
-import { buildInfo } from '../shared/build-info/index';
+import { DefaultCherryUI } from '../ui/default/index';
+import '../ui/default/styles.css';
+import { createBrowserApplicationComposition } from './create-browser-application';
+import { CherryUIRuntime } from './cherry-ui-runtime';
 
-export function bootstrapPhaseOneShell(root: HTMLElement): void {
-  const heading = document.createElement('h1');
-  heading.textContent = buildInfo.appName;
-
-  const status = document.createElement('p');
-  status.textContent = `Engineering foundation ready (Phase ${buildInfo.phase}).`;
-
-  root.replaceChildren(heading, status);
+export async function bootstrapCherry(root: HTMLElement): Promise<void> {
+  const application = createBrowserApplicationComposition({
+    storage: window.localStorage,
+    indexedDb: window.indexedDB,
+  });
+  const runtime = new CherryUIRuntime(application, 'ja');
+  const ui = new DefaultCherryUI();
+  ui.mount(root, runtime);
+  await runtime.boot();
 }
