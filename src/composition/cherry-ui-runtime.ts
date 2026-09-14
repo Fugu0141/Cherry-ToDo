@@ -363,25 +363,15 @@ export class CherryUIRuntime implements CherryUIContext {
     const from = parseTaskId(fromRaw);
     const to = parseTaskId(toRaw);
     if (!from.ok || !to.ok) return this.#error('validation', 'error.validation');
-    return this.#runMutation((store, tabId) => {
-      const tab = store.workspace.tabs[tabId];
-      if (tab === undefined) {
-        return { ok: false, error: { code: 'tab-not-found', tabId } } as const;
-      }
-      const branchOrders = Object.values(tab.flowEdges)
-        .filter((edge) => edge.kind === 'branch' && edge.fromTaskId === from.value)
-        .map((edge) => edge.order);
-      const order =
-        kind === 'branch' ? (branchOrders.length === 0 ? 0 : Math.max(...branchOrders) + 1) : 0;
-      return store.connectFlow({
+    return this.#runMutation((store, tabId) =>
+      store.connectFlow({
         tabId,
         edgeId: unwrapId(parseFlowEdgeId(randomId('edge'))),
         kind,
         fromTaskId: from.value,
         toTaskId: to.value,
-        ...(kind === 'reference' ? {} : { order }),
-      });
-    });
+      }),
+    );
   }
 
   async #withTaskId(
