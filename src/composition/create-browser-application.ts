@@ -67,26 +67,17 @@ export function createBrowserApplicationComposition(
       if (environment.indexedDb === undefined) {
         throw new Error('IndexedDB is unavailable in this browser environment.');
       }
-      return new BrowserWorkspaceRepository(
-        new IndexedDbBinaryStore(environment.indexedDb),
-        codec,
-      );
+      return new BrowserWorkspaceRepository(new IndexedDbBinaryStore(environment.indexedDb), codec);
     });
 
   const persistence = new PersistenceCoordinator(
     memoryWorkspaceRepository,
     memorySessionRepository,
     consentStore,
-    () =>
-      Promise.resolve(
-        createPersistentBundle(environment, createPersistentWorkspaceRepository),
-      ),
+    () => Promise.resolve(createPersistentBundle(environment, createPersistentWorkspaceRepository)),
   );
 
-  const startup = new StartupController(
-    persistence,
-    options.initializeWorkspaceRuntime,
-  );
+  const startup = new StartupController(persistence, options.initializeWorkspaceRuntime);
 
   return { persistence, startup };
 }
