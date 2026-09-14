@@ -1,5 +1,5 @@
 import type { WorkspaceDocument } from '../../workspace/index';
-import { PersistenceCoordinator } from './persistence-coordinator';
+import type { PersistenceCoordinator } from './persistence-coordinator';
 import type { SessionContext } from '../ports/startup-storage';
 
 export type StartupState =
