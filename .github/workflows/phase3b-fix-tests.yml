@@ -1,0 +1,45 @@
+name: Phase 3B test fixer
+
+on:
+  push:
+    branches:
+      - feat/v2-phase3b-application-mutations
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/v2-phase3b-application-mutations
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Fix Schedule test fixtures
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('test/application/application-store.test.ts')
+          s = p.read_text()
+          s = s.replace(
+              "    const schedule = scheduleOnDate(date.value);",
+              "    const scheduled = scheduleOnDate(date.value);\n    if (!scheduled.ok) throw new Error('Invalid Schedule fixture.');\n    const schedule = scheduled.value;",
+          )
+          p.write_text(s)
+          PY
+          npx prettier --write test/application/application-store.test.ts
+      - name: Commit fixes
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add test/application/application-store.test.ts
+          git commit -m "fix: unwrap Phase 3B Schedule fixtures"
+          git push
