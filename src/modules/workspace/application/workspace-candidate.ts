@@ -1,5 +1,9 @@
 import { err, ok, type Result } from '../../../shared/result/index';
-import { validateWorkspaceDocument, type WorkspaceDocument } from '../domain/workspace';
+import {
+  validateWorkspaceDocument,
+  type WorkspaceDocument,
+  type WorkspaceValidationError,
+} from '../domain/workspace';
 import type { WorkspaceCodec, WorkspaceDecodeError } from '../ports/workspace-codec';
 import {
   workspaceSummary,
@@ -18,12 +22,7 @@ export type WorkspaceCandidateError =
   | {
       readonly code: 'invalid-workspace';
       readonly message: string;
-      readonly causes: ReturnType<typeof validateWorkspaceDocument> extends Result<
-        WorkspaceDocument,
-        infer E
-      >
-        ? E
-        : never;
+      readonly causes: readonly WorkspaceValidationError[];
     };
 
 export function prepareWorkspaceCandidate(
