@@ -91,12 +91,7 @@ describe('derived branching goal evaluation', () => {
 
     const [before] = evaluateDerivedGoalStatuses(tasks, flow);
     expect(before?.taskId).toBe(taskId('A'));
-    expect(before?.descendantTaskIds).toEqual([
-      taskId('B'),
-      taskId('C'),
-      taskId('D'),
-      taskId('E'),
-    ]);
+    expect(before?.descendantTaskIds).toEqual([taskId('B'), taskId('C'), taskId('D'), taskId('E')]);
     expect(before?.shouldBeDone).toBe(false);
 
     const completedTasks = { ...tasks, E: task('E', 'done') };
@@ -181,10 +176,7 @@ describe('merge execution gates', () => {
 
   it('ignores reference edges when deriving execution locks', () => {
     const tasks = { A: task('A'), B: task('B'), C: task('C') };
-    const flow = graph(tasks, [
-      reference('ab', 'A', 'B'),
-      reference('cb', 'C', 'B'),
-    ]);
+    const flow = graph(tasks, [reference('ab', 'A', 'B'), reference('cb', 'C', 'B')]);
 
     expect(deriveTaskCompletionAvailability(taskId('B'), tasks, flow)).toEqual({
       kind: 'available',
