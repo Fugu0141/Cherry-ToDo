@@ -104,7 +104,9 @@ export class PersistenceCoordinator {
         if (document === null) continue;
         const saved = await bundle.workspaceRepository.save(document);
         if (saved.kind !== 'saved') {
-          throw new Error(`Failed to copy in-memory workspace "${summary.id}" to persistent storage.`);
+          throw new Error(
+            `Failed to copy in-memory workspace "${summary.id}" to persistent storage.`,
+          );
         }
         copiedWorkspaceIds.push(String(summary.id));
       }
