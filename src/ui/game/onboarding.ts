@@ -40,6 +40,33 @@ export const CHERRY_ONBOARDING_STEPS: readonly CherryOnboardingStep[] = [
   },
 ];
 
+export const CHERRY_ONBOARDING_STEPS_EN: readonly CherryOnboardingStep[] = [
+  {
+    selector: '.cg-fab',
+    eyebrow: 'STEP 1 / 4',
+    title: 'Place your first task',
+    body: 'Use the + button at the lower right to create your first task. In Cherry, the board itself is the main planning surface.',
+  },
+  {
+    selector: '.cg-board-scroll',
+    eyebrow: 'STEP 2 / 4',
+    title: 'Move tasks directly',
+    body: 'Select a task with a click or tap and drag it to move it. The action dock lets you complete, edit, or continue from the selected task.',
+  },
+  {
+    selector: '.cg-tabs',
+    eyebrow: 'STEP 3 / 4',
+    title: 'Grow the Flow',
+    body: 'Use the + handle, Next, or Branch to extend a Flow. Existing lets you connect to a task that is already on the board.',
+  },
+  {
+    selector: '.cg-topbar-actions',
+    eyebrow: 'STEP 4 / 4',
+    title: 'Bring in tools only when needed',
+    body: 'Board/List, Undo/Redo, and display settings live at the upper right. You can reopen this guide any time from the ? button.',
+  },
+];
+
 export function shouldAutoOpenCherryOnboarding(state: CherryOnboardingState): boolean {
   return state.hasWorkspace && !state.seen && state.taskCount === 0;
 }
@@ -52,16 +79,20 @@ function makeButton(label: string, className: string): HTMLButtonElement {
   return button;
 }
 
-export function installCherryOnboarding(root: HTMLElement): () => void {
+export function installCherryOnboarding(root: HTMLElement, locale: 'ja' | 'en' = 'ja'): () => void {
   let disposed = false;
   let autoAttempted = false;
   let currentStep = 0;
   let overlay: HTMLDivElement | null = null;
   let spotlight: HTMLDivElement | null = null;
   let card: HTMLDivElement | null = null;
+  const steps = locale === 'en' ? CHERRY_ONBOARDING_STEPS_EN : CHERRY_ONBOARDING_STEPS;
 
   const helpButton = makeButton('?', 'cg-help-button');
-  helpButton.setAttribute('aria-label', 'Cherryの使い方を開く');
+  helpButton.setAttribute(
+    'aria-label',
+    locale === 'ja' ? 'Cherryの使い方を開く' : 'Open Cherry guide',
+  );
   helpButton.hidden = true;
   document.body.append(helpButton);
 
@@ -83,8 +114,7 @@ export function installCherryOnboarding(root: HTMLElement): () => void {
 
   const workspaceMounted = (): boolean => root.querySelector('.cg-shell') !== null;
 
-  const currentOnboardingStep = (): CherryOnboardingStep =>
-    CHERRY_ONBOARDING_STEPS[currentStep] ?? CHERRY_ONBOARDING_STEPS[0]!;
+  const currentOnboardingStep = (): CherryOnboardingStep => steps[currentStep] ?? steps[0]!;
 
   const updateSpotlight = (): void => {
     if (!overlay || !spotlight || !workspaceMounted()) return;
@@ -135,12 +165,12 @@ export function installCherryOnboarding(root: HTMLElement): () => void {
     const actions = document.createElement('div');
     actions.className = 'cg-onboarding-actions';
 
-    const skip = makeButton('あとで', 'cg-onboarding-button quiet');
+    const skip = makeButton(locale === 'ja' ? 'あとで' : 'Later', 'cg-onboarding-button quiet');
     skip.addEventListener('click', () => closeTutorial(true));
     actions.append(skip);
 
     if (currentStep > 0) {
-      const back = makeButton('戻る', 'cg-onboarding-button quiet');
+      const back = makeButton(locale === 'ja' ? '戻る' : 'Back', 'cg-onboarding-button quiet');
       back.addEventListener('click', () => {
         currentStep -= 1;
         renderStep();
@@ -149,11 +179,17 @@ export function installCherryOnboarding(root: HTMLElement): () => void {
     }
 
     const next = makeButton(
-      currentStep === CHERRY_ONBOARDING_STEPS.length - 1 ? '使ってみる' : '次へ',
+      currentStep === steps.length - 1
+        ? locale === 'ja'
+          ? '使ってみる'
+          : 'Start planning'
+        : locale === 'ja'
+          ? '次へ'
+          : 'Next',
       'cg-onboarding-button primary',
     );
     next.addEventListener('click', () => {
-      if (currentStep === CHERRY_ONBOARDING_STEPS.length - 1) {
+      if (currentStep === steps.length - 1) {
         closeTutorial(true);
         return;
       }
@@ -174,7 +210,7 @@ export function installCherryOnboarding(root: HTMLElement): () => void {
     overlay.className = 'cg-onboarding-layer';
     overlay.setAttribute('role', 'dialog');
     overlay.setAttribute('aria-modal', 'true');
-    overlay.setAttribute('aria-label', 'Cherryの使い方');
+    overlay.setAttribute('aria-label', locale === 'ja' ? 'Cherryの使い方' : 'How to use Cherry');
 
     spotlight = document.createElement('div');
     spotlight.className = 'cg-onboarding-spotlight';

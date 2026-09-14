@@ -103,6 +103,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
     const coordinator = new InteractionCoordinator();
 
     const perform = (promise: Promise<UIActionResult>) => run(context, promise);
+    const tr = (ja: string, en: string): string => (context.i18n.locale === 'ja' ? ja : en);
 
     const currentWorkspace = (): WorkspaceScreenModel | null => {
       const screen = context.getScreen();
@@ -144,13 +145,19 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       const brand = el('div', 'cg-wordmark');
       brand.textContent = 'Cherry';
       const title = el('h1');
-      title.textContent = '流れを置いて、つないで、進める。';
+      title.textContent = tr(
+        '流れを置いて、つないで、進める。',
+        'Place it. Connect it. Move forward.',
+      );
       const sub = el('p');
-      sub.textContent = 'タスクをリストに入力するのではなく、ボードを直接触って計画します。';
+      sub.textContent = tr(
+        'タスクをリストに入力するのではなく、ボードを直接触って計画します。',
+        'Plan by working directly on the board instead of filling out a task form.',
+      );
       const newButton = btn(
-        '＋ 新しいワークスペース',
+        tr('＋ 新しいワークスペース', '＋ New workspace'),
         () => {
-          const name = window.prompt('ワークスペース名', 'My Cherry');
+          const name = window.prompt(tr('ワークスペース名', 'Workspace name'), 'My Cherry');
           if (!name?.trim()) return;
           void perform(context.intents.workspace.create({ name: name.trim() }));
         },
@@ -162,7 +169,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       if (screen.workspaces.length > 0) {
         const recent = el('section', 'cg-start-recent');
         const heading = el('h2');
-        heading.textContent = 'つづきから';
+        heading.textContent = tr('つづきから', 'Continue');
         recent.append(heading);
         const grid = el('div', 'cg-workspace-grid');
         for (const workspace of screen.workspaces) {
@@ -198,7 +205,10 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         const done = el('button', 'cg-check');
         done.type = 'button';
         done.textContent = task.status === 'done' ? '✓' : '';
-        done.setAttribute('aria-label', task.status === 'done' ? '未完了に戻す' : '完了');
+        done.setAttribute(
+          'aria-label',
+          task.status === 'done' ? tr('未完了に戻す', 'Reopen') : tr('完了', 'Complete'),
+        );
         done.addEventListener('click', (event) => {
           event.stopPropagation();
           void perform(context.intents.task.setCompleted(task.id, task.status !== 'done'));
@@ -207,7 +217,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       }
       const text = el('div', 'cg-task-copy');
       const title = el('strong', 'cg-task-title');
-      title.textContent = task.title || '無題のタスク';
+      title.textContent = task.title || tr('無題のタスク', 'Untitled task');
       text.append(title);
       if (task.scheduleLabel) {
         const schedule = el('small', 'cg-task-schedule');
@@ -240,8 +250,8 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       const handle = el('button', 'cg-flow-handle');
       handle.type = 'button';
       handle.textContent = '+';
-      handle.title = '次のタスクをつなぐ';
-      handle.setAttribute('aria-label', '次のタスクをつなぐ');
+      handle.title = tr('次のタスクをつなぐ', 'Connect next task');
+      handle.setAttribute('aria-label', tr('次のタスクをつなぐ', 'Connect next task'));
       handle.addEventListener('click', (event) => {
         event.stopPropagation();
         if (handle.dataset.suppressClick === 'true') {
@@ -305,7 +315,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
           laneNode.style.top = `${lane.startY}px`;
           laneNode.style.height = `${collapsedLaneIds.has(lane.id) ? 48 : lane.height}px`;
           const label = btn(
-            `${collapsedLaneIds.has(lane.id) ? '＋' : '−'} ${lane.date ?? '日付なし'}`,
+            `${collapsedLaneIds.has(lane.id) ? '＋' : '−'} ${lane.date ?? tr('日付なし', 'No date')}`,
             (event) => {
               event.stopPropagation();
               if (collapsedLaneIds.has(lane.id)) collapsedLaneIds.delete(lane.id);
@@ -450,7 +460,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       const main = el('main', 'cg-list');
       const heading = el('div', 'cg-list-heading');
       const title = el('h2');
-      title.textContent = '今やること';
+      title.textContent = tr('今やること', 'Now');
       const meta = el('span');
       meta.textContent = `${workspace.tasks.filter((task) => task.status !== 'done').length} tasks`;
       heading.append(title, meta);
@@ -465,32 +475,35 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
 
     const renderTaskActions = (task: TaskCardModel): HTMLElement => {
       const dock = el('aside', 'cg-action-dock');
-      dock.setAttribute('aria-label', '選択中のタスク操作');
+      dock.setAttribute('aria-label', tr('選択中のタスク操作', 'Selected task actions'));
       if (task.canManuallyComplete) {
         dock.append(
-          btn(task.status === 'done' ? '↺ 戻す' : '✓ 完了', () => {
-            void perform(context.intents.task.setCompleted(task.id, task.status !== 'done'));
-          }),
+          btn(
+            task.status === 'done' ? tr('↺ 戻す', '↺ Reopen') : tr('✓ 完了', '✓ Complete'),
+            () => {
+              void perform(context.intents.task.setCompleted(task.id, task.status !== 'done'));
+            },
+          ),
         );
       }
       dock.append(
         btn(
-          '＋ 次へ',
+          tr('＋ 次へ', '＋ Next'),
           () => {
             createDraft = { parentTaskId: task.id, kind: 'continuation' };
             render();
           },
           'cg-btn cg-primary',
         ),
-        btn('↗ 分岐', () => {
+        btn(tr('↗ 分岐', '↗ Branch'), () => {
           createDraft = { parentTaskId: task.id, kind: 'branch' };
           render();
         }),
-        btn('🔗 既存へ', () => {
+        btn(tr('🔗 既存へ', '🔗 Existing'), () => {
           connectDraft = { fromTaskId: task.id, kind: 'continuation' };
           render();
         }),
-        btn('✎ 編集', () => {
+        btn(tr('✎ 編集', '✎ Edit'), () => {
           editingTaskId = task.id;
           render();
         }),
@@ -505,16 +518,18 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       const kicker = el('span', 'cg-kicker');
       kicker.textContent = createDraft.parentTaskId ? 'FLOW' : 'NEW TASK';
       const title = el('h2');
-      title.textContent = createDraft.parentTaskId ? '次にやることは？' : '何をやる？';
+      title.textContent = createDraft.parentTaskId
+        ? tr('次にやることは？', "What's next?")
+        : tr('何をやる？', 'What do you want to do?');
       const input = el('input', 'cg-quick-input');
-      input.placeholder = 'タスク名を入力…';
+      input.placeholder = tr('タスク名を入力…', 'Enter a task name…');
       input.autofocus = true;
       const modes = el('div', 'cg-create-modes');
       if (createDraft.parentTaskId) {
         for (const [kind, label] of [
-          ['continuation', '→ 続き'],
-          ['branch', '↗ 分岐'],
-          ['reference', '↝ 参照'],
+          ['continuation', tr('→ 続き', '→ Continue')],
+          ['branch', tr('↗ 分岐', '↗ Branch')],
+          ['reference', tr('↝ 参照', '↝ Reference')],
         ] as const) {
           const mode = btn(
             label,
@@ -531,7 +546,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       const actions = el('div', 'cg-dialog-actions');
       actions.append(
         btn(
-          'キャンセル',
+          tr('キャンセル', 'Cancel'),
           () => {
             createDraft = null;
             render();
@@ -541,7 +556,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       );
       const submit = el('button', 'cg-btn cg-primary');
       submit.type = 'submit';
-      submit.textContent = '作成';
+      submit.textContent = tr('作成', 'Create');
       actions.append(submit);
       form.append(kicker, title, input, modes, actions);
       form.addEventListener('submit', (event) => {
@@ -570,20 +585,20 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       const overlay = el('div', 'cg-overlay');
       const form = el('form', 'cg-dialog cg-editor');
       const heading = el('h2');
-      heading.textContent = 'タスクを編集';
-      const title = field('タスク名', task.title);
+      heading.textContent = tr('タスクを編集', 'Edit task');
+      const title = field(tr('タスク名', 'Task name'), task.title);
       const notesWrap = el('label', 'cg-field');
       const notesLabel = el('span', 'cg-field-label');
-      notesLabel.textContent = 'メモ';
+      notesLabel.textContent = tr('メモ', 'Notes');
       const notes = el('textarea', 'cg-textarea');
       notes.value = task.notes;
       notesWrap.append(notesLabel, notes);
       const schedule = scheduleValue(task);
       const scheduleKind = el('select', 'cg-input');
       for (const [value, label] of [
-        ['none', '日付なし'],
-        ['date', '日付'],
-        ['datetime', '日時'],
+        ['none', tr('日付なし', 'No date')],
+        ['date', tr('日付', 'Date')],
+        ['datetime', tr('日時', 'Date & time')],
       ] as const) {
         const option = el('option');
         option.value = value;
@@ -591,14 +606,14 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         scheduleKind.append(option);
       }
       scheduleKind.value = schedule.kind;
-      const date = field('日付', schedule.date);
+      const date = field(tr('日付', 'Date'), schedule.date);
       date.input.type = 'date';
-      const time = field('時刻', schedule.time);
+      const time = field(tr('時刻', 'Time'), schedule.time);
       time.input.type = 'time';
       const danger = btn(
-        '削除',
+        tr('削除', 'Delete'),
         () => {
-          if (!window.confirm('このタスクを削除しますか？')) return;
+          if (!window.confirm(tr('このタスクを削除しますか？', 'Delete this task?'))) return;
           editingTaskId = null;
           selectedTaskId = null;
           void perform(context.intents.task.deleteOnly(task.id));
@@ -609,7 +624,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       actions.append(
         danger,
         btn(
-          'キャンセル',
+          tr('キャンセル', 'Cancel'),
           () => {
             editingTaskId = null;
             render();
@@ -619,7 +634,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       );
       const save = el('button', 'cg-btn cg-primary');
       save.type = 'submit';
-      save.textContent = '保存';
+      save.textContent = tr('保存', 'Save');
       actions.append(save);
       form.append(heading, title.wrap, notesWrap, scheduleKind, date.wrap, time.wrap, actions);
       form.addEventListener('submit', (event) => {
@@ -651,7 +666,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       const panel = el('aside', 'cg-settings');
       const head = el('div', 'cg-settings-head');
       const title = el('strong');
-      title.textContent = '表示と操作';
+      title.textContent = tr('表示と操作', 'Display & controls');
       head.append(
         title,
         btn(
@@ -685,18 +700,18 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         );
       };
       panel.append(
-        toggle('日付レーン', workspace.board.settings.showDateLanes, (checked) =>
+        toggle(tr('日付レーン', 'Date lanes'), workspace.board.settings.showDateLanes, (checked) =>
           apply({ showDateLanes: checked }),
         ),
-        toggle('自動整列', workspace.board.settings.autoLayout, (checked) =>
+        toggle(tr('自動整列', 'Auto layout'), workspace.board.settings.autoLayout, (checked) =>
           apply({ autoLayout: checked }),
         ),
       );
       const guide = el('select', 'cg-input');
       for (const [value, label] of [
-        ['auto', '時間ガイド: 自動'],
-        ['shown', '時間ガイド: 表示'],
-        ['hidden', '時間ガイド: 非表示'],
+        ['auto', tr('時間ガイド: 自動', 'Time guide: Auto')],
+        ['shown', tr('時間ガイド: 表示', 'Time guide: Shown')],
+        ['hidden', tr('時間ガイド: 非表示', 'Time guide: Hidden')],
       ] as const) {
         const option = el('option');
         option.value = value;
@@ -710,7 +725,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       panel.append(guide);
 
       const dataHeading = el('strong', 'cg-settings-section-title');
-      dataHeading.textContent = 'データ';
+      dataHeading.textContent = tr('データ', 'Data');
       const importFile = (accept: string, kind: 'csv' | 'ics'): void => {
         const input = el('input');
         input.type = 'file';
@@ -734,7 +749,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       };
       panel.append(
         dataHeading,
-        btn('CSVを書き出す', () => {
+        btn(tr('CSVを書き出す', 'Export CSV'), () => {
           void context.intents.interop.exportCsv().then((result) => {
             if (result.kind === 'error') {
               window.alert(context.i18n.t(result.error.messageKey));
@@ -743,14 +758,14 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
             downloadTextFile(result.fileName, result.mimeType, result.content);
           });
         }),
-        btn('CSVを取り込む', () => importFile('.csv,text/csv', 'csv')),
-        btn('ICSを取り込む', () => importFile('.ics,text/calendar', 'ics')),
+        btn(tr('CSVを取り込む', 'Import CSV'), () => importFile('.csv,text/csv', 'csv')),
+        btn(tr('ICSを取り込む', 'Import ICS'), () => importFile('.ics,text/calendar', 'ics')),
       );
 
       if (context.capabilities.persistentStorageEnabled) {
         panel.append(
           btn(
-            '端末保存を停止',
+            tr('端末保存を停止', 'Stop device storage'),
             () => {
               void perform(context.intents.storage.disable(false));
             },
@@ -813,9 +828,9 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
             const menu = el('div', 'cg-tab-menu');
             menu.append(
               btn(
-                '名前を変更',
+                tr('名前を変更', 'Rename'),
                 () => {
-                  const name = window.prompt('タブ名', tab.name);
+                  const name = window.prompt(tr('タブ名', 'Tab name'), tab.name);
                   tabMenuId = null;
                   if (name?.trim()) {
                     void perform(
@@ -828,7 +843,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
                 'cg-tab-menu-action',
               ),
               btn(
-                '複製',
+                tr('複製', 'Duplicate'),
                 () => {
                   tabMenuId = null;
                   void perform(context.intents.workspace.duplicateTab(tab.id));
@@ -836,10 +851,14 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
                 'cg-tab-menu-action',
               ),
               btn(
-                '削除',
+                tr('削除', 'Delete'),
                 () => {
                   tabMenuId = null;
-                  if (!window.confirm(`「${tab.name}」を削除しますか？`)) {
+                  if (
+                    !window.confirm(
+                      tr(`「${tab.name}」を削除しますか？`, `Delete \"${tab.name}\"?`),
+                    )
+                  ) {
                     render();
                     return;
                   }
@@ -857,7 +876,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         btn(
           '+',
           () => {
-            const name = window.prompt('タブ名', '新しいタブ');
+            const name = window.prompt(tr('タブ名', 'Tab name'), tr('新しいタブ', 'New tab'));
             if (name?.trim())
               void perform(context.intents.workspace.createTab({ name: name.trim() }));
           },
@@ -867,14 +886,14 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
 
       const right = el('div', 'cg-topbar-actions');
       const board = btn(
-        'ボード',
+        tr('ボード', 'Board'),
         () => {
           void perform(context.intents.workspace.setView('board'));
         },
         workspace.activeView === 'board' ? 'cg-view active' : 'cg-view',
       );
       const list = btn(
-        'リスト',
+        tr('リスト', 'List'),
         () => {
           void perform(context.intents.workspace.setView('list'));
         },
@@ -925,12 +944,15 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         },
         'cg-fab',
       );
-      add.setAttribute('aria-label', 'タスクを追加');
+      add.setAttribute('aria-label', tr('タスクを追加', 'Add task'));
       shell.append(add);
 
       if (connectDraft) {
         const hint = el('div', 'cg-connect-hint');
-        hint.textContent = '接続先のタスクを選んでください  ·  Escでキャンセル';
+        hint.textContent = tr(
+          '接続先のタスクを選んでください  ·  Escでキャンセル',
+          'Choose a task to connect  ·  Esc to cancel',
+        );
         shell.append(hint);
       }
       const selected = workspace.tasks.find((task) => task.id === selectedTaskId);
@@ -962,20 +984,23 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         const word = el('div', 'cg-wordmark');
         word.textContent = 'Cherry';
         const title = el('h1');
-        title.textContent = 'この端末に作業を保存しますか？';
+        title.textContent = tr('この端末に作業を保存しますか？', 'Save your work on this device?');
         const body = el('p');
-        body.textContent = '許可すると、閉じても続きから再開できます。あとから変更できます。';
+        body.textContent = tr(
+          '許可すると、閉じても続きから再開できます。あとから変更できます。',
+          'Allow storage to resume where you left off after closing Cherry. You can change this later.',
+        );
         const actions = el('div', 'cg-dialog-actions');
         actions.append(
           btn(
-            '今回は保存しない',
+            tr('今回は保存しない', 'Not now'),
             () => {
               void perform(context.intents.storage.notNow());
             },
             'cg-btn cg-quiet',
           ),
           btn(
-            '保存する',
+            tr('保存する', 'Save on this device'),
             () => {
               void perform(context.intents.storage.allow());
             },
@@ -995,7 +1020,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         const main = el('main', 'cg-start');
         const card = el('section', 'cg-storage-card');
         const title = el('h1');
-        title.textContent = 'Cherryを開けませんでした';
+        title.textContent = tr('Cherryを開けませんでした', 'Cherry could not be opened');
         const body = el('p');
         body.textContent = context.i18n.t(screen.error.messageKey);
         card.append(title, body);

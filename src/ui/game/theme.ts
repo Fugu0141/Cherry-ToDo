@@ -45,7 +45,10 @@ export function saveCherryThemePreference(
   }
 }
 
-export function installCherryThemeControls(root: HTMLElement): () => void {
+export function installCherryThemeControls(
+  root: HTMLElement,
+  locale: 'ja' | 'en' = 'ja',
+): () => void {
   const install = (): void => {
     const settings = root.querySelector<HTMLElement>('.cg-settings');
     if (!settings || settings.querySelector('.cg-theme-setting')) return;
@@ -54,16 +57,16 @@ export function installCherryThemeControls(root: HTMLElement): () => void {
     row.className = 'cg-setting-row cg-theme-setting';
 
     const label = document.createElement('span');
-    label.textContent = 'テーマ';
+    label.textContent = locale === 'ja' ? 'テーマ' : 'Theme';
 
     const select = document.createElement('select');
     select.className = 'cg-input cg-theme-select';
-    select.setAttribute('aria-label', 'テーマ');
+    select.setAttribute('aria-label', locale === 'ja' ? 'テーマ' : 'Theme');
 
     for (const [value, text] of [
-      ['system', 'システム'],
-      ['light', 'ライト'],
-      ['dark', 'ダーク'],
+      ['system', locale === 'ja' ? 'システム' : 'System'],
+      ['light', locale === 'ja' ? 'ライト' : 'Light'],
+      ['dark', locale === 'ja' ? 'ダーク' : 'Dark'],
     ] as const) {
       const option = document.createElement('option');
       option.value = value;

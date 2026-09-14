@@ -116,7 +116,9 @@ test('persistent opt-in restores the active workspace after reload', async ({ pa
 
   await page.reload();
   await expect(page.locator('.cg-workspace-name')).toHaveText('Restore workspace');
-  await expect(page.locator('.cg-task').filter({ hasText: '保存されるタスク' }).first()).toBeVisible();
+  await expect(
+    page.locator('.cg-task').filter({ hasText: '保存されるタスク' }).first(),
+  ).toBeVisible();
 });
 
 test('multiple named planning tabs keep independent content and restore the active tab', async ({
@@ -148,7 +150,9 @@ test('multiple named planning tabs keep independent content and restore the acti
   await expect(page.locator('.cg-task').filter({ hasText: 'Plan only' })).toHaveCount(0);
 });
 
-test('existing tasks can be connected through the contextual planning surface', async ({ page }) => {
+test('existing tasks can be connected through the contextual planning surface', async ({
+  page,
+}) => {
   await chooseEphemeral(page);
   await createWorkspace(page, 'Connect workspace');
   await addTask(page, 'A');
