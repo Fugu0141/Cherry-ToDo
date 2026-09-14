@@ -18,3 +18,11 @@ export {
   type BoardLayoutTaskInput,
   type BoardTaskLayout,
 } from './domain/layout';
+
+export {
+  resolveDropIntent,
+  type BoardDropTarget,
+  type BoardPlacementDropIntent,
+  type DropIntent,
+  type ResolveDropIntentInput,
+} from './domain/drop';
