@@ -1,8 +1,4 @@
-import type {
-  CherryUIContext,
-  CherryUIHandle,
-  CherryUIPackage,
-} from '../../ui-contract/index';
+import type { CherryUIContext, CherryUIHandle, CherryUIPackage } from '../../ui-contract/index';
 
 function actionButton(label: string, action: () => void): HTMLButtonElement {
   const button = document.createElement('button');
