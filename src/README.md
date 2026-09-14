@@ -1,5 +1,12 @@
-# V2 Source
+# Cherry V2 Source Layout
 
-Product source code is intentionally absent at this stage.
+Phase 1 establishes the V2 engineering skeleton from the frozen Basic Design. Product semantics intentionally remain absent until later phases.
 
-The final directory/module structure will be created from the accepted V2 basic design rather than copied from V1.
+- `composition/` — application/bootstrap wiring boundary.
+- `modules/` — future feature-oriented Domain/Application/ports modules.
+- `ui-contract/` — future formal UI-facing contract.
+- `ui/` — future replaceable UI package implementations.
+- `adapters/` — future concrete infrastructure adapters.
+- `shared/` — framework-independent shared primitives.
+
+Cross-layer dependency rules are checked by `npm run boundaries`.

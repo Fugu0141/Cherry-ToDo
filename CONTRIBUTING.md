@@ -1,10 +1,19 @@
 # Contributing to Cherry V2.0
 
-Cherry V2.0 is currently being redesigned from the requirements upward.
+Cherry V2.0 is implemented from a frozen design in bounded phases.
 
-## Current rule
+## Start here
 
-During the requirements/basic-design phase, implementation PRs should not add product features unless the corresponding requirement and design have already been accepted.
+Before changing code, read:
+
+1. `docs/v2/DESIGN_FREEZE.md`
+2. `docs/v2/IMPLEMENTATION_PLAN.md`
+3. the relevant accepted ADRs and requirements
+4. `docs/v2/DEVELOPMENT_SETUP.md`
+
+## Phase rule
+
+Implementation PRs must stay inside the active phase scope. A later-phase feature should not be added early simply because nearby code is already being changed.
 
 Before implementation, every feature must have:
 
@@ -16,7 +25,7 @@ Before implementation, every feature must have:
 
 ## Branching
 
-Create work branches from `v2.0` after the bootstrap branch is merged. Keep PRs focused on one design decision, component, or feature.
+Create focused work branches from the current `v2.0`. A phase is a milestone, not one mega-PR; prefer small reviewable PRs whose combined result satisfies the phase exit criteria.
 
 ## Architecture principles
 
@@ -26,6 +35,18 @@ Create work branches from `v2.0` after the bootstrap branch is merged. Keep PRs 
 - UI consumes application-facing APIs and must not own business rules.
 - Avoid hidden globals and implicit side effects.
 - Components should be independently testable and replaceable.
+- Cross-module code must use public module entry points.
+
+## Quality baseline
+
+Once the Phase 1 toolchain is present, run:
+
+```bash
+npm ci
+npm run check
+```
+
+A PR targeting `v2.0` should not merge while the V2 CI quality job fails.
 
 ## V1 reference
 
