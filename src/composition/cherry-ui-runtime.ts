@@ -1,4 +1,8 @@
-import { createEmptyBoardDocumentState, layoutBoard } from '../modules/board/index';
+import {
+  createEmptyBoardDocumentState,
+  layoutBoard,
+  resolveDropIntent,
+} from '../modules/board/index';
 import {
   noSchedule,
   scheduleAtDateTime,
@@ -32,6 +36,7 @@ import {
   type CherryUIContext,
   type CherryUIIntents,
   type CherryView,
+  type DropTaskOnBoardIntent,
   type PresentationError,
   type UIActionResult,
   type WorkspaceScreenModel,
@@ -208,6 +213,9 @@ export class CherryUIRuntime implements CherryUIContext {
           ),
         setSchedule: (taskId, schedule) => this.#setSchedule(taskId, schedule),
       },
+      board: {
+        dropTask: (input) => this.#dropTask(input),
+      },
       flow: {
         connect: (input) => this.#connect(input.fromTaskId, input.toTaskId, input.kind),
       },
@@ -327,6 +335,27 @@ export class CherryUIRuntime implements CherryUIContext {
     return this.#withTaskId(rawTaskId, (taskId) =>
       this.#runMutation((store, tabId) => store.setSchedule(tabId, taskId, schedule)),
     );
+  }
+
+  async #dropTask(input: DropTaskOnBoardIntent): Promise<UIActionResult> {
+    if (this.#store === null || this.#tabId === null) {
+      return this.#error('not-found', 'error.notFound');
+    }
+    const taskId = parseTaskId(input.taskId);
+    if (!taskId.ok) return this.#error('validation', 'error.validation');
+    const tab = this.#store.workspace.tabs[this.#tabId];
+    if (tab === undefined) return this.#error('not-found', 'error.notFound');
+
+    const intent = resolveDropIntent({
+      taskId: taskId.value,
+      settings: tab.board.settings,
+      target: input.target,
+    });
+    if (intent.kind === 'connect-task' || intent.kind === 'reorder-flow') {
+      return this.#error('validation', 'error.validation');
+    }
+
+    return this.#runMutation((store, tabId) => store.applyBoardDrop(tabId, taskId.value, intent));
   }
 
   async #connect(fromRaw: string, toRaw: string, kind: CherryFlowKind): Promise<UIActionResult> {
