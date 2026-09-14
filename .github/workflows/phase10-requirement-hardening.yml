@@ -21,6 +21,18 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - name: Normalize temporary patch anchors
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('scripts/phase10-requirement-hardening.py')
+          text = path.read_text()
+          old = '''# Contract tests must implement the expanded contract.\nfor path in ['test/contracts/ui-contract.test.ts', 'test/contracts/ui-replaceability.test.ts']:\n    replace(path, "storage: { allow: ok, notNow: ok },", "storage: { allow: ok, notNow: ok, disable: ok },")\n    replace(\n        path,\n        """        persistentStorageAvailable: true,\\n        boardView: true,\\n""",\n        """        persistentStorageAvailable: true,\\n        persistentStorageEnabled: false,\\n        boardView: true,\\n""",\n    )\n'''
+          new = '''# Contract tests must implement the expanded contract.\nfor path in ['test/contracts/ui-contract.test.ts', 'test/contracts/ui-replaceability.test.ts']:\n    replace(path, "storage: { allow: ok, notNow: ok },", "storage: { allow: ok, notNow: ok, disable: ok },")\nreplace(\n    'test/contracts/ui-contract.test.ts',\n    """        persistentStorageAvailable: true,\\n        boardView: true,\\n""",\n    """        persistentStorageAvailable: true,\\n        persistentStorageEnabled: false,\\n        boardView: true,\\n""",\n)\nreplace(\n    'test/contracts/ui-replaceability.test.ts',\n    """      persistentStorageAvailable: true,\\n      boardView: true,\\n""",\n    """      persistentStorageAvailable: true,\\n      persistentStorageEnabled: false,\\n      boardView: true,\\n""",\n)\n'''
+          if old not in text:
+              raise SystemExit('temporary contract-test patch block not found')
+          path.write_text(text.replace(old, new, 1))
+          PY
       - run: python scripts/phase10-requirement-hardening.py
       - run: npx prettier --write src/ui-contract/index.ts src/ui-contract/i18n.ts src/composition/cherry-ui-runtime.ts src/ui/default/index.ts test/contracts/ui-contract.test.ts test/contracts/ui-replaceability.test.ts
       - name: Commit patch
