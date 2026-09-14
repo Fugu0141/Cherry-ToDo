@@ -73,6 +73,12 @@ function fromBase64(value: string): Uint8Array | null {
   }
 }
 
+function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  const copy = new Uint8Array(bytes.byteLength);
+  copy.set(bytes);
+  return copy.buffer;
+}
+
 export async function decryptV1CherryEnvelope(
   input: unknown,
   passphrase: string,
@@ -96,7 +102,7 @@ export async function decryptV1CherryEnvelope(
   try {
     const material = await cryptoProvider.subtle.importKey(
       'raw',
-      new TextEncoder().encode(passphrase),
+      toArrayBuffer(new TextEncoder().encode(passphrase)),
       'PBKDF2',
       false,
       ['deriveKey'],
@@ -104,7 +110,7 @@ export async function decryptV1CherryEnvelope(
     const key = await cryptoProvider.subtle.deriveKey(
       {
         name: 'PBKDF2',
-        salt,
+        salt: toArrayBuffer(salt),
         iterations: 250000,
         hash: 'SHA-256',
       },
@@ -113,7 +119,11 @@ export async function decryptV1CherryEnvelope(
       false,
       ['decrypt'],
     );
-    const plaintext = await cryptoProvider.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext);
+    const plaintext = await cryptoProvider.subtle.decrypt(
+      { name: 'AES-GCM', iv: toArrayBuffer(iv) },
+      key,
+      toArrayBuffer(ciphertext),
+    );
     return ok(JSON.parse(new TextDecoder().decode(plaintext)) as unknown);
   } catch {
     return err({
