@@ -697,7 +697,7 @@ export class CherryUIRuntime implements CherryUIContext {
     if (tab === undefined) {
       return { kind: 'error', error: { code: 'not-found', messageKey: 'error.notFound' } };
     }
-    const stem = tab.name.trim().replace(/[\/:*?"<>|]+/g, '_') || 'cherry-tab';
+    const stem = tab.name.trim().replace(new RegExp('[\\\\/:*?"<>|]+', 'g'), '_') || 'cherry-tab';
     return {
       kind: 'ok',
       fileName: `${stem}.csv`,
