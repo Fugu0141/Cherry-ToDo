@@ -32,7 +32,8 @@ async function openSettings(page: Page): Promise<void> {
 }
 
 async function selectTask(page: Page, title: string): Promise<void> {
-  await page.locator('.cg-task').filter({ hasText: title }).first().click();
+  const task = page.locator('.cg-task').filter({ hasText: title }).first();
+  if ((await task.getAttribute('data-selected')) !== 'true') await task.click();
   await expect(page.locator('.cg-action-dock')).toBeVisible();
 }
 
