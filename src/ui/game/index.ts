@@ -354,10 +354,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
 
       const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
       svg.setAttribute('class', 'cg-flow-layer');
-      svg.setAttribute(
-        'viewBox',
-        `0 0 ${canvasWidth} ${canvasHeight}`,
-      );
+      svg.setAttribute('viewBox', `0 0 ${canvasWidth} ${canvasHeight}`);
       svg.setAttribute('aria-hidden', 'true');
       const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
       for (const kind of ['continuation', 'branch', 'reference'] as const) {
