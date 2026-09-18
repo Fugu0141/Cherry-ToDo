@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  desktop:
+  mobile:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -20,4 +20,4 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - run: npx playwright test --project=desktop-chromium --max-failures=1 --reporter=line
+      - run: npx playwright test --project=mobile-chromium --max-failures=1 --reporter=line
