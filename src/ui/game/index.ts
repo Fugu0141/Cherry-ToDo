@@ -910,7 +910,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
                   tabMenuId = null;
                   if (
                     !window.confirm(
-                      tr(`「${tab.name}」を削除しますか？`, `Delete \"${tab.name}\"?`),
+                      tr(`「${tab.name}」を削除しますか？`, `Delete "${tab.name}"?`),
                     )
                   ) {
                     render();
