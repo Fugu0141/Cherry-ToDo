@@ -31,6 +31,20 @@ async function openSettings(page: Page): Promise<void> {
   await expect(page.locator('.cg-settings')).toBeVisible();
 }
 
+async function selectTask(page: Page, title: string): Promise<void> {
+  await page.locator('.cg-task').filter({ hasText: title }).first().click();
+  await expect(page.locator('.cg-action-dock')).toBeVisible();
+}
+
+async function createNextTask(page: Page, fromTitle: string, title: string): Promise<void> {
+  await selectTask(page, fromTitle);
+  await page.getByRole('button', { name: '＋ 次へ' }).click();
+  const dialog = page.locator('.cg-quick-create');
+  await dialog.locator('.cg-quick-input').fill(title);
+  await dialog.getByRole('button', { name: '作成' }).click();
+  await expect(page.locator('.cg-task').filter({ hasText: title }).first()).toBeVisible();
+}
+
 test('task importance is editable and presented with text', async ({ page }) => {
   await chooseStorage(page, false);
   await createWorkspace(page, 'Importance workspace');
@@ -94,4 +108,52 @@ test('persistent data can be cleared when device storage is disabled', async ({ 
   await expect(page.getByRole('heading', { name: 'この端末に作業を保存しますか？' })).toBeVisible();
   await page.getByRole('button', { name: '今回は保存しない' }).click();
   await expect(page.getByRole('button', { name: 'Disposable workspace' })).toHaveCount(0);
+});
+
+
+test('board text annotations can be created from Game UI settings', async ({ page }) => {
+  await chooseStorage(page, false);
+  await createWorkspace(page, 'Annotation workspace');
+  await openSettings(page);
+
+  await page.getByRole('button', { name: 'テキストを追加' }).click();
+
+  const annotation = page.locator('.cherry-text-annotation');
+  await expect(annotation).toHaveCount(1);
+  await expect(annotation).toContainText('メモ');
+  await expect(page.getByText('注釈を管理 (1)')).toBeVisible();
+});
+
+test('linear Flow can be reordered and disconnected from Game UI settings', async ({ page }) => {
+  await chooseStorage(page, false);
+  await createWorkspace(page, 'Flow management workspace');
+  await addTask(page, 'A');
+  await createNextTask(page, 'A', 'B');
+  await createNextTask(page, 'B', 'C');
+  await expect(page.locator('.cg-flow')).toHaveCount(2);
+
+  await openSettings(page);
+  const orderRows = page.locator('.cg-flow-order-row');
+  await expect(orderRows).toHaveCount(3);
+  await orderRows.nth(1).getByRole('button', { name: '前へ移動' }).click();
+  await expect(page.locator('.cg-flow-order-row').first()).toContainText('B');
+
+  const flowRows = page.locator('.cg-flow-management-row');
+  await expect(flowRows).toHaveCount(2);
+  await flowRows.first().getByRole('button', { name: 'Flowを切断' }).click();
+  await expect(page.locator('.cg-flow')).toHaveCount(1);
+});
+
+test('task editor can delete a linear downstream chain', async ({ page }) => {
+  await chooseStorage(page, false);
+  await createWorkspace(page, 'Downstream workspace');
+  await addTask(page, 'A');
+  await createNextTask(page, 'A', 'B');
+  await createNextTask(page, 'B', 'C');
+
+  await page.locator('.cg-task').filter({ hasText: 'A' }).first().dblclick();
+  page.once('dialog', (dialog) => dialog.accept());
+  await page.getByRole('button', { name: 'この先も削除' }).click();
+
+  await expect(page.locator('.cg-task')).toHaveCount(0);
 });
