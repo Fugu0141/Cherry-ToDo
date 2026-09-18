@@ -689,6 +689,7 @@ export class CherryUIRuntime implements CherryUIContext {
   }
 
   async #exportCsv(): Promise<UITextExportResult> {
+    await Promise.resolve();
     if (this.#store === null || this.#tabId === null) {
       return { kind: 'error', error: { code: 'not-found', messageKey: 'error.notFound' } };
     }
