@@ -633,6 +633,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       notesWrap.append(notesLabel, notes);
       const schedule = scheduleValue(task);
       const scheduleKind = el('select', 'cg-input');
+      scheduleKind.setAttribute('aria-label', tr('日付設定', 'Schedule type'));
       for (const [value, label] of [
         ['none', tr('日付なし', 'No date')],
         ['date', tr('日付', 'Date')],
@@ -789,6 +790,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         ),
       );
       const guide = el('select', 'cg-input');
+      guide.setAttribute('aria-label', tr('時間ガイド', 'Time guide'));
       for (const [value, label] of [
         ['auto', tr('時間ガイド: 自動', 'Time guide: Auto')],
         ['shown', tr('時間ガイド: 表示', 'Time guide: Shown')],
