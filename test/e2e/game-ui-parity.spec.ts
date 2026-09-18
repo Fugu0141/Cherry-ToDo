@@ -57,7 +57,7 @@ test('CSV import creates a new tab and CSV export downloads the active tab', asy
   await chooser.setFiles('test/fixtures/game-ui-sample.csv');
 
   await expect(page.locator('.cg-task').filter({ hasText: 'Imported task' }).first()).toBeVisible();
-  await expect(page.locator('.cg-tabs .cg-tab.active')).toContainText('sample.csv');
+  await expect(page.locator('.cg-tabs .cg-tab.active')).toContainText('game-ui-sample');
 
   if (!(await page.locator('.cg-settings').isVisible())) await openSettings(page);
   const downloadPromise = page.waitForEvent('download');
