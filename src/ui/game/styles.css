@@ -328,7 +328,8 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   .cg-topbar { grid-template-columns: 1fr auto; gap: 8px; }
   .cg-tabs { grid-row: 2; grid-column: 1 / -1; justify-content: flex-start; border-top: 1px solid #eef0f2; padding-top: 5px; }
   .cg-workspace-name { display: none; }
-  .cg-topbar-actions .cg-view { display: none; }
+  .cg-topbar-actions .cg-view { min-width: 0; padding-inline: 8px; }
+  .cg-flow-map { bottom: calc(150px + env(safe-area-inset-bottom, 0px)); }
   .cg-action-dock { left: 10px; right: 10px; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); transform: none; justify-content: stretch; overflow-x: auto; }
   .cg-action-dock .cg-btn { flex: 1 0 auto; min-height: 48px; }
   .cg-fab { right: 16px; bottom: calc(82px + env(safe-area-inset-bottom, 0px)); width: 54px; height: 54px; }
