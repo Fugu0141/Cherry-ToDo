@@ -1,4 +1,3 @@
-import { Buffer } from 'node:buffer';
 import { expect, test, type Page } from '@playwright/test';
 
 const ONBOARDING_KEY = 'cherry:v2:ui:onboarding-seen';
@@ -55,17 +54,7 @@ test('CSV import creates a new tab and CSV export downloads the active tab', asy
   const chooserPromise = page.waitForEvent('filechooser');
   await page.getByRole('button', { name: 'CSVを取り込む' }).click();
   const chooser = await chooserPromise;
-  await chooser.setFiles({
-    name: 'sample.csv',
-    mimeType: 'text/csv',
-    buffer: Buffer.from(
-      [
-        'record_type,id,title,notes,status,schedule_kind,date,time,time_zone,importance,from_task_id,to_task_id,flow_kind,flow_order',
-        'task,task-imported,Imported task,,todo,none,,,,high,,,,',
-      ].join('\r\n'),
-      'utf8',
-    ),
-  });
+  await chooser.setFiles('test/fixtures/game-ui-sample.csv');
 
   await expect(page.locator('.cg-task').filter({ hasText: 'Imported task' }).first()).toBeVisible();
   await expect(page.locator('.cg-tabs .cg-tab.active')).toContainText('sample.csv');
