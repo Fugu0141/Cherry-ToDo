@@ -111,7 +111,6 @@ test('persistent data can be cleared when device storage is disabled', async ({ 
   await expect(page.getByRole('button', { name: 'Disposable workspace' })).toHaveCount(0);
 });
 
-
 test('board text annotations can be created from Game UI settings', async ({ page }) => {
   await chooseStorage(page, false);
   await createWorkspace(page, 'Annotation workspace');
