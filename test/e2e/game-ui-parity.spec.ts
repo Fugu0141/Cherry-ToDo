@@ -43,9 +43,9 @@ test('task importance is editable and presented with text', async ({ page }) => 
   await editor.getByLabel('重要度').selectOption('high');
   await editor.getByRole('button', { name: '保存' }).click();
 
-  await expect(page.locator('.cg-task').filter({ hasText: 'Prioritize me' }).first()).toContainText(
-    '重要度: 高',
-  );
+  await expect(
+    page.locator('.cg-task').filter({ hasText: 'Prioritize me' }).first(),
+  ).toContainText('重要度: 高');
 });
 
 test('CSV import creates a new tab and CSV export downloads the active tab', async ({ page }) => {
@@ -102,7 +102,9 @@ test('persistent data can be cleared when device storage is disabled', async ({ 
   await page.getByRole('button', { name: '保存データを削除して停止' }).click();
   await page.reload();
 
-  await expect(page.getByRole('heading', { name: 'この端末に作業を保存しますか？' })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'この端末に作業を保存しますか？' }),
+  ).toBeVisible();
   await page.getByRole('button', { name: '今回は保存しない' }).click();
   await expect(page.getByRole('button', { name: 'Disposable workspace' })).toHaveCount(0);
 });
