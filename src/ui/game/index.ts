@@ -10,6 +10,8 @@ import type {
   UIActionResult,
   WorkspaceScreenModel,
 } from '../../ui-contract/index';
+import { renderAnnotationLayers, renderAnnotationTools } from '../default/annotation-ui';
+import { installAnnotationDrawing } from '../default/interaction/annotation-drawing';
 import { InteractionCoordinator } from '../default/interaction/interaction-coordinator';
 import { installDesktopHandleConnection } from './interaction/desktop-handle-connection';
 import { installMobileFlowMap } from './interaction/mobile-flow-map';
@@ -97,6 +99,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
     let editingTaskId: string | null = null;
     let connectDraft: ConnectDraft | null = null;
     let settingsOpen = false;
+    let drawingEnabled = false;
     let tabMenuId: string | null = null;
     let boardCleanup: (() => void) | null = null;
     let lastTabId: string | null = null;
@@ -315,9 +318,12 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
     const renderBoard = (workspace: WorkspaceScreenModel): HTMLElement => {
       const scroll = el('main', 'cg-board-scroll');
       const canvas = el('section', 'cg-board');
-      canvas.style.minWidth = `${Math.max(workspace.board.width, 1000)}px`;
-      canvas.style.minHeight = `${Math.max(workspace.board.height, 680)}px`;
+      const canvasWidth = Math.max(workspace.board.width, 1000);
+      const canvasHeight = Math.max(workspace.board.height, 680);
+      canvas.style.minWidth = `${canvasWidth}px`;
+      canvas.style.minHeight = `${canvasHeight}px`;
       canvas.dataset.timeGuide = workspace.board.settings.timeGuide;
+      canvas.dataset.drawing = String(drawingEnabled);
 
       const hidden = new Set<string>();
       for (const lane of workspace.board.lanes) {
@@ -350,7 +356,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       svg.setAttribute('class', 'cg-flow-layer');
       svg.setAttribute(
         'viewBox',
-        `0 0 ${Math.max(workspace.board.width, 1000)} ${Math.max(workspace.board.height, 680)}`,
+        `0 0 ${canvasWidth} ${canvasHeight}`,
       );
       svg.setAttribute('aria-hidden', 'true');
       const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
@@ -378,6 +384,9 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         svg.append(path);
       }
       canvas.append(svg);
+      for (const annotationNode of renderAnnotationLayers(workspace, canvasWidth, canvasHeight)) {
+        canvas.append(annotationNode);
+      }
 
       for (const task of workspace.tasks) {
         const card = renderTaskCard(task);
@@ -387,7 +396,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
           card.style.left = `${task.position.x}px`;
           card.style.top = `${task.position.y}px`;
         }
-        card.draggable = true;
+        card.draggable = !drawingEnabled;
         card.addEventListener('dragstart', (event) => {
           if (!event.dataTransfer) return;
           event.dataTransfer.setData('application/x-cherry-task-id', task.id);
@@ -421,6 +430,20 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         }
       });
 
+      const drawingCleanup = installAnnotationDrawing({
+        canvas,
+        coordinator,
+        enabled: () => drawingEnabled,
+        commitStroke: (points) => {
+          void perform(
+            context.intents.annotation.createStroke({
+              points,
+              widthToken: 'medium',
+              styleToken: 'ink',
+            }),
+          );
+        },
+      });
       const mobileCleanup = installMobileBoardInteraction({
         scroll,
         canvas,
@@ -468,6 +491,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         flowMapCleanup();
         handleCleanup();
         mobileCleanup();
+        drawingCleanup();
       };
       scroll.append(canvas);
       return scroll;
@@ -641,7 +665,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       importance.value = task.importance;
       importanceWrap.append(importanceCaption, importance);
       const danger = btn(
-        tr('削除', 'Delete'),
+        tr('このタスクのみ削除', 'Delete only'),
         () => {
           if (!window.confirm(tr('このタスクを削除しますか？', 'Delete this task?'))) return;
           editingTaskId = null;
@@ -650,9 +674,29 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         },
         'cg-btn cg-danger',
       );
+      const deleteDownstream = btn(
+        tr('この先も削除', 'Delete downstream'),
+        () => {
+          if (
+            !window.confirm(
+              tr(
+                'このタスクと、この先につながるタスクを削除しますか？',
+                'Delete this task and its downstream flow?',
+              ),
+            )
+          ) {
+            return;
+          }
+          editingTaskId = null;
+          selectedTaskId = null;
+          void perform(context.intents.task.deleteDownstream(task.id));
+        },
+        'cg-btn cg-danger',
+      );
       const actions = el('div', 'cg-dialog-actions');
       actions.append(
         danger,
+        deleteDownstream,
         btn(
           tr('キャンセル', 'Cancel'),
           () => {
@@ -764,6 +808,108 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       );
       panel.append(guide);
 
+      if (context.capabilities.annotations && workspace.activeView === 'board') {
+        const annotationHeading = el('strong', 'cg-settings-section-title');
+        annotationHeading.textContent = tr('ボード注釈', 'Board annotations');
+        const annotationTools = renderAnnotationTools({
+          context,
+          workspace,
+          drawingEnabled,
+          setDrawingEnabled: (enabled) => {
+            drawingEnabled = enabled;
+            if (enabled) {
+              selectedTaskId = null;
+              connectDraft = null;
+            }
+            render();
+          },
+          run: (promise) => {
+            void perform(promise);
+          },
+        });
+        panel.append(annotationHeading, annotationTools);
+      }
+
+      if (workspace.connections.length > 0) {
+        const flowHeading = el('strong', 'cg-settings-section-title');
+        flowHeading.textContent = tr('Flow管理', 'Flow management');
+        const flowList = el('div', 'cg-flow-management');
+        const taskNames = new Map(workspace.tasks.map((task) => [task.id, task.title]));
+        const symbols: Record<CherryFlowKind, string> = {
+          continuation: '→',
+          branch: '↗',
+          reference: '↝',
+        };
+        for (const edge of workspace.connections) {
+          const row = el('div', 'cg-flow-management-row');
+          const label = el('span');
+          label.textContent = `${taskNames.get(edge.fromTaskId) ?? edge.fromTaskId} ${symbols[edge.kind]} ${taskNames.get(edge.toTaskId) ?? edge.toTaskId}`;
+          const remove = btn(
+            '×',
+            () => {
+              void perform(context.intents.flow.disconnect(edge.id));
+            },
+            'cg-icon cg-flow-remove',
+          );
+          remove.setAttribute('aria-label', tr('Flowを切断', 'Disconnect flow'));
+          row.append(label, remove);
+          flowList.append(row);
+        }
+        panel.append(flowHeading, flowList);
+      }
+
+      if (workspace.linearFlowOrder !== null && workspace.linearFlowOrder.length > 1) {
+        const orderHeading = el('strong', 'cg-settings-section-title');
+        orderHeading.textContent = tr('Flowの順番', 'Flow order');
+        const orderList = el('div', 'cg-flow-order');
+        const taskNames = new Map(workspace.tasks.map((task) => [task.id, task.title]));
+        for (const [index, taskId] of workspace.linearFlowOrder.entries()) {
+          const row = el('div', 'cg-flow-order-row');
+          const label = el('span');
+          label.textContent = taskNames.get(taskId) ?? taskId;
+          const earlier = btn(
+            '↑',
+            () => {
+              if (workspace.linearFlowOrder === null || index === 0) return;
+              const next = [...workspace.linearFlowOrder];
+              const current = next[index];
+              const previous = next[index - 1];
+              if (current === undefined || previous === undefined) return;
+              next[index - 1] = current;
+              next[index] = previous;
+              void perform(context.intents.flow.reorder(next));
+            },
+            'cg-icon',
+          );
+          earlier.disabled = index === 0;
+          earlier.setAttribute('aria-label', tr('前へ移動', 'Move earlier'));
+          const later = btn(
+            '↓',
+            () => {
+              if (
+                workspace.linearFlowOrder === null ||
+                index >= workspace.linearFlowOrder.length - 1
+              ) {
+                return;
+              }
+              const next = [...workspace.linearFlowOrder];
+              const current = next[index];
+              const following = next[index + 1];
+              if (current === undefined || following === undefined) return;
+              next[index] = following;
+              next[index + 1] = current;
+              void perform(context.intents.flow.reorder(next));
+            },
+            'cg-icon',
+          );
+          later.disabled = index >= workspace.linearFlowOrder.length - 1;
+          later.setAttribute('aria-label', tr('後ろへ移動', 'Move later'));
+          row.append(label, earlier, later);
+          orderList.append(row);
+        }
+        panel.append(orderHeading, orderList);
+      }
+
       const dataHeading = el('strong', 'cg-settings-section-title');
       dataHeading.textContent = tr('データ', 'Data');
       const importFile = (accept: string, kind: 'csv' | 'ics'): void => {
@@ -836,6 +982,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         editingTaskId = null;
         createDraft = null;
         connectDraft = null;
+        drawingEnabled = false;
         collapsedLaneIds.clear();
         lastTabId = workspace.tabId;
       }
@@ -1096,6 +1243,11 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         return;
       }
       if (event.key === 'Escape') {
+        if (drawingEnabled) {
+          drawingEnabled = false;
+          render();
+          return;
+        }
         if (createDraft || editingTaskId || connectDraft || settingsOpen || selectedTaskId) {
           closeTransient();
           selectedTaskId = null;
