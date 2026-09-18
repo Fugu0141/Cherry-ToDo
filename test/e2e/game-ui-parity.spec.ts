@@ -88,6 +88,7 @@ test('persistent data can be cleared when device storage is disabled', async ({ 
 
   page.once('dialog', (dialog) => dialog.accept());
   await page.getByRole('button', { name: '保存データを削除して停止' }).click();
+  await expect(page.getByRole('button', { name: '保存データを削除して停止' })).toHaveCount(0);
   await page.reload();
 
   await expect(page.getByRole('heading', { name: 'この端末に作業を保存しますか？' })).toBeVisible();
