@@ -1,3 +1,4 @@
+import { Buffer } from 'node:buffer';
 import { expect, test, type Page } from '@playwright/test';
 
 const ONBOARDING_KEY = 'cherry:v2:ui:onboarding-seen';
