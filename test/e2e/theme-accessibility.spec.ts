@@ -50,3 +50,27 @@ test('explicit dark presentation works independently of system preference', asyn
   expect(background).toBe('rgb(16, 19, 24)');
   expect(await blockingA11yViolations(page)).toEqual([]);
 });
+
+
+test('dark theme remains dark after switching from Board to List', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'light' });
+  await page.goto('/');
+  await page.evaluate(() => {
+    window.localStorage.setItem('cherry:v2:ui:theme', 'dark');
+    window.sessionStorage.setItem('cherry:v2:ui:onboarding-seen', '1');
+  });
+  await page.reload();
+  await enterStart(page);
+
+  page.once('dialog', (dialog) => dialog.accept('Dark list workspace'));
+  await page.getByRole('button', { name: '＋ 新しいワークスペース' }).click();
+  await page.getByRole('button', { name: 'リスト' }).click();
+
+  const list = page.locator('.cg-list');
+  await expect(list).toBeVisible();
+  const listBackground = await list.evaluate((node) => getComputedStyle(node).backgroundColor);
+  const listColor = await list.evaluate((node) => getComputedStyle(node).color);
+  expect(listBackground).toBe('rgb(16, 19, 24)');
+  expect(listColor).toBe('rgb(238, 242, 246)');
+  expect(await blockingA11yViolations(page)).toEqual([]);
+});
