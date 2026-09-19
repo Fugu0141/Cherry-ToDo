@@ -338,13 +338,29 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         mobile && workspace.board.mobileLanes !== undefined
           ? workspace.board.mobileLanes
           : workspace.board.lanes;
+      const selectedForLayout =
+        selectedTaskId === null
+          ? null
+          : workspace.tasks.find((task) => task.id === selectedTaskId) ?? null;
+      const selectedPosition =
+        selectedForLayout === null
+          ? null
+          : mobile
+            ? (selectedForLayout.mobilePosition ?? selectedForLayout.position)
+            : selectedForLayout.position;
+      const contextualWidth =
+        !mobile && selectedPosition !== null ? selectedPosition.x + 520 : 0;
+      const contextualHeight =
+        !mobile && selectedPosition !== null ? selectedPosition.y + 240 : 0;
       const canvasWidth = Math.max(
         mobile ? (workspace.board.mobileWidth ?? workspace.board.width) : workspace.board.width,
         mobile ? 720 : 1000,
+        contextualWidth,
       );
       const canvasHeight = Math.max(
         mobile ? (workspace.board.mobileHeight ?? workspace.board.height) : workspace.board.height,
         mobile ? 900 : 680,
+        contextualHeight,
       );
       canvas.style.minWidth = `${canvasWidth}px`;
       canvas.style.minHeight = `${canvasHeight}px`;
