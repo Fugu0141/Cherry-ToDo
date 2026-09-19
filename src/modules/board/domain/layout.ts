@@ -21,6 +21,8 @@ export interface BoardLaneLayout {
   readonly kind: BoardLaneKind;
   readonly date: string | null;
   readonly taskIds: readonly TaskId[];
+  readonly startX?: number;
+  readonly width?: number;
   readonly startY: number;
   readonly height: number;
 }
@@ -128,12 +130,188 @@ function fallbackAutoPoint(
   if (orientation === 'vertical') {
     return {
       x: BOARD_PADDING + crossIndex * (CARD_WIDTH + HORIZONTAL_GAP),
-      y: rank * (CARD_HEIGHT + VERTICAL_GAP),
+      y: BOARD_PADDING + rank * (CARD_HEIGHT + VERTICAL_GAP),
     };
   }
   return {
     x: BOARD_PADDING + rank * (CARD_WIDTH + HORIZONTAL_GAP),
-    y: crossIndex * (CARD_HEIGHT + VERTICAL_GAP),
+    y: BOARD_PADDING + crossIndex * (CARD_HEIGHT + VERTICAL_GAP),
+  };
+}
+
+function layoutWithoutDateLanes(
+  tasks: readonly BoardLayoutTaskInput[],
+  ranks: ReadonlyMap<TaskId, number>,
+  settings: BoardSettings,
+  orientation: BoardLayoutOrientation,
+): BoardLayoutResult {
+  const groupedByRank = new Map<number, BoardLayoutTaskInput[]>();
+  for (const task of tasks) {
+    const rank = ranks.get(task.id) ?? 0;
+    const group = groupedByRank.get(rank) ?? [];
+    group.push(task);
+    groupedByRank.set(rank, group);
+  }
+
+  const taskLayouts: Record<string, BoardTaskLayout> = {};
+  let maxX = 0;
+  let maxY = 0;
+  for (const [rank, group] of groupedByRank) {
+    const stableGroup = [...group].sort((left, right) => left.id.localeCompare(right.id));
+    stableGroup.forEach((task, crossIndex) => {
+      const fallback = fallbackAutoPoint(rank, crossIndex, orientation);
+      const point =
+        !settings.autoLayout && task.manualPosition !== undefined ? task.manualPosition : fallback;
+      maxX = Math.max(maxX, point.x + CARD_WIDTH + BOARD_PADDING);
+      maxY = Math.max(maxY, point.y + CARD_HEIGHT + BOARD_PADDING);
+      taskLayouts[task.id] = { taskId: task.id, rank, laneId: 'all', point };
+    });
+  }
+
+  return {
+    tasks: taskLayouts,
+    lanes: [
+      {
+        id: 'all',
+        kind: 'all',
+        date: null,
+        taskIds: tasks.map((task) => task.id),
+        startX: 0,
+        width: maxX,
+        startY: 0,
+        height: maxY,
+      },
+    ],
+    width: maxX,
+    height: maxY,
+  };
+}
+
+function layoutHorizontalDateLanes(
+  laneIds: readonly string[],
+  laneTaskMap: ReadonlyMap<string, readonly BoardLayoutTaskInput[]>,
+  ranks: ReadonlyMap<TaskId, number>,
+  settings: BoardSettings,
+): BoardLayoutResult {
+  const taskLayouts: Record<string, BoardTaskLayout> = {};
+  const laneDrafts: BoardLaneLayout[] = [];
+  const laneWidth = CARD_WIDTH + LANE_PADDING * 2;
+  let laneStartX = BOARD_PADDING;
+  let maxY = BOARD_PADDING;
+
+  for (const laneId of laneIds) {
+    const laneTasks = [...(laneTaskMap.get(laneId) ?? [])].sort((left, right) => {
+      const rankDifference = (ranks.get(left.id) ?? 0) - (ranks.get(right.id) ?? 0);
+      return rankDifference !== 0 ? rankDifference : left.id.localeCompare(right.id);
+    });
+
+    laneTasks.forEach((task, index) => {
+      const fallback = {
+        x: laneStartX + LANE_PADDING,
+        y:
+          BOARD_PADDING +
+          LANE_HEADER_HEIGHT +
+          LANE_PADDING +
+          index * (CARD_HEIGHT + VERTICAL_GAP),
+      };
+      const point =
+        !settings.autoLayout && task.manualPosition !== undefined ? task.manualPosition : fallback;
+      maxY = Math.max(maxY, point.y + CARD_HEIGHT + BOARD_PADDING);
+      taskLayouts[task.id] = {
+        taskId: task.id,
+        rank: ranks.get(task.id) ?? 0,
+        laneId,
+        point,
+      };
+    });
+
+    laneDrafts.push({
+      id: laneId,
+      kind: laneKind(laneId),
+      date: laneDate(laneId),
+      taskIds: laneTasks.map((task) => task.id),
+      startX: laneStartX,
+      width: laneWidth,
+      startY: BOARD_PADDING,
+      height: 0,
+    });
+    laneStartX += laneWidth + LANE_GAP;
+  }
+
+  const width = Math.max(
+    laneStartX - LANE_GAP + BOARD_PADDING,
+    ...Object.values(taskLayouts).map((task) => task.point.x + CARD_WIDTH + BOARD_PADDING),
+  );
+  const height = Math.max(
+    maxY,
+    BOARD_PADDING * 2 + LANE_HEADER_HEIGHT + LANE_PADDING * 2 + CARD_HEIGHT,
+  );
+  const laneHeight = Math.max(CARD_HEIGHT + LANE_HEADER_HEIGHT + LANE_PADDING * 2, height - BOARD_PADDING * 2);
+
+  return {
+    tasks: taskLayouts,
+    lanes: laneDrafts.map((lane) => ({ ...lane, height: laneHeight })),
+    width,
+    height,
+  };
+}
+
+function layoutVerticalDateLanes(
+  laneIds: readonly string[],
+  laneTaskMap: ReadonlyMap<string, readonly BoardLayoutTaskInput[]>,
+  ranks: ReadonlyMap<TaskId, number>,
+  settings: BoardSettings,
+): BoardLayoutResult {
+  const taskLayouts: Record<string, BoardTaskLayout> = {};
+  const laneDrafts: BoardLaneLayout[] = [];
+  const laneHeight = CARD_HEIGHT + LANE_HEADER_HEIGHT + LANE_PADDING * 2;
+  let laneStartY = BOARD_PADDING;
+  let maxX = BOARD_PADDING;
+
+  for (const laneId of laneIds) {
+    const laneTasks = [...(laneTaskMap.get(laneId) ?? [])].sort((left, right) => {
+      const rankDifference = (ranks.get(left.id) ?? 0) - (ranks.get(right.id) ?? 0);
+      return rankDifference !== 0 ? rankDifference : left.id.localeCompare(right.id);
+    });
+
+    laneTasks.forEach((task, index) => {
+      const fallback = {
+        x: BOARD_PADDING + LANE_PADDING + index * (CARD_WIDTH + HORIZONTAL_GAP),
+        y: laneStartY + LANE_HEADER_HEIGHT + LANE_PADDING,
+      };
+      const point =
+        !settings.autoLayout && task.manualPosition !== undefined ? task.manualPosition : fallback;
+      maxX = Math.max(maxX, point.x + CARD_WIDTH + BOARD_PADDING);
+      taskLayouts[task.id] = {
+        taskId: task.id,
+        rank: ranks.get(task.id) ?? 0,
+        laneId,
+        point,
+      };
+    });
+
+    laneDrafts.push({
+      id: laneId,
+      kind: laneKind(laneId),
+      date: laneDate(laneId),
+      taskIds: laneTasks.map((task) => task.id),
+      startX: BOARD_PADDING,
+      width: 0,
+      startY: laneStartY,
+      height: laneHeight,
+    });
+    laneStartY += laneHeight + LANE_GAP;
+  }
+
+  const width = Math.max(maxX, BOARD_PADDING * 2 + LANE_PADDING * 2 + CARD_WIDTH);
+  const height = laneStartY - LANE_GAP + BOARD_PADDING;
+  const laneWidth = Math.max(CARD_WIDTH + LANE_PADDING * 2, width - BOARD_PADDING * 2);
+
+  return {
+    tasks: taskLayouts,
+    lanes: laneDrafts.map((lane) => ({ ...lane, width: laneWidth })),
+    width,
+    height,
   };
 }
 
@@ -148,6 +326,10 @@ export function layoutBoard(
   }
 
   const ranks = structuralRanks(tasks, structuralEdges);
+  if (!settings.showDateLanes) {
+    return layoutWithoutDateLanes(tasks, ranks, settings, orientation);
+  }
+
   const laneTaskMap = new Map<string, BoardLayoutTaskInput[]>();
   for (const task of tasks) {
     const laneId = laneIdFor(task, settings);
@@ -155,90 +337,9 @@ export function layoutBoard(
     laneTasks.push(task);
     laneTaskMap.set(laneId, laneTasks);
   }
-
   const laneIds = sortLaneIds([...laneTaskMap.keys()]);
-  const laneLayouts: BoardLaneLayout[] = [];
-  const taskLayouts: Record<string, BoardTaskLayout> = {};
-  let laneStartY = BOARD_PADDING;
-  let maxX = 0;
 
-  for (const laneId of laneIds) {
-    const laneTasks = [...(laneTaskMap.get(laneId) ?? [])].sort((left, right) => {
-      const rankDifference = (ranks.get(left.id) ?? 0) - (ranks.get(right.id) ?? 0);
-      return rankDifference !== 0 ? rankDifference : left.id.localeCompare(right.id);
-    });
-
-    const groupedByRank = new Map<number, BoardLayoutTaskInput[]>();
-    for (const task of laneTasks) {
-      const rank = ranks.get(task.id) ?? 0;
-      const group = groupedByRank.get(rank) ?? [];
-      group.push(task);
-      groupedByRank.set(rank, group);
-    }
-
-    const maxCrossCount = Math.max(1, ...[...groupedByRank.values()].map((group) => group.length));
-    const maxRank = Math.max(0, ...groupedByRank.keys());
-    const horizontalContentHeight =
-      maxCrossCount * CARD_HEIGHT + Math.max(0, maxCrossCount - 1) * VERTICAL_GAP;
-    const verticalContentHeight = (maxRank + 1) * CARD_HEIGHT + Math.max(0, maxRank) * VERTICAL_GAP;
-    const contentHeight =
-      orientation === 'vertical' ? verticalContentHeight : horizontalContentHeight;
-    const laneHeight =
-      (settings.showDateLanes ? LANE_HEADER_HEIGHT : 0) + LANE_PADDING * 2 + contentHeight;
-
-    for (const [rank, group] of groupedByRank) {
-      const stableGroup = [...group].sort((left, right) => left.id.localeCompare(right.id));
-      stableGroup.forEach((task, crossIndex) => {
-        const fallback = fallbackAutoPoint(rank, crossIndex, orientation);
-        let point: Point;
-        if (settings.autoLayout) {
-          point = {
-            x: fallback.x,
-            y:
-              laneStartY +
-              (settings.showDateLanes ? LANE_HEADER_HEIGHT : 0) +
-              LANE_PADDING +
-              fallback.y,
-          };
-        } else if (task.manualPosition !== undefined) {
-          point =
-            settings.showDateLanes && orientation === 'horizontal'
-              ? {
-                  x: task.manualPosition.x,
-                  y: laneStartY + LANE_HEADER_HEIGHT + LANE_PADDING + task.manualPosition.y,
-                }
-              : task.manualPosition;
-        } else {
-          point = {
-            x: fallback.x,
-            y:
-              laneStartY +
-              (settings.showDateLanes ? LANE_HEADER_HEIGHT : 0) +
-              LANE_PADDING +
-              fallback.y,
-          };
-        }
-
-        maxX = Math.max(maxX, point.x + CARD_WIDTH + BOARD_PADDING);
-        taskLayouts[task.id] = { taskId: task.id, rank, laneId, point };
-      });
-    }
-
-    laneLayouts.push({
-      id: laneId,
-      kind: laneKind(laneId),
-      date: laneDate(laneId),
-      taskIds: laneTasks.map((task) => task.id),
-      startY: laneStartY,
-      height: laneHeight,
-    });
-    laneStartY += laneHeight + LANE_GAP;
-  }
-
-  return {
-    tasks: taskLayouts,
-    lanes: laneLayouts,
-    width: maxX,
-    height: Math.max(0, laneStartY - LANE_GAP + BOARD_PADDING),
-  };
+  return orientation === 'vertical'
+    ? layoutVerticalDateLanes(laneIds, laneTaskMap, ranks, settings)
+    : layoutHorizontalDateLanes(laneIds, laneTaskMap, ranks, settings);
 }

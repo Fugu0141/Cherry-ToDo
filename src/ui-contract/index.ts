@@ -25,6 +25,8 @@ export interface BoardLaneModel {
   readonly kind: 'all' | 'date' | 'undated';
   readonly date: string | null;
   readonly taskIds: readonly string[];
+  readonly startX?: number;
+  readonly width?: number;
   readonly startY: number;
   readonly height: number;
 }
