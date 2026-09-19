@@ -98,6 +98,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
     let createDraft: CreateDraft | null = null;
     let editingTaskId: string | null = null;
     let connectDraft: ConnectDraft | null = null;
+    let mobileSecondaryActionsOpen = false;
     let settingsOpen = false;
     let drawingEnabled = false;
     let tabMenuId: string | null = null;
@@ -149,6 +150,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       createDraft = null;
       editingTaskId = null;
       connectDraft = null;
+      mobileSecondaryActionsOpen = false;
       settingsOpen = false;
       tabMenuId = null;
       coordinator.cancel();
@@ -300,10 +302,12 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
           return;
         }
         selectedTaskId = selectedTaskId === task.id ? null : task.id;
+        mobileSecondaryActionsOpen = false;
         render();
       });
       card.addEventListener('dblclick', () => {
         selectedTaskId = task.id;
+        mobileSecondaryActionsOpen = false;
         editingTaskId = task.id;
         render();
       });
@@ -559,6 +563,19 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         workspace: presentedWorkspace,
         selectedTaskId: () => selectedTaskId,
       });
+
+      if (!mobile && selectedTaskId !== null) {
+        const selected = workspace.tasks.find((task) => task.id === selectedTaskId);
+        const position = selected?.position;
+        if (selected !== undefined && position !== null && position !== undefined) {
+          const dock = renderTaskActions(selected);
+          dock.dataset.layout = 'contextual';
+          dock.style.left = `${position.x}px`;
+          dock.style.top = `${position.y + 138}px`;
+          canvas.append(dock);
+        }
+      }
+
       boardCleanup = () => {
         flowMapCleanup();
         handleCleanup();
@@ -588,39 +605,85 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
 
     const renderTaskActions = (task: TaskCardModel): HTMLElement => {
       const dock = el('aside', 'cg-action-dock');
+      const mobile = isMobileBoard();
+      dock.dataset.layout = mobile ? 'mobile' : 'floating';
       dock.setAttribute('aria-label', tr('選択中のタスク操作', 'Selected task actions'));
-      if (task.canManuallyComplete) {
+
+      const completeButton =
+        task.canManuallyComplete
+          ? btn(
+              task.status === 'done' ? tr('↺ 戻す', '↺ Reopen') : tr('✓ 完了', '✓ Complete'),
+              () => {
+                void perform(context.intents.task.setCompleted(task.id, task.status !== 'done'));
+              },
+            )
+          : null;
+      const nextButton = btn(
+        tr('＋ 次へ', '＋ Next'),
+        () => {
+          mobileSecondaryActionsOpen = false;
+          createDraft = { parentTaskId: task.id, kind: 'continuation' };
+          render();
+        },
+        'cg-btn cg-primary',
+      );
+      const editButton = btn(tr('✎ 編集', '✎ Edit'), () => {
+        mobileSecondaryActionsOpen = false;
+        editingTaskId = task.id;
+        render();
+      });
+
+      if (!mobile) {
+        if (completeButton !== null) dock.append(completeButton);
         dock.append(
-          btn(
-            task.status === 'done' ? tr('↺ 戻す', '↺ Reopen') : tr('✓ 完了', '✓ Complete'),
-            () => {
-              void perform(context.intents.task.setCompleted(task.id, task.status !== 'done'));
-            },
-          ),
+          nextButton,
+          btn(tr('↗ 分岐', '↗ Branch'), () => {
+            createDraft = { parentTaskId: task.id, kind: 'branch' };
+            render();
+          }),
+          btn(tr('🔗 既存へ', '🔗 Existing'), () => {
+            connectDraft = { fromTaskId: task.id, kind: 'continuation' };
+            render();
+          }),
+          editButton,
         );
+        return dock;
       }
+
+      if (completeButton !== null) dock.append(completeButton);
+      dock.append(nextButton, editButton);
       dock.append(
         btn(
-          tr('＋ 次へ', '＋ Next'),
+          tr('••• その他', '••• More'),
           () => {
-            createDraft = { parentTaskId: task.id, kind: 'continuation' };
+            mobileSecondaryActionsOpen = !mobileSecondaryActionsOpen;
             render();
           },
-          'cg-btn cg-primary',
+          'cg-btn cg-action-more-toggle',
         ),
-        btn(tr('↗ 分岐', '↗ Branch'), () => {
-          createDraft = { parentTaskId: task.id, kind: 'branch' };
-          render();
-        }),
-        btn(tr('🔗 既存へ', '🔗 Existing'), () => {
-          connectDraft = { fromTaskId: task.id, kind: 'continuation' };
-          render();
-        }),
-        btn(tr('✎ 編集', '✎ Edit'), () => {
-          editingTaskId = task.id;
-          render();
-        }),
       );
+
+      if (mobileSecondaryActionsOpen) {
+        const secondary = el('div', 'cg-action-secondary');
+        secondary.append(
+          btn(tr('↗ 分岐', '↗ Branch'), () => {
+            mobileSecondaryActionsOpen = false;
+            createDraft = { parentTaskId: task.id, kind: 'branch' };
+            render();
+          }),
+          btn(tr('↝ 参照', '↝ Reference'), () => {
+            mobileSecondaryActionsOpen = false;
+            createDraft = { parentTaskId: task.id, kind: 'reference' };
+            render();
+          }),
+          btn(tr('🔗 既存へ', '🔗 Existing'), () => {
+            mobileSecondaryActionsOpen = false;
+            connectDraft = { fromTaskId: task.id, kind: 'continuation' };
+            render();
+          }),
+        );
+        dock.append(secondary);
+      }
       return dock;
     };
 
@@ -629,7 +692,17 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       const overlay = el('div', 'cg-overlay');
       const form = el('form', 'cg-dialog cg-quick-create');
       const kicker = el('span', 'cg-kicker');
-      kicker.textContent = createDraft.parentTaskId ? 'FLOW' : 'NEW TASK';
+      const mobileFlowLabels: Record<CherryFlowKind, readonly [string, string]> = {
+        continuation: ['続き', 'Continue'],
+        branch: ['分岐', 'Branch'],
+        reference: ['参照', 'Reference'],
+      };
+      kicker.textContent =
+        createDraft.parentTaskId && isMobileBoard()
+          ? `FLOW · ${tr(...mobileFlowLabels[createDraft.kind])}`
+          : createDraft.parentTaskId
+            ? 'FLOW'
+            : 'NEW TASK';
       const title = el('h2');
       title.textContent = createDraft.parentTaskId
         ? tr('次にやることは？', "What's next?")
@@ -638,7 +711,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       input.placeholder = tr('タスク名を入力…', 'Enter a task name…');
       input.autofocus = true;
       const modes = el('div', 'cg-create-modes');
-      if (createDraft.parentTaskId) {
+      if (createDraft.parentTaskId && !isMobileBoard()) {
         for (const [kind, label] of [
           ['continuation', tr('→ 続き', '→ Continue')],
           ['branch', tr('↗ 分岐', '↗ Branch')],
@@ -1209,16 +1282,19 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         workspace.activeView === 'board' ? renderBoard(workspace) : renderList(workspace);
       shell.append(content);
 
-      const add = btn(
-        '+',
-        () => {
-          createDraft = { parentTaskId: null, kind: 'continuation' };
-          render();
-        },
-        'cg-fab',
-      );
-      add.setAttribute('aria-label', tr('タスクを追加', 'Add task'));
-      shell.append(add);
+      if (!isMobileBoard() || selectedTaskId === null) {
+        const add = btn(
+          '+',
+          () => {
+            mobileSecondaryActionsOpen = false;
+            createDraft = { parentTaskId: null, kind: 'continuation' };
+            render();
+          },
+          'cg-fab',
+        );
+        add.setAttribute('aria-label', tr('タスクを追加', 'Add task'));
+        shell.append(add);
+      }
 
       if (connectDraft) {
         const hint = el('div', 'cg-connect-hint');
@@ -1229,7 +1305,12 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         shell.append(hint);
       }
       const selected = workspace.tasks.find((task) => task.id === selectedTaskId);
-      if (selected) shell.append(renderTaskActions(selected));
+      if (
+        selected &&
+        (isMobileBoard() || workspace.activeView === 'list')
+      ) {
+        shell.append(renderTaskActions(selected));
+      }
       const settings = renderSettings(workspace);
       if (settings) shell.append(settings);
       const createDialog = renderCreateDialog();
