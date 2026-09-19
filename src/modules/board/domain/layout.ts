@@ -208,11 +208,7 @@ function layoutHorizontalDateLanes(
     laneTasks.forEach((task, index) => {
       const fallback = {
         x: laneStartX + LANE_PADDING,
-        y:
-          BOARD_PADDING +
-          LANE_HEADER_HEIGHT +
-          LANE_PADDING +
-          index * (CARD_HEIGHT + VERTICAL_GAP),
+        y: BOARD_PADDING + LANE_HEADER_HEIGHT + LANE_PADDING + index * (CARD_HEIGHT + VERTICAL_GAP),
       };
       const point =
         !settings.autoLayout && task.manualPosition !== undefined ? task.manualPosition : fallback;
@@ -246,7 +242,10 @@ function layoutHorizontalDateLanes(
     maxY,
     BOARD_PADDING * 2 + LANE_HEADER_HEIGHT + LANE_PADDING * 2 + CARD_HEIGHT,
   );
-  const laneHeight = Math.max(CARD_HEIGHT + LANE_HEADER_HEIGHT + LANE_PADDING * 2, height - BOARD_PADDING * 2);
+  const laneHeight = Math.max(
+    CARD_HEIGHT + LANE_HEADER_HEIGHT + LANE_PADDING * 2,
+    height - BOARD_PADDING * 2,
+  );
 
   return {
     tasks: taskLayouts,

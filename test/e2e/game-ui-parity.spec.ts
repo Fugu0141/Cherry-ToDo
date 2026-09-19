@@ -193,7 +193,6 @@ test('responsive board progression follows the platform axis', async ({ page }, 
   }
 });
 
-
 test('date lanes follow platform direction and desktop lane drops update schedule', async ({
   page,
 }, testInfo) => {
