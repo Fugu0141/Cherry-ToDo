@@ -113,6 +113,35 @@ describe('DAG-aware Board layout', () => {
     expect(mobile.tasks[A]?.point.y).toBeLessThan(mobile.tasks[B]?.point.y ?? 0);
   });
 
+  it('preserves the primary Flow axis inside one date lane', () => {
+    const desktop = layoutBoard(
+      [input(A, '2026-09-15'), input(B, '2026-09-15'), input(C, '2026-09-15')],
+      [
+        { fromTaskId: A, toTaskId: B },
+        { fromTaskId: B, toTaskId: C },
+      ],
+      AUTO_LANES,
+      'horizontal',
+    );
+    const mobile = layoutBoard(
+      [input(A, '2026-09-15'), input(B, '2026-09-15'), input(C, '2026-09-15')],
+      [
+        { fromTaskId: A, toTaskId: B },
+        { fromTaskId: B, toTaskId: C },
+      ],
+      AUTO_LANES,
+      'vertical',
+    );
+
+    expect(desktop.tasks[A]?.point.x).toBeLessThan(desktop.tasks[B]?.point.x ?? 0);
+    expect(desktop.tasks[B]?.point.x).toBeLessThan(desktop.tasks[C]?.point.x ?? 0);
+    expect(desktop.tasks[A]?.point.y).toBe(desktop.tasks[B]?.point.y);
+
+    expect(mobile.tasks[A]?.point.y).toBeLessThan(mobile.tasks[B]?.point.y ?? 0);
+    expect(mobile.tasks[B]?.point.y).toBeLessThan(mobile.tasks[C]?.point.y ?? 0);
+    expect(mobile.tasks[A]?.point.x).toBe(mobile.tasks[B]?.point.x);
+  });
+
   it('keeps manual positions authoritative when auto layout is off', () => {
     const tasks = [
       { id: A, scheduleDate: '2026-09-15', manualPosition: { x: 123, y: 45 } },
