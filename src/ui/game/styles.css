@@ -87,7 +87,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .cg-lane-label { position: sticky; left: 18px; margin: 9px 0 0 10px; min-height: 30px; padding: 4px 9px; border: 1px solid var(--cg-border); background: rgba(255,255,255,.92); font-size: 11px; color: var(--cg-muted); z-index: 4; }
 .cg-lane[data-orientation='vertical'] .cg-lane-label { top: 10px; left: auto; margin: 10px; }
 
-.cg-flow-layer { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; z-index: 1; }
+.cg-flow-layer { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; z-index: 1; }
 .cg-flow { fill: none; stroke: #747b84; stroke-width: 2.3; vector-effect: non-scaling-stroke; }
 .cg-flow-continuation { stroke: #737a84; }
 .cg-flow-branch { stroke: var(--cg-accent); stroke-width: 2.8; }
