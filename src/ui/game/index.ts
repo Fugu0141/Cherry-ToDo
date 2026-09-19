@@ -132,17 +132,26 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       title: string,
       parentTaskId: string | null,
       kind: CherryFlowKind,
+      schedule: CherryScheduleModel = { kind: 'none' },
     ): Promise<void> => {
       const before = currentWorkspace();
       const existing = new Set(before?.tasks.map((task) => task.id) ?? []);
       const result = await perform(context.intents.task.create({ title }));
-      if (result.kind !== 'ok' || parentTaskId === null) return;
+      if (result.kind !== 'ok') return;
       const after = currentWorkspace();
       const created = after?.tasks.find((task) => !existing.has(task.id));
       if (!created) return;
-      await perform(
-        context.intents.flow.connect({ fromTaskId: parentTaskId, toTaskId: created.id, kind }),
-      );
+
+      if (parentTaskId !== null) {
+        const connected = await perform(
+          context.intents.flow.connect({ fromTaskId: parentTaskId, toTaskId: created.id, kind }),
+        );
+        if (connected.kind !== 'ok') return;
+      }
+      if (schedule.kind !== 'none') {
+        const scheduled = await perform(context.intents.task.setSchedule(created.id, schedule));
+        if (scheduled.kind !== 'ok') return;
+      }
       selectedTaskId = created.id;
     };
 
@@ -709,6 +718,25 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       const input = el('input', 'cg-quick-input');
       input.placeholder = tr('タスク名を入力…', 'Enter a task name…');
       input.autofocus = true;
+
+      const parentTask =
+        createDraft.parentTaskId === null
+          ? null
+          : currentWorkspace()?.tasks.find((task) => task.id === createDraft?.parentTaskId) ?? null;
+      const inheritedSchedule =
+        parentTask === null ? { kind: 'none', date: '', time: '' } : scheduleValue(parentTask);
+      const quickSchedule = el('div', 'cg-quick-schedule');
+      const quickDate = field(tr('日付（任意）', 'Date (optional)'), inheritedSchedule.date);
+      quickDate.input.type = 'date';
+      const quickTime = field(tr('時間（任意）', 'Time (optional)'), inheritedSchedule.time);
+      quickTime.input.type = 'time';
+      quickTime.input.disabled = quickDate.input.value.length === 0;
+      quickDate.input.addEventListener('change', () => {
+        quickTime.input.disabled = quickDate.input.value.length === 0;
+        if (quickTime.input.disabled) quickTime.input.value = '';
+      });
+      quickSchedule.append(quickDate.wrap, quickTime.wrap);
+
       const modes = el('div', 'cg-create-modes');
       if (createDraft.parentTaskId && !isMobileBoard()) {
         for (const [kind, label] of [
@@ -743,7 +771,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       submit.type = 'submit';
       submit.textContent = tr('作成', 'Create');
       actions.append(submit);
-      form.append(kicker, title, input);
+      form.append(kicker, title, input, quickSchedule);
       if (modes.childElementCount > 0) form.append(modes);
       form.append(actions);
       form.addEventListener('submit', (event) => {
@@ -751,8 +779,18 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         const value = input.value.trim();
         const draft = createDraft;
         if (!value || !draft) return;
+        let nextSchedule: CherryScheduleModel = { kind: 'none' };
+        if (quickDate.input.value) {
+          nextSchedule = quickTime.input.value
+            ? {
+                kind: 'datetime',
+                date: quickDate.input.value,
+                time: quickTime.input.value,
+              }
+            : { kind: 'date', date: quickDate.input.value };
+        }
         createDraft = null;
-        void createTask(value, draft.parentTaskId, draft.kind).then(render);
+        void createTask(value, draft.parentTaskId, draft.kind, nextSchedule).then(render);
       });
       overlay.addEventListener('pointerdown', (event) => {
         if (event.target === overlay) {
