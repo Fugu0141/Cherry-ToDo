@@ -42,6 +42,7 @@ import {
   createCherryI18n,
   type CherryFlowKind,
   type CherryLocale,
+  type CreateTaskIntent,
   type CherryMessageKey,
   type CherryScheduleModel,
   type CherryScreenModel,
@@ -240,15 +241,7 @@ export class CherryUIRuntime implements CherryUIContext {
           this.#runMutation((store, tabId) => store.setBoardSettings(tabId, settings)),
       },
       task: {
-        create: (input) =>
-          this.#runMutation((store, tabId) =>
-            store.createTask(tabId, {
-              id: unwrapId(parseTaskId(randomId('task'))),
-              title: input.title.trim(),
-              notes: input.notes ?? '',
-              importance: input.importance ?? 'none',
-            }),
-          ),
+        create: (input) => this.#createTask(input),
         update: (input) =>
           this.#withTaskId(input.taskId, (taskId) =>
             this.#runMutation((store, tabId) =>
@@ -583,6 +576,22 @@ export class CherryUIRuntime implements CherryUIContext {
     await this.#rememberSession();
     this.#refreshWorkspace();
     return OK;
+  }
+
+  async #createTask(input: CreateTaskIntent): Promise<UIActionResult> {
+    const schedule =
+      input.schedule === undefined ? noSchedule() : scheduleFromModel(input.schedule);
+    if (schedule === null) return this.#error('validation', 'error.validation');
+
+    return this.#runMutation((store, tabId) =>
+      store.createTask(tabId, {
+        id: unwrapId(parseTaskId(randomId('task'))),
+        title: input.title.trim(),
+        notes: input.notes ?? '',
+        importance: input.importance ?? 'none',
+        schedule,
+      }),
+    );
   }
 
   async #setSchedule(rawTaskId: string, model: CherryScheduleModel): Promise<UIActionResult> {
