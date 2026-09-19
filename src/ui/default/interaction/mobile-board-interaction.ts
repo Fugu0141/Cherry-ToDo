@@ -90,28 +90,45 @@ export function installMobileBoardInteraction(options: MobileBoardInteractionOpt
     session.card.classList.remove('dragging', 'touch-dragging');
   };
 
+  const laneNodes = (): NodeListOf<HTMLElement> =>
+    canvas.querySelectorAll<HTMLElement>('.cherry-date-lane, .cg-lane');
+
+  const clearLaneDropState = (): void => {
+    for (const laneNode of laneNodes()) delete laneNode.dataset.dropActive;
+  };
+
   const laneTargetAt = (
     point: InteractionPoint,
     preview: InteractionPoint,
   ): CherryBoardDropTarget => {
-    for (const laneNode of canvas.querySelectorAll<HTMLElement>('.cherry-date-lane')) {
+    for (const laneNode of laneNodes()) {
       const rect = laneNode.getBoundingClientRect();
       if (!pointInRect(point, rect)) continue;
       const laneId = laneNode.dataset.laneId;
       const lane = workspace.board.lanes.find((candidate) => candidate.id === laneId);
       if (lane === undefined) break;
-      const collapsed = collapsedLaneIds.has(lane.id);
       return {
         kind: 'date-lane',
         date: lane.date,
-        point: {
-          x: preview.x,
-          y: collapsed ? 0 : Math.max(0, point.y - rect.top - 68),
-        },
-        collapsed,
+        point: preview,
+        collapsed: collapsedLaneIds.has(lane.id),
       };
     }
     return { kind: 'canvas', point: preview };
+  };
+
+  const updateLaneDropState = (point: InteractionPoint): void => {
+    let active: HTMLElement | null = null;
+    for (const laneNode of laneNodes()) {
+      if (pointInRect(point, laneNode.getBoundingClientRect())) {
+        active = laneNode;
+        break;
+      }
+    }
+    for (const laneNode of laneNodes()) {
+      if (laneNode === active) laneNode.dataset.dropActive = 'true';
+      else delete laneNode.dataset.dropActive;
+    }
   };
 
   const scheduleDragFrame = (): void => {
@@ -155,12 +172,13 @@ export function installMobileBoardInteraction(options: MobileBoardInteractionOpt
       scroll.scrollTop = autoScroll.nextScroll.top;
       current.card.style.left = `${autoScroll.nextPreview.x}px`;
       current.card.style.top = `${autoScroll.nextPreview.y}px`;
+      updateLaneDropState(current.latestPointer);
 
       if (autoScroll.delta.x !== 0 || autoScroll.delta.y !== 0) scheduleDragFrame();
     });
   };
 
-  for (const card of canvas.querySelectorAll<HTMLElement>('.cherry-board-task')) {
+  for (const card of canvas.querySelectorAll<HTMLElement>('.cherry-board-task, .cg-board-task')) {
     const taskId = card.dataset.taskId;
     if (taskId === undefined) continue;
 
@@ -228,11 +246,13 @@ export function installMobileBoardInteraction(options: MobileBoardInteractionOpt
           workspace.tasks.find((task) => task.id === current.taskId)?.position?.y ?? 0,
         ),
       };
+      const target = !cancelled && moved ? laneTargetAt(current.latestPointer, preview) : null;
+      clearLaneDropState();
       restoreCard(current);
       drag = null;
 
-      if (!cancelled && moved) {
-        dropTask(current.taskId, laneTargetAt(current.latestPointer, preview));
+      if (target !== null) {
+        dropTask(current.taskId, target);
       }
     };
 
@@ -243,7 +263,8 @@ export function installMobileBoardInteraction(options: MobileBoardInteractionOpt
   on(scroll, 'pointerdown', (event) => {
     if (!isTouchLike(event)) return;
     const target = event.target;
-    const overTask = target instanceof Element && target.closest('.cherry-board-task') !== null;
+    const overTask =
+      target instanceof Element && target.closest('.cherry-board-task, .cg-board-task') !== null;
     const overAnnotation =
       target instanceof Element && target.closest('.cherry-annotation') !== null;
     const owner = resolveMobileInteractionStart({
@@ -298,6 +319,7 @@ export function installMobileBoardInteraction(options: MobileBoardInteractionOpt
     if (activeDrag !== null) restoreCard(activeDrag);
     const state = coordinator.state;
     if (state.kind === 'dragging-task' || state.kind === 'panning') coordinator.cancel();
+    clearLaneDropState();
     drag = null;
     pan = null;
     for (const cleanup of cleanups) cleanup();

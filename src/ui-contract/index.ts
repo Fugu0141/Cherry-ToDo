@@ -25,6 +25,8 @@ export interface BoardLaneModel {
   readonly kind: 'all' | 'date' | 'undated';
   readonly date: string | null;
   readonly taskIds: readonly string[];
+  readonly startX?: number;
+  readonly width?: number;
   readonly startY: number;
   readonly height: number;
 }
@@ -34,6 +36,9 @@ export interface BoardPresentationModel {
   readonly lanes: readonly BoardLaneModel[];
   readonly width: number;
   readonly height: number;
+  readonly mobileLanes?: readonly BoardLaneModel[];
+  readonly mobileWidth?: number;
+  readonly mobileHeight?: number;
 }
 
 export interface CherryPoint {
@@ -105,6 +110,7 @@ export interface TaskCardModel {
   readonly blocked: boolean;
   readonly blockedReasonKey: CherryMessageKey | null;
   readonly position: { readonly x: number; readonly y: number } | null;
+  readonly mobilePosition?: { readonly x: number; readonly y: number } | null;
 }
 
 export interface FlowConnectionModel {
@@ -113,6 +119,7 @@ export interface FlowConnectionModel {
   readonly fromTaskId: string;
   readonly toTaskId: string;
   readonly path: string | null;
+  readonly mobilePath?: string | null;
 }
 
 export interface WorkspaceScreenModel {
@@ -160,6 +167,20 @@ export type UIActionResult =
   | { readonly kind: 'confirmation-required'; readonly confirmation: ConfirmationDescriptor }
   | { readonly kind: 'error'; readonly error: PresentationError };
 
+export interface ImportExternalTextIntent {
+  readonly source: string;
+  readonly name: string;
+}
+
+export type UITextExportResult =
+  | {
+      readonly kind: 'ok';
+      readonly fileName: string;
+      readonly mimeType: string;
+      readonly content: string;
+    }
+  | { readonly kind: 'error'; readonly error: PresentationError };
+
 export interface CreateWorkspaceIntent {
   readonly name: string;
 }
@@ -168,10 +189,16 @@ export interface CreateTabIntent {
   readonly name: string;
 }
 
+export interface RenameTabIntent {
+  readonly tabId: string;
+  readonly name: string;
+}
+
 export interface CreateTaskIntent {
   readonly title: string;
   readonly notes?: string;
   readonly importance?: CherryTaskImportance;
+  readonly schedule?: CherryScheduleModel;
 }
 
 export interface UpdateTaskIntent {
@@ -223,6 +250,9 @@ export interface CherryUIIntents {
     create(input: CreateWorkspaceIntent): Promise<UIActionResult>;
     open(workspaceId: string): Promise<UIActionResult>;
     createTab(input: CreateTabIntent): Promise<UIActionResult>;
+    renameTab(input: RenameTabIntent): Promise<UIActionResult>;
+    duplicateTab(tabId: string): Promise<UIActionResult>;
+    deleteTab(tabId: string): Promise<UIActionResult>;
     openTab(tabId: string): Promise<UIActionResult>;
     goToStart(): Promise<UIActionResult>;
     setView(view: CherryView): Promise<UIActionResult>;
@@ -250,6 +280,11 @@ export interface CherryUIIntents {
     updateText(input: UpdateTextAnnotationIntent): Promise<UIActionResult>;
     updateStroke(input: UpdateStrokeAnnotationIntent): Promise<UIActionResult>;
     delete(annotationId: string): Promise<UIActionResult>;
+  };
+  readonly interop: {
+    exportCsv(): Promise<UITextExportResult>;
+    importCsv(input: ImportExternalTextIntent): Promise<UIActionResult>;
+    importIcs(input: ImportExternalTextIntent): Promise<UIActionResult>;
   };
   readonly history: {
     undo(): Promise<UIActionResult>;

@@ -11,6 +11,20 @@ describe('Board Flow connector geometry', () => {
     expect(geometry.path).toBe('M 268 143 C 316 143, 312 283, 360 283');
   });
 
+  it('anchors a mobile connector at the bottom and top card edges', () => {
+    const geometry = buildBoardFlowConnectorGeometry(
+      { x: 28, y: 80 },
+      { x: 300, y: 360 },
+      210,
+      112,
+      'vertical',
+    );
+
+    expect(geometry.start).toEqual({ x: 133, y: 192 });
+    expect(geometry.end).toEqual({ x: 405, y: 360 });
+    expect(geometry.path).toBe('M 133 192 C 133 267.6, 405 284.4, 405 360');
+  });
+
   it('produces a valid reverse curve for manual layouts', () => {
     const geometry = buildBoardFlowConnectorGeometry({ x: 500, y: 40 }, { x: 100, y: 40 });
 
