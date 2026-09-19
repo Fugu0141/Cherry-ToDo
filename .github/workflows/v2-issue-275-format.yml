@@ -1,0 +1,31 @@
+name: V2 Issue 275 Formatter
+
+on:
+  push:
+    branches:
+      - feat/v2-ui-overhaul-v1-parity
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx prettier --write src/ui/game/index.ts test/e2e/game-ui-parity.spec.ts
+      - name: Commit formatting
+        run: |
+          if git diff --quiet; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+Fugu0141@users.noreply.github.com"
+          git add src/ui/game/index.ts test/e2e/game-ui-parity.spec.ts
+          git commit -m "style(v2): format platform-specific task actions"
+          git push
