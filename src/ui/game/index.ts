@@ -152,7 +152,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         const scheduled = await perform(context.intents.task.setSchedule(created.id, schedule));
         if (scheduled.kind !== 'ok') return;
       }
-      selectedTaskId = created.id;
+      if (parentTaskId !== null) selectedTaskId = created.id;
     };
 
     const closeTransient = (): void => {
