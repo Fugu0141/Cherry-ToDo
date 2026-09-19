@@ -51,7 +51,6 @@ test('explicit dark presentation works independently of system preference', asyn
   expect(await blockingA11yViolations(page)).toEqual([]);
 });
 
-
 test('dark theme remains dark after switching from Board to List', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'light' });
   await page.goto('/');
