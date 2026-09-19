@@ -24,7 +24,8 @@
 :root[data-cherry-theme='dark'] .cg-start,
 :root[data-cherry-theme='dark'] .cg-splash,
 :root[data-cherry-theme='dark'] .cg-board-scroll,
-:root[data-cherry-theme='dark'] .cg-board {
+:root[data-cherry-theme='dark'] .cg-board,
+:root[data-cherry-theme='dark'] .cg-list {
   background-color: #101318;
   color: var(--cg-text);
 }
@@ -123,7 +124,8 @@
   :root:not([data-cherry-theme]) .cg-start,
   :root:not([data-cherry-theme]) .cg-splash,
   :root:not([data-cherry-theme]) .cg-board-scroll,
-  :root:not([data-cherry-theme]) .cg-board {
+  :root:not([data-cherry-theme]) .cg-board,
+  :root:not([data-cherry-theme]) .cg-list {
     background-color: #101318;
     color: var(--cg-text);
   }
