@@ -59,7 +59,7 @@ async function connectExisting(page: Page, fromTitle: string, toTitle: string): 
   await selectTask(page, fromTitle);
   const existing = page.getByRole('button', { name: '🔗 既存へ' });
   if (!(await existing.isVisible())) {
-    await page.getByRole('button', { name: '••• その他' }).click();
+    await page.getByRole('button', { name: 'その他', exact: true }).click();
   }
   await page.getByRole('button', { name: '🔗 既存へ' }).click();
   await expect(page.locator('.cg-connect-hint')).toContainText('接続先のタスクを選んでください');
