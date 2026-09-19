@@ -176,6 +176,22 @@ test('first empty workspace exposes onboarding and the guide can be reopened', a
   await page.getByRole('button', { name: '＋ 新しいワークスペース' }).click();
 
   await expect(page.getByRole('dialog', { name: 'Cherryの使い方' })).toBeVisible();
+  await expect(page.locator('.cg-onboarding-curtain')).toHaveCount(4);
+  await expect(page.locator('.cg-onboarding-layer')).toHaveCSS('backdrop-filter', 'none');
+  const spotlightBox = await page.locator('.cg-onboarding-spotlight').boundingBox();
+  const targetBox = await page.locator('.cg-fab').boundingBox();
+  expect(spotlightBox).not.toBeNull();
+  expect(targetBox).not.toBeNull();
+  if (spotlightBox !== null && targetBox !== null) {
+    expect(spotlightBox.x).toBeLessThanOrEqual(targetBox.x);
+    expect(spotlightBox.y).toBeLessThanOrEqual(targetBox.y);
+    expect(spotlightBox.x + spotlightBox.width).toBeGreaterThanOrEqual(
+      targetBox.x + targetBox.width,
+    );
+    expect(spotlightBox.y + spotlightBox.height).toBeGreaterThanOrEqual(
+      targetBox.y + targetBox.height,
+    );
+  }
   await page.getByRole('button', { name: 'あとで' }).click();
   await expect(page.getByRole('dialog', { name: 'Cherryの使い方' })).toHaveCount(0);
 
