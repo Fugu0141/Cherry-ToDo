@@ -97,7 +97,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 #cg-arrow-reference path { fill: #8e959e; }
 
 .cg-task { position: relative; min-width: 0; background: #fff; border: 1px solid #dfe3e7; border-radius: 17px; padding: 14px 15px; box-shadow: 0 5px 18px rgba(27,31,38,.055); user-select: none; transition: box-shadow 140ms ease, transform 140ms ease, border-color 140ms ease, opacity 140ms ease; }
-.cg-board-task { position: absolute; width: 230px; min-height: 92px; z-index: 3; }
+.cg-board-task { position: absolute; width: 240px; min-height: 126px; z-index: 3; }
 .cg-board-task:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(24,28,35,.11); border-color: #cdd2d8; }
 .cg-task[data-selected="true"] { border-color: var(--cg-accent); box-shadow: 0 0 0 3px rgba(216,51,82,.12), 0 13px 30px rgba(24,28,35,.12); z-index: 7; }
 .cg-task[data-done="true"] { opacity: .58; }
@@ -333,8 +333,18 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   .cg-action-dock { left: 10px; right: 10px; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); transform: none; justify-content: stretch; overflow-x: auto; }
   .cg-action-dock .cg-btn { flex: 1 0 auto; min-height: 48px; }
   .cg-fab { right: 16px; bottom: calc(82px + env(safe-area-inset-bottom, 0px)); width: 54px; height: 54px; }
-  .cg-board-task { width: 210px; }
-  .cg-flow-handle { opacity: 1; width: 34px; height: 34px; right: -17px; }
+  .cg-board-task { width: 210px; min-height: 112px; }
+  .cg-flow-handle {
+    opacity: 1;
+    width: 34px;
+    height: 34px;
+    left: 50%;
+    right: auto;
+    top: auto;
+    bottom: -17px;
+    transform: translateX(-50%);
+  }
+  .cg-flow-handle:hover { transform: translateX(-50%) scale(1.08); }
   .cg-connect-hint { top: 108px; width: max-content; max-width: calc(100vw - 24px); text-align: center; }
   .cg-overlay { place-items: end center; padding: 0; }
   .cg-dialog { width: 100%; max-height: min(82vh, 720px); border-radius: 22px 22px 0 0; padding: 22px 18px calc(22px + env(safe-area-inset-bottom, 0px)); }

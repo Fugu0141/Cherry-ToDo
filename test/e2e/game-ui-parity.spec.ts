@@ -157,3 +157,30 @@ test('task editor can delete a linear downstream chain', async ({ page }) => {
 
   await expect(page.locator('.cg-task')).toHaveCount(0);
 });
+
+
+test('responsive board progression follows the platform axis', async ({ page }, testInfo) => {
+  await chooseStorage(page, false);
+  await createWorkspace(page, 'Responsive layout workspace');
+  await addTask(page, 'Axis A');
+  await createNextTask(page, 'Axis A', 'Axis B');
+  await createNextTask(page, 'Axis B', 'Axis C');
+
+  const first = await page.locator('.cg-task').filter({ hasText: 'Axis A' }).first().boundingBox();
+  const second = await page.locator('.cg-task').filter({ hasText: 'Axis B' }).first().boundingBox();
+  const third = await page.locator('.cg-task').filter({ hasText: 'Axis C' }).first().boundingBox();
+  expect(first).not.toBeNull();
+  expect(second).not.toBeNull();
+  expect(third).not.toBeNull();
+  if (first === null || second === null || third === null) return;
+
+  if (testInfo.project.name === 'mobile-chromium') {
+    expect(second.y).toBeGreaterThan(first.y);
+    expect(third.y).toBeGreaterThan(second.y);
+    expect(Math.abs(second.x - first.x)).toBeLessThan(8);
+  } else {
+    expect(second.x).toBeGreaterThan(first.x);
+    expect(third.x).toBeGreaterThan(second.x);
+    expect(Math.abs(second.y - first.y)).toBeLessThan(8);
+  }
+});

@@ -94,7 +94,7 @@ export function installMobileBoardInteraction(options: MobileBoardInteractionOpt
     point: InteractionPoint,
     preview: InteractionPoint,
   ): CherryBoardDropTarget => {
-    for (const laneNode of canvas.querySelectorAll<HTMLElement>('.cherry-date-lane')) {
+    for (const laneNode of canvas.querySelectorAll<HTMLElement>('.cherry-date-lane, .cg-lane')) {
       const rect = laneNode.getBoundingClientRect();
       if (!pointInRect(point, rect)) continue;
       const laneId = laneNode.dataset.laneId;
@@ -160,7 +160,7 @@ export function installMobileBoardInteraction(options: MobileBoardInteractionOpt
     });
   };
 
-  for (const card of canvas.querySelectorAll<HTMLElement>('.cherry-board-task')) {
+  for (const card of canvas.querySelectorAll<HTMLElement>('.cherry-board-task, .cg-board-task')) {
     const taskId = card.dataset.taskId;
     if (taskId === undefined) continue;
 
@@ -243,7 +243,7 @@ export function installMobileBoardInteraction(options: MobileBoardInteractionOpt
   on(scroll, 'pointerdown', (event) => {
     if (!isTouchLike(event)) return;
     const target = event.target;
-    const overTask = target instanceof Element && target.closest('.cherry-board-task') !== null;
+    const overTask = target instanceof Element && target.closest('.cherry-board-task, .cg-board-task') !== null;
     const overAnnotation =
       target instanceof Element && target.closest('.cherry-annotation') !== null;
     const owner = resolveMobileInteractionStart({

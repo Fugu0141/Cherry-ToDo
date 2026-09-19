@@ -41,6 +41,22 @@ describe('DAG-aware Board layout', () => {
     expect(result.tasks[B]?.point.x).toBeLessThan(result.tasks[C]?.point.x ?? 0);
   });
 
+  it('supports a vertical progression for mobile presentation', () => {
+    const result = layoutBoard(
+      [input(A), input(B), input(C)],
+      [
+        { fromTaskId: A, toTaskId: B },
+        { fromTaskId: B, toTaskId: C },
+      ],
+      { ...AUTO_LANES, showDateLanes: false },
+      'vertical',
+    );
+
+    expect(result.tasks[A]?.point.y).toBeLessThan(result.tasks[B]?.point.y ?? 0);
+    expect(result.tasks[B]?.point.y).toBeLessThan(result.tasks[C]?.point.y ?? 0);
+    expect(result.tasks[A]?.point.x).toBe(result.tasks[B]?.point.x);
+  });
+
   it('lays out branch-then-merge DAGs without duplicating the merge Task', () => {
     const result = layoutBoard(
       [input(A), input(B), input(C), input(D)],

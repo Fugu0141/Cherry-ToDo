@@ -105,6 +105,8 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
     let lastTabId: string | null = null;
     const collapsedLaneIds = new Set<string>();
     const coordinator = new InteractionCoordinator();
+    const mobileBoardMedia = window.matchMedia('(max-width: 900px)');
+    const isMobileBoard = (): boolean => mobileBoardMedia.matches;
 
     const perform = (promise: Promise<UIActionResult>) => run(context, promise);
     const tr = (ja: string, en: string): string => (context.i18n.locale === 'ja' ? ja : en);
@@ -318,21 +320,32 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
     const renderBoard = (workspace: WorkspaceScreenModel): HTMLElement => {
       const scroll = el('main', 'cg-board-scroll');
       const canvas = el('section', 'cg-board');
-      const canvasWidth = Math.max(workspace.board.width, 1000);
-      const canvasHeight = Math.max(workspace.board.height, 680);
+      const mobile = isMobileBoard();
+      const presentedLanes =
+        mobile && workspace.board.mobileLanes !== undefined
+          ? workspace.board.mobileLanes
+          : workspace.board.lanes;
+      const canvasWidth = Math.max(
+        mobile ? (workspace.board.mobileWidth ?? workspace.board.width) : workspace.board.width,
+        mobile ? 720 : 1000,
+      );
+      const canvasHeight = Math.max(
+        mobile ? (workspace.board.mobileHeight ?? workspace.board.height) : workspace.board.height,
+        mobile ? 900 : 680,
+      );
       canvas.style.minWidth = `${canvasWidth}px`;
       canvas.style.minHeight = `${canvasHeight}px`;
       canvas.dataset.timeGuide = workspace.board.settings.timeGuide;
       canvas.dataset.drawing = String(drawingEnabled);
 
       const hidden = new Set<string>();
-      for (const lane of workspace.board.lanes) {
+      for (const lane of presentedLanes) {
         if (!collapsedLaneIds.has(lane.id)) continue;
         for (const taskId of lane.taskIds) hidden.add(taskId);
       }
 
       if (workspace.board.settings.showDateLanes) {
-        for (const lane of workspace.board.lanes) {
+        for (const lane of presentedLanes) {
           const laneNode = el('section', 'cg-lane');
           laneNode.dataset.laneId = lane.id;
           laneNode.style.top = `${lane.startY}px`;
@@ -373,9 +386,10 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       }
       svg.append(defs);
       for (const edge of workspace.connections) {
-        if (!edge.path || hidden.has(edge.fromTaskId) || hidden.has(edge.toTaskId)) continue;
+        const pathData = mobile ? (edge.mobilePath ?? edge.path) : edge.path;
+        if (!pathData || hidden.has(edge.fromTaskId) || hidden.has(edge.toTaskId)) continue;
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        path.setAttribute('d', edge.path);
+        path.setAttribute('d', pathData);
         path.setAttribute('class', `cg-flow cg-flow-${edge.kind}`);
         path.setAttribute('marker-end', `url(#cg-arrow-${edge.kind})`);
         svg.append(path);
@@ -389,9 +403,10 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         const card = renderTaskCard(task);
         card.classList.add('cg-board-task');
         if (hidden.has(task.id)) card.hidden = true;
-        if (task.position) {
-          card.style.left = `${task.position.x}px`;
-          card.style.top = `${task.position.y}px`;
+        const position = mobile ? (task.mobilePosition ?? task.position) : task.position;
+        if (position) {
+          card.style.left = `${position.x}px`;
+          card.style.top = `${position.y}px`;
         }
         card.draggable = !drawingEnabled;
         card.addEventListener('dragstart', (event) => {
@@ -427,6 +442,26 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         }
       });
 
+      const presentedWorkspace: WorkspaceScreenModel = mobile
+        ? {
+            ...workspace,
+            board: {
+              ...workspace.board,
+              lanes: presentedLanes,
+              width: canvasWidth,
+              height: canvasHeight,
+            },
+            tasks: workspace.tasks.map((task) => ({
+              ...task,
+              position: task.mobilePosition ?? task.position,
+            })),
+            connections: workspace.connections.map((edge) => ({
+              ...edge,
+              path: edge.mobilePath ?? edge.path,
+            })),
+          }
+        : workspace;
+
       const drawingCleanup = installAnnotationDrawing({
         canvas,
         coordinator,
@@ -444,7 +479,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       const mobileCleanup = installMobileBoardInteraction({
         scroll,
         canvas,
-        workspace,
+        workspace: presentedWorkspace,
         collapsedLaneIds,
         coordinator,
         dropTask: (taskId, target) => {
@@ -481,7 +516,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       const flowMapCleanup = installMobileFlowMap({
         scroll,
         canvas,
-        workspace,
+        workspace: presentedWorkspace,
         selectedTaskId: () => selectedTaskId,
       });
       boardCleanup = () => {
@@ -1258,7 +1293,9 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         render();
       }
     };
+    const viewportChanged = (): void => render();
     document.addEventListener('keydown', keydown);
+    mobileBoardMedia.addEventListener('change', viewportChanged);
     const unsubscribe = context.subscribe(render);
     render();
     return {
@@ -1266,6 +1303,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         boardCleanup?.();
         coordinator.cancel();
         document.removeEventListener('keydown', keydown);
+        mobileBoardMedia.removeEventListener('change', viewportChanged);
         unsubscribe();
         root.replaceChildren();
       },
