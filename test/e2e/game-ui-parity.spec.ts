@@ -245,7 +245,6 @@ test('date lanes follow platform direction and desktop lane drops update schedul
   }
 });
 
-
 test('selected task actions are contextual on desktop and progressive on mobile', async ({
   page,
 }, testInfo) => {

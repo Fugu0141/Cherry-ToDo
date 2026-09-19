@@ -609,15 +609,14 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       dock.dataset.layout = mobile ? 'mobile' : 'floating';
       dock.setAttribute('aria-label', tr('選択中のタスク操作', 'Selected task actions'));
 
-      const completeButton =
-        task.canManuallyComplete
-          ? btn(
-              task.status === 'done' ? tr('↺ 戻す', '↺ Reopen') : tr('✓ 完了', '✓ Complete'),
-              () => {
-                void perform(context.intents.task.setCompleted(task.id, task.status !== 'done'));
-              },
-            )
-          : null;
+      const completeButton = task.canManuallyComplete
+        ? btn(
+            task.status === 'done' ? tr('↺ 戻す', '↺ Reopen') : tr('✓ 完了', '✓ Complete'),
+            () => {
+              void perform(context.intents.task.setCompleted(task.id, task.status !== 'done'));
+            },
+          )
+        : null;
       const nextButton = btn(
         tr('＋ 次へ', '＋ Next'),
         () => {
@@ -1305,10 +1304,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         shell.append(hint);
       }
       const selected = workspace.tasks.find((task) => task.id === selectedTaskId);
-      if (
-        selected &&
-        (isMobileBoard() || workspace.activeView === 'list')
-      ) {
+      if (selected && (isMobileBoard() || workspace.activeView === 'list')) {
         shell.append(renderTaskActions(selected));
       }
       const settings = renderSettings(workspace);
