@@ -290,7 +290,7 @@ test('quick create can set date and time and inherits parent schedule', async ({
   await createWorkspace(page, 'Quick schedule workspace');
 
   await page.locator('.cg-fab').click();
-  let dialog = page.locator('.cg-quick-create');
+  const dialog = page.locator('.cg-quick-create');
   await dialog.locator('.cg-quick-input').fill('Timed root');
   await dialog.getByLabel('日付（任意）').fill('2026-09-22');
   await dialog.getByLabel('時間（任意）').fill('14:30');
