@@ -387,7 +387,6 @@ test('created date and time stay bound to the same task after persistence reload
   await expect(editor.locator('input[type="time"]')).toHaveValue('16:45');
 });
 
-
 test('same-date auto layout keeps Flow on the platform axis and connectors touch cards', async ({
   page,
 }, testInfo) => {

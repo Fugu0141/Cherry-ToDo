@@ -216,13 +216,10 @@ function layoutWithoutDateLanes(
 
   for (const [localRank, group] of ranked.groups) {
     group.forEach((task, crossIndex) => {
-      const fallback = autoPoint(
-        localRank,
-        crossIndex,
-        orientation,
-        metrics,
-        { x: BOARD_PADDING, y: BOARD_PADDING },
-      );
+      const fallback = autoPoint(localRank, crossIndex, orientation, metrics, {
+        x: BOARD_PADDING,
+        y: BOARD_PADDING,
+      });
       const point =
         !settings.autoLayout && task.manualPosition !== undefined ? task.manualPosition : fallback;
       maxX = Math.max(maxX, point.x + metrics.cardWidth + BOARD_PADDING);
@@ -271,8 +268,7 @@ function layoutHorizontalDateLanes(
     const laneTasks = laneTaskMap.get(laneId) ?? [];
     const ranked = rankedGroups(laneTasks, ranks);
     const contentWidth =
-      (ranked.maxLocalRank + 1) * metrics.cardWidth +
-      ranked.maxLocalRank * metrics.primaryGap;
+      (ranked.maxLocalRank + 1) * metrics.cardWidth + ranked.maxLocalRank * metrics.primaryGap;
     const contentHeight =
       ranked.maxCrossCount * metrics.cardHeight +
       Math.max(0, ranked.maxCrossCount - 1) * metrics.crossGap;
@@ -282,18 +278,14 @@ function layoutHorizontalDateLanes(
 
     for (const [localRank, group] of ranked.groups) {
       group.forEach((task, crossIndex) => {
-        const fallback = autoPoint(
-          localRank,
-          crossIndex,
-          'horizontal',
-          metrics,
-          {
-            x: laneStartX + LANE_PADDING,
-            y: BOARD_PADDING + LANE_HEADER_HEIGHT + LANE_PADDING,
-          },
-        );
+        const fallback = autoPoint(localRank, crossIndex, 'horizontal', metrics, {
+          x: laneStartX + LANE_PADDING,
+          y: BOARD_PADDING + LANE_HEADER_HEIGHT + LANE_PADDING,
+        });
         const point =
-          !settings.autoLayout && task.manualPosition !== undefined ? task.manualPosition : fallback;
+          !settings.autoLayout && task.manualPosition !== undefined
+            ? task.manualPosition
+            : fallback;
         taskLayouts[task.id] = {
           taskId: task.id,
           rank: ranks.get(task.id) ?? 0,
@@ -343,8 +335,7 @@ function layoutVerticalDateLanes(
     const laneTasks = laneTaskMap.get(laneId) ?? [];
     const ranked = rankedGroups(laneTasks, ranks);
     const contentHeight =
-      (ranked.maxLocalRank + 1) * metrics.cardHeight +
-      ranked.maxLocalRank * metrics.primaryGap;
+      (ranked.maxLocalRank + 1) * metrics.cardHeight + ranked.maxLocalRank * metrics.primaryGap;
     const contentWidth =
       ranked.maxCrossCount * metrics.cardWidth +
       Math.max(0, ranked.maxCrossCount - 1) * metrics.crossGap;
@@ -354,18 +345,14 @@ function layoutVerticalDateLanes(
 
     for (const [localRank, group] of ranked.groups) {
       group.forEach((task, crossIndex) => {
-        const fallback = autoPoint(
-          localRank,
-          crossIndex,
-          'vertical',
-          metrics,
-          {
-            x: BOARD_PADDING + LANE_PADDING,
-            y: laneStartY + LANE_HEADER_HEIGHT + LANE_PADDING,
-          },
-        );
+        const fallback = autoPoint(localRank, crossIndex, 'vertical', metrics, {
+          x: BOARD_PADDING + LANE_PADDING,
+          y: laneStartY + LANE_HEADER_HEIGHT + LANE_PADDING,
+        });
         const point =
-          !settings.autoLayout && task.manualPosition !== undefined ? task.manualPosition : fallback;
+          !settings.autoLayout && task.manualPosition !== undefined
+            ? task.manualPosition
+            : fallback;
         taskLayouts[task.id] = {
           taskId: task.id,
           rank: ranks.get(task.id) ?? 0,
