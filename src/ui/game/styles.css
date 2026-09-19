@@ -165,6 +165,9 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .cg-quick-create h2 { font-size: 27px; }
 .cg-quick-input { width: 100%; border: 0; border-bottom: 2px solid #dfe2e6; padding: 12px 2px; outline: none; font-size: 22px; font-weight: 720; }
 .cg-quick-input:focus { border-color: var(--cg-accent); }
+.cg-quick-schedule { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr); gap: 10px; margin-top: 16px; }
+.cg-quick-schedule .cg-field { margin-bottom: 0; }
+.cg-quick-schedule .cg-input:disabled { opacity: .48; cursor: not-allowed; }
 .cg-create-modes { display: flex; gap: 7px; margin-top: 16px; }
 .cg-chip { min-height: 34px; padding: 6px 10px; border-radius: 999px; font-size: 12px; }
 .cg-chip.active { background: var(--cg-accent-soft); color: #a52a41; font-weight: 800; }
