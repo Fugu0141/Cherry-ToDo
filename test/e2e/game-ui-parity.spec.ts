@@ -312,7 +312,6 @@ test('quick create can set date and time and inherits parent schedule', async ({
   );
 });
 
-
 test('major Game UI surfaces stay inside the viewport without overlapping navigation', async ({
   page,
 }, testInfo) => {
