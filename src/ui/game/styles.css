@@ -81,8 +81,11 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   position: relative; overflow: hidden; background-color: #f7f8fa; background-image: radial-gradient(#d5d9df 1px, transparent 1px); background-size: 24px 24px; isolation: isolate;
 }
 .cg-board[data-time-guide="shown"] { background-image: linear-gradient(to bottom, rgba(216,51,82,.055) 1px, transparent 1px), radial-gradient(#d5d9df 1px, transparent 1px); background-size: 100% 64px, 24px 24px; }
-.cg-lane { position: absolute; left: 16px; right: 16px; border: 1px solid rgba(208,212,218,.8); border-radius: 22px; background: rgba(255,255,255,.42); z-index: 0; }
+.cg-lane { position: absolute; border: 1px solid rgba(208,212,218,.8); border-radius: 22px; background: rgba(255,255,255,.42); z-index: 0; transition: border-color 120ms ease, background 120ms ease, box-shadow 120ms ease; }
+.cg-lane[data-orientation='horizontal'] { left: 16px; right: 16px; }
+.cg-lane[data-drop-active='true'] { border-color: var(--cg-accent); background: rgba(216,51,82,.06); box-shadow: inset 0 0 0 2px rgba(216,51,82,.12); }
 .cg-lane-label { position: sticky; left: 18px; margin: 9px 0 0 10px; min-height: 30px; padding: 4px 9px; border: 1px solid var(--cg-border); background: rgba(255,255,255,.92); font-size: 11px; color: var(--cg-muted); z-index: 4; }
+.cg-lane[data-orientation='vertical'] .cg-lane-label { top: 10px; left: auto; margin: 10px; }
 
 .cg-flow-layer { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; z-index: 1; }
 .cg-flow { fill: none; stroke: #747b84; stroke-width: 2.3; vector-effect: non-scaling-stroke; }

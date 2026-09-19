@@ -348,8 +348,18 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         for (const lane of presentedLanes) {
           const laneNode = el('section', 'cg-lane');
           laneNode.dataset.laneId = lane.id;
-          laneNode.style.top = `${lane.startY}px`;
-          laneNode.style.height = `${collapsedLaneIds.has(lane.id) ? 48 : lane.height}px`;
+          laneNode.dataset.orientation = mobile ? 'horizontal' : 'vertical';
+          if (mobile) {
+            laneNode.style.left = '16px';
+            laneNode.style.right = '16px';
+            laneNode.style.top = `${lane.startY}px`;
+            laneNode.style.height = `${collapsedLaneIds.has(lane.id) ? 48 : lane.height}px`;
+          } else {
+            laneNode.style.left = `${lane.startX ?? 16}px`;
+            laneNode.style.width = `${collapsedLaneIds.has(lane.id) ? 48 : (lane.width ?? 280)}px`;
+            laneNode.style.top = `${lane.startY}px`;
+            laneNode.style.height = `${Math.max(lane.height, canvasHeight - lane.startY - 16)}px`;
+          }
           const label = btn(
             `${collapsedLaneIds.has(lane.id) ? '＋' : '−'} ${lane.date ?? tr('日付なし', 'No date')}`,
             (event) => {
@@ -361,6 +371,36 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
             'cg-lane-label',
           );
           laneNode.append(label);
+          laneNode.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            laneNode.dataset.dropActive = 'true';
+          });
+          laneNode.addEventListener('dragleave', () => {
+            delete laneNode.dataset.dropActive;
+          });
+          laneNode.addEventListener('drop', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            delete laneNode.dataset.dropActive;
+            const taskId = event.dataTransfer?.getData('application/x-cherry-task-id');
+            if (!taskId) return;
+            const rect = canvas.getBoundingClientRect();
+            void perform(
+              context.intents.board.dropTask({
+                taskId,
+                target: {
+                  kind: 'date-lane',
+                  date: lane.date,
+                  point: {
+                    x: event.clientX - rect.left,
+                    y: event.clientY - rect.top,
+                  },
+                  collapsed: collapsedLaneIds.has(lane.id),
+                },
+              }),
+            );
+          });
           canvas.append(laneNode);
         }
       }

@@ -46,6 +46,15 @@ async function createNextTask(page: Page, fromTitle: string, title: string): Pro
   await expect(page.locator('.cg-task').filter({ hasText: title }).first()).toBeVisible();
 }
 
+async function setTaskDate(page: Page, title: string, date: string): Promise<void> {
+  await page.locator('.cg-task').filter({ hasText: title }).first().dblclick();
+  const editor = page.locator('.cg-editor');
+  await editor.getByLabel('日付設定').selectOption('date');
+  await editor.locator('input[type="date"]').fill(date);
+  await editor.getByRole('button', { name: '保存' }).click();
+  await expect(page.locator('.cg-task').filter({ hasText: title }).first()).toContainText(date);
+}
+
 test('task importance is editable and presented with text', async ({ page }) => {
   await chooseStorage(page, false);
   await createWorkspace(page, 'Importance workspace');
@@ -181,5 +190,39 @@ test('responsive board progression follows the platform axis', async ({ page }, 
     expect(second.x).toBeGreaterThan(first.x);
     expect(third.x).toBeGreaterThan(second.x);
     expect(Math.abs(second.y - first.y)).toBeLessThan(8);
+  }
+});
+
+
+test('date lanes follow platform direction and desktop lane drops update schedule', async ({
+  page,
+}, testInfo) => {
+  await chooseStorage(page, false);
+  await createWorkspace(page, 'Date lane workspace');
+  await addTask(page, 'Lane A');
+  await createNextTask(page, 'Lane A', 'Lane B');
+  await setTaskDate(page, 'Lane A', '2026-09-20');
+  await setTaskDate(page, 'Lane B', '2026-09-21');
+
+  const firstLane = page.locator('.cg-lane[data-lane-id="date:2026-09-20"]');
+  const secondLane = page.locator('.cg-lane[data-lane-id="date:2026-09-21"]');
+  const firstBox = await firstLane.boundingBox();
+  const secondBox = await secondLane.boundingBox();
+  expect(firstBox).not.toBeNull();
+  expect(secondBox).not.toBeNull();
+  if (firstBox === null || secondBox === null) return;
+
+  if (testInfo.project.name === 'mobile-chromium') {
+    expect(secondBox.y).toBeGreaterThan(firstBox.y);
+    expect(Math.abs(secondBox.x - firstBox.x)).toBeLessThan(8);
+  } else {
+    expect(secondBox.x).toBeGreaterThan(firstBox.x);
+    expect(Math.abs(secondBox.y - firstBox.y)).toBeLessThan(8);
+
+    const task = page.locator('.cg-task').filter({ hasText: 'Lane A' }).first();
+    await task.dragTo(secondLane, { targetPosition: { x: 80, y: 180 } });
+    await expect(page.locator('.cg-task').filter({ hasText: 'Lane A' }).first()).toContainText(
+      '2026-09-21',
+    );
   }
 });

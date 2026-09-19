@@ -90,6 +90,29 @@ describe('DAG-aware Board layout', () => {
     expect(result.tasks[B]?.laneId).toBe('undated');
   });
 
+  it('uses vertical date lanes on desktop and horizontal date lanes on mobile', () => {
+    const desktop = layoutBoard(
+      [input(A, '2026-09-15'), input(B, '2026-09-16')],
+      [{ fromTaskId: A, toTaskId: B }],
+      AUTO_LANES,
+      'horizontal',
+    );
+    const mobile = layoutBoard(
+      [input(A, '2026-09-15'), input(B, '2026-09-16')],
+      [{ fromTaskId: A, toTaskId: B }],
+      AUTO_LANES,
+      'vertical',
+    );
+
+    expect(desktop.lanes[0]?.startX).toBeLessThan(desktop.lanes[1]?.startX ?? 0);
+    expect(desktop.lanes[0]?.startY).toBe(desktop.lanes[1]?.startY);
+    expect(desktop.tasks[A]?.point.x).toBeLessThan(desktop.tasks[B]?.point.x ?? 0);
+
+    expect(mobile.lanes[0]?.startY).toBeLessThan(mobile.lanes[1]?.startY ?? 0);
+    expect(mobile.lanes[0]?.startX).toBe(mobile.lanes[1]?.startX);
+    expect(mobile.tasks[A]?.point.y).toBeLessThan(mobile.tasks[B]?.point.y ?? 0);
+  });
+
   it('keeps manual positions authoritative when auto layout is off', () => {
     const tasks = [
       { id: A, scheduleDate: '2026-09-15', manualPosition: { x: 123, y: 45 } },
