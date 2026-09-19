@@ -366,7 +366,7 @@ test('created date and time stay bound to the same task after persistence reload
   await createWorkspace(page, 'Persistent schedule workspace');
 
   await page.locator('.cg-fab').click();
-  let dialog = page.locator('.cg-quick-create');
+  const dialog = page.locator('.cg-quick-create');
   await dialog.locator('.cg-quick-input').fill('Persistent timed task');
   await dialog.getByLabel('日付（任意）').fill('2026-09-24');
   await dialog.getByLabel('時間（任意）').fill('16:45');
