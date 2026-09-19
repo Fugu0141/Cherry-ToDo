@@ -136,7 +136,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
     ): Promise<void> => {
       const before = currentWorkspace();
       const existing = new Set(before?.tasks.map((task) => task.id) ?? []);
-      const result = await perform(context.intents.task.create({ title }));
+      const result = await perform(context.intents.task.create({ title, schedule }));
       if (result.kind !== 'ok') return;
       const after = currentWorkspace();
       const created = after?.tasks.find((task) => !existing.has(task.id));
@@ -147,10 +147,6 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
           context.intents.flow.connect({ fromTaskId: parentTaskId, toTaskId: created.id, kind }),
         );
         if (connected.kind !== 'ok') return;
-      }
-      if (schedule.kind !== 'none') {
-        const scheduled = await perform(context.intents.task.setSchedule(created.id, schedule));
-        if (scheduled.kind !== 'ok') return;
       }
       if (parentTaskId !== null) selectedTaskId = created.id;
     };
