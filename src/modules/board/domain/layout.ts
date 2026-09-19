@@ -180,8 +180,7 @@ export function layoutBoard(
     const maxRank = Math.max(0, ...groupedByRank.keys());
     const horizontalContentHeight =
       maxCrossCount * CARD_HEIGHT + Math.max(0, maxCrossCount - 1) * VERTICAL_GAP;
-    const verticalContentHeight =
-      (maxRank + 1) * CARD_HEIGHT + Math.max(0, maxRank) * VERTICAL_GAP;
+    const verticalContentHeight = (maxRank + 1) * CARD_HEIGHT + Math.max(0, maxRank) * VERTICAL_GAP;
     const contentHeight =
       orientation === 'vertical' ? verticalContentHeight : horizontalContentHeight;
     const laneHeight =

@@ -243,7 +243,8 @@ export function installMobileBoardInteraction(options: MobileBoardInteractionOpt
   on(scroll, 'pointerdown', (event) => {
     if (!isTouchLike(event)) return;
     const target = event.target;
-    const overTask = target instanceof Element && target.closest('.cherry-board-task, .cg-board-task') !== null;
+    const overTask =
+      target instanceof Element && target.closest('.cherry-board-task, .cg-board-task') !== null;
     const overAnnotation =
       target instanceof Element && target.closest('.cherry-annotation') !== null;
     const owner = resolveMobileInteractionStart({

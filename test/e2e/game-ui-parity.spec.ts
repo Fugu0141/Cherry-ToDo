@@ -158,7 +158,6 @@ test('task editor can delete a linear downstream chain', async ({ page }) => {
   await expect(page.locator('.cg-task')).toHaveCount(0);
 });
 
-
 test('responsive board progression follows the platform axis', async ({ page }, testInfo) => {
   await chooseStorage(page, false);
   await createWorkspace(page, 'Responsive layout workspace');
