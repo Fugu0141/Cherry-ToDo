@@ -653,7 +653,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       dock.append(nextButton, editButton);
       dock.append(
         btn(
-          tr('••• その他', '••• More'),
+          tr('その他', 'More'),
           () => {
             mobileSecondaryActionsOpen = !mobileSecondaryActionsOpen;
             render();
@@ -743,7 +743,9 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       submit.type = 'submit';
       submit.textContent = tr('作成', 'Create');
       actions.append(submit);
-      form.append(kicker, title, input, modes, actions);
+      form.append(kicker, title, input);
+      if (modes.childElementCount > 0) form.append(modes);
+      form.append(actions);
       form.addEventListener('submit', (event) => {
         event.preventDefault();
         const value = input.value.trim();
