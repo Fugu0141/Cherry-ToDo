@@ -27,7 +27,7 @@ async function addTask(page: Page, title: string): Promise<void> {
 }
 
 async function openSettings(page: Page): Promise<void> {
-  await page.getByRole('button', { name: '•••' }).click();
+  await page.getByRole('button', { name: '•••', exact: true }).click();
   await expect(page.locator('.cg-settings')).toBeVisible();
 }
 
@@ -110,7 +110,7 @@ test('language preference reloads the product in English', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Board' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'List' })).toBeVisible();
 
-  await page.getByRole('button', { name: '•••' }).click();
+  await page.getByRole('button', { name: '•••', exact: true }).click();
   await expect(page.getByLabel('Language')).toHaveValue('en');
   await expect(page.getByLabel('Theme')).toBeVisible();
 });
@@ -263,7 +263,7 @@ test('selected task actions are contextual on desktop and progressive on mobile'
     await expect(page.getByRole('button', { name: '🔗 既存へ' })).toHaveCount(0);
     await expect(page.locator('.cg-fab')).toHaveCount(0);
 
-    await page.getByRole('button', { name: '••• その他' }).click();
+    await page.getByRole('button', { name: 'その他', exact: true }).click();
     await expect(page.getByRole('button', { name: '↗ 分岐' })).toBeVisible();
     await expect(page.getByRole('button', { name: '↝ 参照' })).toBeVisible();
     await expect(page.getByRole('button', { name: '🔗 既存へ' })).toBeVisible();
