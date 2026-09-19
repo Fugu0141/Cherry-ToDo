@@ -358,3 +358,30 @@ test('major Game UI surfaces stay inside the viewport without overlapping naviga
     expect(settingsBox.y + settingsBox.height).toBeLessThanOrEqual(viewport.height + 1);
   }
 });
+
+
+test('created date and time stay bound to the same task after persistence reload', async ({ page }) => {
+  await chooseStorage(page, true);
+  await createWorkspace(page, 'Persistent schedule workspace');
+
+  await page.locator('.cg-fab').click();
+  let dialog = page.locator('.cg-quick-create');
+  await dialog.locator('.cg-quick-input').fill('Persistent timed task');
+  await dialog.getByLabel('日付（任意）').fill('2026-09-24');
+  await dialog.getByLabel('時間（任意）').fill('16:45');
+  await dialog.getByRole('button', { name: '作成' }).click();
+
+  let task = page.locator('.cg-task').filter({ hasText: 'Persistent timed task' }).first();
+  await expect(task).toContainText('2026-09-24 16:45');
+
+  await page.reload();
+  task = page.locator('.cg-task').filter({ hasText: 'Persistent timed task' }).first();
+  await expect(task).toBeVisible();
+  await expect(task).toContainText('2026-09-24 16:45');
+
+  await task.dblclick();
+  const editor = page.locator('.cg-editor');
+  await expect(editor.getByLabel('日付設定')).toHaveValue('datetime');
+  await expect(editor.locator('input[type="date"]')).toHaveValue('2026-09-24');
+  await expect(editor.locator('input[type="time"]')).toHaveValue('16:45');
+});
