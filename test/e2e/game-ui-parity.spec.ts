@@ -284,3 +284,31 @@ test('selected task actions are contextual on desktop and progressive on mobile'
     expect(Math.abs(dockBox.x - taskBox.x)).toBeLessThan(12);
   }
 });
+
+
+test('quick create can set date and time and inherits parent schedule', async ({ page }) => {
+  await chooseStorage(page, false);
+  await createWorkspace(page, 'Quick schedule workspace');
+
+  await page.locator('.cg-fab').click();
+  let dialog = page.locator('.cg-quick-create');
+  await dialog.locator('.cg-quick-input').fill('Timed root');
+  await dialog.getByLabel('日付（任意）').fill('2026-09-22');
+  await dialog.getByLabel('時間（任意）').fill('14:30');
+  await dialog.getByRole('button', { name: '作成' }).click();
+
+  const rootTask = page.locator('.cg-task').filter({ hasText: 'Timed root' }).first();
+  await expect(rootTask).toContainText('2026-09-22 14:30');
+
+  await selectTask(page, 'Timed root');
+  await page.getByRole('button', { name: '＋ 次へ' }).click();
+  dialog = page.locator('.cg-quick-create');
+  await expect(dialog.getByLabel('日付（任意）')).toHaveValue('2026-09-22');
+  await expect(dialog.getByLabel('時間（任意）')).toHaveValue('14:30');
+  await dialog.locator('.cg-quick-input').fill('Timed child');
+  await dialog.getByRole('button', { name: '作成' }).click();
+
+  await expect(page.locator('.cg-task').filter({ hasText: 'Timed child' }).first()).toContainText(
+    '2026-09-22 14:30',
+  );
+});
