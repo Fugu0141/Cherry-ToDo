@@ -386,3 +386,70 @@ test('created date and time stay bound to the same task after persistence reload
   await expect(editor.locator('input[type="date"]')).toHaveValue('2026-09-24');
   await expect(editor.locator('input[type="time"]')).toHaveValue('16:45');
 });
+
+
+test('same-date auto layout keeps Flow on the platform axis and connectors touch cards', async ({
+  page,
+}, testInfo) => {
+  await chooseStorage(page, false);
+  await createWorkspace(page, 'Aligned flow workspace');
+  await addTask(page, 'Aligned A');
+  await createNextTask(page, 'Aligned A', 'Aligned B');
+  await createNextTask(page, 'Aligned B', 'Aligned C');
+  await setTaskDate(page, 'Aligned A', '2026-09-25');
+  await setTaskDate(page, 'Aligned B', '2026-09-25');
+  await setTaskDate(page, 'Aligned C', '2026-09-25');
+
+  const first = page.locator('.cg-task').filter({ hasText: 'Aligned A' }).first();
+  const second = page.locator('.cg-task').filter({ hasText: 'Aligned B' }).first();
+  const third = page.locator('.cg-task').filter({ hasText: 'Aligned C' }).first();
+
+  const firstBox = await first.boundingBox();
+  const secondBox = await second.boundingBox();
+  const thirdBox = await third.boundingBox();
+  expect(firstBox).not.toBeNull();
+  expect(secondBox).not.toBeNull();
+  expect(thirdBox).not.toBeNull();
+  if (firstBox === null || secondBox === null || thirdBox === null) return;
+
+  if (testInfo.project.name === 'mobile-chromium') {
+    expect(secondBox.y).toBeGreaterThan(firstBox.y);
+    expect(thirdBox.y).toBeGreaterThan(secondBox.y);
+    expect(Math.abs(secondBox.x - firstBox.x)).toBeLessThan(8);
+  } else {
+    expect(secondBox.x).toBeGreaterThan(firstBox.x);
+    expect(thirdBox.x).toBeGreaterThan(secondBox.x);
+    expect(Math.abs(secondBox.y - firstBox.y)).toBeLessThan(8);
+  }
+
+  const connector = page.locator('.cg-flow').first();
+  const endpoints = await connector.evaluate((path) => {
+    const svgPath = path as SVGPathElement;
+    const svg = svgPath.ownerSVGElement;
+    if (svg === null) return null;
+    const matrix = svgPath.getScreenCTM();
+    if (matrix === null) return null;
+    const start = svgPath.getPointAtLength(0);
+    const end = svgPath.getPointAtLength(svgPath.getTotalLength());
+    const startPoint = new DOMPoint(start.x, start.y).matrixTransform(matrix);
+    const endPoint = new DOMPoint(end.x, end.y).matrixTransform(matrix);
+    return {
+      start: { x: startPoint.x, y: startPoint.y },
+      end: { x: endPoint.x, y: endPoint.y },
+    };
+  });
+  expect(endpoints).not.toBeNull();
+  if (endpoints === null) return;
+
+  const distance = (
+    point: { x: number; y: number },
+    box: { x: number; y: number; width: number; height: number },
+  ): number => {
+    const clampedX = Math.max(box.x, Math.min(point.x, box.x + box.width));
+    const clampedY = Math.max(box.y, Math.min(point.y, box.y + box.height));
+    return Math.hypot(point.x - clampedX, point.y - clampedY);
+  };
+
+  expect(distance(endpoints.start, firstBox)).toBeLessThan(4);
+  expect(distance(endpoints.end, secondBox)).toBeLessThan(4);
+});
