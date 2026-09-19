@@ -359,8 +359,9 @@ test('major Game UI surfaces stay inside the viewport without overlapping naviga
   }
 });
 
-
-test('created date and time stay bound to the same task after persistence reload', async ({ page }) => {
+test('created date and time stay bound to the same task after persistence reload', async ({
+  page,
+}) => {
   await chooseStorage(page, true);
   await createWorkspace(page, 'Persistent schedule workspace');
 
