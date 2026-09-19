@@ -348,12 +348,12 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       const contextualHeight = !mobile && selectedPosition !== null ? selectedPosition.y + 240 : 0;
       const canvasWidth = Math.max(
         mobile ? (workspace.board.mobileWidth ?? workspace.board.width) : workspace.board.width,
-        mobile ? 720 : 1000,
+        mobile ? 280 : 1000,
         contextualWidth,
       );
       const canvasHeight = Math.max(
         mobile ? (workspace.board.mobileHeight ?? workspace.board.height) : workspace.board.height,
-        mobile ? 900 : 680,
+        mobile ? 620 : 680,
         contextualHeight,
       );
       canvas.style.minWidth = `${canvasWidth}px`;
@@ -431,6 +431,10 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
       svg.setAttribute('class', 'cg-flow-layer');
       svg.setAttribute('viewBox', `0 0 ${canvasWidth} ${canvasHeight}`);
+      svg.setAttribute('width', String(canvasWidth));
+      svg.setAttribute('height', String(canvasHeight));
+      svg.style.width = `${canvasWidth}px`;
+      svg.style.height = `${canvasHeight}px`;
       svg.setAttribute('aria-hidden', 'true');
       const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
       for (const kind of ['continuation', 'branch', 'reference'] as const) {
