@@ -198,6 +198,7 @@ export interface CreateTaskIntent {
   readonly title: string;
   readonly notes?: string;
   readonly importance?: CherryTaskImportance;
+  readonly schedule?: CherryScheduleModel;
 }
 
 export interface UpdateTaskIntent {
