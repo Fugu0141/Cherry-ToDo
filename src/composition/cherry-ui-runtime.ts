@@ -844,20 +844,19 @@ export class CherryUIRuntime implements CherryUIContext {
         (incomingStructuralCounts.get(edge.toTaskId) ?? 0) + 1,
       );
     }
-    const layout = layoutBoard(
-      Object.values(tab.tasks).map((task) => ({
-        id: task.id,
-        scheduleDate: task.schedule.kind === 'none' ? null : task.schedule.date,
-        ...(tab.board.positions[task.id] === undefined
-          ? {}
-          : { manualPosition: tab.board.positions[task.id] }),
-      })),
-      structuralEdges.map((edge) => ({
-        fromTaskId: edge.fromTaskId,
-        toTaskId: edge.toTaskId,
-      })),
-      tab.board.settings,
-    );
+    const layoutTasks = Object.values(tab.tasks).map((task) => ({
+      id: task.id,
+      scheduleDate: task.schedule.kind === 'none' ? null : task.schedule.date,
+      ...(tab.board.positions[task.id] === undefined
+        ? {}
+        : { manualPosition: tab.board.positions[task.id] }),
+    }));
+    const layoutEdges = structuralEdges.map((edge) => ({
+      fromTaskId: edge.fromTaskId,
+      toTaskId: edge.toTaskId,
+    }));
+    const layout = layoutBoard(layoutTasks, layoutEdges, tab.board.settings, 'horizontal');
+    const mobileLayout = layoutBoard(layoutTasks, layoutEdges, tab.board.settings, 'vertical');
 
     const annotationExtents = Object.values(tab.annotations).map((annotation) => {
       if (annotation.kind === 'text') {
@@ -894,6 +893,16 @@ export class CherryUIRuntime implements CherryUIContext {
         })),
         width: Math.max(layout.width, annotationWidth),
         height: Math.max(layout.height, annotationHeight),
+        mobileLanes: mobileLayout.lanes.map((lane) => ({
+          id: lane.id,
+          kind: lane.kind,
+          date: lane.date,
+          taskIds: lane.taskIds,
+          startY: lane.startY,
+          height: lane.height,
+        })),
+        mobileWidth: Math.max(mobileLayout.width, annotationWidth),
+        mobileHeight: Math.max(mobileLayout.height, annotationHeight),
       },
       tasks: Object.values(tab.tasks).map((task) => {
         const state = execution.value[task.id];
@@ -913,6 +922,7 @@ export class CherryUIRuntime implements CherryUIContext {
           blocked,
           blockedReasonKey: blocked ? 'task.blockedByMerge' : null,
           position: layout.tasks[task.id]?.point ?? null,
+          mobilePosition: mobileLayout.tasks[task.id]?.point ?? null,
         };
       }),
       annotations: Object.values(tab.annotations).map((annotation) =>
@@ -942,6 +952,8 @@ export class CherryUIRuntime implements CherryUIContext {
       connections: Object.values(tab.flowEdges).map((edge) => {
         const from = layout.tasks[edge.fromTaskId]?.point;
         const to = layout.tasks[edge.toTaskId]?.point;
+        const mobileFrom = mobileLayout.tasks[edge.fromTaskId]?.point;
+        const mobileTo = mobileLayout.tasks[edge.toTaskId]?.point;
         return {
           id: edge.id,
           kind: edge.kind,
@@ -951,6 +963,10 @@ export class CherryUIRuntime implements CherryUIContext {
             from === undefined || to === undefined
               ? null
               : buildBoardFlowConnectorGeometry(from, to).path,
+          mobilePath:
+            mobileFrom === undefined || mobileTo === undefined
+              ? null
+              : buildBoardFlowConnectorGeometry(mobileFrom, mobileTo, 210, 112, 'vertical').path,
         };
       }),
       canUndo: this.#store.historyState.canUndo,

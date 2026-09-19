@@ -34,6 +34,9 @@ export interface BoardPresentationModel {
   readonly lanes: readonly BoardLaneModel[];
   readonly width: number;
   readonly height: number;
+  readonly mobileLanes?: readonly BoardLaneModel[];
+  readonly mobileWidth?: number;
+  readonly mobileHeight?: number;
 }
 
 export interface CherryPoint {
@@ -105,6 +108,7 @@ export interface TaskCardModel {
   readonly blocked: boolean;
   readonly blockedReasonKey: CherryMessageKey | null;
   readonly position: { readonly x: number; readonly y: number } | null;
+  readonly mobilePosition?: { readonly x: number; readonly y: number } | null;
 }
 
 export interface FlowConnectionModel {
@@ -113,6 +117,7 @@ export interface FlowConnectionModel {
   readonly fromTaskId: string;
   readonly toTaskId: string;
   readonly path: string | null;
+  readonly mobilePath?: string | null;
 }
 
 export interface WorkspaceScreenModel {

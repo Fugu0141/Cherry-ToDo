@@ -1,6 +1,8 @@
 import type { TaskId } from '../../../shared/ids/index';
 import type { BoardSettings, Point } from './board';
 
+export type BoardLayoutOrientation = 'horizontal' | 'vertical';
+
 export interface BoardLayoutTaskInput {
   readonly id: TaskId;
   readonly scheduleDate: string | null;
@@ -118,10 +120,20 @@ function structuralRanks(
   return ranks;
 }
 
-function fallbackAutoPoint(rank: number, row: number): Point {
+function fallbackAutoPoint(
+  rank: number,
+  crossIndex: number,
+  orientation: BoardLayoutOrientation,
+): Point {
+  if (orientation === 'vertical') {
+    return {
+      x: BOARD_PADDING + crossIndex * (CARD_WIDTH + HORIZONTAL_GAP),
+      y: rank * (CARD_HEIGHT + VERTICAL_GAP),
+    };
+  }
   return {
     x: BOARD_PADDING + rank * (CARD_WIDTH + HORIZONTAL_GAP),
-    y: row * (CARD_HEIGHT + VERTICAL_GAP),
+    y: crossIndex * (CARD_HEIGHT + VERTICAL_GAP),
   };
 }
 
@@ -129,6 +141,7 @@ export function layoutBoard(
   tasks: readonly BoardLayoutTaskInput[],
   structuralEdges: readonly BoardLayoutEdgeInput[],
   settings: BoardSettings,
+  orientation: BoardLayoutOrientation = 'horizontal',
 ): BoardLayoutResult {
   if (tasks.length === 0) {
     return { tasks: {}, lanes: [], width: 0, height: 0 };
@@ -163,18 +176,21 @@ export function layoutBoard(
       groupedByRank.set(rank, group);
     }
 
-    const maxRows = Math.max(1, ...[...groupedByRank.values()].map((group) => group.length));
-    const laneHeight = settings.showDateLanes
-      ? LANE_HEADER_HEIGHT +
-        LANE_PADDING * 2 +
-        maxRows * CARD_HEIGHT +
-        Math.max(0, maxRows - 1) * VERTICAL_GAP
-      : LANE_PADDING * 2 + maxRows * CARD_HEIGHT + Math.max(0, maxRows - 1) * VERTICAL_GAP;
+    const maxCrossCount = Math.max(1, ...[...groupedByRank.values()].map((group) => group.length));
+    const maxRank = Math.max(0, ...groupedByRank.keys());
+    const horizontalContentHeight =
+      maxCrossCount * CARD_HEIGHT + Math.max(0, maxCrossCount - 1) * VERTICAL_GAP;
+    const verticalContentHeight =
+      (maxRank + 1) * CARD_HEIGHT + Math.max(0, maxRank) * VERTICAL_GAP;
+    const contentHeight =
+      orientation === 'vertical' ? verticalContentHeight : horizontalContentHeight;
+    const laneHeight =
+      (settings.showDateLanes ? LANE_HEADER_HEIGHT : 0) + LANE_PADDING * 2 + contentHeight;
 
     for (const [rank, group] of groupedByRank) {
       const stableGroup = [...group].sort((left, right) => left.id.localeCompare(right.id));
-      stableGroup.forEach((task, row) => {
-        const fallback = fallbackAutoPoint(rank, row);
+      stableGroup.forEach((task, crossIndex) => {
+        const fallback = fallbackAutoPoint(rank, crossIndex, orientation);
         let point: Point;
         if (settings.autoLayout) {
           point = {
@@ -186,12 +202,13 @@ export function layoutBoard(
               fallback.y,
           };
         } else if (task.manualPosition !== undefined) {
-          point = settings.showDateLanes
-            ? {
-                x: task.manualPosition.x,
-                y: laneStartY + LANE_HEADER_HEIGHT + LANE_PADDING + task.manualPosition.y,
-              }
-            : task.manualPosition;
+          point =
+            settings.showDateLanes && orientation === 'horizontal'
+              ? {
+                  x: task.manualPosition.x,
+                  y: laneStartY + LANE_HEADER_HEIGHT + LANE_PADDING + task.manualPosition.y,
+                }
+              : task.manualPosition;
         } else {
           point = {
             x: fallback.x,
