@@ -311,3 +311,51 @@ test('quick create can set date and time and inherits parent schedule', async ({
     '2026-09-22 14:30',
   );
 });
+
+
+test('major Game UI surfaces stay inside the viewport without overlapping navigation', async ({
+  page,
+}, testInfo) => {
+  await chooseStorage(page, false);
+  await createWorkspace(page, 'Layout guard workspace');
+  await addTask(page, 'Layout task');
+  await selectTask(page, 'Layout task');
+
+  const viewport = page.viewportSize();
+  expect(viewport).not.toBeNull();
+  if (viewport === null) return;
+
+  const dock = page.locator('.cg-action-dock');
+  const dockBox = await dock.boundingBox();
+  expect(dockBox).not.toBeNull();
+  if (dockBox === null) return;
+
+  if (testInfo.project.name === 'mobile-chromium') {
+    expect(dockBox.x).toBeGreaterThanOrEqual(0);
+    expect(dockBox.x + dockBox.width).toBeLessThanOrEqual(viewport.width + 1);
+    expect(dockBox.y + dockBox.height).toBeLessThanOrEqual(viewport.height + 1);
+  } else {
+    const canvas = page.locator('.cg-board');
+    const canvasBox = await canvas.boundingBox();
+    expect(canvasBox).not.toBeNull();
+    if (canvasBox !== null) {
+      expect(dockBox.x).toBeGreaterThanOrEqual(canvasBox.x);
+      expect(dockBox.x + dockBox.width).toBeLessThanOrEqual(canvasBox.x + canvasBox.width + 1);
+      expect(dockBox.y + dockBox.height).toBeLessThanOrEqual(canvasBox.y + canvasBox.height + 1);
+    }
+  }
+
+  await page.getByRole('button', { name: '•••', exact: true }).click();
+  const topbar = page.locator('.cg-topbar');
+  const settings = page.locator('.cg-settings');
+  const topbarBox = await topbar.boundingBox();
+  const settingsBox = await settings.boundingBox();
+  expect(topbarBox).not.toBeNull();
+  expect(settingsBox).not.toBeNull();
+  if (topbarBox !== null && settingsBox !== null) {
+    expect(settingsBox.y).toBeGreaterThanOrEqual(topbarBox.y + topbarBox.height - 1);
+    expect(settingsBox.x).toBeGreaterThanOrEqual(0);
+    expect(settingsBox.x + settingsBox.width).toBeLessThanOrEqual(viewport.width + 1);
+    expect(settingsBox.y + settingsBox.height).toBeLessThanOrEqual(viewport.height + 1);
+  }
+});
