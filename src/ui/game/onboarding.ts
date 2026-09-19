@@ -85,6 +85,7 @@ export function installCherryOnboarding(root: HTMLElement, locale: 'ja' | 'en' =
   let currentStep = 0;
   let overlay: HTMLDivElement | null = null;
   let spotlight: HTMLDivElement | null = null;
+  let curtains: readonly HTMLDivElement[] = [];
   let card: HTMLDivElement | null = null;
   const steps = locale === 'en' ? CHERRY_ONBOARDING_STEPS_EN : CHERRY_ONBOARDING_STEPS;
 
@@ -117,7 +118,7 @@ export function installCherryOnboarding(root: HTMLElement, locale: 'ja' | 'en' =
   const currentOnboardingStep = (): CherryOnboardingStep => steps[currentStep] ?? steps[0]!;
 
   const updateSpotlight = (): void => {
-    if (!overlay || !spotlight || !workspaceMounted()) return;
+    if (!overlay || !spotlight || curtains.length !== 4 || !workspaceMounted()) return;
     const step = currentOnboardingStep();
     const target = root.querySelector<HTMLElement>(step.selector);
     if (!target) {
@@ -132,11 +133,41 @@ export function installCherryOnboarding(root: HTMLElement, locale: 'ja' | 'en' =
     }
 
     const pad = 8;
+    const left = Math.max(6, rect.left - pad);
+    const top = Math.max(6, rect.top - pad);
+    const right = Math.min(window.innerWidth - 6, rect.right + pad);
+    const bottom = Math.min(window.innerHeight - 6, rect.bottom + pad);
+    const width = Math.max(20, right - left);
+    const height = Math.max(20, bottom - top);
+
     spotlight.hidden = false;
-    spotlight.style.left = `${Math.max(6, rect.left - pad)}px`;
-    spotlight.style.top = `${Math.max(6, rect.top - pad)}px`;
-    spotlight.style.width = `${Math.max(20, rect.width + pad * 2)}px`;
-    spotlight.style.height = `${Math.max(20, rect.height + pad * 2)}px`;
+    spotlight.style.left = `${left}px`;
+    spotlight.style.top = `${top}px`;
+    spotlight.style.width = `${width}px`;
+    spotlight.style.height = `${height}px`;
+
+    const [topCurtain, rightCurtain, bottomCurtain, leftCurtain] = curtains;
+    if (!topCurtain || !rightCurtain || !bottomCurtain || !leftCurtain) return;
+
+    topCurtain.style.left = '0';
+    topCurtain.style.top = '0';
+    topCurtain.style.width = '100vw';
+    topCurtain.style.height = `${top}px`;
+
+    rightCurtain.style.left = `${right}px`;
+    rightCurtain.style.top = `${top}px`;
+    rightCurtain.style.width = `${Math.max(0, window.innerWidth - right)}px`;
+    rightCurtain.style.height = `${height}px`;
+
+    bottomCurtain.style.left = '0';
+    bottomCurtain.style.top = `${bottom}px`;
+    bottomCurtain.style.width = '100vw';
+    bottomCurtain.style.height = `${Math.max(0, window.innerHeight - bottom)}px`;
+
+    leftCurtain.style.left = '0';
+    leftCurtain.style.top = `${top}px`;
+    leftCurtain.style.width = `${left}px`;
+    leftCurtain.style.height = `${height}px`;
   };
 
   const closeTutorial = (remember: boolean): void => {
@@ -144,6 +175,7 @@ export function installCherryOnboarding(root: HTMLElement, locale: 'ja' | 'en' =
     overlay?.remove();
     overlay = null;
     spotlight = null;
+    curtains = [];
     card = null;
   };
 
@@ -212,6 +244,14 @@ export function installCherryOnboarding(root: HTMLElement, locale: 'ja' | 'en' =
     overlay.setAttribute('aria-modal', 'true');
     overlay.setAttribute('aria-label', locale === 'ja' ? 'Cherryの使い方' : 'How to use Cherry');
 
+    curtains = ['top', 'right', 'bottom', 'left'].map((side) => {
+      const curtain = document.createElement('div');
+      curtain.className = 'cg-onboarding-curtain';
+      curtain.dataset.side = side;
+      curtain.setAttribute('aria-hidden', 'true');
+      return curtain;
+    });
+
     spotlight = document.createElement('div');
     spotlight.className = 'cg-onboarding-spotlight';
     spotlight.setAttribute('aria-hidden', 'true');
@@ -219,7 +259,7 @@ export function installCherryOnboarding(root: HTMLElement, locale: 'ja' | 'en' =
     card = document.createElement('div');
     card.className = 'cg-onboarding-card';
 
-    overlay.append(spotlight, card);
+    overlay.append(...curtains, spotlight, card);
     document.body.append(overlay);
     renderStep();
   };
