@@ -285,7 +285,6 @@ test('selected task actions are contextual on desktop and progressive on mobile'
   }
 });
 
-
 test('quick create can set date and time and inherits parent schedule', async ({ page }) => {
   await chooseStorage(page, false);
   await createWorkspace(page, 'Quick schedule workspace');

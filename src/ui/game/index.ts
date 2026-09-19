@@ -722,7 +722,8 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       const parentTask =
         createDraft.parentTaskId === null
           ? null
-          : currentWorkspace()?.tasks.find((task) => task.id === createDraft?.parentTaskId) ?? null;
+          : (currentWorkspace()?.tasks.find((task) => task.id === createDraft?.parentTaskId) ??
+            null);
       const inheritedSchedule =
         parentTask === null ? { kind: 'none', date: '', time: '' } : scheduleValue(parentTask);
       const quickSchedule = el('div', 'cg-quick-schedule');
