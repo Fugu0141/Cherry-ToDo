@@ -244,3 +244,44 @@ test('date lanes follow platform direction and desktop lane drops update schedul
     );
   }
 });
+
+
+test('selected task actions are contextual on desktop and progressive on mobile', async ({
+  page,
+}, testInfo) => {
+  await chooseStorage(page, false);
+  await createWorkspace(page, 'Context actions workspace');
+  await addTask(page, 'Context task');
+  await selectTask(page, 'Context task');
+
+  const task = page.locator('.cg-task').filter({ hasText: 'Context task' }).first();
+  const dock = page.locator('.cg-action-dock');
+
+  if (testInfo.project.name === 'mobile-chromium') {
+    await expect(dock).toHaveAttribute('data-layout', 'mobile');
+    await expect(page.getByRole('button', { name: '↗ 分岐' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: '↝ 参照' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: '🔗 既存へ' })).toHaveCount(0);
+    await expect(page.locator('.cg-fab')).toHaveCount(0);
+
+    await page.getByRole('button', { name: '••• その他' }).click();
+    await expect(page.getByRole('button', { name: '↗ 分岐' })).toBeVisible();
+    await expect(page.getByRole('button', { name: '↝ 参照' })).toBeVisible();
+    await expect(page.getByRole('button', { name: '🔗 既存へ' })).toBeVisible();
+
+    await page.getByRole('button', { name: '↗ 分岐' }).click();
+    await expect(page.locator('.cg-quick-create')).toBeVisible();
+    await expect(page.locator('.cg-create-modes')).toHaveCount(0);
+    await expect(page.locator('.cg-kicker')).toContainText('分岐');
+  } else {
+    await expect(dock).toHaveAttribute('data-layout', 'contextual');
+    const taskBox = await task.boundingBox();
+    const dockBox = await dock.boundingBox();
+    expect(taskBox).not.toBeNull();
+    expect(dockBox).not.toBeNull();
+    if (taskBox === null || dockBox === null) return;
+    expect(dockBox.y).toBeGreaterThanOrEqual(taskBox.y + taskBox.height);
+    expect(dockBox.y - (taskBox.y + taskBox.height)).toBeLessThan(30);
+    expect(Math.abs(dockBox.x - taskBox.x)).toBeLessThan(12);
+  }
+});
