@@ -55,6 +55,17 @@ async function setTaskDate(page: Page, title: string, date: string): Promise<voi
   await expect(page.locator('.cg-task').filter({ hasText: title }).first()).toContainText(date);
 }
 
+async function setDateLanes(page: Page, enabled: boolean): Promise<void> {
+  await openSettings(page);
+  const settings = page.locator('.cg-settings');
+  const toggle = settings.getByLabel('日付レーン');
+  if (enabled) await toggle.check();
+  else await toggle.uncheck();
+  if (enabled) await expect(page.locator('.cg-lane')).not.toHaveCount(0);
+  else await expect(page.locator('.cg-lane')).toHaveCount(0);
+  await settings.getByRole('button', { name: '×' }).click();
+}
+
 test('task importance is editable and presented with text', async ({ page }) => {
   await chooseStorage(page, false);
   await createWorkspace(page, 'Importance workspace');
@@ -170,6 +181,7 @@ test('task editor can delete a linear downstream chain', async ({ page }) => {
 test('responsive board progression follows the platform axis', async ({ page }, testInfo) => {
   await chooseStorage(page, false);
   await createWorkspace(page, 'Responsive layout workspace');
+  await setDateLanes(page, false);
   await addTask(page, 'Axis A');
   await createNextTask(page, 'Axis A', 'Axis B');
   await createNextTask(page, 'Axis B', 'Axis C');
@@ -219,7 +231,14 @@ test('date lanes follow platform direction and desktop lane drops update schedul
     expect(Math.abs(secondBox.y - firstBox.y)).toBeLessThan(8);
 
     const task = page.locator('.cg-task').filter({ hasText: 'Lane A' }).first();
-    await task.dragTo(secondLane, { targetPosition: { x: 80, y: 180 } });
+    const dataTransfer = await page.evaluateHandle(() => new DataTransfer());
+    const clientX = secondBox.x + Math.min(80, secondBox.width / 2);
+    const clientY = secondBox.y + Math.min(180, secondBox.height - 20);
+    await task.dispatchEvent('dragstart', { dataTransfer });
+    await secondLane.dispatchEvent('dragover', { dataTransfer, clientX, clientY });
+    await expect(secondLane).toHaveAttribute('data-drop-active', 'true');
+    await secondLane.dispatchEvent('drop', { dataTransfer, clientX, clientY });
+    await task.dispatchEvent('dragend', { dataTransfer });
     await expect(page.locator('.cg-task').filter({ hasText: 'Lane A' }).first()).toContainText(
       '2026-09-21',
     );
