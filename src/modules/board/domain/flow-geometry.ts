@@ -59,10 +59,7 @@ function compactPoints(points: readonly Point[]): Point[] {
   return compact;
 }
 
-function inflated(
-  obstacle: BoardFlowObstacle,
-  clearance = ROUTE_CLEARANCE,
-): BoardFlowObstacle {
+function inflated(obstacle: BoardFlowObstacle, clearance = ROUTE_CLEARANCE): BoardFlowObstacle {
   return {
     x: obstacle.x - clearance,
     y: obstacle.y - clearance,
@@ -71,11 +68,7 @@ function inflated(
   };
 }
 
-function segmentHitsObstacle(
-  from: Point,
-  to: Point,
-  obstacle: BoardFlowObstacle,
-): boolean {
+function segmentHitsObstacle(from: Point, to: Point, obstacle: BoardFlowObstacle): boolean {
   const left = obstacle.x;
   const right = obstacle.x + obstacle.width;
   const top = obstacle.y;
@@ -96,10 +89,7 @@ function segmentHitsObstacle(
   return true;
 }
 
-function routeIsClear(
-  points: readonly Point[],
-  obstacles: readonly BoardFlowObstacle[],
-): boolean {
+function routeIsClear(points: readonly Point[], obstacles: readonly BoardFlowObstacle[]): boolean {
   for (let index = 1; index < points.length; index += 1) {
     const previous = points[index - 1];
     const current = points[index];
@@ -172,17 +162,11 @@ function horizontalRoute(
   const direction = end.x >= start.x ? 1 : -1;
   const channelOffset = channel * 8;
   const middle = (start.x + end.x) / 2 + direction * channelOffset;
-  const candidates: Point[][] = [
-    [start, { x: middle, y: start.y }, { x: middle, y: end.y }, end],
-  ];
+  const candidates: Point[][] = [[start, { x: middle, y: start.y }, { x: middle, y: end.y }, end]];
 
   const exitX = start.x + direction * (24 + Math.abs(channel) * 3);
   const entryX = end.x - direction * (24 + Math.abs(channel) * 3);
-  const obstacleTop = Math.min(
-    start.y,
-    end.y,
-    ...inflatedObstacles.map((obstacle) => obstacle.y),
-  );
+  const obstacleTop = Math.min(start.y, end.y, ...inflatedObstacles.map((obstacle) => obstacle.y));
   const obstacleBottom = Math.max(
     start.y,
     end.y,
@@ -227,17 +211,11 @@ function verticalRoute(
   const direction = end.y >= start.y ? 1 : -1;
   const channelOffset = channel * 8;
   const middle = (start.y + end.y) / 2 + direction * channelOffset;
-  const candidates: Point[][] = [
-    [start, { x: start.x, y: middle }, { x: end.x, y: middle }, end],
-  ];
+  const candidates: Point[][] = [[start, { x: start.x, y: middle }, { x: end.x, y: middle }, end]];
 
   const exitY = start.y + direction * (24 + Math.abs(channel) * 3);
   const entryY = end.y - direction * (24 + Math.abs(channel) * 3);
-  const obstacleLeft = Math.min(
-    start.x,
-    end.x,
-    ...inflatedObstacles.map((obstacle) => obstacle.x),
-  );
+  const obstacleLeft = Math.min(start.x, end.x, ...inflatedObstacles.map((obstacle) => obstacle.x));
   const obstacleRight = Math.max(
     start.x,
     end.x,
@@ -272,11 +250,7 @@ function verticalRoute(
   return clear[0] ?? null;
 }
 
-function fallbackBezier(
-  start: Point,
-  end: Point,
-  orientation: BoardFlowOrientation,
-): string {
+function fallbackBezier(start: Point, end: Point, orientation: BoardFlowOrientation): string {
   if (orientation === 'vertical') {
     const deltaY = end.y - start.y;
     const direction = deltaY >= 0 ? 1 : -1;
