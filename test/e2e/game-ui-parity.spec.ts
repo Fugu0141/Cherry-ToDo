@@ -410,17 +410,20 @@ test('cross-lane Flow routes around unrelated Task cards', async ({ page }, test
   expect(blockerBox).not.toBeNull();
   if (blockerBox === null) return;
 
-  const samples = await page.locator('.cg-flow').first().evaluate((path) => {
-    const svgPath = path as SVGPathElement;
-    const matrix = svgPath.getScreenCTM();
-    if (matrix === null) return [];
-    const length = svgPath.getTotalLength();
-    return Array.from({ length: 81 }, (_, index) => {
-      const point = svgPath.getPointAtLength((length * index) / 80);
-      const screen = new DOMPoint(point.x, point.y).matrixTransform(matrix);
-      return { x: screen.x, y: screen.y };
+  const samples = await page
+    .locator('.cg-flow')
+    .first()
+    .evaluate((path) => {
+      const svgPath = path as SVGPathElement;
+      const matrix = svgPath.getScreenCTM();
+      if (matrix === null) return [];
+      const length = svgPath.getTotalLength();
+      return Array.from({ length: 81 }, (_, index) => {
+        const point = svgPath.getPointAtLength((length * index) / 80);
+        const screen = new DOMPoint(point.x, point.y).matrixTransform(matrix);
+        return { x: screen.x, y: screen.y };
+      });
     });
-  });
 
   for (const point of samples) {
     const inside =
