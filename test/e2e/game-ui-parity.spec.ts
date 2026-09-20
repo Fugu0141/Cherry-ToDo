@@ -46,6 +46,18 @@ async function createNextTask(page: Page, fromTitle: string, title: string): Pro
   await expect(page.locator('.cg-task').filter({ hasText: title }).first()).toBeVisible();
 }
 
+async function connectExisting(page: Page, fromTitle: string, toTitle: string): Promise<void> {
+  await selectTask(page, fromTitle);
+  let existing = page.getByRole('button', { name: '🔗 既存へ' });
+  if (!(await existing.isVisible())) {
+    await page.getByRole('button', { name: 'その他' }).click();
+    existing = page.getByRole('button', { name: '🔗 既存へ' });
+  }
+  await existing.click();
+  await page.locator('.cg-task').filter({ hasText: toTitle }).first().click();
+  await expect(page.locator('.cg-connect-hint')).toHaveCount(0);
+}
+
 async function setTaskDate(page: Page, title: string, date: string): Promise<void> {
   await page.locator('.cg-task').filter({ hasText: title }).first().dblclick();
   const editor = page.locator('.cg-editor');
