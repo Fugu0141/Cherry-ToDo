@@ -171,14 +171,14 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       const created = after?.tasks.find((task) => !existing.has(task.id));
       if (!created) return;
 
+      pendingRevealTaskId = created.id;
       if (parentTaskId !== null) {
         const connected = await perform(
           context.intents.flow.connect({ fromTaskId: parentTaskId, toTaskId: created.id, kind }),
         );
         if (connected.kind !== 'ok') return;
+        selectedTaskId = created.id;
       }
-      selectedTaskId = created.id;
-      pendingRevealTaskId = created.id;
     };
 
     const closeTransient = (): void => {
