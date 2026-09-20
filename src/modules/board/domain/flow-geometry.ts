@@ -152,7 +152,9 @@ function roundedOrthogonalPath(rawPoints: readonly Point[]): string {
         ? { x: current.x, y: current.y + Math.sign(next.y - current.y) * radius }
         : { x: current.x + Math.sign(next.x - current.x) * radius, y: current.y };
 
-    path += ` L ${round(before.x)} ${round(before.y)} Q ${round(current.x)} ${round(current.y)} ${round(after.x)} ${round(after.y)}`;
+    path += ` L ${round(before.x)} ${round(before.y)} Q ${round(current.x)} ${round(
+      current.y,
+    )} ${round(after.x)} ${round(after.y)}`;
   }
 
   const last = points.at(-1);
@@ -279,13 +281,21 @@ function fallbackBezier(
     const deltaY = end.y - start.y;
     const direction = deltaY >= 0 ? 1 : -1;
     const controlDistance = Math.max(MIN_CONTROL_DISTANCE, Math.abs(deltaY) * 0.45);
-    return `M ${round(start.x)} ${round(start.y)} C ${round(start.x)} ${round(start.y + direction * controlDistance)}, ${round(end.x)} ${round(end.y - direction * controlDistance)}, ${round(end.x)} ${round(end.y)}`;
+    return `M ${round(start.x)} ${round(start.y)} C ${round(start.x)} ${round(
+      start.y + direction * controlDistance,
+    )}, ${round(end.x)} ${round(end.y - direction * controlDistance)}, ${round(end.x)} ${round(
+      end.y,
+    )}`;
   }
 
   const deltaX = end.x - start.x;
   const direction = deltaX >= 0 ? 1 : -1;
   const controlDistance = Math.max(MIN_CONTROL_DISTANCE, Math.abs(deltaX) * 0.45);
-  return `M ${round(start.x)} ${round(start.y)} C ${round(start.x + direction * controlDistance)} ${round(start.y)}, ${round(end.x - direction * controlDistance)} ${round(end.y)}, ${round(end.x)} ${round(end.y)}`;
+  return `M ${round(start.x)} ${round(start.y)} C ${round(
+    start.x + direction * controlDistance,
+  )} ${round(start.y)}, ${round(end.x - direction * controlDistance)} ${round(
+    end.y,
+  )}, ${round(end.x)} ${round(end.y)}`;
 }
 
 export function buildBoardFlowConnectorGeometry(
