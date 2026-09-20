@@ -32,4 +32,23 @@ describe('Board Flow connector geometry', () => {
     expect(geometry.end).toEqual({ x: 100, y: 103 });
     expect(geometry.path).toContain('C 452 103, 388 103, 100 103');
   });
+
+  it('routes around unrelated Task cards instead of drawing through them', () => {
+    const geometry = buildBoardFlowConnectorGeometry(
+      { x: 28, y: 80 },
+      { x: 700, y: 80 },
+      240,
+      126,
+      'horizontal',
+      {
+        obstacles: [{ x: 350, y: 50, width: 240, height: 126 }],
+      },
+    );
+
+    expect(geometry.start).toEqual({ x: 268, y: 143 });
+    expect(geometry.end).toEqual({ x: 700, y: 143 });
+    expect(geometry.path).toContain('Q');
+    expect(geometry.path).not.toContain(' C ');
+    expect(geometry.path).not.toBe('M 268 143 L 700 143');
+  });
 });
