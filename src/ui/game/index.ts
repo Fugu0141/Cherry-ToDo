@@ -466,6 +466,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       svg.style.width = `${canvasWidth}px`;
       svg.style.height = `${canvasHeight}px`;
       svg.setAttribute('aria-hidden', 'true');
+      if (selectedTaskId !== null) svg.dataset.hasSelection = 'true';
       const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
       for (const kind of ['continuation', 'branch', 'reference'] as const) {
         const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
@@ -488,6 +489,12 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         path.setAttribute('d', pathData);
         path.setAttribute('class', `cg-flow cg-flow-${edge.kind}`);
+        if (
+          selectedTaskId !== null &&
+          (edge.fromTaskId === selectedTaskId || edge.toTaskId === selectedTaskId)
+        ) {
+          path.dataset.active = 'true';
+        }
         path.setAttribute('marker-end', `url(#cg-arrow-${edge.kind})`);
         svg.append(path);
       }
