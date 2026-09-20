@@ -432,7 +432,9 @@ test('cross-lane Flow routes around unrelated Task cards', async ({ page }, test
   }
 });
 
-test('newly created downstream Tasks stay visible as the board expands', async ({ page }, testInfo) => {
+test('newly created downstream Tasks stay visible as the board expands', async ({
+  page,
+}, testInfo) => {
   test.skip(testInfo.project.name === 'mobile-chromium', 'Desktop reveal regression.');
 
   await chooseStorage(page, false);
