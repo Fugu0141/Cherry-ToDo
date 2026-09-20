@@ -23,7 +23,9 @@ export {
 export {
   buildBoardFlowConnectorGeometry,
   type BoardFlowConnectorGeometry,
+  type BoardFlowObstacle,
   type BoardFlowOrientation,
+  type BoardFlowRoutingOptions,
 } from './domain/flow-geometry';
 
 export {
