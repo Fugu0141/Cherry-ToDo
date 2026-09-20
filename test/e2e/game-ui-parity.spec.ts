@@ -391,7 +391,6 @@ test('created date and time stay bound to the same task after persistence reload
   await expect(editor.locator('input[type="time"]')).toHaveValue('16:45');
 });
 
-
 test('cross-lane Flow routes around unrelated Task cards', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name === 'mobile-chromium', 'Desktop lane routing regression.');
 
