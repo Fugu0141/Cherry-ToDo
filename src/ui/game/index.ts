@@ -38,24 +38,6 @@ function btn(
   return node;
 }
 
-async function run(
-  context: CherryUIContext,
-  promise: Promise<UIActionResult>,
-): Promise<UIActionResult> {
-  let result = await promise;
-  if (result.kind === 'confirmation-required') {
-    const c = result.confirmation;
-    const accepted = window.confirm(
-      `${context.i18n.t(c.titleKey)}\n\n${context.i18n.t(c.messageKey)}`,
-    );
-    result = accepted
-      ? await context.intents.confirmation.confirm(c.id)
-      : await context.intents.confirmation.cancel(c.id);
-  }
-  if (result.kind === 'error') window.alert(context.i18n.t(result.error.messageKey));
-  return result;
-}
-
 function field(label: string, value = ''): { wrap: HTMLLabelElement; input: HTMLInputElement } {
   const wrap = el('label', 'cg-field');
   const caption = el('span', 'cg-field-label');
@@ -92,6 +74,14 @@ interface ConnectDraft {
   readonly kind: CherryFlowKind;
 }
 
+interface GameConfirmationRequest {
+  readonly title: string;
+  readonly message: string;
+  readonly confirmLabel: string;
+  readonly destructive: boolean;
+  readonly resolve: (accepted: boolean) => void;
+}
+
 export class CherryGameUI implements CherryUIPackage<HTMLElement> {
   mount(root: HTMLElement, context: CherryUIContext): CherryUIHandle {
     let selectedTaskId: string | null = null;
@@ -104,13 +94,52 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
     let tabMenuId: string | null = null;
     let boardCleanup: (() => void) | null = null;
     let lastTabId: string | null = null;
+    let pendingRevealTaskId: string | null = null;
+    let confirmationRequest: GameConfirmationRequest | null = null;
+    let noticeMessage: string | null = null;
+    let noticeTimer: number | null = null;
     const collapsedLaneIds = new Set<string>();
     const coordinator = new InteractionCoordinator();
     const mobileBoardMedia = window.matchMedia('(max-width: 900px)');
     const isMobileBoard = (): boolean => mobileBoardMedia.matches;
 
-    const perform = (promise: Promise<UIActionResult>) => run(context, promise);
     const tr = (ja: string, en: string): string => (context.i18n.locale === 'ja' ? ja : en);
+    const requestConfirmation = (
+      title: string,
+      message: string,
+      destructive = false,
+      confirmLabel = tr('確認', 'Confirm'),
+    ): Promise<boolean> =>
+      new Promise((resolve) => {
+        confirmationRequest = { title, message, confirmLabel, destructive, resolve };
+        render();
+      });
+    const showNotice = (message: string): void => {
+      noticeMessage = message;
+      if (noticeTimer !== null) window.clearTimeout(noticeTimer);
+      noticeTimer = window.setTimeout(() => {
+        noticeMessage = null;
+        noticeTimer = null;
+        render();
+      }, 3200);
+      render();
+    };
+    const perform = async (promise: Promise<UIActionResult>): Promise<UIActionResult> => {
+      let result = await promise;
+      if (result.kind === 'confirmation-required') {
+        const confirmation = result.confirmation;
+        const accepted = await requestConfirmation(
+          context.i18n.t(confirmation.titleKey),
+          context.i18n.t(confirmation.messageKey),
+          confirmation.destructive,
+        );
+        result = accepted
+          ? await context.intents.confirmation.confirm(confirmation.id)
+          : await context.intents.confirmation.cancel(confirmation.id);
+      }
+      if (result.kind === 'error') showNotice(context.i18n.t(result.error.messageKey));
+      return result;
+    };
     const importanceLabel = (value: CherryTaskImportance): string => {
       const labels: Record<CherryTaskImportance, readonly [string, string]> = {
         none: ['なし', 'None'],
@@ -148,7 +177,8 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         );
         if (connected.kind !== 'ok') return;
       }
-      if (parentTaskId !== null) selectedTaskId = created.id;
+      selectedTaskId = created.id;
+      pendingRevealTaskId = created.id;
     };
 
     const closeTransient = (): void => {
@@ -571,6 +601,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         connectExisting: (sourceTaskId, targetTaskId, kind) => {
           connectDraft = null;
           selectedTaskId = targetTaskId;
+          pendingRevealTaskId = targetTaskId;
           void perform(
             context.intents.flow.connect({
               fromTaskId: sourceTaskId,
@@ -605,6 +636,22 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         mobileCleanup();
         drawingCleanup();
       };
+
+      const revealTaskId = pendingRevealTaskId;
+      if (revealTaskId !== null) {
+        pendingRevealTaskId = null;
+        queueMicrotask(() => {
+          const task = canvas.querySelector<HTMLElement>(
+            `.cg-board-task[data-task-id="${CSS.escape(revealTaskId)}"]`,
+          );
+          task?.scrollIntoView({
+            block: 'nearest',
+            inline: 'nearest',
+            behavior: 'smooth',
+          });
+        });
+      }
+
       scroll.append(canvas);
       return scroll;
     };
@@ -867,29 +914,40 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       const danger = btn(
         tr('このタスクのみ削除', 'Delete only'),
         () => {
-          if (!window.confirm(tr('このタスクを削除しますか？', 'Delete this task?'))) return;
-          editingTaskId = null;
-          selectedTaskId = null;
-          void perform(context.intents.task.deleteOnly(task.id));
+          void requestConfirmation(
+            tr('タスクを削除', 'Delete task'),
+            tr(
+              'このタスクだけを削除します。つながりは可能な範囲で保たれます。',
+              'Delete only this task. Cherry will preserve surrounding Flow where possible.',
+            ),
+            true,
+            tr('削除', 'Delete'),
+          ).then((accepted) => {
+            if (!accepted) return;
+            editingTaskId = null;
+            selectedTaskId = null;
+            void perform(context.intents.task.deleteOnly(task.id));
+          });
         },
         'cg-btn cg-danger',
       );
       const deleteDownstream = btn(
         tr('この先も削除', 'Delete downstream'),
         () => {
-          if (
-            !window.confirm(
-              tr(
-                'このタスクと、この先につながるタスクを削除しますか？',
-                'Delete this task and its downstream flow?',
-              ),
-            )
-          ) {
-            return;
-          }
-          editingTaskId = null;
-          selectedTaskId = null;
-          void perform(context.intents.task.deleteDownstream(task.id));
+          void requestConfirmation(
+            tr('この先も削除', 'Delete downstream'),
+            tr(
+              'このタスクと、この先につながるタスクをまとめて削除します。',
+              'Delete this task together with its downstream Flow.',
+            ),
+            true,
+            tr('まとめて削除', 'Delete flow'),
+          ).then((accepted) => {
+            if (!accepted) return;
+            editingTaskId = null;
+            selectedTaskId = null;
+            void perform(context.intents.task.deleteDownstream(task.id));
+          });
         },
         'cg-btn cg-danger',
       );
@@ -938,6 +996,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
               importance: importance.value as CherryTaskImportance,
             }),
           );
+          pendingRevealTaskId = task.id;
           await perform(context.intents.task.setSchedule(task.id, nextSchedule));
         })();
       });
@@ -1139,7 +1198,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         btn(tr('CSVを書き出す', 'Export CSV'), () => {
           void context.intents.interop.exportCsv().then((result) => {
             if (result.kind === 'error') {
-              window.alert(context.i18n.t(result.error.messageKey));
+              showNotice(context.i18n.t(result.error.messageKey));
               return;
             }
             downloadTextFile(result.fileName, result.mimeType, result.content);
@@ -1161,20 +1220,73 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
           btn(
             tr('保存データを削除して停止', 'Clear saved data & stop storage'),
             () => {
-              const accepted = window.confirm(
+              void requestConfirmation(
+                tr('保存データを削除', 'Clear saved data'),
                 tr(
-                  'この端末に保存したCherryデータを削除しますか？',
-                  'Clear saved Cherry data from this device?',
+                  'この端末に保存したCherryデータを削除し、端末保存を停止します。',
+                  'Clear saved Cherry data from this device and stop device storage.',
                 ),
-              );
-              if (!accepted) return;
-              void perform(context.intents.storage.disable(true));
+                true,
+                tr('削除して停止', 'Clear & stop'),
+              ).then((accepted) => {
+                if (!accepted) return;
+                void perform(context.intents.storage.disable(true));
+              });
             },
             'cg-btn cg-danger',
           ),
         );
       }
       return panel;
+    };
+
+    const renderConfirmation = (): HTMLElement | null => {
+      if (confirmationRequest === null) return null;
+      const request = confirmationRequest;
+      const overlay = el('div', 'cg-overlay cg-confirm-overlay');
+      const dialog = el('section', 'cg-dialog cg-confirm');
+      dialog.setAttribute('role', 'dialog');
+      dialog.setAttribute('aria-modal', 'true');
+      dialog.setAttribute('aria-label', request.title);
+
+      const icon = el('div', request.destructive ? 'cg-confirm-icon danger' : 'cg-confirm-icon');
+      icon.textContent = request.destructive ? '!' : '✓';
+      const copy = el('div', 'cg-confirm-copy');
+      const title = el('h2');
+      title.textContent = request.title;
+      const message = el('p');
+      message.textContent = request.message;
+      copy.append(title, message);
+
+      const actions = el('div', 'cg-dialog-actions');
+      const settle = (accepted: boolean): void => {
+        const active = confirmationRequest;
+        confirmationRequest = null;
+        active?.resolve(accepted);
+        render();
+      };
+      actions.append(
+        btn(tr('キャンセル', 'Cancel'), () => settle(false), 'cg-btn cg-quiet'),
+        btn(
+          request.confirmLabel,
+          () => settle(true),
+          request.destructive ? 'cg-btn cg-danger cg-confirm-action' : 'cg-btn cg-primary',
+        ),
+      );
+      dialog.append(icon, copy, actions);
+      overlay.append(dialog);
+      overlay.addEventListener('pointerdown', (event) => {
+        if (event.target === overlay) settle(false);
+      });
+      return overlay;
+    };
+
+    const renderNotice = (): HTMLElement | null => {
+      if (noticeMessage === null) return null;
+      const notice = el('div', 'cg-toast');
+      notice.setAttribute('role', 'status');
+      notice.textContent = noticeMessage;
+      return notice;
     };
 
     const renderWorkspace = (workspace: WorkspaceScreenModel): void => {
@@ -1256,13 +1368,18 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
                 tr('削除', 'Delete'),
                 () => {
                   tabMenuId = null;
-                  if (
-                    !window.confirm(tr(`「${tab.name}」を削除しますか？`, `Delete "${tab.name}"?`))
-                  ) {
-                    render();
-                    return;
-                  }
-                  void perform(context.intents.workspace.deleteTab(tab.id));
+                  void requestConfirmation(
+                    tr('タブを削除', 'Delete tab'),
+                    tr(
+                      `「${tab.name}」を削除します。タブ内のタスクとFlowも削除されます。`,
+                      `Delete "${tab.name}" and the Tasks and Flow inside it.`,
+                    ),
+                    true,
+                    tr('削除', 'Delete'),
+                  ).then((accepted) => {
+                    if (!accepted) return;
+                    void perform(context.intents.workspace.deleteTab(tab.id));
+                  });
                 },
                 'cg-tab-menu-action danger',
               ),
@@ -1368,6 +1485,10 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       if (createDialog) shell.append(createDialog);
       const editor = renderEditor(workspace);
       if (editor) shell.append(editor);
+      const confirmation = renderConfirmation();
+      if (confirmation) shell.append(confirmation);
+      const notice = renderNotice();
+      if (notice) shell.append(notice);
       root.replaceChildren(shell);
     };
 
@@ -1449,6 +1570,13 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         return;
       }
       if (event.key === 'Escape') {
+        if (confirmationRequest !== null) {
+          const active = confirmationRequest;
+          confirmationRequest = null;
+          active.resolve(false);
+          render();
+          return;
+        }
         if (drawingEnabled) {
           drawingEnabled = false;
           render();
@@ -1474,6 +1602,9 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       unmount() {
         boardCleanup?.();
         coordinator.cancel();
+        if (noticeTimer !== null) window.clearTimeout(noticeTimer);
+        confirmationRequest?.resolve(false);
+        confirmationRequest = null;
         document.removeEventListener('keydown', keydown);
         mobileBoardMedia.removeEventListener('change', viewportChanged);
         unsubscribe();
