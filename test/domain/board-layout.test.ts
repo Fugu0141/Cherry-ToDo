@@ -182,4 +182,18 @@ describe('DAG-aware Board layout', () => {
       }
     }
   });
+
+  it('orders same-rank Tasks from their predecessors to reduce edge crossings', () => {
+    const result = layoutBoard(
+      [input(A), input(B), input(C), input(D)],
+      [
+        { fromTaskId: A, toTaskId: C },
+        { fromTaskId: D, toTaskId: B },
+      ],
+      { ...AUTO_LANES, showDateLanes: false },
+    );
+
+    expect(result.tasks[A]?.point.y).toBeLessThan(result.tasks[D]?.point.y ?? 0);
+    expect(result.tasks[C]?.point.y).toBeLessThan(result.tasks[B]?.point.y ?? 0);
+  });
 });
