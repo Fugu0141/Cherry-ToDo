@@ -16,7 +16,7 @@
     "test:e2e": "playwright test",
     "lint": "eslint src test scripts vite.config.ts playwright.config.ts eslint.config.mjs",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\" \"scripts/**/*.mjs\" \"*.{ts,mjs,json,html}\" \".github/workflows/*.yml\" \"docs/v2/DEVELOPMENT_SETUP.md\"",
-    "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\" \"scripts/**/*.mjs\" \"*.{ts,mjs,json,html}\" \".github/workflows/*.yml\" \"docs/v2/DEVELOPMENT_SETUP.md\" || (prettier --write \"src/composition/cherry-ui-runtime.ts\" \"src/modules/board/domain/flow-geometry.ts\" \"test/e2e/game-ui-parity.spec.ts\" && git diff -- src/composition/cherry-ui-runtime.ts src/modules/board/domain/flow-geometry.ts test/e2e/game-ui-parity.spec.ts && exit 1)",
+    "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\" \"scripts/**/*.mjs\" \"*.{ts,mjs,json,html}\" \".github/workflows/*.yml\" \"docs/v2/DEVELOPMENT_SETUP.md\",
     "boundaries": "node scripts/check-boundaries.mjs",
     "metrics": "node scripts/report-build-metrics.mjs",
     "static:verify": "node scripts/verify-static-build.mjs",
