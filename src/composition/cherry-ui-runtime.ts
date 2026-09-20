@@ -962,26 +962,64 @@ export class CherryUIRuntime implements CherryUIContext {
           toTaskId: edge.toTaskId,
         })),
       ),
-      connections: Object.values(tab.flowEdges).map((edge) => {
-        const from = layout.tasks[edge.fromTaskId]?.point;
-        const to = layout.tasks[edge.toTaskId]?.point;
-        const mobileFrom = mobileLayout.tasks[edge.fromTaskId]?.point;
-        const mobileTo = mobileLayout.tasks[edge.toTaskId]?.point;
-        return {
-          id: edge.id,
-          kind: edge.kind,
-          fromTaskId: edge.fromTaskId,
-          toTaskId: edge.toTaskId,
-          path:
-            from === undefined || to === undefined
-              ? null
-              : buildBoardFlowConnectorGeometry(from, to).path,
-          mobilePath:
-            mobileFrom === undefined || mobileTo === undefined
-              ? null
-              : buildBoardFlowConnectorGeometry(mobileFrom, mobileTo, 210, 112, 'vertical').path,
-        };
-      }),
+      connections: (() => {
+        const channelsBySource = new Map<string, number>();
+        return Object.values(tab.flowEdges).map((edge) => {
+          const from = layout.tasks[edge.fromTaskId]?.point;
+          const to = layout.tasks[edge.toTaskId]?.point;
+          const mobileFrom = mobileLayout.tasks[edge.fromTaskId]?.point;
+          const mobileTo = mobileLayout.tasks[edge.toTaskId]?.point;
+          const channel = channelsBySource.get(edge.fromTaskId) ?? 0;
+          channelsBySource.set(edge.fromTaskId, channel + 1);
+          const desktopObstacles = Object.entries(layout.tasks)
+            .filter(
+              ([taskId]) => taskId !== edge.fromTaskId && taskId !== edge.toTaskId,
+            )
+            .map(([, taskLayout]) => ({
+              x: taskLayout.point.x,
+              y: taskLayout.point.y,
+              width: 240,
+              height: 126,
+            }));
+          const mobileObstacles = Object.entries(mobileLayout.tasks)
+            .filter(
+              ([taskId]) => taskId !== edge.fromTaskId && taskId !== edge.toTaskId,
+            )
+            .map(([, taskLayout]) => ({
+              x: taskLayout.point.x,
+              y: taskLayout.point.y,
+              width: 210,
+              height: 112,
+            }));
+          return {
+            id: edge.id,
+            kind: edge.kind,
+            fromTaskId: edge.fromTaskId,
+            toTaskId: edge.toTaskId,
+            path:
+              from === undefined || to === undefined
+                ? null
+                : buildBoardFlowConnectorGeometry(from, to, 240, 126, 'horizontal', {
+                    obstacles: desktopObstacles,
+                    channel,
+                  }).path,
+            mobilePath:
+              mobileFrom === undefined || mobileTo === undefined
+                ? null
+                : buildBoardFlowConnectorGeometry(
+                    mobileFrom,
+                    mobileTo,
+                    210,
+                    112,
+                    'vertical',
+                    {
+                      obstacles: mobileObstacles,
+                      channel,
+                    },
+                  ).path,
+          };
+        });
+      })(),
       canUndo: this.#store.historyState.canUndo,
       canRedo: this.#store.historyState.canRedo,
     };
