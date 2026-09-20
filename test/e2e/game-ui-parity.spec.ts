@@ -121,8 +121,10 @@ test('persistent data can be cleared when device storage is disabled', async ({ 
   await addTask(page, 'Disposable task');
   await openSettings(page);
 
-  page.once('dialog', (dialog) => dialog.accept());
   await page.getByRole('button', { name: '保存データを削除して停止' }).click();
+  const confirm = page.locator('.cg-confirm');
+  await expect(confirm).toContainText('保存データを削除');
+  await confirm.getByRole('button', { name: '削除して停止' }).click();
   await expect(page.getByRole('button', { name: '保存データを削除して停止' })).toHaveCount(0);
   await page.reload();
 
@@ -172,8 +174,10 @@ test('task editor can delete a linear downstream chain', async ({ page }) => {
   await createNextTask(page, 'B', 'C');
 
   await page.locator('.cg-task').filter({ hasText: 'A' }).first().dblclick();
-  page.once('dialog', (dialog) => dialog.accept());
   await page.getByRole('button', { name: 'この先も削除' }).click();
+  const confirm = page.locator('.cg-confirm');
+  await expect(confirm).toContainText('この先も削除');
+  await confirm.getByRole('button', { name: 'まとめて削除' }).click();
 
   await expect(page.locator('.cg-task')).toHaveCount(0);
 });
@@ -385,6 +389,78 @@ test('created date and time stay bound to the same task after persistence reload
   await expect(editor.getByLabel('日付設定')).toHaveValue('datetime');
   await expect(editor.locator('input[type="date"]')).toHaveValue('2026-09-24');
   await expect(editor.locator('input[type="time"]')).toHaveValue('16:45');
+});
+
+
+test('cross-lane Flow routes around unrelated Task cards', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === 'mobile-chromium', 'Desktop lane routing regression.');
+
+  await chooseStorage(page, false);
+  await createWorkspace(page, 'Flow routing workspace');
+  await addTask(page, 'Route A');
+  await addTask(page, 'Blocker');
+  await addTask(page, 'Route C');
+  await setTaskDate(page, 'Route A', '2026-09-20');
+  await setTaskDate(page, 'Blocker', '2026-09-21');
+  await setTaskDate(page, 'Route C', '2026-09-22');
+  await connectExisting(page, 'Route A', 'Route C');
+
+  const blocker = page.locator('.cg-task').filter({ hasText: 'Blocker' }).first();
+  const blockerBox = await blocker.boundingBox();
+  expect(blockerBox).not.toBeNull();
+  if (blockerBox === null) return;
+
+  const samples = await page.locator('.cg-flow').first().evaluate((path) => {
+    const svgPath = path as SVGPathElement;
+    const matrix = svgPath.getScreenCTM();
+    if (matrix === null) return [];
+    const length = svgPath.getTotalLength();
+    return Array.from({ length: 81 }, (_, index) => {
+      const point = svgPath.getPointAtLength((length * index) / 80);
+      const screen = new DOMPoint(point.x, point.y).matrixTransform(matrix);
+      return { x: screen.x, y: screen.y };
+    });
+  });
+
+  for (const point of samples) {
+    const inside =
+      point.x > blockerBox.x + 2 &&
+      point.x < blockerBox.x + blockerBox.width - 2 &&
+      point.y > blockerBox.y + 2 &&
+      point.y < blockerBox.y + blockerBox.height - 2;
+    expect(inside).toBe(false);
+  }
+});
+
+test('newly created downstream Tasks stay visible as the board expands', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === 'mobile-chromium', 'Desktop reveal regression.');
+
+  await chooseStorage(page, false);
+  await createWorkspace(page, 'Auto reveal workspace');
+  await setDateLanes(page, false);
+  await addTask(page, 'Reveal 1');
+  for (let index = 2; index <= 6; index += 1) {
+    await createNextTask(page, `Reveal ${index - 1}`, `Reveal ${index}`);
+  }
+
+  const last = page.locator('.cg-task').filter({ hasText: 'Reveal 6' }).first();
+  await expect(last).toBeInViewport();
+  await expect(last).toHaveAttribute('data-selected', 'true');
+});
+
+test('selecting a Task visually focuses only its connected Flow', async ({ page }) => {
+  await chooseStorage(page, false);
+  await createWorkspace(page, 'Flow focus workspace');
+  await addTask(page, 'Focus A');
+  await createNextTask(page, 'Focus A', 'Focus B');
+  await addTask(page, 'Focus C');
+  await connectExisting(page, 'Focus A', 'Focus C');
+
+  await selectTask(page, 'Focus B');
+  const layer = page.locator('.cg-flow-layer');
+  await expect(layer).toHaveAttribute('data-has-selection', 'true');
+  await expect(layer.locator('.cg-flow[data-active="true"]')).toHaveCount(1);
+  await expect(layer.locator('.cg-flow:not([data-active="true"])')).toHaveCount(1);
 });
 
 test('same-date auto layout keeps Flow on the platform axis and connectors touch cards', async ({
