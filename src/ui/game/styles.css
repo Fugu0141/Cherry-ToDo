@@ -76,7 +76,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .cg-view { min-height: 34px; padding: 6px 10px; background: transparent; font-size: 13px; }
 .cg-view.active { background: #edf0f3; font-weight: 780; }
 
-.cg-board-scroll { overflow: auto; position: relative; min-height: 0; touch-action: none; }
+.cg-board-scroll { overflow: auto; position: relative; min-height: 0; touch-action: none; scroll-padding: 92px 110px; }
 .cg-board {
   position: relative; overflow: hidden; background-color: #f7f8fa; background-image: radial-gradient(#d5d9df 1px, transparent 1px); background-size: 24px 24px; isolation: isolate;
 }
@@ -88,7 +88,9 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .cg-lane[data-orientation='vertical'] .cg-lane-label { top: 10px; left: auto; margin: 10px; }
 
 .cg-flow-layer { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; z-index: 1; }
-.cg-flow { fill: none; stroke: #747b84; stroke-width: 2.3; vector-effect: non-scaling-stroke; }
+.cg-flow { fill: none; stroke: #747b84; stroke-width: 2.3; vector-effect: non-scaling-stroke; stroke-linecap: round; stroke-linejoin: round; transition: opacity 140ms ease, stroke-width 140ms ease; }
+.cg-flow-layer[data-has-selection='true'] .cg-flow { opacity: .18; }
+.cg-flow-layer[data-has-selection='true'] .cg-flow[data-active='true'] { opacity: 1; stroke-width: 3.2; }
 .cg-flow-continuation { stroke: #737a84; }
 .cg-flow-branch { stroke: var(--cg-accent); stroke-width: 2.8; }
 .cg-flow-reference { stroke: #8e959e; stroke-dasharray: 7 7; }
@@ -157,7 +159,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .cg-list-task { margin-bottom: 9px; box-shadow: none; cursor: pointer; }
 .cg-list-task .cg-flow-handle { display: none; }
 
-.cg-overlay { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 20px; background: rgba(25,29,35,.34); backdrop-filter: blur(3px); }
+.cg-overlay { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 20px; background: rgba(25,29,35,.18); backdrop-filter: blur(1px); }
 .cg-dialog { width: min(520px, 100%); max-height: calc(100vh - 40px); overflow: auto; padding: 25px; border-radius: 22px; background: #fff; box-shadow: 0 28px 90px rgba(18,22,29,.25); }
 .cg-dialog h2 { margin: 6px 0 18px; letter-spacing: -.035em; }
 .cg-kicker { color: var(--cg-accent); font-size: 10px; font-weight: 900; letter-spacing: .15em; }
@@ -177,6 +179,17 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .cg-input:focus, .cg-textarea:focus { border-color: var(--cg-accent); box-shadow: 0 0 0 3px rgba(216,51,82,.1); }
 .cg-textarea { min-height: 112px; resize: vertical; }
 .cg-dialog-actions { display: flex; align-items: center; justify-content: flex-end; gap: 7px; margin-top: 20px; }
+
+
+.cg-confirm-overlay { z-index: 120; background: rgba(19,22,28,.32); backdrop-filter: blur(2px); }
+.cg-confirm { width: min(430px, 100%); display: grid; grid-template-columns: auto 1fr; column-gap: 14px; align-items: start; }
+.cg-confirm-icon { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 12px; background: var(--cg-accent-soft); color: var(--cg-accent); font-weight: 900; font-size: 18px; }
+.cg-confirm-icon.danger { background: #fff0f3; color: var(--cg-danger); }
+.cg-confirm-copy h2 { margin: 2px 0 8px; font-size: 20px; }
+.cg-confirm-copy p { margin: 0; color: var(--cg-muted); line-height: 1.65; font-size: 13px; }
+.cg-confirm .cg-dialog-actions { grid-column: 1 / -1; margin-top: 22px; }
+.cg-confirm-action { margin-right: 0 !important; font-weight: 780; }
+.cg-toast { position: fixed; left: 50%; bottom: 26px; z-index: 140; transform: translateX(-50%); max-width: min(520px, calc(100vw - 28px)); padding: 11px 15px; border-radius: 999px; background: rgba(32,33,36,.94); color: #fff; box-shadow: var(--cg-shadow); font-size: 12px; font-weight: 700; text-align: center; pointer-events: none; }
 
 .cg-settings { position: fixed; top: 68px; right: 12px; z-index: 60; width: min(330px, calc(100vw - 24px)); padding: 14px; border: 1px solid var(--cg-border); border-radius: 18px; background: rgba(255,255,255,.98); box-shadow: 0 18px 58px rgba(20,24,30,.18); backdrop-filter: blur(18px); }
 .cg-settings-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
