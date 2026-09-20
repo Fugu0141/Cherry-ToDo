@@ -980,9 +980,7 @@ export class CherryUIRuntime implements CherryUIContext {
               height: 126,
             }));
           const mobileObstacles = Object.entries(mobileLayout.tasks)
-            .filter(
-              ([taskId]) => taskId !== edge.fromTaskId && taskId !== edge.toTaskId,
-            )
+            .filter(([taskId]) => taskId !== edge.fromTaskId && taskId !== edge.toTaskId)
             .map(([, taskLayout]) => ({
               x: taskLayout.point.x,
               y: taskLayout.point.y,
@@ -1004,17 +1002,10 @@ export class CherryUIRuntime implements CherryUIContext {
             mobilePath:
               mobileFrom === undefined || mobileTo === undefined
                 ? null
-                : buildBoardFlowConnectorGeometry(
-                    mobileFrom,
-                    mobileTo,
-                    210,
-                    112,
-                    'vertical',
-                    {
-                      obstacles: mobileObstacles,
-                      channel,
-                    },
-                  ).path,
+                : buildBoardFlowConnectorGeometry(mobileFrom, mobileTo, 210, 112, 'vertical', {
+                    obstacles: mobileObstacles,
+                    channel,
+                  }).path,
           };
         });
       })(),
