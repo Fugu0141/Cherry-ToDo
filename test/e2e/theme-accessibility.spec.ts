@@ -2,8 +2,8 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
 async function enterStart(page: Page): Promise<void> {
-  await page.getByRole('button', { name: '今はしない' }).click();
-  await expect(page.getByLabel('ワークスペース名')).toBeVisible();
+  await page.getByRole('button', { name: '今回は保存しない' }).click();
+  await expect(page.getByRole('button', { name: '＋ 新しいワークスペース' })).toBeVisible();
 }
 
 async function blockingA11yViolations(page: Page) {
@@ -27,12 +27,13 @@ test('explicit light presentation overrides a dark system preference', async ({ 
   await page.emulateMedia({ colorScheme: 'dark' });
   await page.goto('/');
   await page.evaluate(() => {
-    document.documentElement.dataset.cherryTheme = 'light';
+    window.localStorage.setItem('cherry:v2:ui:theme', 'light');
   });
+  await page.reload();
   await enterStart(page);
 
   const background = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
-  expect(background).toBe('rgb(247, 248, 250)');
+  expect(background).toBe('rgb(246, 247, 249)');
   expect(await blockingA11yViolations(page)).toEqual([]);
 });
 
@@ -40,11 +41,35 @@ test('explicit dark presentation works independently of system preference', asyn
   await page.emulateMedia({ colorScheme: 'light' });
   await page.goto('/');
   await page.evaluate(() => {
-    document.documentElement.dataset.cherryTheme = 'dark';
+    window.localStorage.setItem('cherry:v2:ui:theme', 'dark');
   });
+  await page.reload();
   await enterStart(page);
 
   const background = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
   expect(background).toBe('rgb(16, 19, 24)');
+  expect(await blockingA11yViolations(page)).toEqual([]);
+});
+
+test('dark theme remains dark after switching from Board to List', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'light' });
+  await page.goto('/');
+  await page.evaluate(() => {
+    window.localStorage.setItem('cherry:v2:ui:theme', 'dark');
+    window.sessionStorage.setItem('cherry:v2:ui:onboarding-seen', '1');
+  });
+  await page.reload();
+  await enterStart(page);
+
+  page.once('dialog', (dialog) => dialog.accept('Dark list workspace'));
+  await page.getByRole('button', { name: '＋ 新しいワークスペース' }).click();
+  await page.getByRole('button', { name: 'リスト' }).click();
+
+  const list = page.locator('.cg-list');
+  await expect(list).toBeVisible();
+  const listBackground = await list.evaluate((node) => getComputedStyle(node).backgroundColor);
+  const listColor = await list.evaluate((node) => getComputedStyle(node).color);
+  expect(listBackground).toBe('rgb(16, 19, 24)');
+  expect(listColor).toBe('rgb(238, 242, 246)');
   expect(await blockingA11yViolations(page)).toEqual([]);
 });

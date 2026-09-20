@@ -1,3 +1,11 @@
+import {
+  commitPreparedExternalImport,
+  exportTabToCsv,
+  importCsvToTab,
+  importIcsToTab,
+  prepareExternalImportAsNewTab,
+  type ExternalTabImport,
+} from '../adapters/interop/index';
 import { annotationBounds } from '../modules/annotation/index';
 import {
   buildBoardFlowConnectorGeometry,
@@ -34,6 +42,7 @@ import {
   createCherryI18n,
   type CherryFlowKind,
   type CherryLocale,
+  type CreateTaskIntent,
   type CherryMessageKey,
   type CherryScheduleModel,
   type CherryScreenModel,
@@ -43,6 +52,7 @@ import {
   type DropTaskOnBoardIntent,
   type PresentationError,
   type UIActionResult,
+  type UITextExportResult,
   type WorkspaceScreenModel,
 } from '../ui-contract/index';
 import type { BrowserApplicationComposition } from './create-browser-application';
@@ -221,6 +231,9 @@ export class CherryUIRuntime implements CherryUIContext {
         create: (input) => this.#createWorkspace(input.name),
         open: (workspaceId) => this.#openWorkspace(workspaceId),
         createTab: (input) => this.#createTab(input.name),
+        renameTab: (input) => this.#renameTab(input.tabId, input.name),
+        duplicateTab: (tabId) => this.#duplicateTab(tabId),
+        deleteTab: (tabId) => this.#deleteTab(tabId),
         openTab: (tabId) => this.#openTab(tabId),
         goToStart: () => this.#showStart(),
         setView: (view) => this.#setView(view),
@@ -228,15 +241,7 @@ export class CherryUIRuntime implements CherryUIContext {
           this.#runMutation((store, tabId) => store.setBoardSettings(tabId, settings)),
       },
       task: {
-        create: (input) =>
-          this.#runMutation((store, tabId) =>
-            store.createTask(tabId, {
-              id: unwrapId(parseTaskId(randomId('task'))),
-              title: input.title.trim(),
-              notes: input.notes ?? '',
-              importance: input.importance ?? 'none',
-            }),
-          ),
+        create: (input) => this.#createTask(input),
         update: (input) =>
           this.#withTaskId(input.taskId, (taskId) =>
             this.#runMutation((store, tabId) =>
@@ -314,6 +319,11 @@ export class CherryUIRuntime implements CherryUIContext {
           this.#withAnnotationId(annotationId, (parsed) =>
             this.#runMutation((store, tabId) => store.deleteAnnotation(tabId, parsed)),
           ),
+      },
+      interop: {
+        exportCsv: () => this.#exportCsv(),
+        importCsv: (input) => this.#importExternalText('csv', input.source, input.name),
+        importIcs: (input) => this.#importExternalText('ics', input.source, input.name),
       },
       history: {
         undo: () => this.#history('undo'),
@@ -459,6 +469,92 @@ export class CherryUIRuntime implements CherryUIContext {
     return OK;
   }
 
+  async #renameTab(rawId: string, rawName: string): Promise<UIActionResult> {
+    if (this.#store === null) return this.#error('not-found', 'error.notFound');
+    const parsed = parseTabId(rawId);
+    if (!parsed.ok) return this.#error('validation', 'error.validation');
+    const previous = this.#store.workspace;
+    const result = this.#store.renameTab(parsed.value, rawName);
+    if (!result.ok) return { kind: 'error', error: presentationError(result.error) };
+    const saved = await this.#application.persistence.workspaceRepository.save(
+      this.#store.workspace,
+      previous.meta.revision,
+    );
+    if (saved.kind !== 'saved') {
+      this.#store = new ApplicationStore(previous);
+      this.#refreshWorkspace();
+      return this.#error(
+        saved.kind === 'revision-conflict' ? 'conflict' : 'persistence',
+        saved.kind === 'revision-conflict' ? 'error.conflict' : 'error.persistence',
+      );
+    }
+    this.#refreshWorkspace();
+    return OK;
+  }
+
+  async #duplicateTab(rawId: string): Promise<UIActionResult> {
+    if (this.#store === null) return this.#error('not-found', 'error.notFound');
+    const parsed = parseTabId(rawId);
+    if (!parsed.ok) return this.#error('validation', 'error.validation');
+    const previous = this.#store.workspace;
+    const tabId = unwrapId(parseTabId(randomId('tab')));
+    const result = this.#store.duplicateTab(parsed.value, tabId);
+    if (!result.ok) return { kind: 'error', error: presentationError(result.error) };
+    const saved = await this.#application.persistence.workspaceRepository.save(
+      this.#store.workspace,
+      previous.meta.revision,
+    );
+    if (saved.kind !== 'saved') {
+      this.#store = new ApplicationStore(previous);
+      this.#refreshWorkspace();
+      return this.#error(
+        saved.kind === 'revision-conflict' ? 'conflict' : 'persistence',
+        saved.kind === 'revision-conflict' ? 'error.conflict' : 'error.persistence',
+      );
+    }
+    this.#tabId = tabId;
+    await this.#rememberSession();
+    this.#refreshWorkspace();
+    return OK;
+  }
+
+  async #deleteTab(rawId: string): Promise<UIActionResult> {
+    if (this.#store === null) return this.#error('not-found', 'error.notFound');
+    const parsed = parseTabId(rawId);
+    if (!parsed.ok) return this.#error('validation', 'error.validation');
+    const previous = this.#store.workspace;
+    const result = this.#store.deleteTab(parsed.value);
+    if (!result.ok) return { kind: 'error', error: presentationError(result.error) };
+
+    if (this.#store.workspace.tabOrder.length === 0) {
+      await this.#application.persistence.workspaceRepository.delete(this.#store.workspace.id);
+      this.#store = null;
+      this.#tabId = null;
+      return this.#showStart();
+    }
+
+    const saved = await this.#application.persistence.workspaceRepository.save(
+      this.#store.workspace,
+      previous.meta.revision,
+    );
+    if (saved.kind !== 'saved') {
+      this.#store = new ApplicationStore(previous);
+      this.#refreshWorkspace();
+      return this.#error(
+        saved.kind === 'revision-conflict' ? 'conflict' : 'persistence',
+        saved.kind === 'revision-conflict' ? 'error.conflict' : 'error.persistence',
+      );
+    }
+    if (this.#tabId === parsed.value) {
+      const fallback = this.#store.workspace.tabOrder[0];
+      if (fallback === undefined) return this.#error('not-found', 'error.notFound');
+      this.#tabId = fallback;
+      await this.#rememberSession();
+    }
+    this.#refreshWorkspace();
+    return OK;
+  }
+
   async #openTab(rawId: string): Promise<UIActionResult> {
     if (this.#store === null) return this.#error('not-found', 'error.notFound');
     const parsed = parseTabId(rawId);
@@ -480,6 +576,22 @@ export class CherryUIRuntime implements CherryUIContext {
     await this.#rememberSession();
     this.#refreshWorkspace();
     return OK;
+  }
+
+  async #createTask(input: CreateTaskIntent): Promise<UIActionResult> {
+    const schedule =
+      input.schedule === undefined ? noSchedule() : scheduleFromModel(input.schedule);
+    if (schedule === null) return this.#error('validation', 'error.validation');
+
+    return this.#runMutation((store, tabId) =>
+      store.createTask(tabId, {
+        id: unwrapId(parseTaskId(randomId('task'))),
+        title: input.title.trim(),
+        notes: input.notes ?? '',
+        importance: input.importance ?? 'none',
+        schedule,
+      }),
+    );
   }
 
   async #setSchedule(rawTaskId: string, model: CherryScheduleModel): Promise<UIActionResult> {
@@ -585,6 +697,72 @@ export class CherryUIRuntime implements CherryUIContext {
     return OK;
   }
 
+  async #exportCsv(): Promise<UITextExportResult> {
+    await Promise.resolve();
+    if (this.#store === null || this.#tabId === null) {
+      return { kind: 'error', error: { code: 'not-found', messageKey: 'error.notFound' } };
+    }
+    const tab = this.#store.workspace.tabs[this.#tabId];
+    if (tab === undefined) {
+      return { kind: 'error', error: { code: 'not-found', messageKey: 'error.notFound' } };
+    }
+    const stem = tab.name.trim().replace(new RegExp('[\\\\/:*?"<>|]+', 'g'), '_') || 'cherry-tab';
+    return {
+      kind: 'ok',
+      fileName: `${stem}.csv`,
+      mimeType: 'text/csv;charset=utf-8',
+      content: exportTabToCsv(tab),
+    };
+  }
+
+  async #importExternalText(
+    format: 'csv' | 'ics',
+    source: string,
+    rawName: string,
+  ): Promise<UIActionResult> {
+    if (this.#store === null || this.#tabId === null) {
+      return this.#error('not-found', 'error.notFound');
+    }
+    const name = rawName.trim() || (format === 'csv' ? 'CSV import' : 'Calendar import');
+    const parsed = format === 'csv' ? importCsvToTab(source, name) : importIcsToTab(source, name);
+    if (!parsed.ok) {
+      return {
+        kind: 'error',
+        error: { code: 'validation', messageKey: 'error.validation', detail: parsed.error.message },
+      };
+    }
+    const imported: ExternalTabImport = parsed.value;
+    const previous = this.#store.workspace;
+    const prepared = prepareExternalImportAsNewTab(previous, imported);
+    if (!prepared.ok) {
+      return {
+        kind: 'error',
+        error: {
+          code: 'validation',
+          messageKey: 'error.validation',
+          detail: prepared.error.message,
+        },
+      };
+    }
+    const committed = await commitPreparedExternalImport(
+      this.#application.persistence.workspaceRepository,
+      previous,
+      prepared.value,
+    );
+    if (committed.kind !== 'saved') {
+      return this.#error(
+        committed.result.kind === 'revision-conflict' ? 'conflict' : 'persistence',
+        committed.result.kind === 'revision-conflict' ? 'error.conflict' : 'error.persistence',
+      );
+    }
+    this.#store = new ApplicationStore(committed.workspace);
+    this.#tabId = prepared.value.importedTabId;
+    this.#view = 'board';
+    await this.#rememberSession();
+    this.#refreshWorkspace();
+    return OK;
+  }
+
   async #history(direction: 'undo' | 'redo'): Promise<UIActionResult> {
     if (this.#store === null) return this.#error('not-found', 'error.notFound');
     const previous = this.#store.workspace;
@@ -675,20 +853,19 @@ export class CherryUIRuntime implements CherryUIContext {
         (incomingStructuralCounts.get(edge.toTaskId) ?? 0) + 1,
       );
     }
-    const layout = layoutBoard(
-      Object.values(tab.tasks).map((task) => ({
-        id: task.id,
-        scheduleDate: task.schedule.kind === 'none' ? null : task.schedule.date,
-        ...(tab.board.positions[task.id] === undefined
-          ? {}
-          : { manualPosition: tab.board.positions[task.id] }),
-      })),
-      structuralEdges.map((edge) => ({
-        fromTaskId: edge.fromTaskId,
-        toTaskId: edge.toTaskId,
-      })),
-      tab.board.settings,
-    );
+    const layoutTasks = Object.values(tab.tasks).map((task) => ({
+      id: task.id,
+      scheduleDate: task.schedule.kind === 'none' ? null : task.schedule.date,
+      ...(tab.board.positions[task.id] === undefined
+        ? {}
+        : { manualPosition: tab.board.positions[task.id] }),
+    }));
+    const layoutEdges = structuralEdges.map((edge) => ({
+      fromTaskId: edge.fromTaskId,
+      toTaskId: edge.toTaskId,
+    }));
+    const layout = layoutBoard(layoutTasks, layoutEdges, tab.board.settings, 'horizontal');
+    const mobileLayout = layoutBoard(layoutTasks, layoutEdges, tab.board.settings, 'vertical');
 
     const annotationExtents = Object.values(tab.annotations).map((annotation) => {
       if (annotation.kind === 'text') {
@@ -720,11 +897,25 @@ export class CherryUIRuntime implements CherryUIContext {
           kind: lane.kind,
           date: lane.date,
           taskIds: lane.taskIds,
+          ...(lane.startX === undefined ? {} : { startX: lane.startX }),
+          ...(lane.width === undefined ? {} : { width: lane.width }),
           startY: lane.startY,
           height: lane.height,
         })),
         width: Math.max(layout.width, annotationWidth),
         height: Math.max(layout.height, annotationHeight),
+        mobileLanes: mobileLayout.lanes.map((lane) => ({
+          id: lane.id,
+          kind: lane.kind,
+          date: lane.date,
+          taskIds: lane.taskIds,
+          ...(lane.startX === undefined ? {} : { startX: lane.startX }),
+          ...(lane.width === undefined ? {} : { width: lane.width }),
+          startY: lane.startY,
+          height: lane.height,
+        })),
+        mobileWidth: Math.max(mobileLayout.width, annotationWidth),
+        mobileHeight: Math.max(mobileLayout.height, annotationHeight),
       },
       tasks: Object.values(tab.tasks).map((task) => {
         const state = execution.value[task.id];
@@ -744,6 +935,7 @@ export class CherryUIRuntime implements CherryUIContext {
           blocked,
           blockedReasonKey: blocked ? 'task.blockedByMerge' : null,
           position: layout.tasks[task.id]?.point ?? null,
+          mobilePosition: mobileLayout.tasks[task.id]?.point ?? null,
         };
       }),
       annotations: Object.values(tab.annotations).map((annotation) =>
@@ -770,20 +962,53 @@ export class CherryUIRuntime implements CherryUIContext {
           toTaskId: edge.toTaskId,
         })),
       ),
-      connections: Object.values(tab.flowEdges).map((edge) => {
-        const from = layout.tasks[edge.fromTaskId]?.point;
-        const to = layout.tasks[edge.toTaskId]?.point;
-        return {
-          id: edge.id,
-          kind: edge.kind,
-          fromTaskId: edge.fromTaskId,
-          toTaskId: edge.toTaskId,
-          path:
-            from === undefined || to === undefined
-              ? null
-              : buildBoardFlowConnectorGeometry(from, to).path,
-        };
-      }),
+      connections: (() => {
+        const channelsBySource = new Map<string, number>();
+        return Object.values(tab.flowEdges).map((edge) => {
+          const from = layout.tasks[edge.fromTaskId]?.point;
+          const to = layout.tasks[edge.toTaskId]?.point;
+          const mobileFrom = mobileLayout.tasks[edge.fromTaskId]?.point;
+          const mobileTo = mobileLayout.tasks[edge.toTaskId]?.point;
+          const channel = channelsBySource.get(edge.fromTaskId) ?? 0;
+          channelsBySource.set(edge.fromTaskId, channel + 1);
+          const desktopObstacles = Object.entries(layout.tasks)
+            .filter(([taskId]) => taskId !== edge.fromTaskId && taskId !== edge.toTaskId)
+            .map(([, taskLayout]) => ({
+              x: taskLayout.point.x,
+              y: taskLayout.point.y,
+              width: 240,
+              height: 126,
+            }));
+          const mobileObstacles = Object.entries(mobileLayout.tasks)
+            .filter(([taskId]) => taskId !== edge.fromTaskId && taskId !== edge.toTaskId)
+            .map(([, taskLayout]) => ({
+              x: taskLayout.point.x,
+              y: taskLayout.point.y,
+              width: 210,
+              height: 112,
+            }));
+          return {
+            id: edge.id,
+            kind: edge.kind,
+            fromTaskId: edge.fromTaskId,
+            toTaskId: edge.toTaskId,
+            path:
+              from === undefined || to === undefined
+                ? null
+                : buildBoardFlowConnectorGeometry(from, to, 240, 126, 'horizontal', {
+                    obstacles: desktopObstacles,
+                    channel,
+                  }).path,
+            mobilePath:
+              mobileFrom === undefined || mobileTo === undefined
+                ? null
+                : buildBoardFlowConnectorGeometry(mobileFrom, mobileTo, 210, 112, 'vertical', {
+                    obstacles: mobileObstacles,
+                    channel,
+                  }).path,
+          };
+        });
+      })(),
       canUndo: this.#store.historyState.canUndo,
       canRedo: this.#store.historyState.canRedo,
     };

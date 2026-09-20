@@ -41,6 +41,22 @@ describe('DAG-aware Board layout', () => {
     expect(result.tasks[B]?.point.x).toBeLessThan(result.tasks[C]?.point.x ?? 0);
   });
 
+  it('supports a vertical progression for mobile presentation', () => {
+    const result = layoutBoard(
+      [input(A), input(B), input(C)],
+      [
+        { fromTaskId: A, toTaskId: B },
+        { fromTaskId: B, toTaskId: C },
+      ],
+      { ...AUTO_LANES, showDateLanes: false },
+      'vertical',
+    );
+
+    expect(result.tasks[A]?.point.y).toBeLessThan(result.tasks[B]?.point.y ?? 0);
+    expect(result.tasks[B]?.point.y).toBeLessThan(result.tasks[C]?.point.y ?? 0);
+    expect(result.tasks[A]?.point.x).toBe(result.tasks[B]?.point.x);
+  });
+
   it('lays out branch-then-merge DAGs without duplicating the merge Task', () => {
     const result = layoutBoard(
       [input(A), input(B), input(C), input(D)],
@@ -72,6 +88,58 @@ describe('DAG-aware Board layout', () => {
     ]);
     expect(result.tasks[C]?.laneId).toBe('date:2026-09-15');
     expect(result.tasks[B]?.laneId).toBe('undated');
+  });
+
+  it('uses vertical date lanes on desktop and horizontal date lanes on mobile', () => {
+    const desktop = layoutBoard(
+      [input(A, '2026-09-15'), input(B, '2026-09-16')],
+      [{ fromTaskId: A, toTaskId: B }],
+      AUTO_LANES,
+      'horizontal',
+    );
+    const mobile = layoutBoard(
+      [input(A, '2026-09-15'), input(B, '2026-09-16')],
+      [{ fromTaskId: A, toTaskId: B }],
+      AUTO_LANES,
+      'vertical',
+    );
+
+    expect(desktop.lanes[0]?.startX).toBeLessThan(desktop.lanes[1]?.startX ?? 0);
+    expect(desktop.lanes[0]?.startY).toBe(desktop.lanes[1]?.startY);
+    expect(desktop.tasks[A]?.point.x).toBeLessThan(desktop.tasks[B]?.point.x ?? 0);
+
+    expect(mobile.lanes[0]?.startY).toBeLessThan(mobile.lanes[1]?.startY ?? 0);
+    expect(mobile.lanes[0]?.startX).toBe(mobile.lanes[1]?.startX);
+    expect(mobile.tasks[A]?.point.y).toBeLessThan(mobile.tasks[B]?.point.y ?? 0);
+  });
+
+  it('preserves the primary Flow axis inside one date lane', () => {
+    const desktop = layoutBoard(
+      [input(A, '2026-09-15'), input(B, '2026-09-15'), input(C, '2026-09-15')],
+      [
+        { fromTaskId: A, toTaskId: B },
+        { fromTaskId: B, toTaskId: C },
+      ],
+      AUTO_LANES,
+      'horizontal',
+    );
+    const mobile = layoutBoard(
+      [input(A, '2026-09-15'), input(B, '2026-09-15'), input(C, '2026-09-15')],
+      [
+        { fromTaskId: A, toTaskId: B },
+        { fromTaskId: B, toTaskId: C },
+      ],
+      AUTO_LANES,
+      'vertical',
+    );
+
+    expect(desktop.tasks[A]?.point.x).toBeLessThan(desktop.tasks[B]?.point.x ?? 0);
+    expect(desktop.tasks[B]?.point.x).toBeLessThan(desktop.tasks[C]?.point.x ?? 0);
+    expect(desktop.tasks[A]?.point.y).toBe(desktop.tasks[B]?.point.y);
+
+    expect(mobile.tasks[A]?.point.y).toBeLessThan(mobile.tasks[B]?.point.y ?? 0);
+    expect(mobile.tasks[B]?.point.y).toBeLessThan(mobile.tasks[C]?.point.y ?? 0);
+    expect(mobile.tasks[A]?.point.x).toBe(mobile.tasks[B]?.point.x);
   });
 
   it('keeps manual positions authoritative when auto layout is off', () => {
@@ -113,5 +181,19 @@ describe('DAG-aware Board layout', () => {
         expect(Object.keys(result.tasks)).toHaveLength(3);
       }
     }
+  });
+
+  it('orders same-rank Tasks from their predecessors to reduce edge crossings', () => {
+    const result = layoutBoard(
+      [input(A), input(B), input(C), input(D)],
+      [
+        { fromTaskId: A, toTaskId: C },
+        { fromTaskId: D, toTaskId: B },
+      ],
+      { ...AUTO_LANES, showDateLanes: false },
+    );
+
+    expect(result.tasks[A]?.point.y).toBeLessThan(result.tasks[D]?.point.y ?? 0);
+    expect(result.tasks[C]?.point.y).toBeLessThan(result.tasks[B]?.point.y ?? 0);
   });
 });

@@ -20,6 +20,9 @@ function intents(): CherryUIIntents {
       create: ok,
       open: ok,
       createTab: ok,
+      renameTab: ok,
+      duplicateTab: ok,
+      deleteTab: ok,
       openTab: ok,
       goToStart: ok,
       setView: ok,
@@ -41,6 +44,12 @@ function intents(): CherryUIIntents {
       updateText: ok,
       updateStroke: ok,
       delete: ok,
+    },
+    interop: {
+      exportCsv: () =>
+        Promise.resolve({ kind: 'ok', fileName: 'plan.csv', mimeType: 'text/csv', content: '' }),
+      importCsv: ok,
+      importIcs: ok,
     },
     history: { undo: ok, redo: ok },
     confirmation: { confirm: ok, cancel: ok },
