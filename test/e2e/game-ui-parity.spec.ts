@@ -471,7 +471,8 @@ test('selecting a Task visually focuses only its connected Flow', async ({ page 
   await createNextTask(page, 'Focus A', 'Focus B');
   await page.keyboard.press('Escape');
   await addTask(page, 'Focus C');
-  await connectExisting(page, 'Focus A', 'Focus C');
+  await addTask(page, 'Focus D');
+  await connectExisting(page, 'Focus C', 'Focus D');
 
   await selectTask(page, 'Focus B');
   const layer = page.locator('.cg-flow-layer');
