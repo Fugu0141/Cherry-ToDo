@@ -469,6 +469,7 @@ test('selecting a Task visually focuses only its connected Flow', async ({ page 
   await createWorkspace(page, 'Flow focus workspace');
   await addTask(page, 'Focus A');
   await createNextTask(page, 'Focus A', 'Focus B');
+  await page.keyboard.press('Escape');
   await addTask(page, 'Focus C');
   await connectExisting(page, 'Focus A', 'Focus C');
 
