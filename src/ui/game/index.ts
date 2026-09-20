@@ -647,16 +647,33 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
       const revealTaskId = pendingRevealTaskId;
       if (revealTaskId !== null) {
         pendingRevealTaskId = null;
-        queueMicrotask(() => {
-          const task = canvas.querySelector<HTMLElement>(
-            `.cg-board-task[data-task-id="${CSS.escape(revealTaskId)}"]`,
-          );
-          task?.scrollIntoView({
-            block: 'nearest',
-            inline: 'nearest',
-            behavior: 'smooth',
+        const revealTask = presentedWorkspace.tasks.find((task) => task.id === revealTaskId);
+        const revealPosition = revealTask?.position ?? null;
+        if (revealPosition !== null) {
+          window.requestAnimationFrame(() => {
+            const cardWidth = mobile ? 210 : 240;
+            const cardHeight = mobile ? 112 : 126;
+            const viewportWidth = scroll.clientWidth;
+            const viewportHeight = scroll.clientHeight;
+            const maxLeft = Math.max(0, canvasWidth - viewportWidth);
+            const maxTop = Math.max(0, canvasHeight - viewportHeight);
+            const left = Math.min(
+              maxLeft,
+              Math.max(0, revealPosition.x + cardWidth / 2 - viewportWidth / 2),
+            );
+            const top = Math.min(
+              maxTop,
+              Math.max(0, revealPosition.y + cardHeight / 2 - viewportHeight / 2),
+            );
+            scroll.scrollTo({
+              left,
+              top,
+              behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+                ? 'auto'
+                : 'smooth',
+            });
           });
-        });
+        }
       }
 
       scroll.append(canvas);
