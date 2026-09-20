@@ -972,9 +972,7 @@ export class CherryUIRuntime implements CherryUIContext {
           const channel = channelsBySource.get(edge.fromTaskId) ?? 0;
           channelsBySource.set(edge.fromTaskId, channel + 1);
           const desktopObstacles = Object.entries(layout.tasks)
-            .filter(
-              ([taskId]) => taskId !== edge.fromTaskId && taskId !== edge.toTaskId,
-            )
+            .filter(([taskId]) => taskId !== edge.fromTaskId && taskId !== edge.toTaskId)
             .map(([, taskLayout]) => ({
               x: taskLayout.point.x,
               y: taskLayout.point.y,
