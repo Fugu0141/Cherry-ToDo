@@ -170,9 +170,7 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
         context.intents.task.create({
           title,
           schedule,
-          ...(atomicStructuralCreate
-            ? { parentTaskId, connectionKind: kind }
-            : {}),
+          ...(atomicStructuralCreate ? { parentTaskId, connectionKind: kind } : {}),
         }),
       );
       if (result.kind !== 'ok') return;

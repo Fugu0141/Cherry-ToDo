@@ -51,7 +51,10 @@ function task(
   };
 }
 
-function fixture(tasks: readonly Task[], edges: WorkspaceDocument['tabs'][string]['flowEdges'] = {}) {
+function fixture(
+  tasks: readonly Task[],
+  edges: WorkspaceDocument['tabs'][string]['flowEdges'] = {},
+) {
   const tabId: TabId = unwrap(parseTabId('plan'));
   const workspace: WorkspaceDocument = {
     schemaVersion: CHERRY_V2_SCHEMA_VERSION,
@@ -119,19 +122,16 @@ describe('issue #285 atomic connected task creation', () => {
 
   it('does not leave an orphan when a dated Task already has a continuation', () => {
     const dated = unwrap(scheduleOnDate('2026-09-29'));
-    const { workspace, tabId } = fixture(
-      [task('dated', 'todo', dated), task('existing')],
-      {
-        existing: {
-          id: edgeId('existing'),
-          kind: 'continuation',
-          fromTaskId: taskId('dated'),
-          toTaskId: taskId('existing'),
-          order: 0,
-          meta,
-        },
+    const { workspace, tabId } = fixture([task('dated', 'todo', dated), task('existing')], {
+      existing: {
+        id: edgeId('existing'),
+        kind: 'continuation',
+        fromTaskId: taskId('dated'),
+        toTaskId: taskId('existing'),
+        order: 0,
+        meta,
       },
-    );
+    });
     const store = new ApplicationStore(workspace, () => NOW);
 
     const result = store.createConnectedTask({
@@ -157,19 +157,16 @@ describe('issue #285 atomic connected task creation', () => {
   });
 
   it('allows a branch to be created atomically when a continuation already exists', () => {
-    const { workspace, tabId } = fixture(
-      [task('A'), task('B')],
-      {
-        'A-B': {
-          id: edgeId('A-B'),
-          kind: 'continuation',
-          fromTaskId: taskId('A'),
-          toTaskId: taskId('B'),
-          order: 0,
-          meta,
-        },
+    const { workspace, tabId } = fixture([task('A'), task('B')], {
+      'A-B': {
+        id: edgeId('A-B'),
+        kind: 'continuation',
+        fromTaskId: taskId('A'),
+        toTaskId: taskId('B'),
+        order: 0,
+        meta,
       },
-    );
+    });
     const store = new ApplicationStore(workspace, () => NOW);
 
     const result = store.createConnectedTask({
@@ -191,19 +188,16 @@ describe('issue #285 atomic connected task creation', () => {
   });
 
   it('keeps both Task and edge pending until a semantic confirmation is accepted', () => {
-    const { workspace, tabId } = fixture(
-      [task('A', 'done'), task('B', 'done')],
-      {
-        'A-B': {
-          id: edgeId('A-B'),
-          kind: 'continuation',
-          fromTaskId: taskId('A'),
-          toTaskId: taskId('B'),
-          order: 0,
-          meta,
-        },
+    const { workspace, tabId } = fixture([task('A', 'done'), task('B', 'done')], {
+      'A-B': {
+        id: edgeId('A-B'),
+        kind: 'continuation',
+        fromTaskId: taskId('A'),
+        toTaskId: taskId('B'),
+        order: 0,
+        meta,
       },
-    );
+    });
     const store = new ApplicationStore(workspace, () => NOW);
 
     const result = store.createConnectedTask({

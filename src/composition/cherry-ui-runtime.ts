@@ -591,13 +591,15 @@ export class CherryUIRuntime implements CherryUIContext {
       schedule,
     };
 
-    if (input.parentTaskId === undefined && input.connectionKind === undefined) {
+    const parentTaskIdRaw = input.parentTaskId;
+    const connectionKind = input.connectionKind;
+    if (parentTaskIdRaw === undefined && connectionKind === undefined) {
       return this.#runMutation((store, tabId) => store.createTask(tabId, task));
     }
-    if (input.parentTaskId === undefined || input.connectionKind === undefined) {
+    if (parentTaskIdRaw === undefined || connectionKind === undefined) {
       return this.#error('validation', 'error.validation');
     }
-    const parentTaskId = parseTaskId(input.parentTaskId);
+    const parentTaskId = parseTaskId(parentTaskIdRaw);
     if (!parentTaskId.ok) return this.#error('validation', 'error.validation');
 
     return this.#runMutation((store, tabId) =>
@@ -605,7 +607,7 @@ export class CherryUIRuntime implements CherryUIContext {
         tabId,
         task,
         edgeId: unwrapId(parseFlowEdgeId(randomId('edge'))),
-        kind: input.connectionKind,
+        kind: connectionKind,
         fromTaskId: parentTaskId.value,
       }),
     );
