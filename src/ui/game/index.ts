@@ -165,21 +165,26 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
     ): Promise<void> => {
       const before = currentWorkspace();
       const existing = new Set(before?.tasks.map((task) => task.id) ?? []);
-      const result = await perform(context.intents.task.create({ title, schedule }));
+      const atomicStructuralCreate = parentTaskId !== null && kind !== 'reference';
+      const result = await perform(
+        context.intents.task.create({
+          title,
+          schedule,
+          ...(atomicStructuralCreate ? { parentTaskId, connectionKind: kind } : {}),
+        }),
+      );
       if (result.kind !== 'ok') return;
       const after = currentWorkspace();
       const created = after?.tasks.find((task) => !existing.has(task.id));
       if (!created) return;
 
-      if (parentTaskId !== null) {
+      if (parentTaskId !== null && kind === 'reference') {
         const connected = await perform(
           context.intents.flow.connect({ fromTaskId: parentTaskId, toTaskId: created.id, kind }),
         );
         if (connected.kind !== 'ok') return;
-        selectedTaskId = created.id;
-        pendingRevealTaskId = created.id;
-        return;
       }
+      if (parentTaskId !== null) selectedTaskId = created.id;
       pendingRevealTaskId = created.id;
     };
 
@@ -320,7 +325,12 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
           return;
         }
         selectedTaskId = task.id;
-        createDraft = { parentTaskId: task.id, kind: 'continuation' };
+        const kind: CherryFlowKind = currentWorkspace()?.connections.some(
+          (edge) => edge.fromTaskId === task.id && edge.kind !== 'reference',
+        )
+          ? 'branch'
+          : 'continuation';
+        createDraft = { parentTaskId: task.id, kind };
         render();
       });
       card.append(handle);

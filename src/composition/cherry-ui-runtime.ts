@@ -583,13 +583,32 @@ export class CherryUIRuntime implements CherryUIContext {
       input.schedule === undefined ? noSchedule() : scheduleFromModel(input.schedule);
     if (schedule === null) return this.#error('validation', 'error.validation');
 
+    const task = {
+      id: unwrapId(parseTaskId(randomId('task'))),
+      title: input.title.trim(),
+      notes: input.notes ?? '',
+      importance: input.importance ?? 'none',
+      schedule,
+    };
+
+    const parentTaskIdRaw = input.parentTaskId;
+    const connectionKind = input.connectionKind;
+    if (parentTaskIdRaw === undefined && connectionKind === undefined) {
+      return this.#runMutation((store, tabId) => store.createTask(tabId, task));
+    }
+    if (parentTaskIdRaw === undefined || connectionKind === undefined) {
+      return this.#error('validation', 'error.validation');
+    }
+    const parentTaskId = parseTaskId(parentTaskIdRaw);
+    if (!parentTaskId.ok) return this.#error('validation', 'error.validation');
+
     return this.#runMutation((store, tabId) =>
-      store.createTask(tabId, {
-        id: unwrapId(parseTaskId(randomId('task'))),
-        title: input.title.trim(),
-        notes: input.notes ?? '',
-        importance: input.importance ?? 'none',
-        schedule,
+      store.createConnectedTask({
+        tabId,
+        task,
+        edgeId: unwrapId(parseFlowEdgeId(randomId('edge'))),
+        kind: connectionKind,
+        fromTaskId: parentTaskId.value,
       }),
     );
   }

@@ -199,6 +199,8 @@ export interface CreateTaskIntent {
   readonly notes?: string;
   readonly importance?: CherryTaskImportance;
   readonly schedule?: CherryScheduleModel;
+  readonly parentTaskId?: string;
+  readonly connectionKind?: 'continuation' | 'branch';
 }
 
 export interface UpdateTaskIntent {
