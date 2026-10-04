@@ -1,9 +1,9 @@
 import type { Task } from '../../task/index';
 import type { TaskId } from '../../../shared/ids/index';
 import {
-  incomingStructuralEdges,
   isDerivedBranchingGoal,
-  outgoingStructuralEdges,
+  reachableStructuralTaskIds,
+  uniqueIncomingStructuralTaskIds,
   type FlowGraph,
 } from './flow';
 
@@ -45,28 +45,7 @@ export interface TaskExecutionReadModel {
 }
 
 function stableTaskIds(ids: Iterable<TaskId>): readonly TaskId[] {
-  return [...ids].sort((left, right) => left.localeCompare(right));
-}
-
-export function reachableStructuralTaskIds(taskId: TaskId, graph: FlowGraph): readonly TaskId[] {
-  const seen = new Set<TaskId>();
-  const queue = outgoingStructuralEdges(taskId, graph).map((edge) => edge.toTaskId);
-
-  while (queue.length > 0) {
-    const current = queue.shift();
-    if (current === undefined || seen.has(current)) {
-      continue;
-    }
-
-    seen.add(current);
-    for (const edge of outgoingStructuralEdges(current, graph)) {
-      if (!seen.has(edge.toTaskId)) {
-        queue.push(edge.toTaskId);
-      }
-    }
-  }
-
-  return stableTaskIds(seen);
+  return [...new Set(ids)].sort((left, right) => left.localeCompare(right));
 }
 
 function effectiveDoneResolver(
@@ -145,14 +124,12 @@ function closedMergeGates(
   const gates: ClosedMergeGate[] = [];
 
   for (const task of Object.values(tasks)) {
-    const incoming = incomingStructuralEdges(task.id, graph);
-    if (incoming.length < 2) {
+    const predecessors = uniqueIncomingStructuralTaskIds(task.id, graph);
+    if (predecessors.length < 2) {
       continue;
     }
 
-    const remaining = incoming
-      .map((edge) => edge.fromTaskId)
-      .filter((taskId) => !effectiveDone(taskId));
+    const remaining = predecessors.filter((taskId) => !effectiveDone(taskId));
 
     if (remaining.length > 0) {
       gates.push({

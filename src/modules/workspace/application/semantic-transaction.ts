@@ -67,44 +67,49 @@ function normalizeStatuses(
   const iterationLimit = Math.max(4, Object.keys(tasks).length * 4);
 
   for (let iteration = 0; iteration < iterationLimit; iteration += 1) {
-    let changed = false;
-    let nextTasks: Record<string, Task> = { ...tasks };
+    const goals = new Map(
+      evaluateDerivedGoalStatuses(tasks, graph).map((evaluation) => [
+        evaluation.taskId,
+        evaluation,
+      ]),
+    );
+    const desiredStatuses = new Map<TaskId, 'todo' | 'done'>();
 
-    for (const goal of evaluateDerivedGoalStatuses(tasks, graph)) {
-      const task = nextTasks[goal.taskId];
-      if (task === undefined) {
+    for (const task of Object.values(tasks)) {
+      const availability = deriveTaskCompletionAvailability(task.id, tasks, graph);
+      const goal = goals.get(task.id);
+
+      if (goal !== undefined) {
+        desiredStatuses.set(
+          task.id,
+          goal.shouldBeDone && availability.kind === 'available' ? 'done' : 'todo',
+        );
         continue;
       }
 
-      const availability = deriveTaskCompletionAvailability(goal.taskId, tasks, graph);
-      const desiredStatus =
-        goal.shouldBeDone && availability.kind === 'available' ? 'done' : 'todo';
-
-      if (task.status !== desiredStatus) {
-        if (task.status === 'done' && desiredStatus === 'todo') {
-          autoReopenedGoalIds.add(task.id);
-        }
-        nextTasks[task.id] = withStatus(task, desiredStatus, updatedAt);
-        changed = true;
+      if (task.status === 'done' && availability.kind === 'blocked-by-merge') {
+        desiredStatuses.set(task.id, 'todo');
       }
     }
 
-    tasks = nextTasks;
-    nextTasks = { ...tasks };
-
+    let changed = false;
+    const nextTasks: Record<string, Task> = { ...tasks };
     for (const task of Object.values(tasks)) {
-      if (task.status !== 'done') {
+      const desiredStatus = desiredStatuses.get(task.id);
+      if (desiredStatus === undefined || desiredStatus === task.status) {
         continue;
       }
 
-      const availability = deriveTaskCompletionAvailability(task.id, tasks, graph);
-      if (availability.kind === 'blocked-by-merge') {
-        nextTasks[task.id] = withStatus(task, 'todo', updatedAt);
-        if (!autoReopenedGoalIds.has(task.id)) {
+      if (task.status === 'done' && desiredStatus === 'todo') {
+        if (goals.has(task.id)) {
+          autoReopenedGoalIds.add(task.id);
+        } else {
           invalidatedCompletedTaskIds.add(task.id);
         }
-        changed = true;
       }
+
+      nextTasks[task.id] = withStatus(task, desiredStatus, updatedAt);
+      changed = true;
     }
 
     tasks = nextTasks;
@@ -117,7 +122,9 @@ function normalizeStatuses(
     }
   }
 
-  throw new Error('Semantic status normalization did not converge for an acyclic Flow graph.');
+  throw new Error(
+    'Semantic status normalization did not converge for an acyclic execution topology.',
+  );
 }
 
 export function prepareSemanticTransaction(input: {
