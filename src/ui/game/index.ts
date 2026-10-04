@@ -325,7 +325,12 @@ export class CherryGameUI implements CherryUIPackage<HTMLElement> {
           return;
         }
         selectedTaskId = task.id;
-        createDraft = { parentTaskId: task.id, kind: 'continuation' };
+        const kind: CherryFlowKind = currentWorkspace()?.connections.some(
+          (edge) => edge.fromTaskId === task.id && edge.kind !== 'reference',
+        )
+          ? 'branch'
+          : 'continuation';
+        createDraft = { parentTaskId: task.id, kind };
         render();
       });
       card.append(handle);
