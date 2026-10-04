@@ -11,6 +11,7 @@ export {
   ApplicationStore,
   type ApplicationError,
   type ConnectFlowInput,
+  type CreateConnectedTaskInput,
   type MutationOutcome,
   type MutationPreview,
   type UpdateAnnotationInput,
