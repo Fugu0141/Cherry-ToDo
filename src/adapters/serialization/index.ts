@@ -1,5 +1,5 @@
 import {
-  validateWorkspaceDocument,
+  validateCanonicalWorkspaceDocument,
   type WorkspaceCodec,
   type WorkspaceDecodeError,
   type WorkspaceDocument,
@@ -48,11 +48,11 @@ export class NativeV2WorkspaceCodec implements WorkspaceCodec {
     }
 
     try {
-      const validated = validateWorkspaceDocument(parsed as WorkspaceDocument);
+      const validated = validateCanonicalWorkspaceDocument(parsed as WorkspaceDocument);
       if (!validated.ok) {
         return err({
           code: 'invalid-workspace',
-          message: 'Workspace JSON does not satisfy Cherry V2 invariants.',
+          message: 'Workspace JSON does not satisfy canonical Cherry V2 invariants.',
           causes: validated.error,
         });
       }

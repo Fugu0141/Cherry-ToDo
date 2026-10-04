@@ -44,6 +44,20 @@ export interface TaskExecutionReadModel {
   };
 }
 
+export type ExecutionStatusNormalizationReason = 'derived-goal' | 'blocked-by-merge';
+
+export interface ExecutionStatusChange {
+  readonly taskId: TaskId;
+  readonly from: 'todo' | 'done';
+  readonly to: 'todo' | 'done';
+  readonly reason: ExecutionStatusNormalizationReason;
+}
+
+export interface ExecutionStatusNormalization {
+  readonly statuses: Readonly<Record<string, 'todo' | 'done'>>;
+  readonly changes: readonly ExecutionStatusChange[];
+}
+
 function stableTaskIds(ids: Iterable<TaskId>): readonly TaskId[] {
   return [...new Set(ids)].sort((left, right) => left.localeCompare(right));
 }
@@ -188,6 +202,84 @@ export function deriveManualCompletionControl(
   }
 
   return { kind: 'available' };
+}
+
+export function normalizeExecutionStatuses(
+  tasks: Readonly<Record<string, Task>>,
+  graph: FlowGraph,
+): ExecutionStatusNormalization {
+  const originalStatuses = new Map(
+    Object.values(tasks).map((task) => [task.id, task.status] as const),
+  );
+  let currentTasks: Readonly<Record<string, Task>> = tasks;
+  const iterationLimit = Math.max(4, Object.keys(tasks).length * 4);
+
+  for (let iteration = 0; iteration < iterationLimit; iteration += 1) {
+    const goals = new Map(
+      evaluateDerivedGoalStatuses(currentTasks, graph).map((evaluation) => [
+        evaluation.taskId,
+        evaluation,
+      ]),
+    );
+    const desiredStatuses = new Map<TaskId, 'todo' | 'done'>();
+
+    for (const task of Object.values(currentTasks)) {
+      const availability = deriveTaskCompletionAvailability(task.id, currentTasks, graph);
+      const goal = goals.get(task.id);
+
+      if (goal !== undefined) {
+        desiredStatuses.set(
+          task.id,
+          goal.shouldBeDone && availability.kind === 'available' ? 'done' : 'todo',
+        );
+        continue;
+      }
+
+      if (task.status === 'done' && availability.kind === 'blocked-by-merge') {
+        desiredStatuses.set(task.id, 'todo');
+      }
+    }
+
+    let changed = false;
+    const nextTasks: Record<string, Task> = { ...currentTasks };
+    for (const task of Object.values(currentTasks)) {
+      const desiredStatus = desiredStatuses.get(task.id);
+      if (desiredStatus === undefined || desiredStatus === task.status) {
+        continue;
+      }
+
+      nextTasks[task.id] = { ...task, status: desiredStatus };
+      changed = true;
+    }
+
+    currentTasks = nextTasks;
+    if (!changed) {
+      const statuses: Record<string, 'todo' | 'done'> = {};
+      const changes: ExecutionStatusChange[] = [];
+      for (const task of Object.values(currentTasks)) {
+        statuses[task.id] = task.status;
+        const originalStatus = originalStatuses.get(task.id);
+        if (originalStatus === undefined || originalStatus === task.status) {
+          continue;
+        }
+        changes.push({
+          taskId: task.id,
+          from: originalStatus,
+          to: task.status,
+          reason: isDerivedBranchingGoal(task.id, graph) ? 'derived-goal' : 'blocked-by-merge',
+        });
+      }
+
+      return {
+        statuses,
+        changes: changes.sort((left, right) => left.taskId.localeCompare(right.taskId)),
+      };
+    }
+  }
+
+  throw new Error(
+    'Semantic status normalization did not converge for an acyclic execution topology.',
+  );
 }
 
 export function buildTaskExecutionReadModels(

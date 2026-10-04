@@ -1,6 +1,6 @@
 import { err, ok, type Result } from '../../../shared/result/index';
 import {
-  validateWorkspaceDocument,
+  validateCanonicalWorkspaceDocument,
   type WorkspaceDocument,
   type WorkspaceValidationError,
 } from '../domain/workspace';
@@ -32,11 +32,11 @@ export function prepareWorkspaceCandidate(
   const decoded = codec.decode(bytes);
   if (!decoded.ok) return err(decoded.error);
 
-  const validated = validateWorkspaceDocument(decoded.value);
+  const validated = validateCanonicalWorkspaceDocument(decoded.value);
   if (!validated.ok) {
     return err({
       code: 'invalid-workspace',
-      message: 'Decoded data failed Cherry V2 workspace invariants.',
+      message: 'Decoded data failed canonical Cherry V2 workspace invariants.',
       causes: validated.error,
     });
   }

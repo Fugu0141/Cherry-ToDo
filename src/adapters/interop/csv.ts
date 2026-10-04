@@ -1,5 +1,9 @@
 import { createEmptyBoardDocumentState } from '../../modules/board/index';
-import { validateFlowGraph, type FlowEdge } from '../../modules/flow/index';
+import {
+  normalizeExecutionStatuses,
+  validateFlowGraph,
+  type FlowEdge,
+} from '../../modules/flow/index';
 import {
   noSchedule,
   scheduleAtDateTime,
@@ -39,7 +43,8 @@ export const CHERRY_CSV_COLUMNS = [
 export type CsvImportError =
   | { readonly code: 'invalid-csv'; readonly row: number; readonly message: string }
   | { readonly code: 'invalid-header'; readonly row: 1; readonly message: string }
-  | { readonly code: 'invalid-relationship'; readonly row: number; readonly message: string };
+  | { readonly code: 'invalid-relationship'; readonly row: number; readonly message: string }
+  | { readonly code: 'invalid-execution-state'; readonly row: 1; readonly message: string };
 
 function encodeCell(value: string): string {
   return /[",\r\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
@@ -317,6 +322,16 @@ export function importCsvToTab(
       message: `CSV Flow graph is invalid: ${flowValidation.error.map((issue) => issue.code).join(', ')}`,
     });
   }
+
+  const normalization = normalizeExecutionStatuses(tasks, flowValidation.value);
+  if (normalization.changes.length > 0) {
+    return err({
+      code: 'invalid-execution-state',
+      row: 1,
+      message: `CSV execution state is not canonical for Task(s): ${normalization.changes.map((change) => change.taskId).join(', ')}.`,
+    });
+  }
+
   const tabId = parseTabId(`csv-${stableHash(source)}`);
   if (!tabId.ok) {
     return err({ code: 'invalid-csv', row: 1, message: 'Could not allocate CSV import tab ID.' });

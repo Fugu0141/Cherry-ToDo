@@ -1,5 +1,6 @@
 export {
   CHERRY_V2_SCHEMA_VERSION,
+  validateCanonicalWorkspaceDocument,
   validateWorkspaceDocument,
   type TabDocument,
   type WorkspaceDocument,

@@ -1,7 +1,6 @@
 import {
   buildTaskExecutionReadModels,
-  deriveTaskCompletionAvailability,
-  evaluateDerivedGoalStatuses,
+  normalizeExecutionStatuses,
   type FlowGraph,
 } from '../../flow/index';
 import type { Task } from '../../task/index';
@@ -60,71 +59,34 @@ function normalizeStatuses(
   readonly autoReopenedGoalIds: readonly TaskId[];
   readonly invalidatedCompletedTaskIds: readonly TaskId[];
 } {
-  let tasks: Readonly<Record<string, Task>> = proposed.tasks;
-  const graph = graphOf(proposed);
-  const autoReopenedGoalIds = new Set<TaskId>();
-  const invalidatedCompletedTaskIds = new Set<TaskId>();
-  const iterationLimit = Math.max(4, Object.keys(tasks).length * 4);
+  const normalized = normalizeExecutionStatuses(proposed.tasks, graphOf(proposed));
+  const tasks: Record<string, Task> = { ...proposed.tasks };
+  const autoReopenedGoalIds: TaskId[] = [];
+  const invalidatedCompletedTaskIds: TaskId[] = [];
 
-  for (let iteration = 0; iteration < iterationLimit; iteration += 1) {
-    const goals = new Map(
-      evaluateDerivedGoalStatuses(tasks, graph).map((evaluation) => [
-        evaluation.taskId,
-        evaluation,
-      ]),
-    );
-    const desiredStatuses = new Map<TaskId, 'todo' | 'done'>();
-
-    for (const task of Object.values(tasks)) {
-      const availability = deriveTaskCompletionAvailability(task.id, tasks, graph);
-      const goal = goals.get(task.id);
-
-      if (goal !== undefined) {
-        desiredStatuses.set(
-          task.id,
-          goal.shouldBeDone && availability.kind === 'available' ? 'done' : 'todo',
-        );
-        continue;
-      }
-
-      if (task.status === 'done' && availability.kind === 'blocked-by-merge') {
-        desiredStatuses.set(task.id, 'todo');
-      }
-    }
-
-    let changed = false;
-    const nextTasks: Record<string, Task> = { ...tasks };
-    for (const task of Object.values(tasks)) {
-      const desiredStatus = desiredStatuses.get(task.id);
-      if (desiredStatus === undefined || desiredStatus === task.status) {
-        continue;
-      }
-
-      if (task.status === 'done' && desiredStatus === 'todo') {
-        if (goals.has(task.id)) {
-          autoReopenedGoalIds.add(task.id);
-        } else {
-          invalidatedCompletedTaskIds.add(task.id);
-        }
-      }
-
-      nextTasks[task.id] = withStatus(task, desiredStatus, updatedAt);
-      changed = true;
-    }
-
-    tasks = nextTasks;
-    if (!changed) {
-      return {
-        tab: { ...proposed, tasks },
-        autoReopenedGoalIds: stable(autoReopenedGoalIds),
-        invalidatedCompletedTaskIds: stable(invalidatedCompletedTaskIds),
-      };
+  for (const task of Object.values(proposed.tasks)) {
+    const status = normalized.statuses[task.id];
+    if (status !== undefined && status !== task.status) {
+      tasks[task.id] = withStatus(task, status, updatedAt);
     }
   }
 
-  throw new Error(
-    'Semantic status normalization did not converge for an acyclic execution topology.',
-  );
+  for (const change of normalized.changes) {
+    if (change.from !== 'done' || change.to !== 'todo') {
+      continue;
+    }
+    if (change.reason === 'derived-goal') {
+      autoReopenedGoalIds.push(change.taskId);
+    } else {
+      invalidatedCompletedTaskIds.push(change.taskId);
+    }
+  }
+
+  return {
+    tab: { ...proposed, tasks },
+    autoReopenedGoalIds: stable(autoReopenedGoalIds),
+    invalidatedCompletedTaskIds: stable(invalidatedCompletedTaskIds),
+  };
 }
 
 export function prepareSemanticTransaction(input: {

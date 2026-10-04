@@ -8,7 +8,13 @@ import {
   type BoardDocumentState,
   type BoardValidationError,
 } from '../../board/index';
-import { validateFlowGraph, type FlowEdge, type FlowInvariantError } from '../../flow/index';
+import {
+  normalizeExecutionStatuses,
+  validateFlowGraph,
+  type ExecutionStatusChange,
+  type FlowEdge,
+  type FlowInvariantError,
+} from '../../flow/index';
 import { validateTask, type Task, type TaskValidationError } from '../../task/index';
 import type { TabId, TaskId, WorkspaceId } from '../../../shared/ids/index';
 import {
@@ -77,6 +83,11 @@ export type WorkspaceValidationError =
       readonly code: 'invalid-annotation';
       readonly path: string;
       readonly cause: AnnotationValidationError;
+    }
+  | {
+      readonly code: 'execution-normalization-required';
+      readonly path: string;
+      readonly changes: readonly ExecutionStatusChange[];
     };
 
 function simpleIssue(
@@ -241,4 +252,27 @@ export function validateWorkspaceDocument(
   }
 
   return errors.length === 0 ? ok(workspace) : err(errors);
+}
+
+export function validateCanonicalWorkspaceDocument(
+  workspace: WorkspaceDocument,
+): Result<WorkspaceDocument, readonly WorkspaceValidationError[]> {
+  const structural = validateWorkspaceDocument(workspace);
+  if (!structural.ok) {
+    return structural;
+  }
+
+  const errors: WorkspaceValidationError[] = [];
+  for (const tab of Object.values(structural.value.tabs)) {
+    const normalization = normalizeExecutionStatuses(tab.tasks, { edges: tab.flowEdges });
+    if (normalization.changes.length > 0) {
+      errors.push({
+        code: 'execution-normalization-required',
+        path: `tabs.${tab.id}.tasks`,
+        changes: normalization.changes,
+      });
+    }
+  }
+
+  return errors.length === 0 ? ok(structural.value) : err(errors);
 }
