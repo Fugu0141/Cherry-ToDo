@@ -29,5 +29,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Expose formatting diff
+        run: |
+          npm run format
+          git diff -- src/ui/game/index.ts test/regression/issue-285-atomic-connected-task.test.ts
+
       - name: Run V2 quality gates
         run: npm run check
