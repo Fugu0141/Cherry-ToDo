@@ -6,6 +6,7 @@ import {
   installCherryLocaleControls,
   readCherryLocalePreference,
 } from './ui/game/locale';
+import { installScheduleEditorInference } from './ui/game/schedule-editor';
 import {
   applyCherryTheme,
   installCherryThemeControls,
@@ -26,6 +27,7 @@ applyCherryLocale(locale);
 applyCherryTheme(readCherryThemePreference());
 
 void bootstrapCherry(root, { ui: new CherryGameUI(), locale }).then(() => {
+  installScheduleEditorInference(root);
   installCherryOnboarding(root, locale);
   installCherryThemeControls(root, locale);
   installCherryLocaleControls(root, locale);
