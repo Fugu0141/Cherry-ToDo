@@ -1,18 +1,80 @@
 # Cherry V2.0 Flow Execution Rules
 
-Status: **Accepted execution semantics for V2.0 — 2026-09-14**  
+Status: **Accepted execution semantics for V2.0 — 2026-10-04**  
 Related: `../adr/0004-structural-dag-merges-and-derived-goals.md`, `../adr/0006-merge-gates-and-invalidation.md`
 
 This document records the execution semantics that sit on top of the structural Flow DAG. These rules are Domain/Application rules; UI packages only visualize them, request operations, and present required confirmations.
+
+## 0. Execution topology must also be acyclic
+
+A valid structural DAG is necessary but is not sufficient for a valid Cherry Flow.
+
+Cherry derives additional completion dependencies from Goal and Merge semantics:
+
+```text
+Derived Goal G completion depends on required structural descendants D
+Merge M completion availability depends on each direct structural predecessor P
+```
+
+Those derived dependencies form an **execution dependency graph**. A structural edit is invalid when that dependency graph contains a cycle, even when the structural Flow graph itself remains a DAG.
+
+Example of an invalid execution topology:
+
+```text
+    → B ─┐
+A ──     ├→ M
+    → C ─┘
+A ───────→ M
+```
+
+`A` is a real branching Goal, so completing `A` requires `M` to complete. `M` is also a Merge whose predecessors include `A`, so making `M` available requires `A` to complete. The structural graph is acyclic, but the completion rules are cyclic, so Cherry rejects the structural mutation.
+
+Reference edges never participate in the execution dependency graph.
+
+### 0.1 One structural relationship per endpoint pair
+
+For a given `fromTaskId -> toTaskId` pair, Cherry permits at most one structural relationship.
+
+Therefore this is invalid:
+
+```text
+A --continuation--> B
+A --branch-------> B
+```
+
+`continuation` and `branch` are presentation/ordering distinctions inside the same structural relationship category; changing the kind does not make a duplicate endpoint pair independent. A reference relationship may still coexist with a structural relationship for the same endpoints because reference edges do not participate in structural execution semantics.
 
 ## 1. Derived branching goals
 
 A separate persisted Goal entity is not required.
 
+Goal cardinality is based on **unique independent structural successor Tasks**, not raw edge count.
+
 ```text
-outgoing structural edges 0 or 1 → ordinary Task
-outgoing structural edges 2+     → derived branching goal
+independent structural successors 0 or 1 → ordinary Task
+independent structural successors 2+     → derived branching goal
 ```
+
+A direct successor is not an independent branch root when it is already reachable from another direct successor.
+
+For example:
+
+```text
+A → B → M
+└──────→ M
+```
+
+`A` has two outgoing structural edges, but `M` is reachable from `B`. The independent branch-root set is therefore only `{B}`, so `A` is not a Derived Goal.
+
+By contrast:
+
+```text
+    → B ─┐
+A ──     ├→ M
+    → C ─┘
+```
+
+`B` and `C` are independent direct successors because neither is reachable from the other. `A` is a Derived Goal.
 
 Root/top-level status alone does not create goal semantics.
 
@@ -40,7 +102,7 @@ Automatic reopening caused by the same user operation belongs to that operation'
 
 ## 2. Structural merge as an execution gate
 
-A Task with two or more incoming structural edges is a **merge target** and therefore an **execution gate**.
+A Task with two or more **unique direct structural predecessor Tasks** is a **merge target** and therefore an **execution gate**.
 
 A merge target cannot be newly marked complete until all of its direct structural predecessor Tasks are complete.
 
@@ -222,6 +284,12 @@ Flow/status operations that may invalidate completion first produce or expose th
 
 The plan MUST be recomputed or revision-checked at commit time so stale UI confirmation cannot apply to a changed graph.
 
+### 4.3 Goal and Merge consequences use one pre-state per evaluation step
+
+Goal auto-completion/reopening and Merge invalidation are derived from the same immutable status snapshot for each normalization step. Cherry does not first mutate Goal statuses and then use those freshly-mutated statuses to make a Merge appear satisfied in the same step.
+
+This prevents a structural edit from becoming self-fulfilling merely because evaluator order happened to run Goal logic before Merge logic.
+
 ## 5. Downstream deletion is chain-limited
 
 Cherry does not interpret “delete downstream Flow” as recursive deletion of an arbitrary DAG subtree.
@@ -230,8 +298,8 @@ The operation removes only the selected Task and the following **single unambigu
 
 Traversal stops **before** a junction Task when either condition becomes true:
 
-- the next Task is a merge point (`incoming structural edge count >= 2`),
-- the next Task is a branch point (`outgoing structural edge count >= 2`).
+- the next Task is a merge point (`unique incoming structural predecessor count >= 2`),
+- the next Task is a branch point (`independent structural successor count >= 2`).
 
 The junction Task itself remains.
 
@@ -274,23 +342,26 @@ The implementation may need to reconnect or promote the preserved junction accor
 
 At minimum add Domain/Application tests for:
 
-1. a 2-way branch becoming a derived goal,
-2. automatic goal completion after all required descendants complete,
-3. auto-completed goal reopening when a required descendant reopens,
-4. manual goal completion not being silently undone by the derived-goal evaluator,
-5. an ordinary one-line Flow not locking later Tasks,
-6. `A done + B todo → C` blocking completion of merge target `C`,
-7. completing `B` unlocking `C` without auto-completing it,
-8. `A/B → C → D` propagating a closed merge gate from `C` to `D`,
-9. resolving the gate unlocking both `C` and `D`,
-10. UI-level bypass attempts still being rejected by the completion command,
-11. reopening a predecessor of completed `C/D` producing an invalidation plan before mutation,
-12. cancelling the invalidation confirmation leaving the graph unchanged,
-13. confirming the invalidation reopening affected completed Tasks transactionally,
-14. connecting a new incomplete predecessor to an already-completed merge target requiring confirmation before rollback,
-15. downstream deletion stopping before a merge junction,
-16. downstream deletion stopping before a branch junction,
-17. Undo restoring the deleted chain and structural edges,
-18. shared descendants never being duplicated by traversal/read models,
-19. reference edges never creating merge locks,
-20. stale confirmation plans being rejected or recomputed after graph revision changes.
+1. a 2-way independent branch becoming a derived goal,
+2. a transitive direct successor not creating a false derived goal,
+3. continuation + branch duplicates for the same endpoints being rejected,
+4. an execution dependency cycle being rejected separately from a structural cycle,
+5. automatic goal completion after all required descendants complete,
+6. auto-completed goal reopening when a required descendant reopens,
+7. an ordinary one-line Flow not locking later Tasks,
+8. `A done + B todo → C` blocking completion of merge target `C`,
+9. completing `B` unlocking `C` without auto-completing it,
+10. `A/B → C → D` propagating a closed merge gate from `C` to `D`,
+11. resolving the gate unlocking both `C` and `D`,
+12. UI-level bypass attempts still being rejected by the completion command,
+13. reopening a predecessor of completed `C/D` producing an invalidation plan before mutation,
+14. cancelling the invalidation confirmation leaving the graph unchanged,
+15. confirming the invalidation reopening affected completed Tasks transactionally,
+16. connecting a new incomplete predecessor to an already-completed merge target requiring confirmation before rollback,
+17. the previous case not auto-completing an ancestor to satisfy the new Merge,
+18. downstream deletion stopping before a merge junction,
+19. downstream deletion stopping before a branch junction,
+20. Undo restoring the deleted chain and structural edges,
+21. shared descendants never being duplicated by traversal/read models,
+22. reference edges never creating merge locks or execution dependencies,
+23. stale confirmation plans being rejected or recomputed after graph revision changes.
