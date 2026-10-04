@@ -116,6 +116,15 @@ export interface ConnectFlowInput {
   readonly order?: number;
 }
 
+export interface CreateConnectedTaskInput {
+  readonly tabId: TabId;
+  readonly task: Omit<CreateTaskInput, 'meta'>;
+  readonly edgeId: FlowEdgeId;
+  readonly kind: StructuralFlowKind;
+  readonly fromTaskId: TaskId;
+  readonly order?: number;
+}
+
 export interface UpdateTaskInput {
   readonly title?: string;
   readonly notes?: string;
@@ -353,6 +362,65 @@ export class ApplicationStore {
         original: tab,
         proposed,
         baseRevision: this.#workspace.meta.revision,
+        updatedAt: now,
+      }),
+    );
+  }
+
+  createConnectedTask(input: CreateConnectedTaskInput): Result<MutationOutcome, ApplicationError> {
+    const tab = this.#workspace.tabs[input.tabId];
+    if (tab === undefined) return err({ code: 'tab-not-found', tabId: input.tabId });
+    if (tab.tasks[input.task.id] !== undefined) {
+      return err({ code: 'task-id-in-use', taskId: input.task.id });
+    }
+    if (tab.tasks[input.fromTaskId] === undefined) {
+      return err({ code: 'task-not-found', taskId: input.fromTaskId });
+    }
+    if (tab.flowEdges[input.edgeId] !== undefined) {
+      return err({ code: 'edge-id-in-use', edgeId: input.edgeId });
+    }
+
+    const now = this.#now();
+    const created = createTask({
+      ...input.task,
+      meta: { createdAt: now, updatedAt: now, revision: 0 },
+    });
+    if (!created.ok) return err({ code: 'task-invalid', cause: created.error });
+
+    const proposedWithTask = withTask(tab, created.value);
+    const existingBranchOrders = Object.values(tab.flowEdges)
+      .filter(
+        (edge): edge is StructuralFlowEdge =>
+          edge.kind === 'branch' && edge.fromTaskId === input.fromTaskId,
+      )
+      .map((edge) => edge.order);
+    const order =
+      input.order ??
+      (input.kind === 'branch' && existingBranchOrders.length > 0
+        ? Math.max(...existingBranchOrders) + 1
+        : 0);
+    const edge: StructuralFlowEdge = {
+      id: input.edgeId,
+      kind: input.kind,
+      fromTaskId: input.fromTaskId,
+      toTaskId: created.value.id,
+      order,
+      meta: { createdAt: now, updatedAt: now, revision: 0 },
+    };
+    const added = addFlowEdge(
+      Object.values(proposedWithTask.tasks).map((task) => task.id),
+      graphOf(proposedWithTask),
+      edge,
+    );
+    if (!added.ok) return err({ code: 'flow-invalid', causes: added.error });
+
+    return this.#applyPrepared(
+      input.tabId,
+      prepareSemanticTransaction({
+        original: tab,
+        proposed: { ...proposedWithTask, flowEdges: added.value.edges },
+        baseRevision: this.#workspace.meta.revision,
+        directChanges: [created.value.id],
         updatedAt: now,
       }),
     );
