@@ -1,5 +1,5 @@
 import {
-  validateWorkspaceDocument,
+  validateCanonicalWorkspaceDocument,
   type TabDocument,
   type WorkspaceDocument,
   type WorkspaceRepository,
@@ -49,7 +49,7 @@ export function prepareExternalImportAsNewTab(
   imported: ExternalTabImport,
   updatedAt: string = new Date().toISOString(),
 ): Result<PreparedExternalImport, ExternalImportPlanError> {
-  const importedValidation = validateWorkspaceDocument({
+  const importedValidation = validateCanonicalWorkspaceDocument({
     schemaVersion: current.schemaVersion,
     id: current.id,
     name: current.name,
@@ -60,7 +60,7 @@ export function prepareExternalImportAsNewTab(
   if (!importedValidation.ok) {
     return err({
       code: 'invalid-import-tab',
-      message: 'Imported tab is not valid Cherry V2 data.',
+      message: 'Imported tab is not canonical Cherry V2 data.',
     });
   }
 
@@ -75,7 +75,7 @@ export function prepareExternalImportAsNewTab(
     tabOrder: [...current.tabOrder, importedTabId],
     meta: { ...current.meta, updatedAt, revision: current.meta.revision + 1 },
   };
-  const validation = validateWorkspaceDocument(workspace);
+  const validation = validateCanonicalWorkspaceDocument(workspace);
   return validation.ok
     ? ok({
         destination: 'new-tab',

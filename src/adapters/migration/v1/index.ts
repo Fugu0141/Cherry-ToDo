@@ -1,5 +1,5 @@
 import { DEFAULT_BOARD_SETTINGS, type BoardDocumentState } from '../../../modules/board/index';
-import { isDerivedBranchingGoal, type FlowEdge, type FlowGraph } from '../../../modules/flow/index';
+import { normalizeExecutionStatuses, type FlowEdge } from '../../../modules/flow/index';
 import {
   noSchedule,
   scheduleAtDateTime,
@@ -9,6 +9,7 @@ import {
 import type { Task, TaskStatus } from '../../../modules/task/index';
 import {
   CHERRY_V2_SCHEMA_VERSION,
+  validateCanonicalWorkspaceDocument,
   validateWorkspaceDocument,
   type TabDocument,
   type WorkspaceDocument,
@@ -43,7 +44,7 @@ export interface V1CompletionNormalization {
   readonly taskId: TaskId;
   readonly from: TaskStatus;
   readonly to: TaskStatus;
-  readonly reason: 'derived-goal-flow-evaluator';
+  readonly reason: 'derived-goal-flow-evaluator' | 'merge-gate-invalidation';
 }
 
 export interface PreparedV1Migration {
@@ -201,62 +202,32 @@ function boardState(
   };
 }
 
-function descendants(taskId: TaskId, graph: FlowGraph): readonly TaskId[] {
-  const outgoing = new Map<TaskId, TaskId[]>();
-  for (const edge of Object.values(graph.edges)) {
-    if (edge.kind === 'reference') continue;
-    const list = outgoing.get(edge.fromTaskId) ?? [];
-    list.push(edge.toTaskId);
-    outgoing.set(edge.fromTaskId, list);
-  }
-  const seen = new Set<TaskId>();
-  const queue = [...(outgoing.get(taskId) ?? [])];
-  while (queue.length > 0) {
-    const current = queue.shift();
-    if (current === undefined || seen.has(current)) continue;
-    seen.add(current);
-    queue.push(...(outgoing.get(current) ?? []));
-  }
-  return [...seen];
-}
-
-function normalizeDerivedGoalStatuses(tab: TabDocument): {
+function normalizeMigratedExecutionStatuses(tab: TabDocument): {
   readonly tab: TabDocument;
   readonly changes: readonly V1CompletionNormalization[];
 } {
-  const graph: FlowGraph = { edges: tab.flowEdges };
-  const memo = new Map<TaskId, TaskStatus>();
-  const expected = (taskId: TaskId): TaskStatus => {
-    const cached = memo.get(taskId);
-    if (cached !== undefined) return cached;
-    const task = tab.tasks[taskId];
-    if (task === undefined) return 'todo';
-    if (!isDerivedBranchingGoal(taskId, graph)) {
-      memo.set(taskId, task.status);
-      return task.status;
-    }
-    const downstream = descendants(taskId, graph);
-    const status: TaskStatus =
-      downstream.length > 0 && downstream.every((id) => expected(id) === 'done') ? 'done' : 'todo';
-    memo.set(taskId, status);
-    return status;
-  };
+  const normalized = normalizeExecutionStatuses(tab.tasks, { edges: tab.flowEdges });
+  const tasks: Record<string, Task> = { ...tab.tasks };
 
-  const changes: V1CompletionNormalization[] = [];
-  const tasks: Record<string, Task> = {};
   for (const task of Object.values(tab.tasks)) {
-    const nextStatus = expected(task.id);
-    if (nextStatus !== task.status && isDerivedBranchingGoal(task.id, graph)) {
-      changes.push({
-        taskId: task.id,
-        from: task.status,
-        to: nextStatus,
-        reason: 'derived-goal-flow-evaluator',
-      });
+    const status = normalized.statuses[task.id];
+    if (status !== undefined && status !== task.status) {
+      tasks[task.id] = { ...task, status };
     }
-    tasks[task.id] = nextStatus === task.status ? task : { ...task, status: nextStatus };
   }
-  return { tab: { ...tab, tasks }, changes };
+
+  return {
+    tab: { ...tab, tasks },
+    changes: normalized.changes.map((change) => ({
+      taskId: change.taskId,
+      from: change.from,
+      to: change.to,
+      reason:
+        change.reason === 'derived-goal'
+          ? 'derived-goal-flow-evaluator'
+          : 'merge-gate-invalidation',
+    })),
+  };
 }
 
 function migrateTab(
@@ -412,7 +383,7 @@ export function prepareV1Migration(
   let parsed: unknown = input;
   if (typeof input === 'string') {
     try {
-      parsed = JSON.parse(input);
+      parsed = JSON.parse(input) as unknown;
     } catch {
       return err({ code: 'invalid-json', message: 'The V1 workspace is not valid JSON.' });
     }
@@ -475,12 +446,12 @@ export function prepareV1Migration(
   const normalizedTabs: Record<string, TabDocument> = {};
   const completionNormalizations: V1CompletionNormalization[] = [];
   for (const tab of Object.values(candidate.tabs)) {
-    const normalized = normalizeDerivedGoalStatuses(tab);
+    const normalized = normalizeMigratedExecutionStatuses(tab);
     normalizedTabs[tab.id] = normalized.tab;
     completionNormalizations.push(...normalized.changes);
   }
   const normalized: WorkspaceDocument = { ...candidate, tabs: normalizedTabs };
-  const normalizedValidation = validateWorkspaceDocument(normalized);
+  const normalizedValidation = validateCanonicalWorkspaceDocument(normalized);
   if (!normalizedValidation.ok) {
     return err({
       code: 'invalid-v2-candidate',
