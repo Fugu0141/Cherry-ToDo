@@ -20,7 +20,7 @@ async function addTask(page: Page, title: string): Promise<void> {
   await dialog.getByRole('button', { name: '作成' }).click();
 }
 
-test('editing a no-date task infers and persists date and time without changing schedule type manually', async ({
+test('editing a no-date task infers and persists date and time without a schedule-type UI', async ({
   page,
 }) => {
   await chooseTemporaryStorage(page);
@@ -31,17 +31,15 @@ test('editing a no-date task infers and persists date and time without changing 
   await task.dblclick();
 
   const editor = page.locator('.cg-editor');
-  const scheduleKind = editor.getByLabel('日付設定');
+  const scheduleKind = editor.locator('select[data-schedule-kind-internal="true"]');
   const date = editor.locator('input[type="date"]');
   const time = editor.locator('input[type="time"]');
 
-  await expect(scheduleKind).toHaveValue('none');
+  await expect(scheduleKind).toHaveCount(1);
+  await expect(scheduleKind).toHaveAttribute('aria-hidden', 'true');
 
   await date.fill('2026-10-05');
-  await expect(scheduleKind).toHaveValue('date');
-
   await time.fill('16:45');
-  await expect(scheduleKind).toHaveValue('datetime');
 
   await editor.getByRole('button', { name: '保存' }).click();
   await expect(task).toContainText('2026-10-05 16:45');
