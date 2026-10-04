@@ -9,7 +9,7 @@ on:
       - v2.0
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   quality:
@@ -17,10 +17,8 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - name: Checkout PR head
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -30,39 +28,6 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-
-      - name: Apply smart + connection fix
-        run: |
-          node <<'NODE'
-          const fs = require('node:fs');
-          const path = 'src/ui/game/index.ts';
-          let source = fs.readFileSync(path, 'utf8');
-          const before = `        selectedTaskId = task.id;
-                  createDraft = { parentTaskId: task.id, kind: 'continuation' };
-                  render();`;
-          const after = `        selectedTaskId = task.id;
-                  const kind: CherryFlowKind = currentWorkspace()?.connections.some(
-                    (edge) => edge.fromTaskId === task.id && edge.kind !== 'reference',
-                  )
-                    ? 'branch'
-                    : 'continuation';
-                  createDraft = { parentTaskId: task.id, kind };
-                  render();`;
-          if (!source.includes(before)) {
-            console.error('Expected flow-handle click block was not found.');
-            process.exit(1);
-          }
-          source = source.replace(before, after);
-          fs.writeFileSync(path, source);
-          NODE
-          npm run format
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/ui/game/index.ts
-          if ! git diff --cached --quiet; then
-            git commit -m "fix(v2): branch smart-add after an existing continuation"
-            git push origin HEAD:${{ github.event.pull_request.head.ref }}
-          fi
 
       - name: Run V2 quality gates
         run: npm run check
