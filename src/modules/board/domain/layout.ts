@@ -346,9 +346,8 @@ function layoutHorizontalDateLanes(
     const contentHeight =
       ranked.maxCrossCount * metrics.cardHeight +
       Math.max(0, ranked.maxCrossCount - 1) * metrics.crossGap;
-    const laneWidth = LANE_PADDING * 2 + contentWidth;
-    const laneHeight = LANE_HEADER_HEIGHT + LANE_PADDING * 2 + contentHeight;
-    maxLaneHeight = Math.max(maxLaneHeight, laneHeight);
+    let laneWidth = LANE_PADDING * 2 + contentWidth;
+    let laneHeight = LANE_HEADER_HEIGHT + LANE_PADDING * 2 + contentHeight;
 
     for (const [localRank, group] of ranked.groups) {
       group.forEach((task, crossIndex) => {
@@ -366,9 +365,18 @@ function layoutHorizontalDateLanes(
           laneId,
           point,
         };
+
+        if (!settings.autoLayout) {
+          laneWidth = Math.max(laneWidth, point.x + metrics.cardWidth + LANE_PADDING - laneStartX);
+          laneHeight = Math.max(
+            laneHeight,
+            point.y + metrics.cardHeight + LANE_PADDING - BOARD_PADDING,
+          );
+        }
       });
     }
 
+    maxLaneHeight = Math.max(maxLaneHeight, laneHeight);
     laneDrafts.push({
       id: laneId,
       kind: laneKind(laneId),
@@ -382,14 +390,29 @@ function layoutHorizontalDateLanes(
     laneStartX += laneWidth + LANE_GAP;
   }
 
-  const width = Math.max(0, laneStartX - LANE_GAP + BOARD_PADDING);
-  const height = BOARD_PADDING * 2 + maxLaneHeight;
+  const baseWidth = Math.max(0, laneStartX - LANE_GAP + BOARD_PADDING);
+  const baseHeight = BOARD_PADDING * 2 + maxLaneHeight;
+  const taskWidth = Math.max(
+    0,
+    ...Object.values(taskLayouts).map(
+      (taskLayout) => taskLayout.point.x + metrics.cardWidth + BOARD_PADDING,
+    ),
+  );
+  const taskHeight = Math.max(
+    0,
+    ...Object.values(taskLayouts).map(
+      (taskLayout) => taskLayout.point.y + metrics.cardHeight + BOARD_PADDING,
+    ),
+  );
 
   return {
     tasks: taskLayouts,
-    lanes: laneDrafts.map((lane) => ({ ...lane, height: maxLaneHeight })),
-    width,
-    height,
+    lanes: laneDrafts.map((lane) => ({
+      ...lane,
+      height: Math.max(lane.height, maxLaneHeight),
+    })),
+    width: Math.max(baseWidth, taskWidth),
+    height: Math.max(baseHeight, taskHeight),
   };
 }
 
@@ -414,9 +437,8 @@ function layoutVerticalDateLanes(
     const contentWidth =
       ranked.maxCrossCount * metrics.cardWidth +
       Math.max(0, ranked.maxCrossCount - 1) * metrics.crossGap;
-    const laneHeight = LANE_HEADER_HEIGHT + LANE_PADDING * 2 + contentHeight;
-    const laneWidth = LANE_PADDING * 2 + contentWidth;
-    maxLaneWidth = Math.max(maxLaneWidth, laneWidth);
+    let laneHeight = LANE_HEADER_HEIGHT + LANE_PADDING * 2 + contentHeight;
+    let laneWidth = LANE_PADDING * 2 + contentWidth;
 
     for (const [localRank, group] of ranked.groups) {
       group.forEach((task, crossIndex) => {
@@ -434,9 +456,21 @@ function layoutVerticalDateLanes(
           laneId,
           point,
         };
+
+        if (!settings.autoLayout) {
+          laneWidth = Math.max(
+            laneWidth,
+            point.x + metrics.cardWidth + LANE_PADDING - BOARD_PADDING,
+          );
+          laneHeight = Math.max(
+            laneHeight,
+            point.y + metrics.cardHeight + LANE_PADDING - laneStartY,
+          );
+        }
       });
     }
 
+    maxLaneWidth = Math.max(maxLaneWidth, laneWidth);
     laneDrafts.push({
       id: laneId,
       kind: laneKind(laneId),
@@ -450,14 +484,29 @@ function layoutVerticalDateLanes(
     laneStartY += laneHeight + LANE_GAP;
   }
 
-  const width = BOARD_PADDING * 2 + maxLaneWidth;
-  const height = Math.max(0, laneStartY - LANE_GAP + BOARD_PADDING);
+  const baseWidth = BOARD_PADDING * 2 + maxLaneWidth;
+  const baseHeight = Math.max(0, laneStartY - LANE_GAP + BOARD_PADDING);
+  const taskWidth = Math.max(
+    0,
+    ...Object.values(taskLayouts).map(
+      (taskLayout) => taskLayout.point.x + metrics.cardWidth + BOARD_PADDING,
+    ),
+  );
+  const taskHeight = Math.max(
+    0,
+    ...Object.values(taskLayouts).map(
+      (taskLayout) => taskLayout.point.y + metrics.cardHeight + BOARD_PADDING,
+    ),
+  );
 
   return {
     tasks: taskLayouts,
-    lanes: laneDrafts.map((lane) => ({ ...lane, width: maxLaneWidth })),
-    width,
-    height,
+    lanes: laneDrafts.map((lane) => ({
+      ...lane,
+      width: Math.max(lane.width ?? 0, maxLaneWidth),
+    })),
+    width: Math.max(baseWidth, taskWidth),
+    height: Math.max(baseHeight, taskHeight),
   };
 }
 
