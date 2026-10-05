@@ -188,10 +188,9 @@ function boardAfterScheduleChange(
     };
   }
 
-  if (
-    scheduleLaneIdentity(previousSchedule) === scheduleLaneIdentity(nextSchedule) ||
-    tab.board.positions[taskId] === undefined
-  ) {
+  const sameLane =
+    scheduleLaneIdentity(previousSchedule) === scheduleLaneIdentity(nextSchedule);
+  if (sameLane || tab.board.positions[taskId] === undefined) {
     return tab.board;
   }
 
