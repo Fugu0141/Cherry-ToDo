@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   BrowserWorkspaceRepository,
+  type BrowserBinaryCompareAndPutResult,
   type BrowserBinaryStore,
 } from '../../src/adapters/persistence/browser/index';
 import { MemoryWorkspaceRepository } from '../../src/adapters/persistence/memory/index';
@@ -103,6 +104,19 @@ class FakeBinaryStore implements BrowserBinaryStore {
     return Promise.resolve();
   }
 
+  compareAndPut(
+    key: string,
+    value: Uint8Array,
+    matchesCurrent: (current: Uint8Array | null) => boolean,
+  ): Promise<BrowserBinaryCompareAndPutResult> {
+    const current = this.#values.get(key)?.slice() ?? null;
+    if (!matchesCurrent(current)) {
+      return Promise.resolve({ kind: 'mismatch' });
+    }
+    this.#values.set(key, value.slice());
+    return Promise.resolve({ kind: 'stored' });
+  }
+
   delete(key: string): Promise<void> {
     this.#values.delete(key);
     return Promise.resolve();
@@ -169,6 +183,51 @@ describe('Phase 4 native V2 data and repositories', () => {
       },
     ]);
     expect(await repository.load(original.id)).toEqual(original);
+  });
+
+  it('allows only one concurrent writer from the same expected revision', async () => {
+    const codec = new NativeV2WorkspaceCodec();
+    const repository = new BrowserWorkspaceRepository(new FakeBinaryStore(), codec);
+    const original = fixture();
+    await repository.save(original);
+
+    const writerA: WorkspaceDocument = {
+      ...original,
+      name: 'Writer A',
+      meta: { ...original.meta, revision: 1 },
+    };
+    const writerB: WorkspaceDocument = {
+      ...original,
+      name: 'Writer B',
+      meta: { ...original.meta, revision: 1 },
+    };
+
+    const results = await Promise.all([repository.save(writerA, 0), repository.save(writerB, 0)]);
+
+    expect(results.filter((result) => result.kind === 'saved')).toHaveLength(1);
+    expect(results.filter((result) => result.kind === 'revision-conflict')).toHaveLength(1);
+    expect(results.find((result) => result.kind === 'revision-conflict')).toEqual({
+      kind: 'revision-conflict',
+      expectedRevision: 0,
+      actualRevision: 1,
+    });
+
+    const loaded = await repository.load(original.id);
+    const winner = results[0]?.kind === 'saved' ? writerA : writerB;
+    expect(loaded).toEqual(winner);
+  });
+
+  it('treats expectedRevision on a missing browser workspace as a conflict', async () => {
+    const codec = new NativeV2WorkspaceCodec();
+    const repository = new BrowserWorkspaceRepository(new FakeBinaryStore(), codec);
+    const original = fixture();
+
+    expect(await repository.save(original, 0)).toEqual({
+      kind: 'revision-conflict',
+      expectedRevision: 0,
+      actualRevision: null,
+    });
+    expect(await repository.load(original.id)).toBeNull();
   });
 
   it('does not overwrite a readable workspace when a native candidate is corrupt', async () => {

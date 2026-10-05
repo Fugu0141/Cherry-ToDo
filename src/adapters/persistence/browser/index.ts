@@ -10,10 +10,18 @@ import {
 } from '../../../modules/workspace/index';
 import { parseWorkspaceId, type WorkspaceId } from '../../../shared/ids/index';
 
+export type BrowserBinaryCompareAndPutResult =
+  { readonly kind: 'stored' } | { readonly kind: 'mismatch' };
+
 export interface BrowserBinaryStore {
   listKeys(): Promise<readonly string[]>;
   get(key: string): Promise<Uint8Array | null>;
   put(key: string, value: Uint8Array): Promise<void>;
+  compareAndPut(
+    key: string,
+    value: Uint8Array,
+    matchesCurrent: (current: Uint8Array | null) => boolean,
+  ): Promise<BrowserBinaryCompareAndPutResult>;
   delete(key: string): Promise<void>;
   clear(): Promise<void>;
 }
@@ -33,6 +41,17 @@ function transactionDone(transaction: IDBTransaction): Promise<void> {
     transaction.onerror = () =>
       reject(transaction.error ?? new Error('IndexedDB transaction failed.'));
   });
+}
+
+function binaryValue(key: string, value: unknown): Uint8Array | null {
+  if (value === undefined) return null;
+  if (value instanceof Uint8Array) return value.slice();
+  if (value instanceof ArrayBuffer) return new Uint8Array(value.slice(0));
+  throw new Error(`IndexedDB workspace value for "${key}" is not binary data.`);
+}
+
+function rejectionError(value: unknown, fallback: string): Error {
+  return value instanceof Error ? value : new Error(fallback);
 }
 
 export class IndexedDbBinaryStore implements BrowserBinaryStore {
@@ -69,11 +88,7 @@ export class IndexedDbBinaryStore implements BrowserBinaryStore {
     const request = transaction.objectStore(this.#storeName).get(key) as IDBRequest<unknown>;
     const value: unknown = await requestResult(request);
     await done;
-
-    if (value === undefined) return null;
-    if (value instanceof Uint8Array) return value.slice();
-    if (value instanceof ArrayBuffer) return new Uint8Array(value.slice(0));
-    throw new Error(`IndexedDB workspace value for "${key}" is not binary data.`);
+    return binaryValue(key, value);
   }
 
   async put(key: string, value: Uint8Array): Promise<void> {
@@ -82,6 +97,56 @@ export class IndexedDbBinaryStore implements BrowserBinaryStore {
     const done = transactionDone(transaction);
     transaction.objectStore(this.#storeName).put(value.slice(), key);
     await done;
+  }
+
+  async compareAndPut(
+    key: string,
+    value: Uint8Array,
+    matchesCurrent: (current: Uint8Array | null) => boolean,
+  ): Promise<BrowserBinaryCompareAndPutResult> {
+    const database = await this.#database();
+
+    return new Promise((resolve, reject) => {
+      const transaction = database.transaction(this.#storeName, 'readwrite');
+      const store = transaction.objectStore(this.#storeName);
+      const request = store.get(key) as IDBRequest<unknown>;
+      let decision: BrowserBinaryCompareAndPutResult | null = null;
+      let failure: unknown = null;
+
+      request.onsuccess = () => {
+        try {
+          const current = binaryValue(key, request.result);
+          if (!matchesCurrent(current)) {
+            decision = { kind: 'mismatch' };
+            return;
+          }
+
+          store.put(value.slice(), key);
+          decision = { kind: 'stored' };
+        } catch (error) {
+          failure = error;
+          transaction.abort();
+        }
+      };
+      request.onerror = () => {
+        failure = request.error ?? new Error('IndexedDB compare-and-put read failed.');
+      };
+      transaction.onerror = () => {
+        failure ??= transaction.error ?? new Error('IndexedDB compare-and-put failed.');
+      };
+      transaction.onabort = () => {
+        reject(rejectionError(failure ?? transaction.error, 'IndexedDB compare-and-put aborted.'));
+      };
+      transaction.oncomplete = () => {
+        if (decision === null) {
+          reject(
+            rejectionError(failure, 'IndexedDB compare-and-put completed without a decision.'),
+          );
+          return;
+        }
+        resolve(decision);
+      };
+    });
   }
 
   async delete(key: string): Promise<void> {
@@ -117,6 +182,24 @@ export class IndexedDbBinaryStore implements BrowserBinaryStore {
   }
 }
 
+function decodeStoredWorkspace(
+  codec: WorkspaceCodec,
+  id: WorkspaceId,
+  bytes: Uint8Array,
+): WorkspaceDocument {
+  const decoded = codec.decode(bytes);
+  if (!decoded.ok) {
+    throw new WorkspaceRepositoryCorruptDataError(id, decoded.error.message);
+  }
+  if (decoded.value.id !== id) {
+    throw new WorkspaceRepositoryCorruptDataError(
+      id,
+      `stored document id is "${decoded.value.id}"`,
+    );
+  }
+  return decoded.value;
+}
+
 export class BrowserWorkspaceRepository implements WorkspaceRepository {
   readonly #store: BrowserBinaryStore;
   readonly #codec: WorkspaceCodec;
@@ -143,19 +226,7 @@ export class BrowserWorkspaceRepository implements WorkspaceRepository {
 
   async load(id: WorkspaceId): Promise<WorkspaceDocument | null> {
     const bytes = await this.#store.get(id);
-    if (bytes === null) return null;
-
-    const decoded = this.#codec.decode(bytes);
-    if (!decoded.ok) {
-      throw new WorkspaceRepositoryCorruptDataError(id, decoded.error.message);
-    }
-    if (decoded.value.id !== id) {
-      throw new WorkspaceRepositoryCorruptDataError(
-        id,
-        `stored document id is "${decoded.value.id}"`,
-      );
-    }
-    return decoded.value;
+    return bytes === null ? null : decodeStoredWorkspace(this.#codec, id, bytes);
   }
 
   async save(document: WorkspaceDocument, expectedRevision?: number): Promise<WorkspaceSaveResult> {
@@ -164,15 +235,27 @@ export class BrowserWorkspaceRepository implements WorkspaceRepository {
       return { kind: 'invalid-document', errors: validated.error };
     }
 
-    if (expectedRevision !== undefined) {
-      const existing = await this.load(document.id);
-      const actualRevision = existing?.meta.revision ?? null;
-      if (actualRevision !== expectedRevision) {
-        return { kind: 'revision-conflict', expectedRevision, actualRevision };
-      }
+    const bytes = this.#codec.encode(validated.value);
+    if (expectedRevision === undefined) {
+      await this.#store.put(document.id, bytes);
+      return { kind: 'saved', revision: document.meta.revision };
     }
 
-    await this.#store.put(document.id, this.#codec.encode(validated.value));
+    let actualRevision: number | null = null;
+    const result = await this.#store.compareAndPut(document.id, bytes, (currentBytes) => {
+      if (currentBytes === null) {
+        actualRevision = null;
+        return false;
+      }
+
+      const current = decodeStoredWorkspace(this.#codec, document.id, currentBytes);
+      actualRevision = current.meta.revision;
+      return actualRevision === expectedRevision;
+    });
+
+    if (result.kind === 'mismatch') {
+      return { kind: 'revision-conflict', expectedRevision, actualRevision };
+    }
     return { kind: 'saved', revision: document.meta.revision };
   }
 
