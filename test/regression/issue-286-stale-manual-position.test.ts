@@ -1,14 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  createEmptyBoardDocumentState,
-  layoutBoard,
-} from '../../src/modules/board/index';
-import {
-  noSchedule,
-  scheduleAtDateTime,
-  scheduleOnDate,
-} from '../../src/modules/schedule/index';
+import { createEmptyBoardDocumentState, layoutBoard } from '../../src/modules/board/index';
+import { noSchedule, scheduleAtDateTime, scheduleOnDate } from '../../src/modules/schedule/index';
 import type { Task } from '../../src/modules/task/index';
 import {
   ApplicationStore,
@@ -27,9 +20,7 @@ import type { RevisionMeta } from '../../src/shared/revision/index';
 const NOW = '2026-10-05T02:00:00.000Z';
 const meta: RevisionMeta = { createdAt: NOW, updatedAt: NOW, revision: 0 };
 
-function unwrap<T>(
-  result: { readonly ok: true; readonly value: T } | { readonly ok: false },
-): T {
+function unwrap<T>(result: { readonly ok: true; readonly value: T } | { readonly ok: false }): T {
   if (!result.ok) throw new Error('Invalid fixture value.');
   return result.value;
 }
@@ -136,9 +127,9 @@ describe('issue #286 stale manual position lifecycle', () => {
     const { workspace, tabId } = fixture(task(initial));
     const store = new ApplicationStore(workspace, () => NOW);
 
-    expect(
-      store.applyBoardDrop(tabId, taskId('A'), { kind: 'assign-date', date: null }).ok,
-    ).toBe(true);
+    expect(store.applyBoardDrop(tabId, taskId('A'), { kind: 'assign-date', date: null }).ok).toBe(
+      true,
+    );
     expect(store.workspace.tabs[tabId]?.tasks.A?.schedule).toEqual(noSchedule());
     expect(store.workspace.tabs[tabId]?.board.positions.A).toBeUndefined();
   });
@@ -155,12 +146,8 @@ describe('issue #286 manual Board geometry', () => {
     );
     const lane = result.lanes[0];
     expect(lane).toBeDefined();
-    expect((lane?.startX ?? 0) + (lane?.width ?? 0)).toBeGreaterThanOrEqual(
-      900 + 240 + 24,
-    );
-    expect((lane?.startY ?? 0) + (lane?.height ?? 0)).toBeGreaterThanOrEqual(
-      520 + 126 + 24,
-    );
+    expect((lane?.startX ?? 0) + (lane?.width ?? 0)).toBeGreaterThanOrEqual(900 + 240 + 24);
+    expect((lane?.startY ?? 0) + (lane?.height ?? 0)).toBeGreaterThanOrEqual(520 + 126 + 24);
     expect(result.width).toBeGreaterThanOrEqual(900 + 240 + 28);
     expect(result.height).toBeGreaterThanOrEqual(520 + 126 + 28);
   });
@@ -175,12 +162,8 @@ describe('issue #286 manual Board geometry', () => {
     );
     const lane = result.lanes[0];
     expect(lane).toBeDefined();
-    expect((lane?.startX ?? 0) + (lane?.width ?? 0)).toBeGreaterThanOrEqual(
-      620 + 210 + 24,
-    );
-    expect((lane?.startY ?? 0) + (lane?.height ?? 0)).toBeGreaterThanOrEqual(
-      980 + 112 + 24,
-    );
+    expect((lane?.startX ?? 0) + (lane?.width ?? 0)).toBeGreaterThanOrEqual(620 + 210 + 24);
+    expect((lane?.startY ?? 0) + (lane?.height ?? 0)).toBeGreaterThanOrEqual(980 + 112 + 24);
     expect(result.width).toBeGreaterThanOrEqual(620 + 210 + 28);
     expect(result.height).toBeGreaterThanOrEqual(980 + 112 + 28);
   });
