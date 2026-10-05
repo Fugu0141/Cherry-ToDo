@@ -170,6 +170,37 @@ function withTask(tab: TabDocument, task: Task): TabDocument {
   return { ...tab, tasks: { ...tab.tasks, [task.id]: task } };
 }
 
+function scheduleLaneIdentity(schedule: Schedule): string {
+  return schedule.kind === 'none' ? 'undated' : `date:${schedule.date}`;
+}
+
+function boardAfterScheduleChange(
+  tab: TabDocument,
+  taskId: TaskId,
+  previousSchedule: Schedule,
+  nextSchedule: Schedule,
+  replacementPoint?: Point,
+): TabDocument['board'] {
+  if (replacementPoint !== undefined) {
+    return {
+      ...tab.board,
+      positions: { ...tab.board.positions, [taskId]: replacementPoint },
+    };
+  }
+
+  if (
+    scheduleLaneIdentity(previousSchedule) === scheduleLaneIdentity(nextSchedule) ||
+    tab.board.positions[taskId] === undefined
+  ) {
+    return tab.board;
+  }
+
+  return {
+    ...tab.board,
+    positions: withoutKey(tab.board.positions, taskId),
+  };
+}
+
 export class ApplicationStore {
   readonly #now: () => string;
   readonly #pending = new Map<string, PendingMutation>();
@@ -508,13 +539,23 @@ export class ApplicationStore {
     }
 
     const now = this.#now();
+    const nextSchedule = scheduleValidation.value;
+    const updatedTab = withTask(resolved.value.tab, {
+      ...resolved.value.task,
+      schedule: nextSchedule,
+      meta: bumpMeta(resolved.value.task.meta, now),
+    });
     return this.#commitSimpleTab(
       tabId,
-      withTask(resolved.value.tab, {
-        ...resolved.value.task,
-        schedule: scheduleValidation.value,
-        meta: bumpMeta(resolved.value.task.meta, now),
-      }),
+      {
+        ...updatedTab,
+        board: boardAfterScheduleChange(
+          resolved.value.tab,
+          taskId,
+          resolved.value.task.schedule,
+          nextSchedule,
+        ),
+      },
       now,
     );
   }
@@ -684,13 +725,13 @@ export class ApplicationStore {
     const taskValidation = validateTask(updatedTask);
     if (!taskValidation.ok) return err({ code: 'task-invalid', cause: taskValidation.error });
 
-    const board =
-      intent.point === undefined
-        ? tab.board
-        : {
-            ...tab.board,
-            positions: { ...tab.board.positions, [taskId]: intent.point },
-          };
+    const board = boardAfterScheduleChange(
+      tab,
+      taskId,
+      task.schedule,
+      nextSchedule,
+      intent.point,
+    );
     const boardValidation = validateBoardDocumentState(
       Object.values(tab.tasks).map((candidate) => candidate.id),
       board,
