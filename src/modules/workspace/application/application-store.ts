@@ -188,8 +188,7 @@ function boardAfterScheduleChange(
     };
   }
 
-  const sameLane =
-    scheduleLaneIdentity(previousSchedule) === scheduleLaneIdentity(nextSchedule);
+  const sameLane = scheduleLaneIdentity(previousSchedule) === scheduleLaneIdentity(nextSchedule);
   if (sameLane || tab.board.positions[taskId] === undefined) {
     return tab.board;
   }
@@ -724,13 +723,7 @@ export class ApplicationStore {
     const taskValidation = validateTask(updatedTask);
     if (!taskValidation.ok) return err({ code: 'task-invalid', cause: taskValidation.error });
 
-    const board = boardAfterScheduleChange(
-      tab,
-      taskId,
-      task.schedule,
-      nextSchedule,
-      intent.point,
-    );
+    const board = boardAfterScheduleChange(tab, taskId, task.schedule, nextSchedule, intent.point);
     const boardValidation = validateBoardDocumentState(
       Object.values(tab.tasks).map((candidate) => candidate.id),
       board,

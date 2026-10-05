@@ -367,10 +367,7 @@ function layoutHorizontalDateLanes(
         };
 
         if (!settings.autoLayout) {
-          laneWidth = Math.max(
-            laneWidth,
-            point.x + metrics.cardWidth + LANE_PADDING - laneStartX,
-          );
+          laneWidth = Math.max(laneWidth, point.x + metrics.cardWidth + LANE_PADDING - laneStartX);
           laneHeight = Math.max(
             laneHeight,
             point.y + metrics.cardHeight + LANE_PADDING - BOARD_PADDING,
