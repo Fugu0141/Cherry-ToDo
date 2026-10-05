@@ -410,7 +410,10 @@ function layoutHorizontalDateLanes(
 
   return {
     tasks: taskLayouts,
-    lanes: laneDrafts.map((lane) => ({ ...lane, height: Math.max(lane.height, maxLaneHeight) })),
+    lanes: laneDrafts.map((lane) => ({
+      ...lane,
+      height: Math.max(lane.height, maxLaneHeight),
+    })),
     width: Math.max(baseWidth, taskWidth),
     height: Math.max(baseHeight, taskHeight),
   };
@@ -501,7 +504,10 @@ function layoutVerticalDateLanes(
 
   return {
     tasks: taskLayouts,
-    lanes: laneDrafts.map((lane) => ({ ...lane, width: Math.max(lane.width ?? 0, maxLaneWidth) })),
+    lanes: laneDrafts.map((lane) => ({
+      ...lane,
+      width: Math.max(lane.width ?? 0, maxLaneWidth),
+    })),
     width: Math.max(baseWidth, taskWidth),
     height: Math.max(baseHeight, taskHeight),
   };
