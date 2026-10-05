@@ -12,6 +12,8 @@ export interface BoardLayoutTaskInput {
 export interface BoardLayoutEdgeInput {
   readonly fromTaskId: TaskId;
   readonly toTaskId: TaskId;
+  readonly kind?: 'continuation' | 'branch';
+  readonly order?: number;
 }
 
 export type BoardLaneKind = 'all' | 'date' | 'undated';
@@ -143,6 +145,33 @@ function structuralRanks(
   return ranks;
 }
 
+function semanticBranchSiblingComparator(
+  edges: readonly BoardLayoutEdgeInput[],
+): (left: TaskId, right: TaskId) => number {
+  const branchOrderByTarget = new Map<TaskId, Map<TaskId, number>>();
+
+  for (const edge of edges) {
+    if (edge.kind !== 'branch' || edge.order === undefined) continue;
+    const bySource = branchOrderByTarget.get(edge.toTaskId) ?? new Map<TaskId, number>();
+    bySource.set(edge.fromTaskId, edge.order);
+    branchOrderByTarget.set(edge.toTaskId, bySource);
+  }
+
+  return (left, right) => {
+    const leftSources = branchOrderByTarget.get(left);
+    const rightSources = branchOrderByTarget.get(right);
+    if (leftSources === undefined || rightSources === undefined) return 0;
+
+    for (const [sourceTaskId, leftOrder] of leftSources) {
+      const rightOrder = rightSources.get(sourceTaskId);
+      if (rightOrder !== undefined && leftOrder !== rightOrder) {
+        return leftOrder - rightOrder;
+      }
+    }
+    return 0;
+  };
+}
+
 function structuralCrossOrder(
   tasks: readonly BoardLayoutTaskInput[],
   edges: readonly BoardLayoutEdgeInput[],
@@ -152,6 +181,7 @@ function structuralCrossOrder(
   const incoming = new Map<TaskId, TaskId[]>();
   const outgoing = new Map<TaskId, TaskId[]>();
   const byRank = new Map<number, TaskId[]>();
+  const compareSemanticSiblings = semanticBranchSiblingComparator(edges);
 
   for (const task of tasks) {
     incoming.set(task.id, []);
@@ -171,7 +201,7 @@ function structuralCrossOrder(
   const order = new Map<TaskId, number>();
   for (const group of byRank.values()) {
     [...group]
-      .sort((left, right) => left.localeCompare(right))
+      .sort((left, right) => compareSemanticSiblings(left, right) || left.localeCompare(right))
       .forEach((taskId, index) => order.set(taskId, index));
   }
 
@@ -195,6 +225,7 @@ function structuralCrossOrder(
 
       scored.sort(
         (left, right) =>
+          compareSemanticSiblings(left.taskId, right.taskId) ||
           left.barycenter - right.barycenter ||
           left.previous - right.previous ||
           left.taskId.localeCompare(right.taskId),

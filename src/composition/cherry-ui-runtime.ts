@@ -882,6 +882,8 @@ export class CherryUIRuntime implements CherryUIContext {
     const layoutEdges = structuralEdges.map((edge) => ({
       fromTaskId: edge.fromTaskId,
       toTaskId: edge.toTaskId,
+      kind: edge.kind,
+      order: edge.order,
     }));
     const layout = layoutBoard(layoutTasks, layoutEdges, tab.board.settings, 'horizontal');
     const mobileLayout = layoutBoard(layoutTasks, layoutEdges, tab.board.settings, 'vertical');
