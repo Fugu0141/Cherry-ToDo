@@ -11,7 +11,7 @@ Planning authority: [draft V2.1 stabilization proposal #308](https://github.com/
 - Node >=22.13.0; CI selects Node 24. npm scripts: `check` (format/lint/typecheck/boundaries/unit tests/build), `release:check` (check + traceability/metrics/static/E2E).
 - Playwright config: desktop Chromium and Pixel 7 mobile Chromium, production preview on 127.0.0.1:4173. Four existing E2E files: game-ui-parity, release-critical, schedule-editor-inference, theme-accessibility.
 - **Gate gap:** both `.github/workflows/ci.yml` and `release-gate.yml` target only `v2.0` for push/PR; main is not covered by these triggers. Pages deploy success is not release-gate success. Restore main coverage without weakening checks; retain v2.0 triggers until branch policy is reviewed.
-- Source files and Git tree read at the pinned SHA. The local environment cannot resolve github.com to clone/install/run the app. No browser reproduction, benchmark or local test result is claimed. Existing Actions results are not a substitute for a new gate run.
+- Source files and Git tree read at the pinned SHA. The local environment cannot resolve github.com to clone/install/run the app. No browser reproduction, benchmark or local test result is claimed. The restored PR gates ran successfully; see section 6 for actual evidence.
 - Reproduction uses disposable workspaces/browser profiles only; never test destructive actions using real user data.
 
 ## 2. Document inventory (33 Markdown files)
@@ -112,10 +112,24 @@ Run focused E2E with `npx playwright test test/e2e/game-ui-parity.spec.ts --proj
 - [x] Inventory baseline documentation and identify precedence/branch-policy conflicts.
 - [x] Inventory all 34 open Issues with proposed dispositions and priority.
 - [x] Identify static data-safety/UI evidence and write reproduction matrix.
-- [ ] Restore CI/release gate coverage on main; record actual checks.
+- [x] Restore CI/release gate coverage for PRs targeting main and verify checks on PR #309 (not merged; main push trigger not yet exercised).
 - [ ] Reproduce and record UI and safety failures on desktop/mobile; classify any not reproducible.
 - [ ] Capture baseline performance/visual evidence or explicitly agree what remains deferred to refinement.
 - [ ] Owner reviews Issue/document disposition and prioritization; retain historical links.
 - [ ] Record Phase 1 exit evidence and approve Phase 2 specification consolidation.
 
 No production code, existing Issue state, accepted specification or release branch was changed by this audit. No phase completion is claimed.
+
+## 6. Verified CI evidence and focused observation harness
+
+PR #309 head `87642f7cb4a86b1042427fbcb1905504232f4b43`, with only the baseline document and main workflow triggers changed:
+- [V2 CI run 45865392529](https://github.com/Fugu0141/Cherry-ToDo/actions/runs/45865392529): success.
+- [V2 Release Gate run 45865392706](https://github.com/Fugu0141/Cherry-ToDo/actions/runs/45865392706): success. Logs: 46 test files / 159 unit and integration tests, 52 browser tests, 67 requirement IDs, 69 source files checked for architecture boundaries, 2 relative asset references verified.
+- Production bundle total: 173,679 bytes (48,436 gzip bytes). Existing cherry:boot measure: 1.80 ms on both Chromium projects in this run; this is the instrumented boot span, not full page load or a device guarantee.
+- Local git ls-remote still fails with DNS resolution. Additional observation tests are executed remotely, separately from the release gate.
+
+Run `npx playwright test --config=playwright.phase1.config.ts` after installing dependencies and Chromium. The audit is isolated from ordinary release E2E; a green audit job means the observation scenario completed, not that the observed behavior is acceptable. JSON outcomes and screenshots are attached and uploaded; a failed setup is inconclusive, not evidence of a product defect. The branch-specific audit workflow should be removed or made generally reusable before final integration.
+
+The initial harness covers B01, B03, desktop B08 draft retention, and B08 scroll / B09 overlap / B11 import-to-visible-card measurements for independent ten-task chains of 10/50/100/500 tasks on both existing Chromium profiles. Import-to-card timing includes browser/Playwright and import overhead; it is not layout-only timing or a reliable performance budget. One sample per case is exploratory. Branches, merges, annotation fixtures, failure injection, detailed layout/routing timings, repeated samples and real-device verification remain pending.
+
+Audit result status: **pending execution**. No Phase 2 decisions or product fixes are made here.

@@ -1,0 +1,43 @@
+name: V2.1 Phase 1 Audit
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  baseline-observation:
+    if: github.head_ref == 'docs/v2.1-phase1-baseline'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Observe baseline behavior (not a release gate)
+        run: npx playwright test --config=playwright.phase1.config.ts
+
+      - name: Upload observations and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-baseline-observations
+          path: |
+            test-results/phase1-report.json
+            test-results/phase1/
+          if-no-files-found: warn
