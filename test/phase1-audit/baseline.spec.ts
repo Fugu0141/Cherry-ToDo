@@ -62,7 +62,10 @@ test('B01 memory-mode locale change', async ({ page }, info) => {
     await expect(newWorkspace).toBeVisible();
   }
   const recent = page.getByRole('button', { name: 'Phase 1 disposable workspace', exact: true });
-  if (await recent.isVisible()) await recent.click();
+  if (await recent.isVisible()) {
+    await recent.click();
+    await expect(page.locator('.cg-workspace-name')).toHaveText('Phase 1 disposable workspace');
+  }
   const task = page.locator('.cg-task').filter({ hasText: 'Unsaved audit task' });
   const retained = await task.isVisible();
   await record(page, info, {
@@ -85,7 +88,10 @@ test('B03 residual data management after stop without clear', async ({ page }, i
   await openSettings(page);
   const cleanup = page.getByRole('button', { name: /保存データを削除/ });
   const reachable = await cleanup.first().isVisible();
-  const retained = await page.locator('.cg-task').filter({ hasText: 'Stored audit task' }).isVisible();
+  const retained = await page
+    .locator('.cg-task')
+    .filter({ hasText: 'Stored audit task' })
+    .isVisible();
   await record(page, info, {
     id: 'B03',
     cleanupReachable: reachable,
